@@ -48,7 +48,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     email: data.email,
                     password: data.password,
                     options: {
-                        emailRedirectTo: `${getBaseUrl()}/auth/callback`,
+                        emailRedirectTo: `https://qure-ai-nexus.vercel.app/auth/callback`,
                     }
                 });
             } else {
@@ -87,7 +87,8 @@ export const AuthForm = ({ type }: AuthFormProps) => {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
-                    redirectTo: `${getBaseUrl()}/auth/callback`,
+                    // Force production URL to ensure we never redirect to localhost
+                    redirectTo: `https://qure-ai-nexus.vercel.app/auth/callback`,
                 }
             });
             if (error) throw error;
