@@ -85,8 +85,16 @@ export const Navbar = () => {
                     {user ? (
                         <div className="flex items-center gap-2">
                             <Link href="/dashboard">
-                                <Button variant="ghost" size="sm" className="hidden sm:flex rounded-full h-9 w-9 p-0 items-center justify-center border border-white/10 bg-white/5">
-                                    <User className="w-4 h-4" />
+                                <Button variant="ghost" size="sm" className="hidden sm:flex rounded-full h-9 w-9 p-0 items-center justify-center border border-white/10 bg-white/5 overflow-hidden">
+                                    {user?.user_metadata?.avatar_url ? (
+                                        <img
+                                            src={user.user_metadata.avatar_url}
+                                            alt={user.email || "User"}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <User className="w-4 h-4" />
+                                    )}
                                 </Button>
                             </Link>
                             <Button

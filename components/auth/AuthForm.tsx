@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { getBaseUrl } from "@/lib/config";
 
 const schema = z.object({
     email: z.string().email("Please enter a valid email address"),
@@ -71,10 +72,12 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         setIsLoading(true);
         setError(null);
         try {
+            // ... inside component ...
+
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${getBaseUrl()}/auth/callback`,
                 }
             });
             if (error) throw error;
