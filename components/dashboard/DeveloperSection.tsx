@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/Button";
 import { Copy, Key, Plus, Trash2, Terminal, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getBaseUrl } from '@/lib/config';
 
 interface ApiKey {
     id: string;
     key_label: string;
-    api_key: string; // Ideally masked in real prod, but showing here for UX as per plan
+    api_key: string;
     created_at: string;
     last_used_at: string | null;
 }
@@ -24,7 +25,7 @@ export const DeveloperSection = () => {
     const [baseUrl, setBaseUrl] = useState("");
 
     useEffect(() => {
-        setBaseUrl(window.location.origin);
+        setBaseUrl(getBaseUrl());
         fetchKeys();
     }, []);
 
