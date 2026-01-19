@@ -7,25 +7,59 @@ import { DeveloperSection } from "@/components/dashboard/DeveloperSection";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
-const data = [
-    { name: "Mon", calls: 12 },
-    { name: "Tue", calls: 19 },
-    { name: "Wed", calls: 15 },
-    { name: "Thu", calls: 25 },
-    { name: "Fri", calls: 32 },
-    { name: "Sat", calls: 28 },
-    { name: "Sun", calls: 45 },
-];
+
 
 export default function DashboardPage() {
     const [totalScans, setTotalScans] = useState<number>(0);
     const [loading, setLoading] = useState(true);
+    const [chartData, setChartData] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchStats = async () => {
             const supabase = createClient();
+
+            // 1. Get total count
             const { count } = await supabase.from('medication_history').select('*', { count: 'exact', head: true });
             setTotalScans(count || 0);
+
+            // 2. Get calls for last 7 days to populate chart
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            const { data: historyData } = await supabase
+                .from('medication_history')
+                .select('created_at')
+                .gte('created_at', sevenDaysAgo.toISOString());
+
+            // Process data for chart
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const last7Days = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (6 - i));
+                return days[d.getDay()];
+            });
+
+            // Initialize counts
+            const counts: Record<string, number> = {};
+            last7Days.forEach(day => counts[day] = 0);
+
+            // Fill with real data
+            historyData?.forEach(item => {
+                const dayName = days[new Date(item.created_at).getDay()];
+                // Only count if it's in our last 7 days window (labels)
+                // Note: simple day name match might clash if range > 1 week, but here we query > 7 days ago.
+                // To be precise we should match DD/MM, but for UI visual purposes day name is usually fine for a 7 day view.
+                if (counts[dayName] !== undefined) {
+                    counts[dayName]++;
+                }
+            });
+
+            const formattedData = last7Days.map(day => ({
+                name: day,
+                calls: counts[day]
+            }));
+
+            setChartData(formattedData);
             setLoading(false);
         };
         fetchStats();
@@ -84,7 +118,7 @@ export default function DashboardPage() {
 
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={data}>
+                            <LineChart data={chartData.length > 0 ? chartData : [{ name: 'Loading', calls: 0 }]}>
                                 <XAxis
                                     dataKey="name"
                                     stroke="rgba(255,255,255,0.1)"

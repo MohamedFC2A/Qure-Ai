@@ -18,18 +18,28 @@ export default function HistoryPage() {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
+                // Get current user
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (!user) {
+                    setHistory([]);
+                    return;
+                }
+
                 const { data, error } = await supabase
                     .from("medication_history")
                     .select("*")
+                    // Explicitly filter for current user (RLS does this too, but this is safer)
+                    .eq('user_id', user.id)
                     .order("created_at", { ascending: false });
 
                 if (error) {
                     console.error("Error fetching history:", error.message, error.details);
 
                     if (error.message.includes("Could not find the table") || error.code === "PGRST204") {
-                        setHistory([]); // Keep empty
+                        setHistory([]);
                         // In a real app we might show a setup banner, but for now we'll just log clearly
-                        alert("Database Setup Required: Please run the SQL script in 'supabase_schema.sql' in your Supabase Dashboard to create the history table.");
+                        // alert("Database Setup Required...");
                     } else {
                         setHistory([]);
                     }

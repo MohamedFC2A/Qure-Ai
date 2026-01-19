@@ -13,14 +13,15 @@ alter table public.medication_history enable row level security;
 
 -- Policy: Allow anonymous inserts (for now, or authenticated if user system is active)
 -- Adjust 'true' to 'auth.uid() = user_id' if you require login.
-create policy "Allow all inserts"
+-- Policy: Allow users to insert their own data
+create policy "Users can insert their own scans"
   on public.medication_history for insert
-  with check (true);
+  with check (auth.uid() = user_id);
 
--- Policy: Allow reading own data (or all for demo/admin)
-create policy "Allow public read"
+-- Policy: Allow users to view ONLY their own data
+create policy "Users can view their own scans"
   on public.medication_history for select
-  using (true);
+  using (auth.uid() = user_id);
 
 -- API Keys Management
 create table public.api_keys (

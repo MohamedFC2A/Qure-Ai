@@ -12,12 +12,14 @@ import { createClient } from "@/lib/supabase/client";
 export const Navbar = () => {
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
 
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
+            setIsLoading(false);
         };
         checkUser();
 
@@ -82,8 +84,9 @@ export const Navbar = () => {
 
                 {/* Auth Buttons */}
                 <div className="flex items-center gap-2 pl-4 border-l border-white/10 ml-2">
-                    {user ? (
-                        <div className="flex items-center gap-2">
+                    {/* Only show content after we've checked auth state to prevent flickering */}
+                    {!isLoading && user ? (
+                        <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                             <Link href="/dashboard">
                                 <Button variant="ghost" size="sm" className="hidden sm:flex rounded-full h-9 w-9 p-0 items-center justify-center border border-white/10 bg-white/5 overflow-hidden">
                                     {user?.user_metadata?.avatar_url ? (
@@ -106,8 +109,8 @@ export const Navbar = () => {
                                 Sign Out
                             </Button>
                         </div>
-                    ) : (
-                        <div className="flex items-center gap-2">
+                    ) : !isLoading && (
+                        <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                             <Link href="/login">
                                 <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">Login</Button>
                             </Link>
