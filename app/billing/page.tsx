@@ -7,8 +7,10 @@ import { AlertTriangle, CreditCard, Banknote, ShieldCheck, Zap } from "lucide-re
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
-export default function BillingPage() {
+// Separate component that uses search params
+function BillingContent() {
     const searchParams = useSearchParams();
     const plan = searchParams.get("plan") || "ultra";
     const [loading, setLoading] = useState(false);
@@ -182,4 +184,17 @@ export default function BillingPage() {
     );
 }
 
-import Link from "next/link";
+// Main page component wrapped in Suspense
+export default function BillingPage() {
+    return (
+        <React.Suspense fallback={
+            <div className="min-h-screen pt-24 pb-12 px-4 flex items-center justify-center">
+                <div className="text-white/50">Loading billing options...</div>
+            </div>
+        }>
+            <BillingContent />
+        </React.Suspense>
+    );
+}
+
+
