@@ -8,6 +8,7 @@ import { SettingsProvider } from "@/context/SettingsContext";
 import { UserProvider } from "@/context/UserContext";
 import { ScanProvider } from "@/context/ScanContext";
 import { GoogleAdsense } from "@/components/GoogleAdsense";
+import { Footer } from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,9 +31,10 @@ export default function RootLayout({
                     <UserProvider>
                         <ScanProvider>
                             <Navbar />
-                            <div className="pb-28 sm:pb-0">
+                            <div className="pb-28 sm:pb-0 min-h-[calc(100vh-80px)]">
                                 {children}
                             </div>
+                            <Footer />
                         </ScanProvider>
                     </UserProvider>
                 </SettingsProvider>

@@ -1,5 +1,5 @@
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Activity, AlertTriangle, Info, Pill, ShieldAlert, Thermometer, Box, FileText, CheckCircle2, AlertOctagon, Clock, Sparkles, GitBranch, ChevronRight, Lock, Database, ExternalLink, ListTodo, Download, FileDown } from "lucide-react";
+import { Activity, AlertTriangle, Info, Pill, ShieldAlert, Thermometer, Box, FileText, CheckCircle2, AlertOctagon, Clock, Sparkles, GitBranch, ChevronRight, Lock, Database, ExternalLink, ListTodo, Download, FileDown, Copy, Mic, MicOff, Send, MessageSquare, Bookmark, RotateCcw, Languages, Check, Lightbulb, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -165,6 +165,14 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const [aiNodes, setAiNodes] = useState<AiTreeNode[]>([]);
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
+
+    // Enhanced Ask NEXUS AI state
+    const [customQuestion, setCustomQuestion] = useState('');
+    const [isListening, setIsListening] = useState(false);
+    const [copiedNodeIdx, setCopiedNodeIdx] = useState<number | null>(null);
+    const [savedAnswers, setSavedAnswers] = useState<number[]>([]);
+    const [showSimplified, setShowSimplified] = useState<Record<number, boolean>>({});
+    const aiInputRef = useRef<HTMLTextAreaElement>(null);
 
     const [safetyTab, setSafetyTab] = useState<UltraSafetyTab>('interactions');
     const [safetyShowAll, setSafetyShowAll] = useState<Record<string, boolean>>({});
@@ -638,6 +646,92 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
             setAiLoading(false);
         }
     };
+
+    // Copy answer to clipboard
+    const copyAnswer = async (nodeIdx: number, text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedNodeIdx(nodeIdx);
+            setTimeout(() => setCopiedNodeIdx(null), 2000);
+        } catch {
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            setCopiedNodeIdx(nodeIdx);
+            setTimeout(() => setCopiedNodeIdx(null), 2000);
+        }
+    };
+
+    // Toggle save answer (bookmark)
+    const toggleSaveAnswer = (nodeIdx: number) => {
+        setSavedAnswers(prev =>
+            prev.includes(nodeIdx)
+                ? prev.filter(i => i !== nodeIdx)
+                : [...prev, nodeIdx]
+        );
+    };
+
+    // Submit custom question
+    const submitCustomQuestion = () => {
+        const trimmed = customQuestion.trim();
+        if (!trimmed || aiLoading) return;
+        askAi({ question: trimmed, reset: aiNodes.length === 0 });
+        setCustomQuestion('');
+    };
+
+    // Handle keyboard submit
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submitCustomQuestion();
+        }
+    };
+
+    // Voice input (Web Speech API)
+    const toggleVoiceInput = () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            setAiError(t("Voice input not supported in this browser.", "الإدخال الصوتي غير مدعوم في هذا المتصفح."));
+            return;
+        }
+
+        if (isListening) {
+            setIsListening(false);
+            return;
+        }
+
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = resultsLanguage === 'ar' ? 'ar-SA' : 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => setIsListening(true);
+        recognition.onend = () => setIsListening(false);
+        recognition.onerror = () => {
+            setIsListening(false);
+            setAiError(t("Voice input failed. Try again.", "فشل الإدخال الصوتي. حاول مجدداً."));
+        };
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            setCustomQuestion(prev => prev + (prev ? ' ' : '') + transcript);
+            aiInputRef.current?.focus();
+        };
+
+        recognition.start();
+    };
+
+    // Quick suggestion chips data
+    const quickSuggestions = useMemo(() => [
+        { label: t("Side effects?", "الآثار الجانبية؟"), question: t("What are the common and serious side effects I should watch for?", "ما هي الآثار الجانبية الشائعة والخطيرة التي يجب مراقبتها؟") },
+        { label: t("Dosage timing", "توقيت الجرعة"), question: t("When is the best time to take this medication?", "ما هو أفضل وقت لتناول هذا الدواء؟") },
+        { label: t("Food interactions", "تفاعل مع الطعام"), question: t("Should I take this with food or on an empty stomach?", "هل يجب تناوله مع الطعام أم على معدة فارغة؟") },
+        { label: t("Pregnancy safe?", "آمن للحامل؟"), question: t("Is this medication safe during pregnancy or breastfeeding?", "هل هذا الدواء آمن أثناء الحمل أو الرضاعة؟") },
+    ], [t]);
+
 
     if (data.error) {
         return (
@@ -1897,84 +1991,95 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                     )}
                 </div>
 
-                {/* AI Follow-up Tree */}
-                <div className="p-5 sm:p-8 bg-black/10 border-t border-white/10">
-                    <div className="flex items-center justify-between gap-4 mb-4">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-liquid-accent" />
-                            <h3 className="text-lg font-bold text-white">{t(`Ask ${AI_DISPLAY_NAME}`, `اسال ${AI_DISPLAY_NAME}`)}</h3>
+                {/* AI Follow-up Tree - ENHANCED */}
+                <div className="p-5 sm:p-8 bg-gradient-to-b from-black/20 to-black/5 border-t border-white/10">
+                    {/* Header with animated gradient */}
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                                <Sparkles className="w-5 h-5 text-purple-300" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    {t(`Ask ${AI_DISPLAY_NAME}`, `اسال ${AI_DISPLAY_NAME}`)}
+                                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-200">
+                                        {t("AI", "ذكاء")}
+                                    </span>
+                                </h3>
+                                <p className="text-white/40 text-xs mt-0.5">{t("Interactive medical Q&A", "أسئلة وأجوبة طبية تفاعلية")}</p>
+                            </div>
                         </div>
                         {plan === "ultra" && aiNodes.length > 0 && (
                             <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => setAiNodes([])}
-                                className="border-white/15 text-white/70 hover:bg-white/10"
+                                onClick={() => {
+                                    setAiNodes([]);
+                                    setCustomQuestion('');
+                                }}
+                                className="border-white/15 text-white/70 hover:bg-white/10 gap-1.5"
                             >
+                                <RotateCcw className="w-3.5 h-3.5" />
                                 {t("Reset", "إعادة")}
                             </Button>
                         )}
                     </div>
 
                     {(!user || plan !== "ultra") ? (
-                        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                            <div className="p-5 blur-sm opacity-60 pointer-events-none select-none">
+                        /* Locked State - Premium Teaser */
+                        <div className="relative overflow-hidden rounded-2xl ai-gradient-border">
+                            <div className="p-6 blur-[2px] opacity-50 pointer-events-none select-none">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     {[
-                                        { title: t("Alternative medication", "بدائل هذا الدواء"), subtitle: t("Safer options & same use", "بدائل أكثر أمانًا لنفس الاستخدام") },
-                                        { title: t("Based on my profile", "حسب بياناتي الصحية"), subtitle: t("Allergies, conditions, meds", "حساسية + أمراض + أدوية") },
-                                        { title: t("Against my history", "مقارنةً بسجلي"), subtitle: t("Memories + recent scans", "الذاكرة + آخر التحاليل") },
+                                        { icon: Zap, title: t("Alternative medication", "بدائل هذا الدواء"), subtitle: t("Safer options & same use", "بدائل أكثر أمانًا لنفس الاستخدام") },
+                                        { icon: Lightbulb, title: t("Based on my profile", "حسب بياناتي الصحية"), subtitle: t("Allergies, conditions, meds", "حساسية + أمراض + أدوية") },
+                                        { icon: MessageSquare, title: t("Against my history", "مقارنةً بسجلي"), subtitle: t("Memories + recent scans", "الذاكرة + آخر التحاليل") },
                                     ].map((card, idx) => (
-                                        <div key={idx} className="p-4 rounded-xl border bg-black/20 border-white/10">
-                                            <div className="flex items-center justify-between gap-3">
+                                        <div key={idx} className="p-4 rounded-xl border bg-black/40 border-white/10">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <card.icon className="w-4 h-4 text-purple-300" />
                                                 <p className="text-white font-semibold text-sm">{card.title}</p>
-                                                <Lock className="w-4 h-4 text-white/30" />
                                             </div>
-                                            <p className="text-white/50 text-xs mt-1">{card.subtitle}</p>
+                                            <p className="text-white/50 text-xs">{card.subtitle}</p>
                                         </div>
                                     ))}
                                 </div>
-
-                                <div className="mt-6 grid gap-3">
-                                    <div className="flex items-center gap-2 text-white/60 text-sm">
-                                        <GitBranch className="w-4 h-4" />
-                                        <span>{t("Decision path preview", "معاينة مسار القرار")}</span>
-                                    </div>
-                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-                                        <p className="text-white font-bold">{t("Step 1", "الخطوة 1")}</p>
-                                        <p className="text-white/70 text-sm mt-2">{t("Ask a question → get an answer → choose the next step.", "اسأل سؤالًا → تحصل على إجابة → اختر الخطوة التالية.")}</p>
-                                    </div>
+                                <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="h-10 w-full ai-skeleton mb-2" />
+                                    <div className="h-4 w-2/3 ai-skeleton" />
                                 </div>
                             </div>
 
-                            <div className="absolute inset-0 flex items-center justify-center p-4">
-                                <div className="w-full max-w-md p-5 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 rounded-xl bg-white/5 border border-white/10">
-                                            <Lock className="w-5 h-5 text-amber-200" />
+                            {/* Overlay CTA */}
+                            <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-sm">
+                                <div className="w-full max-w-md p-6 rounded-2xl ai-chat-bubble">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                                            <Lock className="w-6 h-6 text-amber-200" />
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-white font-bold">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-white font-bold text-lg">
                                                 {!user
                                                     ? t(`Login to unlock ${AI_DISPLAY_NAME}`, `سجّل الدخول لفتح ${AI_DISPLAY_NAME}`)
                                                     : t(`Upgrade to unlock ${AI_DISPLAY_NAME}`, `ترقية لفتح ${AI_DISPLAY_NAME}`)}
                                             </p>
-                                            <p className="text-white/60 text-sm mt-1">
+                                            <p className="text-white/60 text-sm mt-2 leading-relaxed">
                                                 {t(
-                                                    "Interactive decision-tree questions tailored to your profile + history.",
-                                                    "أسئلة تفاعلية بنظام شجرة مرتبطة بملفك الصحي + سجلك."
+                                                    "Ask any question about this medication. Get personalized answers based on your health profile.",
+                                                    "اسأل أي سؤال عن هذا الدواء. احصل على إجابات مخصصة حسب ملفك الصحي."
                                                 )}
                                             </p>
-                                            <div className="mt-3 flex items-center gap-2">
+                                            <div className="mt-4 flex items-center gap-3">
                                                 {!user ? (
                                                     <Link href="/login">
-                                                        <Button size="sm" className="gap-2">
+                                                        <Button size="sm" className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">
                                                             {t("Log in", "تسجيل الدخول")}
                                                         </Button>
                                                     </Link>
                                                 ) : (
                                                     <Link href="/pricing">
-                                                        <Button size="sm" className="gap-2 bg-amber-500 hover:bg-amber-600 text-black">
+                                                        <Button size="sm" className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
+                                                            <Sparkles className="w-4 h-4" />
                                                             {t("Upgrade to Ultra", "ترقية إلى ألترا")}
                                                         </Button>
                                                     </Link>
@@ -1986,116 +2091,296 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             </div>
                         </div>
                     ) : (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <button
-                                    disabled={aiLoading || !user}
-                                    onClick={() => askAi({ preset: "alternative", reset: true })}
-                                    className={cn(
-                                        "p-4 rounded-xl border text-left transition-colors",
-                                        "bg-white/5 border-white/10 hover:bg-white/10",
-                                        (aiLoading || !user) && "opacity-60 cursor-not-allowed"
-                                    )}
-                                >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <p className="text-white font-semibold text-sm">{t("Alternative medication", "بدائل هذا الدواء")}</p>
-                                        <ChevronRight className="w-4 h-4 text-white/40" />
+                        /* Unlocked State - Full Ask NEXUS AI */
+                        <div className="space-y-5">
+                            {/* Custom Question Input - Premium */}
+                            <div className="ai-gradient-border p-4">
+                                <div className="relative">
+                                    <textarea
+                                        ref={aiInputRef}
+                                        value={customQuestion}
+                                        onChange={(e) => setCustomQuestion(e.target.value.slice(0, 500))}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder={t("Ask anything about this medication...", "اسأل أي شيء عن هذا الدواء...")}
+                                        className="ai-input resize-none min-h-[80px] pr-24"
+                                        disabled={aiLoading}
+                                        dir={isArabic ? 'rtl' : 'ltr'}
+                                    />
+                                    <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                                        {/* Voice Input Button */}
+                                        <button
+                                            type="button"
+                                            onClick={toggleVoiceInput}
+                                            disabled={aiLoading}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-all ai-voice-btn",
+                                                isListening
+                                                    ? "bg-red-500/20 text-red-400 listening"
+                                                    : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                                            )}
+                                            title={t("Voice input", "إدخال صوتي")}
+                                        >
+                                            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                        </button>
+                                        {/* Submit Button */}
+                                        <button
+                                            type="button"
+                                            onClick={submitCustomQuestion}
+                                            disabled={aiLoading || !customQuestion.trim()}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-all",
+                                                customQuestion.trim()
+                                                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                                                    : "bg-white/5 text-white/30"
+                                            )}
+                                        >
+                                            <Send className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                    <p className="text-white/50 text-xs mt-1">{t("Safer alternatives for the same use.", "بدائل أكثر أمانًا لنفس الاستخدام.")}</p>
-                                </button>
-
-                                <button
-                                    disabled={aiLoading || !user}
-                                    onClick={() => askAi({ preset: "personalized", reset: true })}
-                                    className="p-4 rounded-xl border text-left transition-colors bg-white/5 border-white/10 hover:bg-white/10"
-                                >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <p className="text-white font-semibold text-sm">{t("Based on my profile", "حسب بياناتي الصحية")}</p>
-                                        <ChevronRight className="w-4 h-4 text-white/40" />
-                                    </div>
-                                    <p className="text-white/50 text-xs mt-1">{t("Allergies, conditions, current meds.", "الحساسية والأمراض المزمنة والأدوية الحالية.")}</p>
-                                </button>
-
-                                <button
-                                    disabled={aiLoading || !user}
-                                    onClick={() => askAi({ preset: "history", reset: true })}
-                                    className="p-4 rounded-xl border text-left transition-colors bg-white/5 border-white/10 hover:bg-white/10"
-                                >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <p className="text-white font-semibold text-sm">{t("Against my history", "مقارنةً بسجلي")}</p>
-                                        <ChevronRight className="w-4 h-4 text-white/40" />
-                                    </div>
-                                    <p className="text-white/50 text-xs mt-1">{t("Memories + recent scans.", "الذاكرة + آخر التحاليل.")}</p>
-                                </button>
+                                </div>
+                                {/* Character Counter */}
+                                <div className="flex items-center justify-between mt-2 px-1">
+                                    <p className="text-[11px] text-white/30">
+                                        {t("Press Enter to send, Shift+Enter for new line", "اضغط Enter للإرسال، Shift+Enter لسطر جديد")}
+                                    </p>
+                                    <p className={cn("text-[11px]", customQuestion.length > 450 ? "text-amber-400" : "text-white/30")}>
+                                        {customQuestion.length}/500
+                                    </p>
+                                </div>
                             </div>
 
-                            {aiError && (
-                                <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm flex items-center gap-2">
-                                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                                    {aiError}
+                            {/* Quick Suggestion Chips */}
+                            {aiNodes.length === 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {quickSuggestions.map((suggestion, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => {
+                                                setCustomQuestion(suggestion.question);
+                                                aiInputRef.current?.focus();
+                                            }}
+                                            disabled={aiLoading}
+                                            className="ai-chip"
+                                        >
+                                            {suggestion.label}
+                                        </button>
+                                    ))}
                                 </div>
                             )}
 
+                            {/* Preset Buttons - Compact Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    disabled={aiLoading || !user}
+                                    onClick={() => askAi({ preset: "alternative", reset: true })}
+                                    className={cn(
+                                        "ai-chat-bubble p-4 text-left transition-all",
+                                        (aiLoading || !user) && "opacity-60 cursor-not-allowed"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Zap className="w-4 h-4 text-purple-300" />
+                                        <p className="text-white font-semibold text-sm">{t("Alternatives", "البدائل")}</p>
+                                    </div>
+                                    <p className="text-white/50 text-xs">{t("Safer options for the same use.", "بدائل أكثر أمانًا لنفس الاستخدام.")}</p>
+                                </motion.button>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    disabled={aiLoading || !user}
+                                    onClick={() => askAi({ preset: "personalized", reset: true })}
+                                    className="ai-chat-bubble p-4 text-left transition-all"
+                                >
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Lightbulb className="w-4 h-4 text-amber-300" />
+                                        <p className="text-white font-semibold text-sm">{t("For My Profile", "حسب ملفي")}</p>
+                                    </div>
+                                    <p className="text-white/50 text-xs">{t("Personalized based on your health data.", "مخصص حسب بياناتك الصحية.")}</p>
+                                </motion.button>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    disabled={aiLoading || !user}
+                                    onClick={() => askAi({ preset: "history", reset: true })}
+                                    className="ai-chat-bubble p-4 text-left transition-all"
+                                >
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Clock className="w-4 h-4 text-cyan-300" />
+                                        <p className="text-white font-semibold text-sm">{t("Check History", "فحص السجل")}</p>
+                                    </div>
+                                    <p className="text-white/50 text-xs">{t("Against your medication memories.", "مقارنة بذاكرة أدويتك.")}</p>
+                                </motion.button>
+                            </div>
+
+                            {/* Error Display */}
+                            {aiError && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm flex items-center gap-3"
+                                >
+                                    <AlertTriangle className="w-5 h-5 shrink-0" />
+                                    <span>{aiError}</span>
+                                    <button
+                                        onClick={() => setAiError(null)}
+                                        className="ml-auto text-red-300 hover:text-red-200"
+                                    >
+                                        ✕
+                                    </button>
+                                </motion.div>
+                            )}
+
+                            {/* Loading State - Skeleton */}
+                            {aiLoading && aiNodes.length === 0 && (
+                                <div className="ai-chat-bubble p-5">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="ai-thinking">
+                                            <div className="ai-thinking-dot" />
+                                            <div className="ai-thinking-dot" />
+                                            <div className="ai-thinking-dot" />
+                                        </div>
+                                        <span className="text-white/60 text-sm">{t("Analyzing...", "جارٍ التحليل...")}</span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="h-4 w-3/4 ai-skeleton" />
+                                        <div className="h-4 w-full ai-skeleton" />
+                                        <div className="h-4 w-5/6 ai-skeleton" />
+                                        <div className="h-4 w-2/3 ai-skeleton" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Decision Tree - Enhanced */}
                             {aiNodes.length > 0 && (
-                                <div className="mt-6 grid gap-4">
-                                    <div className="flex items-center gap-2 text-white/60 text-sm">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 text-white/50 text-sm">
                                         <GitBranch className="w-4 h-4" />
-                                        <span>{t("Decision path", "مسار القرار")}</span>
+                                        <span>{t("Conversation", "المحادثة")}</span>
+                                        <span className="text-white/30">•</span>
+                                        <span className="text-white/30">{aiNodes.length} {t("responses", "ردود")}</span>
                                     </div>
 
-                                    <div className="relative pl-4 border-l border-white/10 space-y-4">
+                                    <div className="relative pl-5 border-l-2 border-purple-500/30 space-y-4">
                                         {aiNodes.map((node, idx) => {
                                             const isLast = idx === aiNodes.length - 1;
+                                            const isCopied = copiedNodeIdx === idx;
+                                            const isSaved = savedAnswers.includes(idx);
+
                                             return (
-                                                <div key={`${idx}-${node.title}`} className="relative">
-                                                    <div className="absolute -left-[9px] top-3 w-4 h-4 rounded-full bg-liquid-primary/30 border border-liquid-primary/40" />
-                                                    <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-                                                        <div className="flex items-start justify-between gap-4">
-                                                            <div>
-                                                                <p className="text-white font-bold">{node.title}</p>
-                                                                <p className="text-white/70 text-sm mt-2 whitespace-pre-wrap leading-relaxed">{node.answer}</p>
+                                                <motion.div
+                                                    key={`${idx}-${node.title}`}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.1 }}
+                                                    className="relative ai-node-enter"
+                                                >
+                                                    {/* Timeline Node */}
+                                                    <div className="absolute -left-[11px] top-5 w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-black flex items-center justify-center">
+                                                        <span className="text-[10px] text-white font-bold">{idx + 1}</span>
+                                                    </div>
+
+                                                    {/* Answer Card */}
+                                                    <div className={cn("ai-chat-bubble p-5", isCopied && "ai-copy-flash")}>
+                                                        {/* Header with Actions */}
+                                                        <div className="flex items-start justify-between gap-3 mb-3">
+                                                            <p className="text-white font-bold flex items-center gap-2">
+                                                                <MessageSquare className="w-4 h-4 text-purple-300" />
+                                                                {node.title}
+                                                            </p>
+                                                            <div className="flex items-center gap-1">
+                                                                {/* Copy Button */}
+                                                                <button
+                                                                    onClick={() => copyAnswer(idx, `${node.title}\n\n${node.answer}\n\n${node.keyPoints?.join('\n• ') || ''}`)}
+                                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+                                                                    title={t("Copy", "نسخ")}
+                                                                >
+                                                                    {isCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                                {/* Bookmark Button */}
+                                                                <button
+                                                                    onClick={() => toggleSaveAnswer(idx)}
+                                                                    className={cn(
+                                                                        "p-1.5 rounded-lg hover:bg-white/10 transition-colors",
+                                                                        isSaved ? "text-amber-400" : "text-white/40 hover:text-white"
+                                                                    )}
+                                                                    title={t("Save", "حفظ")}
+                                                                >
+                                                                    <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
+                                                                </button>
                                                             </div>
                                                         </div>
 
+                                                        {/* Answer Text */}
+                                                        <p className="text-white/80 text-sm whitespace-pre-wrap leading-relaxed ai-typing">
+                                                            {node.answer}
+                                                        </p>
+
+                                                        {/* Key Points */}
                                                         {node.keyPoints && node.keyPoints.length > 0 && (
-                                                            <ul className="mt-4 space-y-1 text-white/70 text-sm">
-                                                                {node.keyPoints.slice(0, 8).map((p, i) => (
-                                                                    <li key={i}>• {p}</li>
-                                                                ))}
-                                                            </ul>
+                                                            <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
+                                                                <p className="text-xs text-white/40 mb-2 flex items-center gap-1">
+                                                                    <Lightbulb className="w-3 h-3" />
+                                                                    {t("Key Points", "النقاط الرئيسية")}
+                                                                </p>
+                                                                <ul className="space-y-1.5 text-white/70 text-sm">
+                                                                    {node.keyPoints.slice(0, 6).map((p, i) => (
+                                                                        <li key={i} className="flex items-start gap-2">
+                                                                            <span className="text-purple-400 mt-1">•</span>
+                                                                            <span>{p}</span>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
                                                         )}
 
+                                                        {/* Next Questions - Only on Last Node */}
                                                         {isLast && node.nextQuestions && node.nextQuestions.length > 0 && (
-                                                            <div className="mt-5">
-                                                                <p className="text-xs text-white/40 mb-2">{t("Next questions", "أسئلة تالية")}</p>
+                                                            <div className="mt-5 pt-4 border-t border-white/10">
+                                                                <p className="text-xs text-white/40 mb-3">{t("Continue with:", "تابع مع:")}</p>
                                                                 <div className="flex flex-wrap gap-2">
-                                                                    {node.nextQuestions.slice(0, 3).map((q) => (
-                                                                        <Button
+                                                                    {node.nextQuestions.slice(0, 4).map((q) => (
+                                                                        <motion.button
                                                                             key={q.id}
-                                                                            size="sm"
-                                                                            variant="outline"
+                                                                            whileHover={{ scale: 1.02 }}
+                                                                            whileTap={{ scale: 0.98 }}
                                                                             disabled={aiLoading}
                                                                             onClick={() => askAi({ question: q.question, reset: false })}
-                                                                            className="border-white/15 text-white/80 hover:bg-white/10"
+                                                                            className="ai-chip flex items-center gap-1.5"
                                                                         >
+                                                                            <ChevronRight className="w-3 h-3" />
                                                                             {q.title}
-                                                                        </Button>
+                                                                        </motion.button>
                                                                     ))}
                                                                 </div>
                                                             </div>
                                                         )}
                                                     </div>
-                                                </div>
+                                                </motion.div>
                                             );
                                         })}
                                     </div>
 
+                                    {/* Loading indicator for follow-up */}
                                     {aiLoading && (
-                                        <div className="text-xs text-white/40">{t("Thinking…", "جارٍ التفكير…")}</div>
+                                        <div className="pl-5 border-l-2 border-purple-500/30">
+                                            <div className="ai-chat-bubble p-4 flex items-center gap-3">
+                                                <div className="ai-thinking">
+                                                    <div className="ai-thinking-dot" />
+                                                    <div className="ai-thinking-dot" />
+                                                    <div className="ai-thinking-dot" />
+                                                </div>
+                                                <span className="text-white/50 text-sm">{t("Thinking...", "جارٍ التفكير...")}</span>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             )}
-                        </>
+                        </div>
                     )}
                 </div>
 
