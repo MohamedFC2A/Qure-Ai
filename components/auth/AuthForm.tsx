@@ -38,7 +38,11 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
     const getCallbackUrl = () => {
         if (typeof window === "undefined") return "";
-        const url = new URL("/auth/callback", window.location.origin);
+
+        // Prioritize environment variable for production stability
+        const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+
+        const url = new URL("/auth/callback", origin);
         url.searchParams.set("next", getNextPath());
         return url.toString();
     };
