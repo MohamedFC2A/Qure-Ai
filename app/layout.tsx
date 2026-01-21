@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import clsx from "clsx";
 import { LiquidBackground } from "@/components/ui/LiquidBackground";
@@ -23,6 +24,12 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <body className={clsx(inter.className, "min-h-screen relative")} suppressHydrationWarning>
+                <Script
+                    async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8970399272088568"
+                    crossOrigin="anonymous"
+                    strategy="afterInteractive"
+                />
                 <LiquidBackground />
                 <SettingsProvider>
                     <UserProvider>

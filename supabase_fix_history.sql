@@ -11,8 +11,13 @@ create table if not exists public.care_profiles (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- DISABLE RLS FOR BULK OPERATIONS
+alter table public.care_profiles disable row level security;
+alter table public.medication_history disable row level security;
+alter table public.memories_medications disable row level security;
+
+
 -- 0b. Clean up zombie medication_history rows (users that no longer exist)
--- This prevents FK violations when trying to erroneously create profiles for them.
 delete from public.medication_history
 where user_id is null or user_id not in (select id from auth.users);
 
@@ -40,11 +45,11 @@ set profile_id = user_id
 where profile_id is null
   and user_id in (select id from public.care_profiles);
 
--- 3. Safety Clean: Delete any history rows where constraints are still impossible to satisfy
+-- 3. Safety Clean
 delete from public.medication_history
 where profile_id is null;
 
--- 4. Apply the NOT NULL constraint
+-- 4. Apply the NOT NULL constraint (Safe now)
 alter table public.medication_history
   alter column profile_id set not null;
 
@@ -66,4 +71,10 @@ where profile_id is null;
 alter table public.memories_medications
   alter column profile_id set not null;
 
-select 'Fix applied: Care Profiles & History cleaned and linked.' as status;
+
+-- RE-ENABLE RLS
+alter table public.care_profiles enable row level security;
+alter table public.medication_history enable row level security;
+alter table public.memories_medications enable row level security;
+
+select 'Fix applied: RLS Bypassed, Care Profiles created, History linked.' as status;
