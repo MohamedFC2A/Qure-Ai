@@ -8,6 +8,9 @@ const deepseek = new OpenAI({
 
 export interface AnalyzeContext {
     privateProfile?: {
+        username?: string | null;
+        full_name?: string | null;
+        height?: string | null;
         age?: number | null;
         sex?: string | null;
         weight?: string | null;

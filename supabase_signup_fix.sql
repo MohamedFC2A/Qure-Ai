@@ -7,11 +7,28 @@
 -- 1. Ensure Profile Table Exists & Has RLS
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade not null primary key,
+  email text,
   plan text not null default 'free',
+  username text,
+  full_name text,
+  gender text,
+  age integer,
+  height text,
+  weight text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()),
   plan_expires_at timestamp with time zone
 );
+
+-- Ensure profile detail columns exist even if the table was created by older scripts.
+alter table public.profiles
+  add column if not exists email text,
+  add column if not exists username text,
+  add column if not exists full_name text,
+  add column if not exists gender text,
+  add column if not exists age integer,
+  add column if not exists height text,
+  add column if not exists weight text;
 
 alter table public.profiles enable row level security;
 
@@ -74,11 +91,92 @@ end $$;
 -- or if the user was partially created in a previous failed state.
 create or replace function public.handle_new_user() 
 returns trigger as $$
+declare
+  v_username text;
+  v_gender text;
+  v_age int;
+  v_height text;
+  v_weight text;
 begin
+  v_username := nullif(trim(coalesce(new.raw_user_meta_data->>'username', '')), '');
+  if v_username is not null then
+    -- Keep it simple/safe. Client validation already enforces the pattern.
+    v_username := regexp_replace(v_username, '[^a-zA-Z0-9_]+', '', 'g');
+    if length(v_username) < 3 then
+      v_username := null;
+    end if;
+
+    -- If username is (optionally) unique, avoid conflicts by appending a short user-id suffix.
+    if exists (
+      select 1
+      from public.profiles p
+      where p.username is not null
+        and lower(p.username) = lower(v_username)
+    ) then
+      v_username := left(v_username, 20) || '_' || substr(new.id::text, 1, 6);
+    end if;
+  end if;
+
+  v_gender := nullif(lower(trim(coalesce(new.raw_user_meta_data->>'gender', new.raw_user_meta_data->>'sex', ''))), '');
+  if v_gender not in ('male', 'female', 'other') then
+    v_gender := null;
+  end if;
+
+  v_age := null;
+  if coalesce(new.raw_user_meta_data->>'age', '') ~ '^[0-9]{1,3}$' then
+    v_age := (new.raw_user_meta_data->>'age')::int;
+  end if;
+
+  v_height := nullif(trim(coalesce(new.raw_user_meta_data->>'height', '')), '');
+  v_weight := nullif(trim(coalesce(new.raw_user_meta_data->>'weight', '')), '');
+
   -- A. Create Profile associated with the new user
-  insert into public.profiles (id, plan)
-  values (new.id, 'free')
-  on conflict (id) do nothing;
+  begin
+    insert into public.profiles (id, email, plan, username, full_name, gender, age, height, weight, updated_at)
+    values (
+      new.id,
+      new.email,
+      'free',
+      v_username,
+      nullif(trim(coalesce(new.raw_user_meta_data->>'full_name', '')), ''),
+      v_gender,
+      v_age,
+      v_height,
+      v_weight,
+      timezone('utc'::text, now())
+    )
+    on conflict (id) do update set
+      email = coalesce(public.profiles.email, excluded.email),
+      username = coalesce(public.profiles.username, excluded.username),
+      full_name = coalesce(public.profiles.full_name, excluded.full_name),
+      gender = coalesce(public.profiles.gender, excluded.gender),
+      age = coalesce(public.profiles.age, excluded.age),
+      height = coalesce(public.profiles.height, excluded.height),
+      weight = coalesce(public.profiles.weight, excluded.weight),
+      updated_at = timezone('utc'::text, now());
+  exception when unique_violation then
+    -- If username is unique and already taken, do not block account creation.
+    insert into public.profiles (id, email, plan, full_name, gender, age, height, weight, updated_at)
+    values (
+      new.id,
+      new.email,
+      'free',
+      nullif(trim(coalesce(new.raw_user_meta_data->>'full_name', '')), ''),
+      v_gender,
+      v_age,
+      v_height,
+      v_weight,
+      timezone('utc'::text, now())
+    )
+    on conflict (id) do update set
+      email = coalesce(public.profiles.email, excluded.email),
+      full_name = coalesce(public.profiles.full_name, excluded.full_name),
+      gender = coalesce(public.profiles.gender, excluded.gender),
+      age = coalesce(public.profiles.age, excluded.age),
+      height = coalesce(public.profiles.height, excluded.height),
+      weight = coalesce(public.profiles.weight, excluded.weight),
+      updated_at = timezone('utc'::text, now());
+  end;
 
   -- B. Create Usage Window logic
   -- We rely on user_id uniqueness. Whether it's PK or just UNIQUE column, this works.

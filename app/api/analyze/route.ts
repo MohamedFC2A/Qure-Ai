@@ -5,6 +5,7 @@ import { getUserPlan } from "@/lib/creditService";
 import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot } from "@/lib/openfda";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { preflightMedicationEvidence, type ProductClassification } from "@/lib/medicationEnrichment";
+import { generateInteractionGuard } from "@/lib/ai/interactionGuard";
 
 function normalizeMedicationName(name: string): string {
     return String(name || "")
@@ -14,6 +15,16 @@ function normalizeMedicationName(name: string): string {
         .replace(/[^\p{L}\p{N}]+/gu, " ")
         .replace(/\s+/g, " ")
         .trim();
+}
+
+function parseMedicationList(raw: unknown): string[] {
+    const text = String(raw || "").trim();
+    if (!text) return [];
+    return text
+        .split(/[\n\r,;|•·\u2022،]+/g)
+        .map((s) => String(s || "").trim())
+        .filter((s) => s.length >= 2)
+        .slice(0, 50);
 }
 
 function classifyFromFdaProductTypes(productTypes: unknown): ProductClassification | null {
@@ -63,29 +74,135 @@ export async function POST(req: NextRequest) {
         const requestedFdaEnabled = (body as any)?.fdaEnabled;
         const fdaEnabled = isUltra ? requestedFdaEnabled !== false : true;
 
+        const requestedProfileId = typeof (body as any)?.profileId === "string" ? String((body as any).profileId) : null;
+        let subjectProfileId = requestedProfileId || user.id;
+
+        // Family/Caregiver Mode is Ultra-only.
+        if (!isUltra && subjectProfileId !== user.id) {
+            return NextResponse.json({ error: "Ultra plan required for Family/Caregiver Mode." }, { status: 402 });
+        }
+
         let savedToHistory = false;
         let historyId: string | null = null;
         let memoryInfo: any = null;
+
+        // Owner profile (account-level basics). Used as fallback for "self" subject.
+        let ownerProfileBasics: any = null;
+        try {
+            const { data } = await supabase
+                .from('profiles')
+                .select('username, full_name, gender, age, height, weight')
+                .eq('id', user.id)
+                .maybeSingle();
+            ownerProfileBasics = data || null;
+        } catch (e) {
+            ownerProfileBasics = null;
+        }
+
+        // Resolve subject care-profile (must belong to the current account)
+        let subjectProfile: any = null;
+        try {
+            const { data } = await supabase
+                .from('care_profiles')
+                .select('id, display_name, relationship')
+                .eq('id', subjectProfileId)
+                .eq('owner_user_id', user.id)
+                .maybeSingle();
+            subjectProfile = data || null;
+        } catch (e) {
+            subjectProfile = null;
+        }
+
+        // If invalid/missing, fall back to self.
+        if (!subjectProfile) {
+            subjectProfileId = user.id;
+            try {
+                const { data } = await supabase
+                    .from('care_profiles')
+                    .select('id, display_name, relationship')
+                    .eq('id', subjectProfileId)
+                    .eq('owner_user_id', user.id)
+                    .maybeSingle();
+                subjectProfile = data || null;
+            } catch (e) {
+                subjectProfile = null;
+            }
+        }
+
+        if (!subjectProfile) {
+            subjectProfile = {
+                id: subjectProfileId,
+                display_name:
+                    (ownerProfileBasics as any)?.username ||
+                    (ownerProfileBasics as any)?.full_name ||
+                    String(user.email || "Me"),
+                relationship: subjectProfileId === user.id ? "self" : null,
+            };
+        }
 
         // Ultra-only context: Private AI Profile + Medication Memories
         let analysisContext: any = undefined;
         if (isUltra) {
             try {
-                const { data: privateProfile } = await supabase
-                    .from('user_private_profile')
-                    .select('age, sex, weight, allergies, chronic_conditions, current_medications, notes')
-                    .eq('user_id', user.id)
+                const { data: carePrivate } = await supabase
+                    .from('care_private_profiles')
+                    .select('age, sex, height, weight, allergies, chronic_conditions, current_medications, notes')
+                    .eq('profile_id', subjectProfileId)
                     .maybeSingle();
 
-                const { data: memoriesRows } = await supabase
+                // Legacy fallback for self (if you used the old table before enabling Family Mode)
+                let legacySelfPrivate: any = null;
+                if (!carePrivate && subjectProfileId === user.id) {
+                    const { data: legacy } = await supabase
+                        .from('user_private_profile')
+                        .select('age, sex, weight, allergies, chronic_conditions, current_medications, notes')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+                    legacySelfPrivate = legacy || null;
+                }
+
+                const effectivePrivate = (carePrivate || legacySelfPrivate) as any;
+
+                let memoriesRows: any[] = [];
+                const memoriesRes = await supabase
                     .from('memories_medications')
                     .select('display_name')
                     .eq('user_id', user.id)
+                    .eq('profile_id', subjectProfileId)
                     .order('last_seen_at', { ascending: false })
                     .limit(25);
 
+                if (memoriesRes.error) {
+                    // Legacy fallback (before profile_id existed)
+                    const legacyRes = await supabase
+                        .from('memories_medications')
+                        .select('display_name')
+                        .eq('user_id', user.id)
+                        .order('last_seen_at', { ascending: false })
+                        .limit(25);
+                    memoriesRows = legacyRes.data || [];
+                } else {
+                    memoriesRows = memoriesRes.data || [];
+                }
+
+                const mergedPrivateProfile = {
+                    profile_id: subjectProfileId,
+                    display_name: String(subjectProfile?.display_name || '').trim() || null,
+                    relationship: subjectProfile?.relationship ?? null,
+                    username: (ownerProfileBasics as any)?.username ?? null,
+                    full_name: (ownerProfileBasics as any)?.full_name ?? null,
+                    age: (effectivePrivate as any)?.age ?? (ownerProfileBasics as any)?.age ?? null,
+                    sex: (effectivePrivate as any)?.sex ?? (ownerProfileBasics as any)?.gender ?? null,
+                    height: (effectivePrivate as any)?.height ?? (ownerProfileBasics as any)?.height ?? null,
+                    weight: (effectivePrivate as any)?.weight ?? (ownerProfileBasics as any)?.weight ?? null,
+                    allergies: (effectivePrivate as any)?.allergies ?? null,
+                    chronic_conditions: (effectivePrivate as any)?.chronic_conditions ?? null,
+                    current_medications: (effectivePrivate as any)?.current_medications ?? null,
+                    notes: (effectivePrivate as any)?.notes ?? null,
+                };
+
                 analysisContext = {
-                    privateProfile: privateProfile || null,
+                    privateProfile: mergedPrivateProfile,
                     medicationMemories: (memoriesRows || [])
                         .map((r: any) => String(r.display_name || '').trim())
                         .filter(Boolean),
@@ -185,19 +302,88 @@ export async function POST(req: NextRequest) {
             activeIngredientsDetailed,
         };
 
+        // Ultra-only: Cross-Interaction Guard (target drug vs current meds + memories)
+        let interactionGuard: any = null;
+        let interactionGuardUsed = false;
+        if (isUltra) {
+            const privateProfile = analysisContext?.privateProfile as any;
+            const currentMeds = parseMedicationList(privateProfile?.current_medications);
+            const memoryMeds = Array.isArray(analysisContext?.medicationMemories) ? analysisContext.medicationMemories : [];
+            const candidates = [...currentMeds, ...memoryMeds].map((s) => String(s || "").trim()).filter(Boolean);
+
+            const centralNorm = normalizeMedicationName((analysisWithEnrichment as any)?.drugName || "");
+            const seen = new Set<string>();
+            const otherMeds: string[] = [];
+            for (const med of candidates) {
+                const norm = normalizeMedicationName(med);
+                if (!norm) continue;
+                if (centralNorm && norm === centralNorm) continue;
+                if (seen.has(norm)) continue;
+                seen.add(norm);
+                otherMeds.push(med);
+                if (otherMeds.length >= 12) break;
+            }
+
+            if (otherMeds.length > 0) {
+                try {
+                    const result = await generateInteractionGuard({
+                        language: lang,
+                        targetMedication: analysisWithEnrichment as any,
+                        subjectProfile: privateProfile || null,
+                        otherMedications: otherMeds,
+                    });
+
+                    interactionGuard = {
+                        subject: {
+                            profileId: subjectProfileId,
+                            displayName: subjectProfile?.display_name ?? null,
+                            relationship: subjectProfile?.relationship ?? null,
+                        },
+                        target: {
+                            name: (analysisWithEnrichment as any)?.drugName ?? null,
+                            genericName: (analysisWithEnrichment as any)?.genericName ?? null,
+                        },
+                        ...result,
+                    };
+                    interactionGuardUsed = true;
+                } catch (e) {
+                    console.warn("Interaction guard generation failed:", e);
+                    interactionGuard = null;
+                }
+            }
+        }
+
+        (analysisWithEnrichment as any).interactionGuard = interactionGuard;
+
         // 2. Save Analysis to Supabase (Protected)
         if (analysisWithEnrichment && (analysisWithEnrichment as any).drugName !== "Unknown") {
             try {
-                const { data: historyRow, error: historyError } = await supabase
-                    .from("medication_history")
-                    .insert({
+                const historyPayload: any = {
                     user_id: user.id,
+                    profile_id: subjectProfileId,
                     drug_name: (analysisWithEnrichment as any).drugName || "Target Medication",
                     manufacturer: (analysisWithEnrichment as any).manufacturer || "Generic",
                     analysis_json: analysisWithEnrichment,
-                    })
+                };
+
+                let historyRes = await supabase
+                    .from("medication_history")
+                    .insert(historyPayload)
                     .select("id")
                     .single();
+
+                if (historyRes.error && String(historyRes.error.message || "").toLowerCase().includes("profile_id")) {
+                    const legacyPayload = { ...historyPayload };
+                    delete legacyPayload.profile_id;
+                    historyRes = await supabase
+                        .from("medication_history")
+                        .insert(legacyPayload)
+                        .select("id")
+                        .single();
+                }
+
+                const historyRow = historyRes.data;
+                const historyError = historyRes.error;
 
                 if (!historyError && historyRow?.id) {
                     savedToHistory = true;
@@ -214,12 +400,27 @@ export async function POST(req: NextRequest) {
 
                     if (displayName && displayName !== 'Unknown' && normalizedName) {
                         const nowIso = new Date().toISOString();
-                        const { data: existing } = await supabase
+                        let existing: any = null;
+                        const existingRes = await supabase
                             .from('memories_medications')
                             .select('id, count')
                             .eq('user_id', user.id)
+                            .eq('profile_id', subjectProfileId)
                             .eq('normalized_name', normalizedName)
                             .maybeSingle();
+
+                        if (existingRes.error) {
+                            // Legacy fallback (before profile_id existed)
+                            const legacyRes = await supabase
+                                .from('memories_medications')
+                                .select('id, count')
+                                .eq('user_id', user.id)
+                                .eq('normalized_name', normalizedName)
+                                .maybeSingle();
+                            existing = legacyRes.data || null;
+                        } else {
+                            existing = existingRes.data || null;
+                        }
 
                         if (existing?.id) {
                             const { error: updateError } = await supabase
@@ -240,19 +441,35 @@ export async function POST(req: NextRequest) {
                                 };
                             }
                         } else {
-                            const { data: inserted, error: insertError } = await supabase
-                                .from('memories_medications')
-                                .insert({
+                            const insertPayload: any = {
                                 user_id: user.id,
+                                profile_id: subjectProfileId,
                                 normalized_name: normalizedName,
                                 display_name: displayName,
                                 count: 1,
                                 first_seen_at: nowIso,
                                 last_seen_at: nowIso,
                                 metadata: { source: 'scan', genericName: (analysisWithEnrichment as any).genericName },
-                                })
+                            };
+
+                            let insertRes = await supabase
+                                .from('memories_medications')
+                                .insert(insertPayload)
                                 .select('display_name, normalized_name, count, last_seen_at')
                                 .single();
+
+                            if (insertRes.error && String(insertRes.error.message || "").toLowerCase().includes("profile_id")) {
+                                const legacyPayload = { ...insertPayload };
+                                delete legacyPayload.profile_id;
+                                insertRes = await supabase
+                                    .from('memories_medications')
+                                    .insert(legacyPayload)
+                                    .select('display_name, normalized_name, count, last_seen_at')
+                                    .single();
+                            }
+
+                            const inserted = insertRes.data || null;
+                            const insertError = insertRes.error || null;
 
                             if (!insertError) {
                                 memoryInfo = inserted;
@@ -265,17 +482,38 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        const privateContextForMeta = analysisContext?.privateProfile;
+        const hasAnyPrivateContext =
+            Boolean(isUltra) &&
+            Boolean(privateContextForMeta) &&
+            [
+                (privateContextForMeta as any)?.age,
+                (privateContextForMeta as any)?.sex,
+                (privateContextForMeta as any)?.height,
+                (privateContextForMeta as any)?.weight,
+                (privateContextForMeta as any)?.allergies,
+                (privateContextForMeta as any)?.chronic_conditions,
+                (privateContextForMeta as any)?.current_medications,
+                (privateContextForMeta as any)?.notes,
+            ].some((v) => String(v || "").trim().length > 0);
+
+        const medicationMemoriesCount = Number(analysisContext?.medicationMemories?.length || 0);
+
         return NextResponse.json({
             ...(analysisWithEnrichment as any),
             meta: {
                 plan: userPlan,
                 fdaEnabled,
+                subjectProfileId,
+                subjectProfileName: subjectProfile?.display_name ?? null,
+                subjectRelationship: subjectProfile?.relationship ?? null,
                 savedToHistory,
                 historyId,
-                usedPrivateContext: Boolean(isUltra && analysisContext?.privateProfile),
-                usedMedicationMemories: Boolean(isUltra && (analysisContext?.medicationMemories?.length || 0) > 0),
-                medicationMemoriesCount: Number(analysisContext?.medicationMemories?.length || 0),
-                hasPrivateProfile: Boolean(isUltra && analysisContext?.privateProfile),
+                usedPrivateContext: hasAnyPrivateContext,
+                usedMedicationMemories: Boolean(isUltra && medicationMemoriesCount > 0),
+                medicationMemoriesCount,
+                hasPrivateProfile: hasAnyPrivateContext,
+                usedInteractionGuard: interactionGuardUsed,
                 memory: memoryInfo,
                 usedWebVerification: Boolean(preflight.web?.found),
                 usedFdaVerification: Boolean(fdaEnabled && (((analysisWithEnrichment as any)?.fda?.found) || ((analysisWithEnrichment as any)?.fda?.ndc?.found))),

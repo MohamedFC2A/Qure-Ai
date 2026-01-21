@@ -71,6 +71,8 @@ export async function POST(req: NextRequest) {
         const analysis = body?.analysis;
         const question = body?.question ? String(body.question) : null;
         const path = Array.isArray(body?.path) ? body.path : [];
+        const userProfile = body?.userProfile || null;
+        const requestedProfileId = typeof body?.profileId === "string" ? String(body.profileId) : null;
 
         if (!analysis || typeof analysis !== "object" || !analysis.drugName) {
             return NextResponse.json({ error: "Missing analysis payload" }, { status: 400 });
@@ -87,34 +89,97 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Ultra plan required" }, { status: 402 });
         }
 
+        // Resolve subject profile for Family/Caregiver Mode (Ultra)
+        let subjectProfileId = requestedProfileId || user.id;
+        let subjectProfile: any = null;
+        const subjectRes = await supabase
+            .from("care_profiles")
+            .select("id, display_name, relationship")
+            .eq("id", subjectProfileId)
+            .eq("owner_user_id", user.id)
+            .maybeSingle();
+
+        if (subjectRes.data) {
+            subjectProfile = subjectRes.data;
+        } else {
+            subjectProfileId = user.id;
+            const fallbackRes = await supabase
+                .from("care_profiles")
+                .select("id, display_name, relationship")
+                .eq("id", subjectProfileId)
+                .eq("owner_user_id", user.id)
+                .maybeSingle();
+            subjectProfile = fallbackRes.data || { id: user.id, display_name: "Me", relationship: "self" };
+        }
+
         // Load PRO-only context (RLS will enforce Ultra access via policies)
         let privateProfile: any = null;
         let medicationMemories: any[] = [];
         let recentHistory: any[] = [];
 
         if (isUltra) {
-            const { data: profileRow } = await supabase
-                .from("user_private_profile")
-                .select("age, sex, weight, allergies, chronic_conditions, current_medications, notes")
-                .eq("user_id", user.id)
+            const carePrivateRes = await supabase
+                .from("care_private_profiles")
+                .select("age, sex, height, weight, allergies, chronic_conditions, current_medications, notes")
+                .eq("profile_id", subjectProfileId)
                 .maybeSingle();
-            privateProfile = profileRow || null;
 
-            const { data: memoriesRows } = await supabase
+            privateProfile = carePrivateRes.data || null;
+
+            // Legacy fallback for self (before Family Mode migration)
+            if (!privateProfile && subjectProfileId === user.id) {
+                const { data: legacy } = await supabase
+                    .from("user_private_profile")
+                    .select("age, sex, weight, allergies, chronic_conditions, current_medications, notes")
+                    .eq("user_id", user.id)
+                    .maybeSingle();
+                privateProfile = legacy || null;
+            }
+
+            privateProfile = {
+                ...(privateProfile || {}),
+                profile_id: subjectProfileId,
+                display_name: subjectProfile?.display_name ?? null,
+                relationship: subjectProfile?.relationship ?? null,
+            };
+
+            let memoriesRes = await supabase
                 .from("memories_medications")
                 .select("display_name, count, last_seen_at")
                 .eq("user_id", user.id)
+                .eq("profile_id", subjectProfileId)
                 .order("last_seen_at", { ascending: false })
                 .limit(25);
-            medicationMemories = memoriesRows || [];
 
-            const { data: historyRows } = await supabase
+            if (memoriesRes.error && String(memoriesRes.error.message || "").toLowerCase().includes("profile_id")) {
+                memoriesRes = await supabase
+                    .from("memories_medications")
+                    .select("display_name, count, last_seen_at")
+                    .eq("user_id", user.id)
+                    .order("last_seen_at", { ascending: false })
+                    .limit(25);
+            }
+
+            medicationMemories = memoriesRes.data || [];
+
+            let historyRes: any = await supabase
                 .from("medication_history")
-                .select("drug_name, created_at")
+                .select("drug_name, created_at, profile_id")
                 .eq("user_id", user.id)
+                .eq("profile_id", subjectProfileId)
                 .order("created_at", { ascending: false })
                 .limit(25);
-            recentHistory = historyRows || [];
+
+            if (historyRes.error && String(historyRes.error.message || "").toLowerCase().includes("profile_id")) {
+                historyRes = await supabase
+                    .from("medication_history")
+                    .select("drug_name, created_at")
+                    .eq("user_id", user.id)
+                    .order("created_at", { ascending: false })
+                    .limit(25);
+            }
+
+            recentHistory = historyRes.data || [];
         }
 
         if (!process.env.DEEPSEEK_API_KEY) {
@@ -133,8 +198,12 @@ export async function POST(req: NextRequest) {
 
         const rootQuestion = question || presetToQuestion(preset, language);
         const analysisJson = JSON.stringify(analysis);
+
+        // Merge legacy privateProfile with new userProfile passed from client
+        const mergedProfile = { ...privateProfile, ...userProfile };
+
         const contextJson = JSON.stringify({
-            privateProfile,
+            userProfile: mergedProfile,
             medicationMemories: medicationMemories.map((m) => m.display_name).filter(Boolean),
             recentHistory: recentHistory.map((h) => h.drug_name).filter(Boolean),
         });
@@ -200,7 +269,7 @@ ${rootQuestion}
 
         return NextResponse.json({
             ...parsed,
-            meta: { plan },
+            meta: { plan, subjectProfileId, subjectProfileName: subjectProfile?.display_name ?? null },
             serverDurationMs: Date.now() - startTime,
         });
     } catch (error: any) {

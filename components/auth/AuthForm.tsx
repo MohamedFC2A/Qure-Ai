@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Mail, Lock, Github, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mail, Lock, Github, AlertCircle, Fingerprint, Calendar, User, Ruler, Weight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useRouter } from "next/navigation";
@@ -12,13 +12,34 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { TERMS_VERSION, safeNextPath } from "@/lib/legal/terms";
 
-const schema = z.object({
+const loginSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
-    agreeToTerms: z.boolean().optional(),
 });
 
-type FormData = z.infer<typeof schema>;
+const signupSchema = loginSchema.extend({
+    username: z
+        .string()
+        .min(3, "Username must be at least 3 characters")
+        .max(20, "Username must be 20 characters or less")
+        .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores"),
+    age: z.coerce.number().int().min(1, "Please enter a valid age").max(120, "Please enter a valid age"),
+    gender: z.enum(["male", "female", "other"], { message: "Please select your gender" }),
+    heightCm: z.coerce.number().int().min(50, "Please enter a valid height").max(250, "Please enter a valid height"),
+    weightKg: z.coerce.number().min(10, "Please enter a valid weight").max(500, "Please enter a valid weight"),
+    agreeToTerms: z.literal(true, { message: "You must agree to the Terms & Disclaimer." }),
+});
+
+type AuthFormData = {
+    email: string;
+    password: string;
+    username?: string;
+    age?: number;
+    gender?: "male" | "female" | "other";
+    heightCm?: number;
+    weightKg?: number;
+    agreeToTerms?: boolean;
+};
 
 interface AuthFormProps {
     type: "login" | "signup";
@@ -29,6 +50,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const supabase = createClient();
+    const schema = type === "signup" ? signupSchema : loginSchema;
 
     const getNextPath = () => {
         if (typeof window === "undefined") return "/scan";
@@ -51,23 +73,17 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<FormData>({
-        resolver: zodResolver(schema),
+    } = useForm<AuthFormData>({
+        resolver: zodResolver(schema) as any,
     });
 
-    const onSubmit = async (data: FormData) => {
+    const onSubmit = async (data: AuthFormData) => {
         setIsLoading(true);
         setError(null);
 
         try {
             let result;
             if (type === "signup") {
-                if (!data.agreeToTerms) {
-                    setError("You must agree to the Terms & Disclaimer to create an account.");
-                    setIsLoading(false);
-                    return;
-                }
-
                 const callbackUrl = getCallbackUrl();
                 if (!callbackUrl) throw new Error("Missing callback URL. Please refresh and try again.");
 
@@ -77,6 +93,11 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     options: {
                         emailRedirectTo: callbackUrl,
                         data: {
+                            username: data.username!,
+                            age: data.age!,
+                            gender: data.gender!,
+                            height: `${data.heightCm!} cm`,
+                            weight: `${data.weightKg!} kg`,
                             terms_accepted_at: new Date().toISOString(),
                             terms_version: TERMS_VERSION,
                         },
@@ -189,6 +210,110 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     </div>
 
                     {type === "signup" && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white/80 ml-1">Username</label>
+                                <div className="relative">
+                                    <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                                    <input
+                                        {...register("username")}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                        placeholder="e.g. Alien_X"
+                                        autoComplete="username"
+                                    />
+                                </div>
+                                {errors.username && (
+                                    <p className="text-red-400 text-xs ml-1">{errors.username.message}</p>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/80 ml-1">Age</label>
+                                    <div className="relative">
+                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                                        <input
+                                            {...register("age")}
+                                            type="number"
+                                            inputMode="numeric"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            placeholder="25"
+                                            min={1}
+                                            max={120}
+                                        />
+                                    </div>
+                                    {errors.age && (
+                                        <p className="text-red-400 text-xs ml-1">{errors.age.message}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/80 ml-1">Gender</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                                        <select
+                                            {...register("gender")}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all appearance-none"
+                                            defaultValue=""
+                                        >
+                                            <option value="" disabled className="bg-slate-900 text-white/50">
+                                                Select...
+                                            </option>
+                                            <option value="male" className="bg-slate-900">Male</option>
+                                            <option value="female" className="bg-slate-900">Female</option>
+                                            <option value="other" className="bg-slate-900">Other</option>
+                                        </select>
+                                    </div>
+                                    {errors.gender && (
+                                        <p className="text-red-400 text-xs ml-1">{errors.gender.message}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/80 ml-1">Height (cm)</label>
+                                    <div className="relative">
+                                        <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                                        <input
+                                            {...register("heightCm")}
+                                            type="number"
+                                            inputMode="numeric"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            placeholder="180"
+                                            min={50}
+                                            max={250}
+                                        />
+                                    </div>
+                                    {errors.heightCm && (
+                                        <p className="text-red-400 text-xs ml-1">{errors.heightCm.message}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/80 ml-1">Weight (kg)</label>
+                                    <div className="relative">
+                                        <Weight className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                                        <input
+                                            {...register("weightKg")}
+                                            type="number"
+                                            inputMode="decimal"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            placeholder="75"
+                                            min={10}
+                                            max={500}
+                                            step="0.1"
+                                        />
+                                    </div>
+                                    {errors.weightKg && (
+                                        <p className="text-red-400 text-xs ml-1">{errors.weightKg.message}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {type === "signup" && (
                         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
                             <div className="flex items-start gap-3">
                                 <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
@@ -216,6 +341,9 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             .
                                         </label>
                                     </div>
+                                    {errors.agreeToTerms && (
+                                        <p className="text-red-400 text-xs mt-2">{String(errors.agreeToTerms.message || "")}</p>
+                                    )}
                                 </div>
                             </div>
                         </div>

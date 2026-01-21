@@ -32,6 +32,7 @@ type PersistedScanSession = {
     startedAtMs: number | null;
     completedAtMs: number | null;
     language: "en" | "ar";
+    subjectProfileId: string | null;
     steps: PipelineStep[];
     fileName: string | null;
     processedImageDataUrl: string | null;
@@ -75,6 +76,8 @@ interface ScanContextValue {
     previewSrc: string | null;
     processedImageDataUrl: string | null;
     extractedText: string | null;
+    subjectProfileId: string | null;
+    setSubjectProfileId: (profileId: string) => void;
     isScanning: boolean;
     steps: PipelineStep[];
     totalDuration: string;
@@ -83,7 +86,7 @@ interface ScanContextValue {
     errorAction: ErrorAction;
     setFile: (file: File) => void;
     resetScan: () => void;
-    startScan: () => Promise<void>;
+    startScan: (profileIdOverride?: string) => Promise<void>;
 }
 
 const ScanContext = createContext<ScanContextValue | undefined>(undefined);
@@ -99,6 +102,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
     const [processedImageDataUrl, setProcessedImageDataUrl] = useState<string | null>(null);
     const [extractedText, setExtractedText] = useState<string | null>(null);
+    const [subjectProfileId, setSubjectProfileIdState] = useState<string | null>(null);
 
     const [isScanning, setIsScanning] = useState(false);
     const [steps, setSteps] = useState<PipelineStep[]>(INITIAL_STEPS);
@@ -119,6 +123,10 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const lastPersistAtRef = useRef(0);
 
     const previewSrc = previewObjectUrl || processedImageDataUrl || null;
+
+    const setSubjectProfileId = useCallback((profileId: string) => {
+        setSubjectProfileIdState(String(profileId || "").trim() || null);
+    }, []);
 
     const updateStep = useCallback((id: string, updates: Partial<PipelineStep>) => {
         setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
@@ -226,7 +234,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         []
     );
 
-    const startScan = useCallback(async () => {
+    const startScan = useCallback(async (profileIdOverride?: string) => {
         if (runningRef.current) return;
 
         if (!user) {
@@ -339,10 +347,12 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             const analyzeStart = Date.now();
             updateStep("analyze", { status: "running", startTime: analyzeStart });
 
+            const effectiveProfileId = profileIdOverride || subjectProfileId || user.id;
+
             const analyzeResponse = await fetch("/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: ocrText, language: resultsLanguage, fdaEnabled: fdaDrugsEnabled }),
+                body: JSON.stringify({ text: ocrText, language: resultsLanguage, fdaEnabled: fdaDrugsEnabled, profileId: effectiveProfileId }),
                 signal: controller.signal,
             });
 
@@ -417,6 +427,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         file,
         preprocessImage,
         processedImageDataUrl,
+        subjectProfileId,
         fdaDrugsEnabled,
         resultsLanguage,
         runLocalOcr,
@@ -477,6 +488,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             setErrorAction(session.errorAction || null);
             setStartedAtMs(session.startedAtMs || null);
             setCompletedAtMs(session.completedAtMs || null);
+            setSubjectProfileIdState(session.subjectProfileId || null);
 
             if (session.status === "running") {
                 // Normalize step statuses based on what we can actually resume from.
@@ -532,6 +544,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             startedAtMs,
             completedAtMs,
             language: resultsLanguage === "ar" ? "ar" : "en",
+            subjectProfileId: subjectProfileId || (user ? user.id : null),
             steps,
             fileName: file?.name || null,
             processedImageDataUrl,
@@ -558,6 +571,8 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         processedImageDataUrl,
         resultsLanguage,
         startedAtMs,
+        subjectProfileId,
+        user,
         steps,
     ]);
 
@@ -577,6 +592,8 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             previewSrc,
             processedImageDataUrl,
             extractedText,
+            subjectProfileId,
+            setSubjectProfileId,
             isScanning,
             steps,
             totalDuration,
@@ -587,7 +604,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             resetScan,
             startScan,
         }),
-        [errorAction, errorMsg, extractedText, file, finalResult, isScanning, previewSrc, processedImageDataUrl, resetScan, setFile, startScan, steps, totalDuration]
+        [errorAction, errorMsg, extractedText, file, finalResult, isScanning, previewSrc, processedImageDataUrl, resetScan, setFile, setSubjectProfileId, startScan, steps, subjectProfileId, totalDuration]
     );
 
     return <ScanContext.Provider value={value}>{children}</ScanContext.Provider>;

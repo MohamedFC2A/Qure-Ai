@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
-import { User, CreditCard, Settings, Shield, Activity, Gift, LogOut, ChevronRight, Lock, Database } from "lucide-react";
+import { User, Users, CreditCard, Settings, Shield, Activity, Gift, LogOut, ChevronRight, Lock, Database, Trash2, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/context/SettingsContext";
 import { cn } from "@/lib/utils";
@@ -12,15 +12,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
-    const { user, plan, credits, loading: userLoading, refreshUser } = useUser();
+    const { user, profile, plan, credits, loading: userLoading, refreshUser } = useUser();
     const { resultsLanguage, setResultsLanguage, fdaDrugsEnabled, setFdaDrugsEnabled } = useSettings();
-    const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'private' | 'memories'>('account');
+    const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'family' | 'private' | 'memories'>('account');
     const supabase = createClient();
     const router = useRouter();
 
     const [redeemCode, setRedeemCode] = useState("");
     const [redeemMsg, setRedeemMsg] = useState("");
     const [redeemLoading, setRedeemLoading] = useState(false);
+
+    // Basic Profile (stored in `profiles` for all plans)
+    const [basicProfile, setBasicProfile] = useState({
+        username: "",
+        age: "",
+        gender: "",
+        heightCm: "",
+        weightKg: "",
+    });
+    const [basicSaving, setBasicSaving] = useState(false);
+    const [basicSavedMsg, setBasicSavedMsg] = useState<string | null>(null);
 
     // Private Profile State
     const [privateProfile, setPrivateProfile] = useState<any>({});
@@ -32,20 +43,59 @@ export default function ProfilePage() {
     // Transactions State
     const [transactions, setTransactions] = useState<any[]>([]);
 
+    // Family/Caregiver Mode (Ultra): sub-profiles under the same account
+    const [careProfiles, setCareProfiles] = useState<Array<{ id: string; display_name: string; relationship?: string | null }>>([]);
+    const [careLoading, setCareLoading] = useState(false);
+    const [activeCareProfileId, setActiveCareProfileId] = useState<string | null>(null);
+    const [careName, setCareName] = useState("");
+    const [careRelation, setCareRelation] = useState("");
+    const [careMsg, setCareMsg] = useState<string | null>(null);
+
     useEffect(() => {
         if (!userLoading && !user) {
             router.push('/login');
         }
-        if (user && activeTab === 'private' && plan === 'ultra') {
-            fetchPrivateProfile();
-        }
-        if (user && activeTab === 'memories' && plan === 'ultra') {
-            fetchMemories();
-        }
-        if (user && activeTab === 'credits') {
+    }, [router, user, userLoading]);
+
+    useEffect(() => {
+        if (!user) return;
+        fetchCareProfiles();
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!user) return;
+        if (activeTab === 'credits') {
             fetchTransactions();
         }
-    }, [user, userLoading, activeTab, plan]);
+    }, [activeTab, user?.id]);
+
+    useEffect(() => {
+        if (!user) return;
+        if (plan !== 'ultra') return;
+        if (!activeCareProfileId) return;
+
+        if (activeTab === 'private') {
+            fetchPrivateProfile(activeCareProfileId);
+        }
+        if (activeTab === 'memories') {
+            fetchMemories(activeCareProfileId);
+        }
+    }, [activeCareProfileId, activeTab, plan, user?.id]);
+
+    useEffect(() => {
+        if (!user) return;
+        const num = (value?: string) => {
+            const m = String(value || "").match(/[\d.]+/);
+            return m ? m[0] : "";
+        };
+        setBasicProfile({
+            username: String(profile?.username || ""),
+            age: profile?.age == null ? "" : String(profile.age),
+            gender: String(profile?.gender || ""),
+            heightCm: num(profile?.height),
+            weightKg: num(profile?.weight),
+        });
+    }, [user, profile]);
 
     const fetchTransactions = async () => {
         const { data, error } = await supabase
@@ -85,45 +135,261 @@ export default function ProfilePage() {
         }
     };
 
-    const fetchPrivateProfile = async () => {
-        const { data, error } = await supabase
-            .from('user_private_profile')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle();
+    const saveBasicProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+
+        setBasicSaving(true);
+        setBasicSavedMsg(null);
+
+        const payload = {
+            username: basicProfile.username.trim() || null,
+            age: basicProfile.age ? Number(basicProfile.age) : null,
+            gender: basicProfile.gender || null,
+            height: basicProfile.heightCm ? `${basicProfile.heightCm} cm` : null,
+            weight: basicProfile.weightKg ? `${basicProfile.weightKg} kg` : null,
+            updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
+            .from('profiles')
+            .update(payload)
+            .eq('id', user.id);
+
+        setBasicSaving(false);
+
         if (error) {
-            console.error("Error fetching private profile:", error);
+            console.error("Error saving basic profile:", error);
+            setBasicSavedMsg(error.message || "Failed to save profile.");
             return;
         }
-        if (data) setPrivateProfile(data);
+
+        setBasicSavedMsg("Saved!");
+        await refreshUser();
+    };
+
+    const fetchCareProfiles = async () => {
+        if (!user) return;
+        setCareLoading(true);
+        setCareMsg(null);
+        try {
+            const res = await supabase
+                .from('care_profiles')
+                .select('id, display_name, relationship, created_at')
+                .eq('owner_user_id', user.id)
+                .order('created_at', { ascending: true });
+
+            if (res.error) {
+                // If DB isn't migrated yet, fall back to "self" only.
+                setCareProfiles([{ id: user.id, display_name: String(user.email || "Me"), relationship: "self" }]);
+                setActiveCareProfileId(user.id);
+                return;
+            }
+
+            const rows = (res.data || []).map((r: any) => ({
+                id: String(r.id),
+                display_name: String(r.display_name || "Me"),
+                relationship: r.relationship ?? null,
+            }));
+
+            rows.sort((a, b) => {
+                const aSelf = a.id === user.id || a.relationship === "self";
+                const bSelf = b.id === user.id || b.relationship === "self";
+                if (aSelf && !bSelf) return -1;
+                if (!aSelf && bSelf) return 1;
+                return a.display_name.localeCompare(b.display_name);
+            });
+
+            setCareProfiles(rows.length ? rows : [{ id: user.id, display_name: String(user.email || "Me"), relationship: "self" }]);
+
+            const saved = typeof window !== "undefined" ? localStorage.getItem("qure_active_care_profile") : null;
+            const preferred = saved && rows.some((p) => p.id === saved) ? saved : null;
+            const next = preferred || activeCareProfileId || user.id;
+            const valid = rows.some((p) => p.id === next) ? next : (rows[0]?.id || user.id);
+            setActiveCareProfileId(valid);
+        } finally {
+            setCareLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!activeCareProfileId) return;
+        try {
+            localStorage.setItem("qure_active_care_profile", activeCareProfileId);
+        } catch {
+            // ignore
+        }
+    }, [activeCareProfileId]);
+
+    const addCareProfile = async () => {
+        if (!user) return;
+        if (plan !== 'ultra') return;
+
+        const name = careName.trim();
+        if (!name) return;
+
+        setCareLoading(true);
+        setCareMsg(null);
+        try {
+            const res = await supabase
+                .from('care_profiles')
+                .insert({
+                    owner_user_id: user.id,
+                    display_name: name,
+                    relationship: careRelation.trim() || null,
+                    updated_at: new Date().toISOString(),
+                })
+                .select('id, display_name, relationship')
+                .single();
+
+            if (res.error) {
+                setCareMsg(res.error.message || "Failed to add profile.");
+                return;
+            }
+
+            setCareName("");
+            setCareRelation("");
+            await fetchCareProfiles();
+            if (res.data?.id) setActiveCareProfileId(String(res.data.id));
+        } finally {
+            setCareLoading(false);
+        }
+    };
+
+    const deleteCareProfile = async (profileId: string) => {
+        if (!user) return;
+        if (plan !== 'ultra') return;
+        if (profileId === user.id) return;
+
+        setCareLoading(true);
+        setCareMsg(null);
+        try {
+            const { error } = await supabase
+                .from('care_profiles')
+                .delete()
+                .eq('id', profileId)
+                .eq('owner_user_id', user.id);
+
+            if (error) {
+                setCareMsg(error.message || "Failed to delete profile.");
+                return;
+            }
+
+            await fetchCareProfiles();
+            setActiveCareProfileId(user.id);
+        } finally {
+            setCareLoading(false);
+        }
+    };
+
+    const fetchPrivateProfile = async (profileId: string) => {
+        if (!user) return;
+        const pid = String(profileId || "").trim() || user.id;
+
+        const defaults: any = {
+            profile_id: pid,
+            age: "",
+            sex: "",
+            height: "",
+            weight: "",
+            allergies: "",
+            chronic_conditions: "",
+            current_medications: "",
+            notes: "",
+        };
+
+        if (pid === user.id) {
+            defaults.age = profile?.age == null ? "" : String(profile.age);
+            defaults.sex = String(profile?.gender || "");
+            defaults.height = String(profile?.height || "");
+            defaults.weight = String(profile?.weight || "");
+        }
+
+        const res = await supabase
+            .from('care_private_profiles')
+            .select('*')
+            .eq('profile_id', pid)
+            .maybeSingle();
+
+        let row: any = res.data || null;
+
+        if ((!row || res.error) && pid === user.id) {
+            // Legacy fallback (before Family Mode)
+            const legacy = await supabase
+                .from('user_private_profile')
+                .select('*')
+                .eq('user_id', user.id)
+                .maybeSingle();
+            row = legacy.data || row;
+        }
+
+        if (res.error && !String(res.error.message || "").toLowerCase().includes("care_private_profiles")) {
+            console.error("Error fetching private profile:", res.error);
+        }
+
+        setPrivateProfile({ ...defaults, ...(row || {}) });
     };
 
     const savePrivateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!user) return;
+        if (plan !== 'ultra') return;
+
+        const pid = activeCareProfileId || user.id;
+
         setProfileSaving(true);
+        const payload = {
+            profile_id: pid,
+            age: privateProfile.age ? Number(privateProfile.age) : null,
+            sex: privateProfile.sex || null,
+            height: privateProfile.height || null,
+            weight: privateProfile.weight || null,
+            allergies: privateProfile.allergies || null,
+            chronic_conditions: privateProfile.chronic_conditions || null,
+            current_medications: privateProfile.current_medications || null,
+            notes: privateProfile.notes || null,
+            updated_at: new Date().toISOString(),
+        };
+
         const { error } = await supabase
-            .from('user_private_profile')
-            .upsert({ user_id: user.id, ...privateProfile, updated_at: new Date() });
+            .from('care_private_profiles')
+            .upsert(payload);
         setProfileSaving(false);
         if (!error) alert("Profile saved!");
+        if (!error) fetchPrivateProfile(pid);
     };
 
-    const fetchMemories = async () => {
-        const { data, error } = await supabase
+    const fetchMemories = async (profileId: string) => {
+        if (!user) return;
+        const pid = String(profileId || "").trim() || user.id;
+
+        let res = await supabase
             .from('memories_medications')
             .select('*')
             .eq('user_id', user.id)
+            .eq('profile_id', pid)
             .order('last_seen_at', { ascending: false });
-        if (error) {
-            console.error("Error fetching memories:", error);
+
+        if (res.error && String(res.error.message || "").toLowerCase().includes("profile_id")) {
+            // Legacy fallback (before profile_id existed)
+            res = await supabase
+                .from('memories_medications')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('last_seen_at', { ascending: false });
+        }
+
+        if (res.error) {
+            console.error("Error fetching memories:", res.error);
             return;
         }
-        if (data) setMemories(data);
+        setMemories(res.data || []);
     };
 
     const deleteMemory = async (id: string) => {
+        if (!user) return;
         await supabase.from('memories_medications').delete().eq('id', id);
-        fetchMemories();
+        if (activeCareProfileId) fetchMemories(activeCareProfileId);
     };
 
 
@@ -132,6 +398,7 @@ export default function ProfilePage() {
         { id: 'credits', label: 'Credits & Plans', icon: CreditCard },
         { id: 'settings', label: 'App Settings', icon: Settings },
         { id: 'fda', label: 'FDA Drugs', icon: Database, pro: true },
+        { id: 'family', label: 'Family Care', icon: Users, pro: true },
         { id: 'private', label: 'Private AI Profile', icon: Shield, pro: true },
         { id: 'memories', label: 'Medication Memories', icon: Activity, pro: true },
     ];
@@ -198,6 +465,96 @@ export default function ProfilePage() {
                                         <p className="text-xs font-mono text-white/60 truncate">{user?.id}</p>
                                     </div>
                                 </div>
+                            </GlassCard>
+
+                            <GlassCard className="p-6">
+                                <h3 className="text-lg font-bold text-white mb-2">Basic Profile</h3>
+                                <p className="text-white/50 text-sm mb-6">
+                                    Saved for all users. Used to personalize results and auto-fill your Private AI Profile when you upgrade.
+                                </p>
+
+                                <form onSubmit={saveBasicProfile} className="space-y-4 max-w-2xl">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-white/60 mb-1 block">Username</label>
+                                            <input
+                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                value={basicProfile.username}
+                                                onChange={(e) => setBasicProfile({ ...basicProfile, username: e.target.value })}
+                                                placeholder="e.g. Alien_X"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-white/60 mb-1 block">Age</label>
+                                            <input
+                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                type="number"
+                                                inputMode="numeric"
+                                                value={basicProfile.age}
+                                                onChange={(e) => setBasicProfile({ ...basicProfile, age: e.target.value })}
+                                                placeholder="25"
+                                                min={1}
+                                                max={120}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-white/60 mb-1 block">Gender</label>
+                                            <select
+                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                value={basicProfile.gender}
+                                                onChange={(e) => setBasicProfile({ ...basicProfile, gender: e.target.value })}
+                                            >
+                                                <option value="">Select...</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-white/60 mb-1 block">Height (cm)</label>
+                                            <input
+                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                type="number"
+                                                inputMode="numeric"
+                                                value={basicProfile.heightCm}
+                                                onChange={(e) => setBasicProfile({ ...basicProfile, heightCm: e.target.value })}
+                                                placeholder="180"
+                                                min={50}
+                                                max={250}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-white/60 mb-1 block">Weight (kg)</label>
+                                            <input
+                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                type="number"
+                                                inputMode="decimal"
+                                                value={basicProfile.weightKg}
+                                                onChange={(e) => setBasicProfile({ ...basicProfile, weightKg: e.target.value })}
+                                                placeholder="75"
+                                                min={10}
+                                                max={500}
+                                                step="0.1"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {basicSavedMsg && (
+                                        <p className={cn("text-sm", basicSavedMsg === "Saved!" ? "text-green-400" : "text-red-400")}>
+                                            {basicSavedMsg}
+                                        </p>
+                                    )}
+
+                                    <div className="pt-2">
+                                        <Button type="submit" disabled={basicSaving}>
+                                            {basicSaving ? "Saving..." : "Save Basic Profile"}
+                                        </Button>
+                                    </div>
+                                </form>
                             </GlassCard>
                         </div>
                     )}
@@ -394,6 +751,122 @@ export default function ProfilePage() {
                         </div>
                     )}
 
+                    {/* FAMILY TAB (ULTRA) */}
+                    {activeTab === 'family' && (
+                        <div className="relative">
+                            {plan !== 'ultra' && (
+                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/50 flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
+                                    <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
+                                        <Lock className="w-6 h-6 text-amber-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">Ultra Feature</h3>
+                                    <p className="text-white/60 mb-6 max-w-sm">
+                                        Family/Caregiver Mode lets you create sub-profiles (Dad, Child, Grandma…) with separate History, Memories, and Private AI Context.
+                                    </p>
+                                    <Link href="/pricing"><Button variant="primary" className="bg-amber-600 hover:bg-amber-500">Upgrade to Ultra</Button></Link>
+                                </div>
+                            )}
+
+                            <GlassCard className={cn("p-6", plan !== 'ultra' && "opacity-20 pointer-events-none")}>
+                                <div className="flex items-start justify-between gap-4 mb-6">
+                                    <div className="min-w-0">
+                                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                            <Users className="w-5 h-5 text-cyan-300" /> Family Care
+                                        </h2>
+                                        <p className="text-white/50 text-sm mt-1">
+                                            Pick an active profile for Private AI + Memories, and create new family members.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={fetchCareProfiles}
+                                        className="text-xs text-white/50 hover:text-white transition-colors"
+                                        disabled={careLoading}
+                                    >
+                                        Refresh
+                                    </button>
+                                </div>
+
+                                {careMsg && (
+                                    <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm">
+                                        {careMsg}
+                                    </div>
+                                )}
+
+                                <div className="grid gap-3">
+                                    {careProfiles.map((p) => {
+                                        const isSelf = user?.id === p.id || p.relationship === "self";
+                                        const isActive = activeCareProfileId === p.id;
+                                        return (
+                                            <div key={p.id} className={cn(
+                                                "flex items-center justify-between gap-3 p-4 rounded-xl border",
+                                                isActive ? "bg-cyan-500/10 border-cyan-500/25" : "bg-white/5 border-white/10"
+                                            )}>
+                                                <div className="min-w-0">
+                                                    <p className="text-white font-semibold truncate">{p.display_name}</p>
+                                                    <p className="text-xs text-white/45 mt-1 truncate">
+                                                        {p.relationship || (isSelf ? "self" : "family")}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className={cn("border-white/15 hover:bg-white/10", isActive ? "text-cyan-100" : "text-white/70")}
+                                                        onClick={() => setActiveCareProfileId(p.id)}
+                                                    >
+                                                        {isActive ? "Active" : "Use"}
+                                                    </Button>
+                                                    {!isSelf && (
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="border-red-500/25 text-red-200 hover:bg-red-500/10"
+                                                            onClick={() => deleteCareProfile(p.id)}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="mt-6 pt-6 border-t border-white/10">
+                                    <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                                        <Plus className="w-4 h-4 text-cyan-300" /> Add family member
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <input
+                                            value={careName}
+                                            onChange={(e) => setCareName(e.target.value)}
+                                            placeholder="Name (e.g. Dad)"
+                                            className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-cyan-500/50"
+                                        />
+                                        <input
+                                            value={careRelation}
+                                            onChange={(e) => setCareRelation(e.target.value)}
+                                            placeholder="Relationship (optional)"
+                                            className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-cyan-500/50"
+                                        />
+                                    </div>
+                                    <div className="mt-3">
+                                        <Button
+                                            type="button"
+                                            onClick={addCareProfile}
+                                            disabled={careLoading || !careName.trim()}
+                                        >
+                                            {careLoading ? "..." : "Create profile"}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </GlassCard>
+                        </div>
+                    )}
+
                     {/* PRIVATE PROFILE TAB (PRO) */}
                     {activeTab === 'private' && (
                         <div className="relative">
@@ -409,11 +882,36 @@ export default function ProfilePage() {
                             )}
 
                             <GlassCard className={cn("p-6", plan !== 'ultra' && "opacity-20 pointer-events-none")}>
-                                <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><Shield className="w-5 h-5 text-amber-400" /> Private AI Context</h2>
-                                <p className="text-white/50 text-sm mb-6">Data stored here is encrypted and only used during analysis to check for interactions.</p>
+                                <div className="flex items-start justify-between gap-4 mb-4">
+                                    <div className="min-w-0">
+                                        <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                            <Shield className="w-5 h-5 text-amber-400" /> Private AI Context
+                                        </h2>
+                                        <p className="text-white/50 text-sm">
+                                            Data stored here is used during analysis to check interactions and personalize warnings.
+                                        </p>
+                                    </div>
+
+                                    {careProfiles.length > 0 && (
+                                        <div className="shrink-0 min-w-[180px]">
+                                            <label className="text-[11px] text-white/50 block mb-1">Active profile</label>
+                                            <select
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                                value={activeCareProfileId || ""}
+                                                onChange={(e) => setActiveCareProfileId(e.target.value)}
+                                            >
+                                                {careProfiles.map((p) => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.display_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
 
                                 <form onSubmit={savePrivateProfile} className="space-y-4 max-w-2xl">
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">Age</label>
                                             <input className="w-full bg-black/20 border border-white/10 rounded p-2 text-white" type="number"
@@ -426,8 +924,34 @@ export default function ProfilePage() {
                                                 <option value="">Select...</option>
                                                 <option value="male">Male</option>
                                                 <option value="female">Female</option>
+                                                <option value="other">Other</option>
                                             </select>
                                         </div>
+                                        <div>
+                                            <label className="text-xs text-white/60 mb-1 block">Height</label>
+                                            <input
+                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                placeholder="e.g. 180 cm"
+                                                value={privateProfile.height || ''}
+                                                onChange={e => setPrivateProfile({ ...privateProfile, height: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-white/60 mb-1 block">Weight</label>
+                                            <input className="w-full bg-black/20 border border-white/10 rounded p-2 text-white" placeholder="e.g. 75 kg"
+                                                value={privateProfile.weight || ''} onChange={e => setPrivateProfile({ ...privateProfile, weight: e.target.value })} />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs text-white/60 mb-1 block">Current medications</label>
+                                        <textarea
+                                            className="w-full bg-black/20 border border-white/10 rounded p-2 text-white h-24"
+                                            placeholder="Separate items by comma or new line (e.g. Metformin, Warfarin...)"
+                                            value={privateProfile.current_medications || ''}
+                                            onChange={e => setPrivateProfile({ ...privateProfile, current_medications: e.target.value })}
+                                        />
+                                        <p className="text-[11px] text-white/35 mt-1">Used by Cross-Interaction Guard during scans.</p>
                                     </div>
                                     <div>
                                         <label className="text-xs text-white/60 mb-1 block">Known Allergies</label>
@@ -438,6 +962,15 @@ export default function ProfilePage() {
                                         <label className="text-xs text-white/60 mb-1 block">Chronic Conditions</label>
                                         <textarea className="w-full bg-black/20 border border-white/10 rounded p-2 text-white h-20" placeholder="e.g. Diabetes, Hypertension"
                                             value={privateProfile.chronic_conditions || ''} onChange={e => setPrivateProfile({ ...privateProfile, chronic_conditions: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-white/60 mb-1 block">Notes (optional)</label>
+                                        <textarea
+                                            className="w-full bg-black/20 border border-white/10 rounded p-2 text-white h-20"
+                                            placeholder="Anything important for the AI to know (e.g. pregnancy, kidney issues...)"
+                                            value={privateProfile.notes || ''}
+                                            onChange={e => setPrivateProfile({ ...privateProfile, notes: e.target.value })}
+                                        />
                                     </div>
                                     <div className="pt-4">
                                         <Button type="submit" disabled={profileSaving}>
@@ -464,8 +997,33 @@ export default function ProfilePage() {
                             )}
 
                             <GlassCard className={cn("p-6", plan !== 'ultra' && "opacity-20 pointer-events-none")}>
-                                <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><Activity className="w-5 h-5 text-amber-400" /> Medication Memories</h2>
-                                <p className="text-white/50 text-sm mb-6">Automatically populated from your scans. Used to check for drug interactions.</p>
+                                <div className="flex items-start justify-between gap-4 mb-4">
+                                    <div className="min-w-0">
+                                        <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                            <Activity className="w-5 h-5 text-amber-400" /> Medication Memories
+                                        </h2>
+                                        <p className="text-white/50 text-sm">
+                                            Automatically populated from your scans. Used by Cross-Interaction Guard.
+                                        </p>
+                                    </div>
+
+                                    {careProfiles.length > 0 && (
+                                        <div className="shrink-0 min-w-[180px]">
+                                            <label className="text-[11px] text-white/50 block mb-1">Active profile</label>
+                                            <select
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                                value={activeCareProfileId || ""}
+                                                onChange={(e) => setActiveCareProfileId(e.target.value)}
+                                            >
+                                                {careProfiles.map((p) => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.display_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {memories.length === 0 ? (
                                     <div className="text-center py-12 border border-dashed border-white/10 rounded-lg">

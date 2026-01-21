@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { MedicalResultCard } from "@/components/scanner/MedicalResultCard";
-import { Activity, Calendar, ChevronRight, Clock, Pill, Search, X } from "lucide-react";
+import { Activity, Calendar, ChevronRight, Pill, Search, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -14,38 +14,82 @@ export default function HistoryPage() {
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [userId, setUserId] = useState<string | null>(null);
+    const [careProfiles, setCareProfiles] = useState<Array<{ id: string; display_name: string }>>([]);
+    const [profileFilter, setProfileFilter] = useState<string>("all"); // "all" | profile_id
+
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    setUserId(null);
+                    setHistory([]);
+                    return;
+                }
+                setUserId(user.id);
+
+                const careRes = await supabase
+                    .from("care_profiles")
+                    .select("id, display_name")
+                    .eq("owner_user_id", user.id);
+
+                const rows = (careRes.data || []).map((r: any) => ({ id: String(r.id), display_name: String(r.display_name || "Me") }));
+                rows.sort((a, b) => (a.id === user.id ? -1 : b.id === user.id ? 1 : a.display_name.localeCompare(b.display_name)));
+                setCareProfiles(rows.length ? rows : [{ id: user.id, display_name: "Me" }]);
+
+                const saved = typeof window !== "undefined" ? localStorage.getItem("qure_active_care_profile") : null;
+                const preferred = saved && rows.some((p) => p.id === saved) ? saved : null;
+                setProfileFilter(preferred || "all");
+            } catch (err) {
+                console.error("History init error:", err);
+                setHistory([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        init();
+    }, []);
 
     useEffect(() => {
         const fetchHistory = async () => {
+            if (!userId) return;
+            setLoading(true);
             try {
-                // Get current user
-                const { data: { user } } = await supabase.auth.getUser();
+                let res = await supabase
+                    .from("medication_history")
+                    .select("*")
+                    .eq("user_id", userId)
+                    .order("created_at", { ascending: false });
 
-                if (!user) {
+                if (profileFilter !== "all") {
+                    res = await supabase
+                        .from("medication_history")
+                        .select("*")
+                        .eq("user_id", userId)
+                        .eq("profile_id", profileFilter)
+                        .order("created_at", { ascending: false });
+
+                    if (res.error && String(res.error.message || "").toLowerCase().includes("profile_id")) {
+                        // Legacy fallback (before profile_id existed)
+                        res = await supabase
+                            .from("medication_history")
+                            .select("*")
+                            .eq("user_id", userId)
+                            .order("created_at", { ascending: false });
+                    }
+                } else if (res.error && String(res.error.message || "").toLowerCase().includes("profile_id")) {
+                    // keep legacy working
+                }
+
+                if (res.error) {
+                    console.error("Error fetching history:", res.error.message, res.error.details);
                     setHistory([]);
                     return;
                 }
 
-                const { data, error } = await supabase
-                    .from("medication_history")
-                    .select("*")
-                    // Explicitly filter for current user (RLS does this too, but this is safer)
-                    .eq('user_id', user.id)
-                    .order("created_at", { ascending: false });
-
-                if (error) {
-                    console.error("Error fetching history:", error.message, error.details);
-
-                    if (error.message.includes("Could not find the table") || error.code === "PGRST204") {
-                        setHistory([]);
-                        // In a real app we might show a setup banner, but for now we'll just log clearly
-                        // alert("Database Setup Required...");
-                    } else {
-                        setHistory([]);
-                    }
-                } else {
-                    setHistory(data || []);
-                }
+                setHistory(res.data || []);
             } catch (err) {
                 console.error("Unexpected error:", err);
                 setHistory([]);
@@ -55,7 +99,7 @@ export default function HistoryPage() {
         };
 
         fetchHistory();
-    }, []);
+    }, [profileFilter, supabase, userId]);
 
     const filteredHistory = history.filter(item =>
         item.drug_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -74,6 +118,27 @@ export default function HistoryPage() {
                         </h1>
                         <p className="text-white/50 text-lg">Your personal pharmaceutical database.</p>
                     </div>
+
+                    {userId && (
+                        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-2 text-white/60 text-sm">
+                                <Users className="w-4 h-4 text-cyan-300" />
+                                <span>Profile filter</span>
+                            </div>
+                            <select
+                                value={profileFilter}
+                                onChange={(e) => setProfileFilter(e.target.value)}
+                                className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full sm:w-auto focus:outline-none focus:border-cyan-500/50"
+                            >
+                                <option value="all">All profiles</option>
+                                {careProfiles.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.display_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {/* Redesigned Search Bar */}
                     <div className="relative w-full">
@@ -124,10 +189,17 @@ export default function HistoryPage() {
                                         <div className="p-3 rounded-full bg-white/5 border border-white/10 group-hover:scale-110 transition-transform">
                                             <Pill className="w-6 h-6 text-liquid-primary" />
                                         </div>
-                                        <span className="text-xs text-white/40 font-mono flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
-                                            {new Date(item.created_at).toLocaleDateString()}
-                                        </span>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className="text-xs text-white/40 font-mono flex items-center gap-1">
+                                                <Calendar className="w-3 h-3" />
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </span>
+                                            {profileFilter === "all" && (
+                                                <span className="text-[10px] text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full max-w-[160px] truncate">
+                                                    {careProfiles.find((p) => p.id === String(item.profile_id || item.user_id || ""))?.display_name || "Me"}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <h3 className="text-xl font-bold text-white mb-1 group-hover:text-liquid-primary transition-colors">

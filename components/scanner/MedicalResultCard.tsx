@@ -58,6 +58,32 @@ interface MedicalData {
         };
     };
     confidenceScore?: number;
+    interactionGuard?: null | {
+        subject?: {
+            profileId?: string | null;
+            displayName?: string | null;
+            relationship?: string | null;
+        };
+        target?: {
+            name?: string | null;
+            genericName?: string | null;
+        };
+        overallRisk?: string;
+        items?: Array<{
+            otherMedication: string;
+            severity: "safe" | "caution" | "danger";
+            confidence?: number;
+            headline?: string;
+            summary?: string;
+            mechanism?: string;
+            whatToDo?: string[];
+            monitoring?: string[];
+            redFlags?: string[];
+        }>;
+        disclaimer?: string;
+        generatedAt?: string;
+        serverDurationMs?: number;
+    };
     fda?: (OpenFdaLabelSnapshot & { serverDurationMs?: number }) | null;
     web?: null | {
         found?: boolean;
@@ -77,10 +103,14 @@ interface MedicalData {
         fdaEnabled?: boolean;
         savedToHistory?: boolean;
         historyId?: string | null;
+        subjectProfileId?: string | null;
+        subjectProfileName?: string | null;
+        subjectRelationship?: string | null;
         usedPrivateContext?: boolean;
         usedMedicationMemories?: boolean;
         medicationMemoriesCount?: number;
         hasPrivateProfile?: boolean;
+        usedInteractionGuard?: boolean;
         usedWebVerification?: boolean;
         usedFdaVerification?: boolean;
         memory?: {
@@ -112,7 +142,7 @@ interface AiTreeNode {
 type UltraSafetyTab = 'precautions' | 'interactions' | 'sideEffects' | 'overdose' | 'seekHelp';
 
 export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
-    const { user, plan } = useUser();
+    const { user, plan, profile } = useUser();
     const { resultsLanguage, fdaDrugsEnabled } = useSettings();
 
     const exportRef = useRef<HTMLDivElement | null>(null);
@@ -139,6 +169,86 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const [safetyTab, setSafetyTab] = useState<UltraSafetyTab>('interactions');
     const [safetyShowAll, setSafetyShowAll] = useState<Record<string, boolean>>({});
     const [showAllIngredients, setShowAllIngredients] = useState(false);
+
+    const interactionGuard = (data as any)?.interactionGuard as MedicalData["interactionGuard"] | undefined;
+    const guardItems = useMemo(() => {
+        const list = (interactionGuard as any)?.items;
+        return Array.isArray(list) ? (list as any[]).filter((x) => x && x.otherMedication) : [];
+    }, [interactionGuard]);
+
+    const [selectedGuardKey, setSelectedGuardKey] = useState<string | null>(null);
+
+    useEffect(() => {
+        const first = guardItems[0]?.otherMedication ? String(guardItems[0].otherMedication) : null;
+        setSelectedGuardKey(first);
+    }, [guardItems]);
+
+    const selectedGuardItem = useMemo(() => {
+        if (!selectedGuardKey) return guardItems[0] || null;
+        return guardItems.find((it: any) => String(it.otherMedication) === String(selectedGuardKey)) || guardItems[0] || null;
+    }, [guardItems, selectedGuardKey]);
+
+    const guardCounts = useMemo(() => {
+        const counts = { safe: 0, caution: 0, danger: 0 };
+        for (const it of guardItems as any[]) {
+            const sev = String(it?.severity || "caution").toLowerCase();
+            if (sev === "safe") counts.safe += 1;
+            else if (sev === "danger") counts.danger += 1;
+            else counts.caution += 1;
+        }
+        return counts;
+    }, [guardItems]);
+
+    const graphNodes = useMemo(() => (guardItems as any[]).slice(0, 10), [guardItems]);
+    const graphLayout = useMemo(() => {
+        const n = Math.max(1, graphNodes.length);
+        const radius = 38; // percent
+        return graphNodes.map((_: any, idx: number) => {
+            const angle = (2 * Math.PI * idx) / n - Math.PI / 2;
+            const x = 50 + radius * Math.cos(angle);
+            const y = 50 + radius * Math.sin(angle);
+            return { x, y };
+        });
+    }, [graphNodes]);
+
+    const guardSubjectName = useMemo(() => {
+        const fromMeta = String(meta?.subjectProfileName || "").trim();
+        if (fromMeta) return fromMeta;
+        const fromGuard = String((interactionGuard as any)?.subject?.displayName || "").trim();
+        if (fromGuard) return fromGuard;
+        const fromProfile = String(profile?.username || profile?.full_name || "").trim();
+        if (fromProfile) return fromProfile;
+        return "";
+    }, [interactionGuard, meta?.subjectProfileName, profile?.full_name, profile?.username]);
+
+    const severityUi = (sev: string) => {
+        const v = String(sev || "caution").toLowerCase();
+        if (v === "safe") {
+            return {
+                label: t("Safe", "آمن"),
+                chip: "bg-emerald-500/10 text-emerald-200 border-emerald-500/25",
+                stroke: "rgba(16,185,129,0.9)",
+                marker: "url(#arrowSafe)",
+                node: "bg-emerald-500/10 border-emerald-500/25 text-emerald-50",
+            };
+        }
+        if (v === "danger") {
+            return {
+                label: t("Danger", "خطر"),
+                chip: "bg-red-500/10 text-red-200 border-red-500/25",
+                stroke: "rgba(239,68,68,0.9)",
+                marker: "url(#arrowDanger)",
+                node: "bg-red-500/10 border-red-500/25 text-red-50",
+            };
+        }
+        return {
+            label: t("Caution", "تحذير"),
+            chip: "bg-yellow-500/10 text-yellow-200 border-yellow-500/25",
+            stroke: "rgba(234,179,8,0.95)",
+            marker: "url(#arrowCaution)",
+            node: "bg-yellow-500/10 border-yellow-500/25 text-yellow-50",
+        };
+    };
 
     const exportBaseName = useMemo(() => {
         const raw = String(data?.drugName || "analysis")
@@ -329,9 +439,9 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const fdaConfirmedNdc =
         fdaNdcFound &&
         (fdaNdcReason.includes("package_ndc match") ||
-            fdaNdcReason.includes("product_ndc match") ||
-            (fdaNdcReason.includes("brand_name exact match") && fdaNdcReason.includes("generic_name exact match")) ||
-            fdaNdcScore >= 130);
+            (fdaNdcReason.includes("product_ndc match") ||
+                (fdaNdcReason.includes("brand_name exact match") && fdaNdcReason.includes("generic_name exact match")) ||
+                fdaNdcScore >= 130)); // Fixed parenthesis nesting here
 
     const fdaConfirmed = fdaConfirmedLabel || fdaConfirmedNdc;
 
@@ -485,6 +595,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
             setAiError(t("Ultra plan required.", "يلزم الاشتراك ألترا."));
             return;
         }
+        const effectiveProfileId = String(meta?.subjectProfileId || (interactionGuard as any)?.subject?.profileId || "").trim() || undefined;
         setAiError(null);
         setAiLoading(true);
         try {
@@ -494,9 +605,17 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 body: JSON.stringify({
                     preset: params.preset,
                     question: params.question,
+                    profileId: effectiveProfileId,
                     language: resultsLanguage,
                     analysis: analysisForAi,
                     path: (params.reset ? [] : aiNodes).map((n) => ({ title: n.title, answer: n.answer })),
+                    userProfile: profile ? {
+                        age: profile.age,
+                        gender: profile.gender,
+                        weight: profile.weight,
+                        height: profile.height,
+                        username: profile.username
+                    } : undefined
                 }),
             });
 
@@ -722,8 +841,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         <div className="relative z-10 mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
                             <div className="flex items-center justify-between gap-3 text-white/70 text-sm font-semibold mb-2">
                                 <div className="flex items-center gap-2">
-                                <FileText className="w-4 h-4 text-liquid-accent" />
-                                {t('Active Ingredients', 'المواد الفعالة')}
+                                    <FileText className="w-4 h-4 text-liquid-accent" />
+                                    {t('Active Ingredients', 'المواد الفعالة')}
                                 </div>
                                 {fdaFeatureEnabled && ingredientRows[0]?.source === "fda" && (
                                     <span className="text-[11px] text-emerald-200/80 flex items-center gap-1">
@@ -887,20 +1006,20 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         </span>
                                     ))}
                                     {((fda as any)?.openfda?.unii || []).slice(0, 2).map((v: string, i: number) => (
-                                    <span key={`unii-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs font-mono break-all max-w-full">
-                                        UNII: {v}
-                                    </span>
-                                ))}
-                                {((fda as any)?.openfda?.product_ndc || []).slice(0, 1).map((v: string, i: number) => (
-                                    <span key={`ndc-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs font-mono break-all max-w-full">
-                                        NDC: {v}
-                                    </span>
-                                ))}
-                                {((fda as any)?.openfda?.spl_set_id || []).slice(0, 1).map((v: string, i: number) => (
-                                    <span key={`spl-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs font-mono break-all max-w-full">
-                                        SPL: {v}
-                                    </span>
-                                ))}
+                                        <span key={`unii-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs font-mono break-all max-w-full">
+                                            UNII: {v}
+                                        </span>
+                                    ))}
+                                    {((fda as any)?.openfda?.product_ndc || []).slice(0, 1).map((v: string, i: number) => (
+                                        <span key={`ndc-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs font-mono break-all max-w-full">
+                                            NDC: {v}
+                                        </span>
+                                    ))}
+                                    {((fda as any)?.openfda?.spl_set_id || []).slice(0, 1).map((v: string, i: number) => (
+                                        <span key={`spl-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs font-mono break-all max-w-full">
+                                            SPL: {v}
+                                        </span>
+                                    ))}
                                 </div>
 
                                 <p className="text-[11px] text-white/40 leading-relaxed">
@@ -1508,10 +1627,30 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </div>
                             </div>
                         </div>
-                    ) : data.personalized ? (
-                        <div className="grid gap-3">
+                    ) : (
+                        <div className="grid gap-4">
                             <div className="flex items-center gap-2 flex-wrap">
-                                {data.personalized.riskLevel && (
+                                {guardSubjectName && (
+                                    <span className="px-3 py-1 rounded-full text-xs font-medium border bg-white/5 text-white/80 border-white/10">
+                                        {t("Profile", "الملف")}: {guardSubjectName}
+                                    </span>
+                                )}
+
+                                {guardItems.length > 0 && (
+                                    <>
+                                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-200 border-emerald-500/25">
+                                            {t("Safe", "آمن")}: {guardCounts.safe}
+                                        </span>
+                                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-yellow-500/10 text-yellow-200 border-yellow-500/25">
+                                            {t("Caution", "تحذير")}: {guardCounts.caution}
+                                        </span>
+                                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-200 border-red-500/25">
+                                            {t("Danger", "خطر")}: {guardCounts.danger}
+                                        </span>
+                                    </>
+                                )}
+
+                                {data.personalized?.riskLevel && (
                                     <span className={cn(
                                         "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
                                         String(data.personalized.riskLevel).toLowerCase().includes('high')
@@ -1523,60 +1662,237 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         {t('Risk', 'المخاطر')}: {data.personalized.riskLevel}
                                     </span>
                                 )}
+
                                 {Number(meta?.medicationMemoriesCount || 0) > 0 && (
                                     <span className="px-3 py-1 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-200 border-purple-500/30">
                                         {t('Memories', 'الذاكرة')}: {meta?.medicationMemoriesCount}
                                     </span>
                                 )}
-                                {memory?.count != null && (
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-200 border-purple-500/30">
-                                        {t('Seen', 'تمت رؤيته')}: {memory.count}x
-                                    </span>
-                                )}
+
                                 <Link href="/profile" className="text-xs text-white/50 hover:text-white hover:underline">
                                     {t('Edit profile & memories', 'تعديل الملف والذاكرة')}
                                 </Link>
                             </div>
 
-                            {data.personalized.riskSummary && (
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/80 text-sm">
-                                    {data.personalized.riskSummary}
+                            {guardItems.length > 0 && (
+                                <div className="p-4 sm:p-5 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <GitBranch className="w-5 h-5 text-cyan-300" />
+                                            <p className="text-white font-bold truncate">{t("Cross‑Interaction Guard", "حارس التداخلات الدوائية")}</p>
+                                        </div>
+                                        <span className="text-xs text-white/40">
+                                            {t("Tap a node for details", "اضغط على أي دواء لعرض التفاصيل")}
+                                        </span>
+                                    </div>
+
+                                    {interactionGuard?.overallRisk && (
+                                        <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-white/80 text-sm">
+                                            {interactionGuard.overallRisk}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 relative w-full h-[420px] sm:h-[460px] rounded-2xl bg-black/30 border border-white/10 overflow-hidden">
+                                        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
+                                            <defs>
+                                                <marker id="arrowSafe" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(16,185,129,0.9)" />
+                                                </marker>
+                                                <marker id="arrowCaution" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(234,179,8,0.95)" />
+                                                </marker>
+                                                <marker id="arrowDanger" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(239,68,68,0.9)" />
+                                                </marker>
+                                            </defs>
+
+                                            {graphNodes.map((it: any, idx: number) => {
+                                                const ui = severityUi(it?.severity);
+                                                const pos = graphLayout[idx] || { x: 50, y: 12 };
+                                                return (
+                                                    <line
+                                                        key={`l-${idx}`}
+                                                        x1={pos.x}
+                                                        y1={pos.y}
+                                                        x2={50}
+                                                        y2={50}
+                                                        stroke={ui.stroke}
+                                                        strokeWidth={1.8}
+                                                        opacity={0.85}
+                                                        markerEnd={ui.marker}
+                                                    />
+                                                );
+                                            })}
+                                        </svg>
+
+                                        {/* Center node */}
+                                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                                            <div className="w-[170px] sm:w-[210px] rounded-2xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-4 text-center shadow-[0_0_40px_-18px_rgba(34,211,238,0.45)]">
+                                                <p className="text-[11px] text-white/50">{t("Target medication", "الدواء الأساسي")}</p>
+                                                <p className="text-white font-bold mt-1 leading-tight line-clamp-2">
+                                                    {String(data?.drugName || t("Target medication", "الدواء الأساسي"))}
+                                                </p>
+                                                {data?.genericName && (
+                                                    <p className="text-white/60 text-xs mt-1 line-clamp-2">
+                                                        {data.genericName}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Peripheral nodes */}
+                                        {graphNodes.map((it: any, idx: number) => {
+                                            const pos = graphLayout[idx] || { x: 50, y: 12 };
+                                            const ui = severityUi(it?.severity);
+                                            const key = String(it.otherMedication || "");
+                                            const selected = String(selectedGuardKey || "") === key;
+                                            return (
+                                                <button
+                                                    key={`n-${idx}`}
+                                                    type="button"
+                                                    onClick={() => setSelectedGuardKey(key)}
+                                                    style={{
+                                                        left: `${pos.x}%`,
+                                                        top: `${pos.y}%`,
+                                                        transform: "translate(-50%, -50%)",
+                                                    }}
+                                                    className={cn(
+                                                        "absolute w-[150px] sm:w-[180px] p-3 rounded-2xl border text-left backdrop-blur-md transition-all",
+                                                        ui.node,
+                                                        selected ? "ring-2 ring-white/40" : "hover:ring-2 hover:ring-white/15"
+                                                    )}
+                                                >
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <p className="text-sm font-semibold text-white line-clamp-2">
+                                                            {key}
+                                                        </p>
+                                                        <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold border", ui.chip)}>
+                                                            {ui.label}
+                                                        </span>
+                                                    </div>
+                                                    {typeof it?.confidence === "number" && (
+                                                        <p className="text-[11px] text-white/60 mt-1">
+                                                            {t("Confidence", "الثقة")}: <span className="font-mono tabular-nums">{Math.round(it.confidence)}%</span>
+                                                        </p>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {selectedGuardItem && (
+                                        <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-white font-bold truncate">{selectedGuardItem.otherMedication}</p>
+                                                    <p className="text-white/60 text-xs mt-1 truncate">
+                                                        {selectedGuardItem.headline || t("Interaction assessment", "تقييم التداخل")}
+                                                    </p>
+                                                </div>
+                                                <span className={cn("px-3 py-1 rounded-full text-xs font-semibold border", severityUi(selectedGuardItem.severity).chip)}>
+                                                    {severityUi(selectedGuardItem.severity).label}
+                                                </span>
+                                            </div>
+
+                                            {selectedGuardItem.summary && (
+                                                <p className="text-white/80 text-sm mt-3 leading-relaxed">
+                                                    {selectedGuardItem.summary}
+                                                </p>
+                                            )}
+
+                                            {selectedGuardItem.mechanism && (
+                                                <div className="mt-3 text-xs text-white/60">
+                                                    <span className="text-white/80 font-semibold">{t("Mechanism", "الآلية")}: </span>
+                                                    {selectedGuardItem.mechanism}
+                                                </div>
+                                            )}
+
+                                            <div className="mt-4 grid gap-3 md:grid-cols-3">
+                                                {Array.isArray(selectedGuardItem.whatToDo) && selectedGuardItem.whatToDo.length > 0 && (
+                                                    <div className="p-3 rounded-xl bg-black/20 border border-white/10">
+                                                        <p className="text-white font-semibold text-xs mb-2">{t("What to do", "ماذا تفعل")}</p>
+                                                        <ul className="space-y-1 text-white/70 text-sm">
+                                                            {selectedGuardItem.whatToDo.slice(0, 6).map((s: string, i: number) => (
+                                                                <li key={i}>• {s}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                                {Array.isArray(selectedGuardItem.monitoring) && selectedGuardItem.monitoring.length > 0 && (
+                                                    <div className="p-3 rounded-xl bg-black/20 border border-white/10">
+                                                        <p className="text-white font-semibold text-xs mb-2">{t("Monitoring", "المتابعة")}</p>
+                                                        <ul className="space-y-1 text-white/70 text-sm">
+                                                            {selectedGuardItem.monitoring.slice(0, 6).map((s: string, i: number) => (
+                                                                <li key={i}>• {s}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                                {Array.isArray(selectedGuardItem.redFlags) && selectedGuardItem.redFlags.length > 0 && (
+                                                    <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/15">
+                                                        <p className="text-red-100 font-semibold text-xs mb-2">{t("Red flags", "علامات خطر")}</p>
+                                                        <ul className="space-y-1 text-red-100/90 text-sm">
+                                                            {selectedGuardItem.redFlags.slice(0, 6).map((s: string, i: number) => (
+                                                                <li key={i}>• {s}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {interactionGuard?.disclaimer && (
+                                        <p className="mt-3 text-[11px] text-white/45 leading-relaxed">
+                                            {interactionGuard.disclaimer}
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
-                            {data.personalized.alerts && data.personalized.alerts.length > 0 && (
-                                <div className="grid gap-2">
-                                    {data.personalized.alerts.slice(0, 6).map((a, i) => (
-                                        <div key={i} className={cn(
-                                            "p-4 rounded-xl border",
-                                            String(a.severity || '').toLowerCase() === 'high'
-                                                ? "bg-red-500/10 border-red-500/20"
-                                                : String(a.severity || '').toLowerCase() === 'medium'
-                                                    ? "bg-yellow-500/10 border-yellow-500/20"
-                                                    : "bg-white/5 border-white/10"
-                                        )}>
-                                            <p className="text-white font-semibold text-sm">
-                                                {a.title || t('Personalized Alert', 'تنبيه مخصص')}
-                                            </p>
-                                            {a.details && (
-                                                <p className="text-white/70 text-sm mt-1">{a.details}</p>
-                                            )}
+                            {data.personalized ? (
+                                <div className="grid gap-3">
+                                    {data.personalized.riskSummary && (
+                                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/80 text-sm">
+                                            {data.personalized.riskSummary}
                                         </div>
-                                    ))}
+                                    )}
+
+                                    {data.personalized.alerts && data.personalized.alerts.length > 0 && (
+                                        <div className="grid gap-2">
+                                            {data.personalized.alerts.slice(0, 6).map((a, i) => (
+                                                <div key={i} className={cn(
+                                                    "p-4 rounded-xl border",
+                                                    String(a.severity || '').toLowerCase() === 'high'
+                                                        ? "bg-red-500/10 border-red-500/20"
+                                                        : String(a.severity || '').toLowerCase() === 'medium'
+                                                            ? "bg-yellow-500/10 border-yellow-500/20"
+                                                            : "bg-white/5 border-white/10"
+                                                )}>
+                                                    <p className="text-white font-semibold text-sm">
+                                                        {a.title || t('Personalized Alert', 'تنبيه مخصص')}
+                                                    </p>
+                                                    {a.details && (
+                                                        <p className="text-white/70 text-sm mt-1">{a.details}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm">
-                            {t(
-                                'Add your Private AI Profile to get personalized warnings (allergies, conditions, current meds).',
-                                'أضف ملفك الصحي الخاص للحصول على تحذيرات مخصصة (حساسية، أمراض مزمنة، أدوية حالية).'
-                            )}
-                            <div className="mt-2">
-                                <Link href="/profile" className="text-liquid-accent hover:underline text-sm font-medium">
-                                    {t('Open Profile', 'فتح الملف الشخصي')}
-                                </Link>
-                            </div>
+                            ) : guardItems.length === 0 ? (
+                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm">
+                                    {t(
+                                        'Add your Private AI Profile to get personalized warnings (allergies, conditions, current meds).',
+                                        'أضف ملفك الصحي الخاص للحصول على تحذيرات مخصصة (حساسية، أمراض مزمنة، أدوية حالية).'
+                                    )}
+                                    <div className="mt-2">
+                                        <Link href="/profile" className="text-liquid-accent hover:underline text-sm font-medium">
+                                            {t('Open Profile', 'فتح الملف الشخصي')}
+                                        </Link>
+                                    </div>
+                                </div>
+                            ) : null}
                         </div>
                     )}
                 </div>

@@ -28,7 +28,9 @@ export default function RootLayout({
                     <UserProvider>
                         <ScanProvider>
                             <Navbar />
-                            {children}
+                            <div className="pb-28 sm:pb-0">
+                                {children}
+                            </div>
                         </ScanProvider>
                     </UserProvider>
                 </SettingsProvider>

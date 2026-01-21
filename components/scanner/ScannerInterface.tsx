@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, ScanLine, FileText, Brain, CheckCircle, Loader2, ListTodo, History, Sparkles, Zap, Timer, AlertCircle, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Upload, X, ScanLine, FileText, Brain, CheckCircle, Loader2, ListTodo, History, Sparkles, Zap, Timer, AlertCircle, AlertTriangle, ChevronRight, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ import { AI_DISPLAY_NAME } from '@/lib/ai/branding';
 import { useScan } from '@/context/ScanContext';
 
 export const ScannerInterface = () => {
-    const { user, loading } = useUser();
+    const { user, plan, loading } = useUser();
     const {
         file,
         previewSrc,
@@ -26,6 +26,8 @@ export const ScannerInterface = () => {
         finalResult,
         errorMsg,
         errorAction,
+        subjectProfileId,
+        setSubjectProfileId,
         setFile,
         resetScan,
         startScan,
@@ -42,6 +44,11 @@ export const ScannerInterface = () => {
     const [recentHistory, setRecentHistory] = useState<any[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
 
+    const [careProfiles, setCareProfiles] = useState<Array<{ id: string; display_name: string; relationship?: string | null }>>([]);
+    const [careLoading, setCareLoading] = useState(false);
+    const [carePickerOpen, setCarePickerOpen] = useState(false);
+    const [careTempId, setCareTempId] = useState<string | null>(null);
+
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles[0]) {
             setFile(acceptedFiles[0]);
@@ -56,28 +63,85 @@ export const ScannerInterface = () => {
 
         setHistoryLoading(true);
         try {
-            const { data, error } = await supabase
+            const effectiveProfileId = subjectProfileId || user.id;
+            let res = await supabase
                 .from("medication_history")
                 .select("id, drug_name, manufacturer, created_at")
                 .eq("user_id", user.id)
+                .eq("profile_id", effectiveProfileId)
                 .order("created_at", { ascending: false })
                 .limit(5);
 
-            if (error) {
-                console.error("History fetch error:", error);
+            if (res.error && String(res.error.message || "").toLowerCase().includes("profile_id")) {
+                // Legacy fallback (before profile_id existed)
+                res = await supabase
+                    .from("medication_history")
+                    .select("id, drug_name, manufacturer, created_at")
+                    .eq("user_id", user.id)
+                    .order("created_at", { ascending: false })
+                    .limit(5);
+            }
+
+            if (res.error) {
+                console.error("History fetch error:", res.error);
                 setRecentHistory([]);
                 return;
             }
 
-            setRecentHistory(data || []);
+            setRecentHistory(res.data || []);
         } finally {
             setHistoryLoading(false);
         }
-    }, [supabase, user?.id]);
+    }, [supabase, subjectProfileId, user?.id]);
 
     useEffect(() => {
         fetchRecentHistory();
     }, [fetchRecentHistory]);
+
+    const fetchCareProfiles = useCallback(async () => {
+        if (!user?.id) {
+            setCareProfiles([]);
+            return;
+        }
+
+        setCareLoading(true);
+        try {
+            const res = await supabase
+                .from("care_profiles")
+                .select("id, display_name, relationship, created_at")
+                .eq("owner_user_id", user.id)
+                .order("created_at", { ascending: true });
+
+            if (res.error) {
+                // If the table isn't available yet, fall back to "self".
+                setCareProfiles([{ id: user.id, display_name: String(user.email || "Me"), relationship: "self" }]);
+                return;
+            }
+
+            const rows: Array<{ id: string; display_name: string; relationship?: string | null }> = (res.data || []).map((r: any) => ({
+                id: String(r.id),
+                display_name: String(r.display_name || "Me"),
+                relationship: r.relationship ?? null,
+            }));
+
+            // Keep self first if present.
+            rows.sort((a, b) => {
+                const aSelf = a.id === user.id || a.relationship === "self";
+                const bSelf = b.id === user.id || b.relationship === "self";
+                if (aSelf && !bSelf) return -1;
+                if (!aSelf && bSelf) return 1;
+                return a.display_name.localeCompare(b.display_name);
+            });
+
+            setCareProfiles(rows.length ? rows : [{ id: user.id, display_name: String(user.email || "Me"), relationship: "self" }]);
+        } finally {
+            setCareLoading(false);
+        }
+    }, [supabase, user?.id]);
+
+    useEffect(() => {
+        fetchCareProfiles();
+    }, [fetchCareProfiles]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -90,6 +154,40 @@ export const ScannerInterface = () => {
             fetchRecentHistory();
         }
     }, [finalResult, fetchRecentHistory, user?.id]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        if (!subjectProfileId) {
+            setSubjectProfileId(user.id);
+            return;
+        }
+        const exists = careProfiles.some((p) => p.id === subjectProfileId);
+        if (!exists && careProfiles.length > 0) {
+            setSubjectProfileId(careProfiles[0].id);
+        }
+    }, [careProfiles, setSubjectProfileId, subjectProfileId, user?.id]);
+
+    const activeCareProfile = careProfiles.find((p) => p.id === (subjectProfileId || user?.id)) || null;
+
+    const openCarePickerAndStart = () => {
+        if (!user?.id) return;
+        const effective = subjectProfileId || user.id;
+        if (plan === "ultra" && careProfiles.length > 1) {
+            setCareTempId(effective);
+            setCarePickerOpen(true);
+            return;
+        }
+        setSubjectProfileId(effective);
+        void startScan(effective);
+    };
+
+    const confirmCarePicker = () => {
+        if (!user?.id) return;
+        const chosen = careTempId || user.id;
+        setCarePickerOpen(false);
+        setSubjectProfileId(chosen);
+        void startScan(chosen);
+    };
 
     // calculate current duration for running step?
     // Not strictly needed if steps are fast, but nice to have.
@@ -318,6 +416,104 @@ export const ScannerInterface = () => {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-6 relative p-4 lg:p-12 overflow-y-auto">
 
+            <AnimatePresence>
+                {carePickerOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                        onClick={() => setCarePickerOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.98, y: 8, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.98, y: 8, opacity: 0 }}
+                            transition={{ duration: 0.18 }}
+                            className="w-full max-w-lg"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <GlassCard className="p-6 sm:p-7" hoverEffect={false}>
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-start gap-3 min-w-0">
+                                        <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 shrink-0">
+                                            <Users className="w-5 h-5 text-cyan-200" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-white font-bold text-lg">{t("Who is this scan for?", "لمن هذا الفحص؟")}</p>
+                                            <p className="text-white/55 text-sm mt-1">
+                                                {t(
+                                                    "Choose the profile to personalize results and save History/Memories correctly.",
+                                                    "اختر الملف لضبط التخصيص وحفظ السجل/الذاكرة للشخص الصحيح."
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setCarePickerOpen(false)}
+                                        className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="mt-5 grid gap-2">
+                                    {careLoading ? (
+                                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm flex items-center gap-2">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            {t("Loading profiles…", "جارٍ تحميل الملفات…")}
+                                        </div>
+                                    ) : (
+                                        careProfiles.map((p) => {
+                                            const selected = (careTempId || "") === p.id;
+                                            return (
+                                                <button
+                                                    key={p.id}
+                                                    onClick={() => setCareTempId(p.id)}
+                                                    className={cn(
+                                                        "w-full text-left p-4 rounded-xl border transition-colors",
+                                                        selected
+                                                            ? "bg-cyan-500/10 border-cyan-500/25"
+                                                            : "bg-white/5 border-white/10 hover:bg-white/10"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-white font-semibold truncate">{p.display_name}</p>
+                                                            <p className="text-white/45 text-xs mt-1 truncate">
+                                                                {p.relationship ? String(p.relationship) : p.id === user?.id ? t("self", "أنا") : t("family", "عائلة")}
+                                                            </p>
+                                                        </div>
+                                                        <div className={cn(
+                                                            "w-6 h-6 rounded-full border flex items-center justify-center shrink-0",
+                                                            selected ? "border-cyan-400 text-cyan-200" : "border-white/15 text-white/30"
+                                                        )}>
+                                                            {selected ? <CheckCircle className="w-4 h-4" /> : <span className="text-[10px] font-bold">•</span>}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })
+                                    )}
+                                </div>
+
+                                <div className="mt-5 flex items-center justify-between gap-3">
+                                    <button
+                                        onClick={() => setCarePickerOpen(false)}
+                                        className="text-sm text-white/60 hover:text-white transition-colors"
+                                    >
+                                        {t("Cancel", "إلغاء")}
+                                    </button>
+                                    <Button onClick={confirmCarePicker} disabled={!careTempId || isScanning}>
+                                        {t("Start Analysis", "بدء التحليل")}
+                                    </Button>
+                                </div>
+                            </GlassCard>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <AnimatePresence mode="wait">
                 {!previewSrc && (
                     <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-lg">
@@ -350,6 +546,25 @@ export const ScannerInterface = () => {
                                     Open
                                 </Link>
                             </div>
+
+                            {user && activeCareProfile && careProfiles.length > 1 && (
+                                <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                                    <div className="flex items-center gap-2 text-xs text-white/60 min-w-0">
+                                        <Users className="w-4 h-4 text-cyan-300 shrink-0" />
+                                        <span className="shrink-0">{t("Active:", "الحالي:")}</span>
+                                        <span className="text-white/80 font-semibold truncate">{activeCareProfile.display_name}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setCareTempId(activeCareProfile.id);
+                                            setCarePickerOpen(true);
+                                        }}
+                                        className="text-xs text-cyan-200 hover:underline"
+                                    >
+                                        {t("Change", "تغيير")}
+                                    </button>
+                                </div>
+                            )}
 
                             {!user ? (
                                 <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm">
@@ -397,7 +612,7 @@ export const ScannerInterface = () => {
                             {!isScanning && !finalResult && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                     <div className="flex gap-4">
-                                        <Button onClick={startScan} size="lg" className="rounded-full shadow-xl shadow-cyan-500/20 hover:scale-105 transition-transform bg-gradient-to-r from-cyan-500 to-blue-600 border-none text-white font-bold px-8">
+                                        <Button onClick={openCarePickerAndStart} size="lg" className="rounded-full shadow-xl shadow-cyan-500/20 hover:scale-105 transition-transform bg-gradient-to-r from-cyan-500 to-blue-600 border-none text-white font-bold px-8">
                                             <Zap className="mr-2 w-5 h-5" /> Start Analysis
                                         </Button>
                                     </div>
@@ -410,7 +625,7 @@ export const ScannerInterface = () => {
                             {/* Mobile Start Button (Always Visible if not scanning) */}
                             {!isScanning && !finalResult && (
                                 <div className="absolute bottom-6 left-0 right-0 flex justify-center lg:hidden">
-                                    <Button onClick={startScan} size="lg" className="rounded-full shadow-xl bg-cyan-600 text-white">
+                                    <Button onClick={openCarePickerAndStart} size="lg" className="rounded-full shadow-xl bg-cyan-600 text-white">
                                         Scan Now
                                     </Button>
                                 </div>
