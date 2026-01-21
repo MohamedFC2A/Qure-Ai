@@ -19,6 +19,12 @@ interface MedicalData {
     form?: string;
     strength?: string;
     activeIngredients?: string[];
+    activeIngredientsDetailed?: Array<{
+        name: string;
+        strength?: string;
+        strengthMg?: number;
+        source?: string;
+    }>;
     description: string;
     category?: string;
     uses: string[];
@@ -68,6 +74,7 @@ interface MedicalData {
     error?: string;
     meta?: {
         plan?: 'free' | 'ultra';
+        fdaEnabled?: boolean;
         savedToHistory?: boolean;
         historyId?: string | null;
         usedPrivateContext?: boolean;
@@ -106,7 +113,7 @@ type UltraSafetyTab = 'precautions' | 'interactions' | 'sideEffects' | 'overdose
 
 export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const { user, plan } = useUser();
-    const { resultsLanguage } = useSettings();
+    const { resultsLanguage, fdaDrugsEnabled } = useSettings();
 
     const exportRef = useRef<HTMLDivElement | null>(null);
     const [exporting, setExporting] = useState<null | 'png' | 'pdf'>(null);
@@ -115,6 +122,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const meta = (data as any)?.meta as MedicalData["meta"] | undefined;
     const savedToHistory = meta?.savedToHistory ?? true;
     const memory = meta?.memory || null;
+    const fdaFeatureEnabled = plan === "ultra" ? Boolean(fdaDrugsEnabled) : true;
 
     const isArabic = resultsLanguage === 'ar';
     const t = (en: string, ar: string) => (isArabic ? ar : en);
@@ -265,6 +273,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     useEffect(() => {
         let cancelled = false;
         const run = async () => {
+            if (!fdaFeatureEnabled) return;
             const drugName = String(data?.drugName || "").trim();
             if (!drugName || drugName === "Unknown") return;
             if (data.fda) return;
@@ -299,17 +308,59 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         return () => {
             cancelled = true;
         };
-    }, [data.drugName, data.drugNameEn, data.genericName, data.genericNameEn, data.manufacturer, resultsLanguage]);
+    }, [data.drugName, data.drugNameEn, data.genericName, data.genericNameEn, data.manufacturer, fdaFeatureEnabled, resultsLanguage]);
 
-    const fdaVerified = Boolean((fda as any)?.found);
+    const fdaLabelFound = fdaFeatureEnabled && Boolean((fda as any)?.found);
+    const fdaNdcFound = fdaFeatureEnabled && Boolean((fda as any)?.ndc?.found);
+    const fdaFoundAny = fdaLabelFound || fdaNdcFound;
+
+    const fdaLabelScore = Number((fda as any)?.match?.score || 0);
+    const fdaLabelReason = String((fda as any)?.match?.reason || "");
+    const fdaNdcScore = Number((fda as any)?.ndc?.match?.score || 0);
+    const fdaNdcReason = String((fda as any)?.ndc?.match?.reason || "");
+
+    const fdaConfirmedLabel =
+        fdaLabelFound &&
+        (fdaLabelReason.includes("product_ndc match") ||
+            (fdaLabelReason.includes("brand_name exact match") &&
+                (fdaLabelReason.includes("generic_name exact match") || fdaLabelReason.includes("substance_name match"))) ||
+            fdaLabelScore >= 120);
+
+    const fdaConfirmedNdc =
+        fdaNdcFound &&
+        (fdaNdcReason.includes("package_ndc match") ||
+            fdaNdcReason.includes("product_ndc match") ||
+            (fdaNdcReason.includes("brand_name exact match") && fdaNdcReason.includes("generic_name exact match")) ||
+            fdaNdcScore >= 130);
+
+    const fdaConfirmed = fdaConfirmedLabel || fdaConfirmedNdc;
+
     const fdaSoftError = String((fda as any)?.error || "");
     const fdaNotEnoughIdentifiers =
         fdaSoftError.toLowerCase().includes("not enough identifiers") ||
         fdaSoftError.toLowerCase().includes("no fda search terms") ||
         fdaSoftError.toLowerCase().includes("no search terms provided");
 
+    const fdaStatus: "verified" | "uncertain" | "not_found" | "disabled" =
+        !fdaFeatureEnabled
+            ? "disabled"
+            : fdaLoading
+                ? "uncertain"
+                : fdaError
+                    ? "uncertain"
+                    : fdaConfirmed
+                        ? "verified"
+                        : fdaFoundAny
+                            ? "uncertain"
+                            : !fda
+                                ? "uncertain"
+                                : fdaNotEnoughIdentifiers
+                                    ? "uncertain"
+                                    : fdaSoftError
+                                        ? "uncertain"
+                                        : "not_found";
+
     const productKind = String(data.productClassification?.kind || "").trim();
-    const productKindConfidence = Number(data.productClassification?.confidence || 0);
     const productKindLabel =
         productKind === "human_drug"
             ? t("Human medicine", "دواء بشري")
@@ -330,6 +381,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         form: data.form,
         strength: data.strength,
         activeIngredients: data.activeIngredients,
+        activeIngredientsDetailed: (data as any)?.activeIngredientsDetailed,
         category: data.category,
         description: data.description,
         uses: data.uses,
@@ -353,6 +405,76 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         if (data.storage) items.push({ title: t("Store it correctly", "احفظه بالشكل الصحيح"), detail: data.storage, kind: "info" });
         return items.slice(0, 5);
     }, [data.contraindications, data.dosage, data.interactions, data.storage, data.whenToSeekHelp, plan, t]);
+
+    const formatMg = (mg: number) => {
+        const rounded = Math.round(mg * 10) / 10;
+        return Number.isInteger(rounded) ? `${rounded} mg` : `${rounded.toFixed(1)} mg`;
+    };
+
+    const parseDoseFromText = (raw: string) => {
+        const text = String(raw || "").trim();
+        if (!text) return { name: "", doseText: "—", doseMg: undefined as number | undefined };
+
+        const match = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|ug|g)\b/i);
+        if (!match) return { name: text, doseText: "—", doseMg: undefined as number | undefined };
+
+        const value = Number(match[1]);
+        const unit = String(match[2] || "").toLowerCase();
+        let mg = Number.isFinite(value) ? value : NaN;
+        if (unit === "g") mg = value * 1000;
+        else if (unit === "mcg" || unit === "ug") mg = value / 1000;
+
+        const doseMg = Number.isFinite(mg) ? mg : undefined;
+        const cleanedName = text
+            .replace(match[0], "")
+            .replace(/[()،,:–—-]+/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        return {
+            name: cleanedName || text,
+            doseText: doseMg !== undefined ? formatMg(doseMg) : match[0],
+            doseMg,
+        };
+    };
+
+    const ingredientRows = useMemo(() => {
+        if (fdaFeatureEnabled && Array.isArray((data as any)?.activeIngredientsDetailed) && (data as any).activeIngredientsDetailed.length > 0) {
+            return ((data as any).activeIngredientsDetailed as any[])
+                .map((it) => {
+                    const name = String(it?.name || "").trim();
+                    const strength = String(it?.strength || "").trim();
+                    const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
+                    const doseText = strengthMg !== undefined ? formatMg(strengthMg) : strength || "—";
+                    if (!name) return null;
+                    return { name, doseText, doseMg: strengthMg, source: "fda" as const };
+                })
+                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "fda" }>;
+        }
+
+        const ndcIngredients = (fda as any)?.ndc?.activeIngredients;
+        if (fdaFeatureEnabled && Array.isArray(ndcIngredients) && ndcIngredients.length > 0) {
+            return (ndcIngredients as any[])
+                .map((it) => {
+                    const name = String(it?.name || "").trim();
+                    const strength = String(it?.strength || "").trim();
+                    const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
+                    const doseText = strengthMg !== undefined ? formatMg(strengthMg) : strength || "—";
+                    if (!name) return null;
+                    return { name, doseText, doseMg: strengthMg, source: "fda" as const };
+                })
+                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "fda" }>;
+        }
+
+        const list = Array.isArray(data.activeIngredients) ? data.activeIngredients : [];
+        return list
+            .map((raw) => {
+                const parsed = parseDoseFromText(String(raw || ""));
+                if (!parsed.name) return null;
+                return { name: parsed.name, doseText: parsed.doseText, doseMg: parsed.doseMg, source: "ai" as const };
+            })
+            .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "ai" }>;
+    }, [data.activeIngredients, (data as any)?.activeIngredientsDetailed, fda, fdaFeatureEnabled]);
 
     const askAi = async (params: { preset?: "alternative" | "personalized" | "history"; question?: string; reset?: boolean }) => {
         if (!user) {
@@ -421,15 +543,23 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">{data.drugName}</h2>
-                                {fdaVerified ? (
+                                {fdaStatus === "verified" ? (
                                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" /> {t("FDA Verified", "موثق من FDA")}
+                                        <CheckCircle2 className="w-3 h-3" /> {t("FDA Verified", "موثّق من FDA")}
                                     </span>
-                                ) : (data.confidenceScore && data.confidenceScore > 80) ? (
-                                    <span className="px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" /> {t("High confidence", "ثقة عالية")}
+                                ) : fdaStatus === "not_found" ? (
+                                    <span className="px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                                        <AlertOctagon className="w-3 h-3" /> {t("Not in FDA database", "غير موجود في قاعدة بيانات FDA")}
                                     </span>
-                                ) : null}
+                                ) : fdaStatus === "disabled" ? (
+                                    <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                                        <Lock className="w-3 h-3" /> {t("FDA disabled", "تم إيقاف FDA")}
+                                    </span>
+                                ) : (
+                                    <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                                        <AlertTriangle className="w-3 h-3" /> {t("FDA: Not confirmed", "FDA: غير مؤكد")}
+                                    </span>
+                                )}
                             </div>
 
                             {data.genericName && (
@@ -463,7 +593,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         )}
                                         <span>
                                             {productKindLabel}
-                                            {productKindConfidence > 0 ? ` · ${productKindConfidence}%` : ""}
+                                            {fdaStatus === "verified" ? " · 100%" : ""}
                                         </span>
                                     </div>
                                 )}
@@ -563,7 +693,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     <ListTodo className="w-4 h-4 text-liquid-accent" />
                                     {t("Quick Action Checklist", "قائمة سريعة لما يجب فعله")}
                                 </div>
-                                {fdaVerified && (
+                                {fdaConfirmedLabel && (
                                     <span className="text-[11px] text-emerald-200/80 flex items-center gap-1">
                                         <Database className="w-3 h-3" /> {t("Backed by FDA label", "مدعوم ببيانات FDA")}
                                     </span>
@@ -588,39 +718,50 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         </div>
                     )}
 
-                    {data.activeIngredients && data.activeIngredients.length > 0 && (
+                    {ingredientRows.length > 0 && (
                         <div className="relative z-10 mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                            <div className="flex items-center gap-2 text-white/70 text-sm font-semibold mb-2">
+                            <div className="flex items-center justify-between gap-3 text-white/70 text-sm font-semibold mb-2">
+                                <div className="flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-liquid-accent" />
                                 {t('Active Ingredients', 'المواد الفعالة')}
+                                </div>
+                                {fdaFeatureEnabled && ingredientRows[0]?.source === "fda" && (
+                                    <span className="text-[11px] text-emerald-200/80 flex items-center gap-1">
+                                        <Database className="w-3 h-3" /> {t("From FDA (NDC)", "من FDA (NDC)")}
+                                    </span>
+                                )}
                             </div>
 
                             <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                                <table className={cn("w-full text-xs sm:text-sm", isArabic && "text-right")}>
+                                <table className={cn("w-full text-xs sm:text-sm table-fixed", isArabic && "text-right")}>
                                     <thead className="bg-white/5">
                                         <tr>
                                             <th className="px-3 py-2 text-white/60 font-semibold w-10 text-center">#</th>
                                             <th className="px-3 py-2 text-white/60 font-semibold">
                                                 {t("Ingredient", "المادة")}
                                             </th>
+                                            <th className="px-3 py-2 text-white/60 font-semibold w-24 sm:w-28 text-center">
+                                                {t("Dose", "الجرعة")}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {(showAllIngredients ? data.activeIngredients : data.activeIngredients.slice(0, 10)).map((item, i) => (
+                                        {(showAllIngredients ? ingredientRows : ingredientRows.slice(0, 10)).map((row, i) => (
                                             <tr key={i} className="border-t border-white/10">
                                                 <td className="px-3 py-2 text-white/50 font-mono tabular-nums text-center">{i + 1}</td>
-                                                <td className="px-3 py-2 text-white/80 leading-relaxed break-words">{item}</td>
+                                                <td className="px-3 py-2 text-white/80 leading-relaxed break-words">{row.name}</td>
+                                                <td className="px-3 py-2 text-white/70 font-mono tabular-nums text-center">{row.doseText}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
 
-                                {data.activeIngredients.length > 10 && (
+                                {ingredientRows.length > 10 && (
                                     <div className="flex items-center justify-between gap-3 px-3 py-2 border-t border-white/10 bg-white/5">
                                         <p className="text-[11px] text-white/50">
                                             {t(
-                                                `${data.activeIngredients.length} ingredients detected`,
-                                                `تم رصد ${data.activeIngredients.length} مادة`
+                                                `${ingredientRows.length} ingredients detected`,
+                                                `تم رصد ${ingredientRows.length} مادة`
                                             )}
                                         </p>
                                         <button
@@ -655,15 +796,29 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     {t("Docs", "التوثيق")} <ExternalLink className="w-3 h-3" />
                                 </a>
                                 {plan === 'ultra' ? (
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => setShowFdaDetails((v) => !v)}
-                                        className="border-white/15 text-white/70 hover:bg-white/10"
-                                        disabled={fdaLoading || !(fda as any)?.found}
-                                    >
-                                        {showFdaDetails ? t("Hide", "إخفاء") : t("Show", "عرض")}
-                                    </Button>
+                                    !fdaFeatureEnabled ? (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            disabled
+                                            className="border-white/10 text-white/40"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Lock className="w-4 h-4" />
+                                                {t("Disabled", "مُعطّل")}
+                                            </span>
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setShowFdaDetails((v) => !v)}
+                                            className="border-white/15 text-white/70 hover:bg-white/10"
+                                            disabled={fdaLoading || !fdaLabelFound}
+                                        >
+                                            {showFdaDetails ? t("Hide", "إخفاء") : t("Show", "عرض")}
+                                        </Button>
+                                    )
                                 ) : (
                                     <Button
                                         size="sm"
@@ -680,11 +835,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             </div>
                         </div>
 
-                        {fdaLoading ? (
+                        {!fdaFeatureEnabled ? (
+                            <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-xs leading-relaxed">
+                                <p>
+                                    {t(
+                                        "FDA verification is disabled in your profile settings (Ultra). Enable it to use FDA/NDC cross-checks.",
+                                        "تم إيقاف التحقق من FDA من إعدادات ملفك (ألترا). فعّل الخيار لاستخدام التحقق عبر FDA/NDC."
+                                    )}
+                                </p>
+                                <div className="mt-2">
+                                    <Link href="/profile" className="text-liquid-accent hover:underline font-medium">
+                                        {t("Open Profile", "فتح الملف الشخصي")}
+                                    </Link>
+                                </div>
+                            </div>
+                        ) : fdaLoading ? (
                             <p className="mt-3 text-xs text-white/40">{t("Checking FDA label…", "جارٍ التحقق من بيانات FDA…")}</p>
                         ) : fdaError ? (
                             <p className="mt-3 text-xs text-red-200/80">{fdaError}</p>
-                        ) : (fda as any)?.found ? (
+                        ) : fdaLabelFound ? (
                             <div className="mt-3 grid gap-3">
                                 <div className="flex flex-wrap gap-2">
                                     {((fda as any)?.openfda?.brand_name || []).slice(0, 2).map((v: string, i: number) => (
@@ -849,15 +1018,33 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     </div>
                                 )}
                             </div>
+                        ) : fdaNdcFound ? (
+                            <div className="mt-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-emerald-100/90 text-xs leading-relaxed">
+                                {t(
+                                    "Found in FDA NDC listing, but an official label snippet was not available via openFDA label dataset.",
+                                    "تم العثور عليه في بيانات NDC التابعة لـ FDA، لكن لم تتوفر نشرة رسمية عبر قاعدة بيانات openFDA (labels)."
+                                )}
+                            </div>
                         ) : (
-                            <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-white/60 text-xs leading-relaxed">
+                            <div
+                                className={cn(
+                                    "mt-3 p-3 rounded-xl border text-xs leading-relaxed",
+                                    fdaStatus === "not_found"
+                                        ? "bg-red-500/5 border-red-500/15 text-red-100/90"
+                                        : "bg-amber-500/5 border-amber-500/15 text-amber-100/90"
+                                )}
+                            >
                                 {t(
                                     fdaNotEnoughIdentifiers
                                         ? "FDA verification needs an English drug name or an NDC. Try scanning the name more clearly or include an NDC if present on the package."
-                                        : "This product does not appear in the FDA drug label database (openFDA). It may be outside FDA coverage, a supplement, or not FDA-classified. Try scanning the name more clearly or include an NDC if present.",
+                                        : fdaStatus === "not_found"
+                                            ? "Not found in FDA databases (openFDA). It may be outside FDA coverage, a supplement, or not FDA-classified."
+                                            : "FDA match is not fully confirmed. Try scanning the name/NDC more clearly.",
                                     fdaNotEnoughIdentifiers
                                         ? "تعذر التحقق من FDA لأن الاسم بالإنجليزية أو رقم NDC غير متوفر. جرّب تصوير الاسم بوضوح أو تضمين رقم NDC إن كان موجودًا على العبوة."
-                                        : "هذا المنتج غير موجود/غير مُصنّف في قاعدة بيانات FDA (openFDA). قد يكون خارج تغطية FDA أو مكملًا غذائيًا أو غير مُدرج. جرّب تصوير الاسم بوضوح أو تضمين رقم NDC إن كان موجودًا."
+                                        : fdaStatus === "not_found"
+                                            ? "غير موجود في قواعد بيانات FDA (openFDA). قد يكون خارج تغطية FDA أو مكملًا غذائيًا أو غير مُدرج."
+                                            : "مطابقة FDA غير مؤكدة بالكامل. جرّب تصوير الاسم/NDC بوضوح أكبر."
                                 )}
                             </div>
                         )}

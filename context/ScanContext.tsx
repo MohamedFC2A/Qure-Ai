@@ -90,7 +90,7 @@ const ScanContext = createContext<ScanContextValue | undefined>(undefined);
 
 export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const { user } = useUser();
-    const { resultsLanguage } = useSettings();
+    const { resultsLanguage, fdaDrugsEnabled } = useSettings();
 
     const isArabic = resultsLanguage === "ar";
     const t = useCallback((en: string, ar: string) => (isArabic ? ar : en), [isArabic]);
@@ -342,7 +342,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             const analyzeResponse = await fetch("/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: ocrText, language: resultsLanguage }),
+                body: JSON.stringify({ text: ocrText, language: resultsLanguage, fdaEnabled: fdaDrugsEnabled }),
                 signal: controller.signal,
             });
 
@@ -417,6 +417,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         file,
         preprocessImage,
         processedImageDataUrl,
+        fdaDrugsEnabled,
         resultsLanguage,
         runLocalOcr,
         startedAtMs,

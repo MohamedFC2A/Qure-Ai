@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeMedicationText } from "@/lib/ai/vision";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
-import { extractPossibleNdc, fetchOpenFdaLabelSnapshot } from "@/lib/openfda";
+import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot } from "@/lib/openfda";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { preflightMedicationEvidence, type ProductClassification } from "@/lib/medicationEnrichment";
 
@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
 
         const userPlan = await getUserPlan(user.id, supabase);
         const isUltra = userPlan === 'ultra';
+        const requestedFdaEnabled = (body as any)?.fdaEnabled;
+        const fdaEnabled = isUltra ? requestedFdaEnabled !== false : true;
 
         let savedToHistory = false;
         let historyId: string | null = null;
@@ -96,16 +98,16 @@ export async function POST(req: NextRequest) {
         const lang: "en" | "ar" = language === "ar" ? "ar" : "en";
 
         // 0. Preflight verification: web (Serper) + openFDA (best-effort) BEFORE full AI analysis
-        const preflight = await preflightMedicationEvidence({ ocrText: text, language: lang });
+        const preflight = await preflightMedicationEvidence({ ocrText: text, language: lang, enableFda: fdaEnabled });
 
         // 1. Call AI Service (DeepSeek) with verification evidence
         const data = await analyzeMedicationText(text, lang, analysisContext, preflight.evidenceForAi);
 
         // 1b. Post-analysis openFDA pass (best-effort): improves hit-rate using AI's English identifiers.
         // This does NOT replace the fact that preflight already ran before analysis.
-        let fdaFinal: any = preflight.fda || null;
+        let fdaFinal: any = fdaEnabled ? (preflight.fda || null) : null;
         try {
-            if (!fdaFinal?.found) {
+            if (fdaEnabled && !fdaFinal?.found) {
                 const ndc = preflight.ndc || extractPossibleNdc(text);
                 const brandForFda =
                     String((data as any)?.drugNameEn || "").trim() ||
@@ -130,6 +132,45 @@ export async function POST(req: NextRequest) {
             console.warn("openFDA post-analysis lookup failed:", e);
         }
 
+        // Attach NDC dataset snapshot for strengths (best-effort).
+        let activeIngredientsDetailed: any[] | undefined = undefined;
+        if (fdaEnabled) {
+            try {
+                const packageNdc = preflight.ndc || extractPossibleNdc(text);
+                const productNdcFromLabel = (fdaFinal as any)?.openfda?.product_ndc?.[0] ? String((fdaFinal as any).openfda.product_ndc[0]) : null;
+                const ndcSnapshot = await fetchOpenFdaNdcSnapshot({
+                    packageNdc: packageNdc || null,
+                    productNdc: productNdcFromLabel || packageNdc || null,
+                    brand: String((data as any)?.drugNameEn || "").trim() || null,
+                    generic: String((data as any)?.genericNameEn || "").trim() || null,
+                    manufacturer: String((data as any)?.manufacturer || "").trim() || null,
+                    limit: 5,
+                });
+
+                if (fdaFinal) {
+                    fdaFinal = { ...(fdaFinal as any), ndc: ndcSnapshot };
+                } else if (ndcSnapshot?.found) {
+                    fdaFinal = {
+                        found: false,
+                        query: { brand: null, generic: null, productNdc: packageNdc || null, manufacturer: null, attemptedSearch: null },
+                        fetchedAt: new Date().toISOString(),
+                        ndc: ndcSnapshot,
+                    };
+                }
+
+                if (ndcSnapshot?.activeIngredients?.length) {
+                    activeIngredientsDetailed = ndcSnapshot.activeIngredients.slice(0, 12).map((ai: any) => ({
+                        name: String(ai?.name || "").trim(),
+                        strength: String(ai?.strength || "").trim(),
+                        strengthMg: typeof ai?.strengthMg === "number" ? ai.strengthMg : undefined,
+                        source: "fda",
+                    }));
+                }
+            } catch (e) {
+                console.warn("openFDA NDC lookup failed:", e);
+            }
+        }
+
         const classificationFromFinalFda = classifyFromFdaProductTypes((fdaFinal as any)?.openfda?.product_type);
         const productClassification =
             classificationFromFinalFda && classificationFromFinalFda.confidence >= (preflight.classification?.confidence ?? 0)
@@ -138,9 +179,10 @@ export async function POST(req: NextRequest) {
 
         const analysisWithEnrichment = {
             ...(data as any),
-            fda: fdaFinal || preflight.fda,
+            fda: fdaEnabled ? (fdaFinal || preflight.fda) : null,
             web: preflight.web,
             productClassification,
+            activeIngredientsDetailed,
         };
 
         // 2. Save Analysis to Supabase (Protected)
@@ -227,6 +269,7 @@ export async function POST(req: NextRequest) {
             ...(analysisWithEnrichment as any),
             meta: {
                 plan: userPlan,
+                fdaEnabled,
                 savedToHistory,
                 historyId,
                 usedPrivateContext: Boolean(isUltra && analysisContext?.privateProfile),
@@ -235,7 +278,7 @@ export async function POST(req: NextRequest) {
                 hasPrivateProfile: Boolean(isUltra && analysisContext?.privateProfile),
                 memory: memoryInfo,
                 usedWebVerification: Boolean(preflight.web?.found),
-                usedFdaVerification: Boolean((analysisWithEnrichment as any)?.fda?.found),
+                usedFdaVerification: Boolean(fdaEnabled && (((analysisWithEnrichment as any)?.fda?.found) || ((analysisWithEnrichment as any)?.fda?.ndc?.found))),
             },
             serverDurationMs: Date.now() - startTime
         });

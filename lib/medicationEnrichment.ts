@@ -1,4 +1,4 @@
-import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, type OpenFdaLabelSnapshot } from "@/lib/openfda";
+import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot, type OpenFdaLabelSnapshot } from "@/lib/openfda";
 import { serperSearch, type SerperSearchSnapshot } from "@/lib/serper";
 
 export type ProductKind =
@@ -17,7 +17,7 @@ export type ProductClassification = {
 export type MedicationPreflight = {
     ndc: string | null;
     web: SerperSearchSnapshot | null;
-    fda: OpenFdaLabelSnapshot;
+    fda: OpenFdaLabelSnapshot | null;
     classification: ProductClassification;
     evidenceForAi: {
         ndc: string | null;
@@ -260,6 +260,7 @@ function classifyFromTextSignals(text: string): ProductClassification | null {
 export async function preflightMedicationEvidence(opts: {
     ocrText: string;
     language: "en" | "ar";
+    enableFda?: boolean;
 }): Promise<MedicationPreflight> {
     const ndc = extractPossibleNdc(opts.ocrText || "");
 
@@ -290,37 +291,60 @@ export async function preflightMedicationEvidence(opts: {
         web = null;
     }
 
-    let fda: OpenFdaLabelSnapshot | null = null;
-    try {
-        if (ndc) {
-            fda = await fetchOpenFdaLabelSnapshot({ productNdc: ndc, limit: 5 });
-        } else {
-            const candidates = extractCandidateNamesFromSerper(web);
-            for (const brand of candidates) {
-                const attempt = await fetchOpenFdaLabelSnapshot({ brand, limit: 5 });
-                if (attempt?.found) {
-                    fda = attempt;
-                    break;
-                }
-                if (!fda) fda = attempt;
-            }
-        }
-    } catch (e: any) {
-        fda = {
-            found: false,
-            query: { brand: null, generic: null, productNdc: ndc || null, manufacturer: null, attemptedSearch: null },
-            fetchedAt: new Date().toISOString(),
-            error: String(e?.message || e || "openFDA lookup failed"),
-        };
-    }
+    const enableFda = opts.enableFda !== false;
 
-    if (!fda) {
-        fda = {
-            found: false,
-            query: { brand: null, generic: null, productNdc: ndc || null, manufacturer: null, attemptedSearch: null },
-            fetchedAt: new Date().toISOString(),
-            error: "No FDA search terms available",
-        };
+    let fda: OpenFdaLabelSnapshot | null = null;
+    if (enableFda) {
+        let pickedBrand: string | null = null;
+        try {
+            if (ndc) {
+                fda = await fetchOpenFdaLabelSnapshot({ productNdc: ndc, limit: 5 });
+            } else {
+                const candidates = extractCandidateNamesFromSerper(web);
+                pickedBrand = candidates[0] || null;
+                for (const brand of candidates) {
+                    const attempt = await fetchOpenFdaLabelSnapshot({ brand, limit: 5 });
+                    if (attempt?.found) {
+                        fda = attempt;
+                        pickedBrand = brand;
+                        break;
+                    }
+                    if (!fda) fda = attempt;
+                }
+            }
+        } catch (e: any) {
+            fda = {
+                found: false,
+                query: { brand: null, generic: null, productNdc: ndc || null, manufacturer: null, attemptedSearch: null },
+                fetchedAt: new Date().toISOString(),
+                error: String(e?.message || e || "openFDA lookup failed"),
+            };
+        }
+
+        // Attach NDC dataset snapshot when possible (active ingredients + strengths).
+        try {
+            const productNdcFromLabel = (fda as any)?.openfda?.product_ndc?.[0] ? String((fda as any).openfda.product_ndc[0]) : null;
+            const ndcSnapshot = await fetchOpenFdaNdcSnapshot({
+                packageNdc: ndc || null,
+                productNdc: productNdcFromLabel || ndc || null,
+                brand: pickedBrand || (fda as any)?.query?.brand || null,
+                generic: (fda as any)?.query?.generic || null,
+                limit: 5,
+            });
+
+            if (fda) {
+                (fda as any).ndc = ndcSnapshot;
+            } else if (ndcSnapshot?.found) {
+                fda = {
+                    found: false,
+                    query: { brand: pickedBrand || null, generic: null, productNdc: ndc || null, manufacturer: null, attemptedSearch: null },
+                    fetchedAt: new Date().toISOString(),
+                    ndc: ndcSnapshot,
+                } as OpenFdaLabelSnapshot;
+            }
+        } catch {
+            // best-effort
+        }
     }
 
     const classification =

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
-import { User, CreditCard, Settings, Shield, Activity, Gift, LogOut, ChevronRight, Lock } from "lucide-react";
+import { User, CreditCard, Settings, Shield, Activity, Gift, LogOut, ChevronRight, Lock, Database } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/context/SettingsContext";
 import { cn } from "@/lib/utils";
@@ -13,8 +13,8 @@ import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
     const { user, plan, credits, loading: userLoading, refreshUser } = useUser();
-    const { resultsLanguage, setResultsLanguage } = useSettings();
-    const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'private' | 'memories'>('account');
+    const { resultsLanguage, setResultsLanguage, fdaDrugsEnabled, setFdaDrugsEnabled } = useSettings();
+    const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'private' | 'memories'>('account');
     const supabase = createClient();
     const router = useRouter();
 
@@ -131,6 +131,7 @@ export default function ProfilePage() {
         { id: 'account', label: 'Account', icon: User },
         { id: 'credits', label: 'Credits & Plans', icon: CreditCard },
         { id: 'settings', label: 'App Settings', icon: Settings },
+        { id: 'fda', label: 'FDA Drugs', icon: Database, pro: true },
         { id: 'private', label: 'Private AI Profile', icon: Shield, pro: true },
         { id: 'memories', label: 'Medication Memories', icon: Activity, pro: true },
     ];
@@ -157,7 +158,7 @@ export default function ProfilePage() {
                         >
                             <tab.icon className={cn("w-4 h-4", tab.pro && plan !== 'ultra' ? "text-white/30" : "text-cyan-400")} />
                             <span className="flex-1">{tab.label}</span>
-                            {tab.pro && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">PRO</span>}
+                            {tab.pro && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">ULTRA</span>}
                         </button>
                     ))}
 
@@ -328,6 +329,69 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         </GlassCard>
+                    )}
+
+                    {/* FDA TAB (ULTRA) */}
+                    {activeTab === 'fda' && (
+                        <div className="relative">
+                            {plan !== 'ultra' && (
+                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/50 flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
+                                    <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
+                                        <Lock className="w-6 h-6 text-amber-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">Ultra Feature</h3>
+                                    <p className="text-white/60 mb-6 max-w-sm">
+                                        Control FDA verification (openFDA label + NDC) to improve accuracy and ingredient dosages.
+                                    </p>
+                                    <Link href="/pricing"><Button variant="primary" className="bg-amber-600 hover:bg-amber-500">Upgrade to Ultra</Button></Link>
+                                </div>
+                            )}
+
+                            <GlassCard className={cn("p-6", plan !== 'ultra' && "opacity-20 pointer-events-none")}>
+                                <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                    <Database className="w-5 h-5 text-emerald-300" /> FDA Drugs Verification
+                                </h2>
+                                <p className="text-white/50 text-sm">
+                                    When enabled, QURE cross-checks your scan with FDA datasets (openFDA) to improve drug naming, manufacturer matching, and active-ingredient dosages.
+                                </p>
+
+                                <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                                    <div className="min-w-0">
+                                        <p className="text-white font-semibold">Use FDA verification</p>
+                                        <p className="text-white/45 text-xs mt-1 leading-relaxed">
+                                            Affects new scans and the FDA sections in result cards. Might add a few seconds per scan.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={fdaDrugsEnabled}
+                                        onClick={() => setFdaDrugsEnabled(!fdaDrugsEnabled)}
+                                        className={cn(
+                                            "relative inline-flex h-8 w-14 items-center rounded-full border transition-colors",
+                                            fdaDrugsEnabled
+                                                ? "bg-emerald-500/20 border-emerald-500/30"
+                                                : "bg-white/5 border-white/15"
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                "inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform",
+                                                fdaDrugsEnabled ? "translate-x-7" : "translate-x-1"
+                                            )}
+                                        />
+                                    </button>
+                                </div>
+
+                                <div className="mt-4 text-xs text-white/40">
+                                    Docs:{" "}
+                                    <a className="text-white/70 hover:underline" href="https://open.fda.gov/apis/drug/" target="_blank" rel="noreferrer">
+                                        open.fda.gov
+                                    </a>
+                                </div>
+                            </GlassCard>
+                        </div>
                     )}
 
                     {/* PRIVATE PROFILE TAB (PRO) */}

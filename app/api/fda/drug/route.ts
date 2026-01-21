@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { extractPossibleNdc, fetchOpenFdaLabelSnapshot } from "@/lib/openfda";
+import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot } from "@/lib/openfda";
 import { createClient } from "@/lib/supabase/server";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 
@@ -53,7 +53,27 @@ export async function POST(req: NextRequest) {
             limit: 5,
         });
 
-        return NextResponse.json({ ...snapshot, serverDurationMs: Date.now() - startTime });
+        // Best-effort: also fetch drug/ndc dataset for active-ingredient strengths.
+        let ndcSnapshot: any = null;
+        try {
+            const productNdcFromLabel = (snapshot as any)?.openfda?.product_ndc?.[0] ? String((snapshot as any).openfda.product_ndc[0]) : null;
+            ndcSnapshot = await fetchOpenFdaNdcSnapshot({
+                packageNdc: productNdc || null,
+                productNdc: productNdcFromLabel || productNdc || null,
+                brand: brandForFda || null,
+                generic: genericForFda || null,
+                manufacturer: manufacturer || null,
+                limit: 5,
+            });
+        } catch {
+            ndcSnapshot = null;
+        }
+
+        return NextResponse.json({
+            ...(snapshot as any),
+            ndc: ndcSnapshot || undefined,
+            serverDurationMs: Date.now() - startTime
+        });
     } catch (error: any) {
         console.error("openFDA route error:", error);
         return NextResponse.json(
