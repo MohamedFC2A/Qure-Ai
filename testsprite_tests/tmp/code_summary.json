@@ -1,0 +1,51 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "Next.js",
+        "Supabase",
+        "Tailwind CSS",
+        "Tesseract.js",
+        "OpenAI"
+    ],
+    "features": [
+        {
+            "name": "Authentication",
+            "description": "User login and registration functionality.",
+            "files": [
+                "app/(auth)",
+                "app/auth",
+                "components/auth"
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "description": "User dashboard for managing content.",
+            "files": [
+                "app/dashboard",
+                "components/dashboard"
+            ]
+        },
+        {
+            "name": "Scanner (OCR)",
+            "description": "Image scanning and text extraction using Tesseract.js.",
+            "files": [
+                "app/scan",
+                "components/scanner"
+            ]
+        },
+        {
+            "name": "API",
+            "description": "Backend API endpoints for AI and other services.",
+            "files": [
+                "app/api"
+            ]
+        },
+        {
+            "name": "Documentation",
+            "description": "Developer documentation and guides.",
+            "files": [
+                "app/docs"
+            ]
+        }
+    ]
+}

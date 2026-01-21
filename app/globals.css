@@ -25,3 +25,12 @@
 .liquid-shape {
   @apply absolute rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob;
 }
+
+/* Hide scrollbars for horizontal carousels/nav on mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

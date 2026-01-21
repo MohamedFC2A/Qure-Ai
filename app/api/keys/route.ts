@@ -8,7 +8,8 @@ export async function GET(req: NextRequest) {
     // Get user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        console.error("[API/Keys] GET Unauthorized:", authError?.message || "No user found");
+        return NextResponse.json({ error: "Unauthorized", details: authError?.message || "No session" }, { status: 401 });
     }
 
     const { data, error } = await supabase
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest) {
         .order("created_at", { ascending: false });
 
     if (error) {
+        console.error("[API/Keys] GET DB Error:", error.message);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -35,7 +37,8 @@ export async function POST(req: NextRequest) {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        console.error("[API/Keys] POST Unauthorized:", authError?.message || "No user found");
+        return NextResponse.json({ error: "Unauthorized", details: authError?.message || "No session" }, { status: 401 });
     }
 
     // Check limit (Max 5)
@@ -76,7 +79,8 @@ export async function DELETE(req: NextRequest) {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        console.error("[API/Keys] DELETE Unauthorized:", authError?.message || "No user found");
+        return NextResponse.json({ error: "Unauthorized", details: authError?.message || "No session" }, { status: 401 });
     }
 
     const { error } = await supabase

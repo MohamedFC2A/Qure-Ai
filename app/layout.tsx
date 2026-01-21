@@ -4,11 +4,14 @@ import "./globals.css";
 import clsx from "clsx";
 import { LiquidBackground } from "@/components/ui/LiquidBackground";
 import { Navbar } from "@/components/Navbar";
+import { SettingsProvider } from "@/context/SettingsContext";
+import { UserProvider } from "@/context/UserContext";
+import { ScanProvider } from "@/context/ScanContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "MedVision AI | Pharmaceutical Analysis",
+    title: "Qure Ai | Pharmaceutical Analysis",
     description: "Advanced AI-powered medication analysis and pharmaceutical intelligence.",
 };
 
@@ -21,8 +24,14 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body className={clsx(inter.className, "min-h-screen relative")} suppressHydrationWarning>
                 <LiquidBackground />
-                <Navbar />
-                {children}
+                <SettingsProvider>
+                    <UserProvider>
+                        <ScanProvider>
+                            <Navbar />
+                            {children}
+                        </ScanProvider>
+                    </UserProvider>
+                </SettingsProvider>
             </body>
         </html>
     );

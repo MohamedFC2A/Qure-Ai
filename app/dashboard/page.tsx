@@ -3,6 +3,7 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Activity, Database, Server } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { CreditsWidget } from "@/components/dashboard/CreditsWidget";
 import { DeveloperSection } from "@/components/dashboard/DeveloperSection";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
@@ -71,7 +72,11 @@ export default function DashboardPage() {
             <DeveloperSection />
 
             {/* Real Analytics Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-10 duration-700">
+            <GlassCard className="p-0 border-white/5 overflow-hidden col-span-1 md:col-span-1">
+                <CreditsWidget />
+            </GlassCard>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 col-span-1 md:col-span-2">
                 <GlassCard className="p-6 border-white/5 flex items-center gap-4">
                     <div className="p-3 bg-blue-500/20 rounded-xl">
                         <Database className="w-8 h-8 text-blue-400" />
@@ -89,16 +94,6 @@ export default function DashboardPage() {
                     <div>
                         <p className="text-white/40 text-sm font-medium uppercase tracking-wider">System Status</p>
                         <h3 className="text-3xl font-bold text-white">Online</h3>
-                    </div>
-                </GlassCard>
-
-                <GlassCard className="p-6 border-white/5 flex items-center gap-4">
-                    <div className="p-3 bg-fuchsia-500/20 rounded-xl">
-                        <Server className="w-8 h-8 text-fuchsia-400" />
-                    </div>
-                    <div>
-                        <p className="text-white/40 text-sm font-medium uppercase tracking-wider">API Latency</p>
-                        <h3 className="text-3xl font-bold text-white">~45ms</h3>
                     </div>
                 </GlassCard>
             </div>

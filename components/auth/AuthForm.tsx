@@ -10,11 +10,12 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { getBaseUrl } from "@/lib/config";
+import { TERMS_VERSION, safeNextPath } from "@/lib/legal/terms";
 
 const schema = z.object({
     email: z.string().email("Please enter a valid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
+    agreeToTerms: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -28,6 +29,19 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const supabase = createClient();
+
+    const getNextPath = () => {
+        if (typeof window === "undefined") return "/scan";
+        const params = new URLSearchParams(window.location.search);
+        return safeNextPath(params.get("next"), "/scan");
+    };
+
+    const getCallbackUrl = () => {
+        if (typeof window === "undefined") return "";
+        const url = new URL("/auth/callback", window.location.origin);
+        url.searchParams.set("next", getNextPath());
+        return url.toString();
+    };
 
     const {
         register,
@@ -44,11 +58,24 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         try {
             let result;
             if (type === "signup") {
+                if (!data.agreeToTerms) {
+                    setError("You must agree to the Terms & Disclaimer to create an account.");
+                    setIsLoading(false);
+                    return;
+                }
+
+                const callbackUrl = getCallbackUrl();
+                if (!callbackUrl) throw new Error("Missing callback URL. Please refresh and try again.");
+
                 result = await supabase.auth.signUp({
                     email: data.email,
                     password: data.password,
                     options: {
-                        emailRedirectTo: `https://qure-ai-nexus.vercel.app/auth/callback`,
+                        emailRedirectTo: callbackUrl,
+                        data: {
+                            terms_accepted_at: new Date().toISOString(),
+                            terms_version: TERMS_VERSION,
+                        },
                     }
                 });
             } else {
@@ -69,7 +96,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                 return;
             }
 
-            router.push("/scan");
+            router.push(getNextPath());
             router.refresh(); // Refresh to update Navbar state
         } catch (err: any) {
             setError(err.message || "An error occurred during authentication");
@@ -82,13 +109,12 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         setIsLoading(true);
         setError(null);
         try {
-            // ... inside component ...
-
+            const callbackUrl = getCallbackUrl();
+            if (!callbackUrl) throw new Error("Missing callback URL. Please refresh and try again.");
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
-                    // Force production URL to ensure we never redirect to localhost
-                    redirectTo: `https://qure-ai-nexus.vercel.app/auth/callback`,
+                    redirectTo: callbackUrl,
                 }
             });
             if (error) throw error;
@@ -157,6 +183,39 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>
                         )}
                     </div>
+
+                    {type === "signup" && (
+                        <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                    <p className="text-sm text-white font-semibold">Terms & Disclaimer</p>
+                                    <p className="text-xs text-white/60 mt-1 leading-relaxed">
+                                        This app may produce incorrect or incomplete medication data. Always verify with a pharmacist/doctor and official labels (FDA when available).
+                                    </p>
+                                    <p className="text-xs text-white/50 mt-2 leading-relaxed">
+                                        بالعربي: احتمال وجود خطأ في OCR/التحليل. لا تعتمد عليه كمرجع طبي بدون استشارة مختص.
+                                    </p>
+
+                                    <div className="mt-3 flex items-start gap-3">
+                                        <input
+                                            id="agreeToTerms"
+                                            type="checkbox"
+                                            className="mt-1 h-4 w-4 rounded border-white/20 bg-white/10"
+                                            {...register("agreeToTerms")}
+                                        />
+                                        <label htmlFor="agreeToTerms" className="text-xs text-white/70">
+                                            I agree to the{" "}
+                                            <Link href="/terms" className="text-white hover:underline font-medium">
+                                                Terms & Disclaimer
+                                            </Link>
+                                            .
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <Button
                         type="submit"

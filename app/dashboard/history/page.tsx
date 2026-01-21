@@ -63,7 +63,7 @@ export default function HistoryPage() {
     );
 
     return (
-        <div className="min-h-screen w-full text-white p-6 md:p-12">
+        <div className="min-h-screen w-full text-white pt-24 pb-12 px-4 md:px-8">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header Section */}

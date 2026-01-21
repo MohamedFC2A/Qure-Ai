@@ -1,0 +1,16 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "QURE AI",
+    "projectPath": "c:\\Projects\\QURE AI",
+    "testIds": [],
+    "additionalInstruction": "Run the tests against the production server to verify stability. Update the report.",
+    "envs": {
+      "API_KEY": "sk-user-PKA8QPJ045cWKLB2iWyZPeZ0V249vsHI-MJWg-PvAFVedAj7Y5J_MWUwU6bPKtox3BljBRUq2smd_2lTVD1HmuPCz_XjRpJTLFS8UN9TJjAJ6WX0oiJtiS2ugSsvDW8xl6A"
+    }
+  },
+  "proxy": "http://3b889963-867e-46c1-8571-6a9b9dcd493e:1VBcbop7bFWHoS0HzlsbqnjsBi5CvOFd@tun.testsprite.com:8080"
+}

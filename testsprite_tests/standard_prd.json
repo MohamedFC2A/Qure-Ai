@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "project": "Qure-Ai",
+    "date": "2026-01-15",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "Qure-Ai is a web application that leverages AI and OCR technologies to enhance content management and text extraction capabilities for users. It provides secure authentication, an intuitive dashboard, OCR scanning, and AI-powered services within an integrated interface.",
+  "core_goals": [
+    "Enable seamless user authentication for personalized experiences.",
+    "Provide a user-friendly dashboard to manage and organize content effectively.",
+    "Integrate OCR technology for accurate image scanning and text extraction.",
+    "Offer AI-driven backend services to enhance data processing and productivity.",
+    "Deliver comprehensive documentation for easy developer onboarding and collaboration."
+  ],
+  "key_features": [
+    "User login and registration functionality for secure access.",
+    "Dashboard interface for managing user content and interactions.",
+    "OCR Scanner using Tesseract.js for extracting text from images.",
+    "Backend API endpoints supporting AI services and other functionalities.",
+    "Detailed developer documentation and guides to support development and usage."
+  ],
+  "user_flow_summary": [
+    "User registers or logs in to access the platform.",
+    "Upon authentication, user navigates to the dashboard to manage content.",
+    "User uploads or scans images through the OCR Scanner feature to extract text.",
+    "Extracted text can be further processed or used via AI-powered backend services.",
+    "Developers can access documentation for integration and extension of platform features."
+  ],
+  "validation_criteria": [
+    "Users can successfully register and log in with valid credentials.",
+    "Dashboard loads user-specific content accurately and performs expected actions.",
+    "OCR scanner correctly extracts text from a variety of image types and qualities.",
+    "API endpoints respond correctly and deliver AI-related functionalities as specified.",
+    "Documentation is accessible, clear, and comprehensive for developers and users."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "Next.js",
+      "Supabase",
+      "Tailwind CSS",
+      "Tesseract.js",
+      "OpenAI"
+    ],
+    "features": [
+      {
+        "name": "Authentication",
+        "description": "User login and registration functionality.",
+        "files": [
+          "app/(auth)",
+          "app/auth",
+          "components/auth"
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "description": "User dashboard for managing content.",
+        "files": [
+          "app/dashboard",
+          "components/dashboard"
+        ]
+      },
+      {
+        "name": "Scanner (OCR)",
+        "description": "Image scanning and text extraction using Tesseract.js.",
+        "files": [
+          "app/scan",
+          "components/scanner"
+        ]
+      },
+      {
+        "name": "API",
+        "description": "Backend API endpoints for AI and other services.",
+        "files": [
+          "app/api"
+        ]
+      },
+      {
+        "name": "Documentation",
+        "description": "Developer documentation and guides.",
+        "files": [
+          "app/docs"
+        ]
+      }
+    ]
+  }
+}

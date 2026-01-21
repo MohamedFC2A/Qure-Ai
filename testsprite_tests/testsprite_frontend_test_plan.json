@@ -1,0 +1,398 @@
+[
+  {
+    "id": "TC001",
+    "title": "User Registration with Valid Credentials",
+    "description": "Verify that a new user can successfully register with valid username, email, and password.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the user registration page."
+      },
+      {
+        "type": "action",
+        "description": "Input a valid username."
+      },
+      {
+        "type": "action",
+        "description": "Input a valid email address."
+      },
+      {
+        "type": "action",
+        "description": "Input a secure password that meets the password policy."
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that registration is successful and user is redirected to the login page or dashboard."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User Registration with Invalid Email",
+    "description": "Verify that registration fails when an invalid email format is provided.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the user registration page."
+      },
+      {
+        "type": "action",
+        "description": "Input a valid username."
+      },
+      {
+        "type": "action",
+        "description": "Input an invalid email address (e.g., 'useratexample.com')."
+      },
+      {
+        "type": "action",
+        "description": "Input a valid password."
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that an error message indicating invalid email format is displayed and registration is prevented."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "User Login with Valid Credentials",
+    "description": "Check that a registered user can log in successfully using valid username/email and password.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid registered username or email."
+      },
+      {
+        "type": "action",
+        "description": "Input the correct password."
+      },
+      {
+        "type": "action",
+        "description": "Click the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login is successful and user is redirected to the dashboard with personalized content."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "User Login with Incorrect Password",
+    "description": "Verify that login fails when entering incorrect password for a registered user.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid registered username or email."
+      },
+      {
+        "type": "action",
+        "description": "Input an incorrect password."
+      },
+      {
+        "type": "action",
+        "description": "Click the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login fails and an appropriate error message is shown to the user."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Dashboard Loads User-Specific Content",
+    "description": "Verify the dashboard loads accurate and personalized content for the logged-in user.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in successfully to the application."
+      },
+      {
+        "type": "action",
+        "description": "Navigate to the dashboard page."
+      },
+      {
+        "type": "assertion",
+        "description": "Check the dashboard displays content that is specific and relevant to the logged-in user."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Dashboard User Actions Execution",
+    "description": "Verify user can perform expected actions on dashboard content such as adding, editing, and deleting items.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login and navigate to the dashboard."
+      },
+      {
+        "type": "action",
+        "description": "Add a new content item."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the new item appears on the dashboard list."
+      },
+      {
+        "type": "action",
+        "description": "Edit an existing item."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm changes are saved and displayed correctly."
+      },
+      {
+        "type": "action",
+        "description": "Delete an existing item."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the item is removed from the dashboard."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "OCR Text Extraction from Clear Image",
+    "description": "Verify that the OCR Scanner extracts text accurately from a clear, high-quality image.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the OCR Scanner feature."
+      },
+      {
+        "type": "action",
+        "description": "Upload or select a clear, high-resolution image containing printed text."
+      },
+      {
+        "type": "action",
+        "description": "Start the OCR scan."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the extracted text matches the text present in the image accurately."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "OCR Text Extraction from Low-Quality Image",
+    "description": "Verify OCR Scanner can handle low-quality or blurred images and still extract readable text with tolerable accuracy.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the OCR Scanner feature."
+      },
+      {
+        "type": "action",
+        "description": "Upload a low-quality or slightly blurred image containing text."
+      },
+      {
+        "type": "action",
+        "description": "Start the OCR scan."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the OCR result extracts the majority of text correctly, allowing for minor errors."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "OCR Scanner with Image Having No Text",
+    "description": "Verify that the OCR Scanner correctly handles images with no text and returns an empty or appropriate result.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the OCR Scanner feature."
+      },
+      {
+        "type": "action",
+        "description": "Upload an image that contains no text or is purely graphical."
+      },
+      {
+        "type": "action",
+        "description": "Start the OCR scan."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the output indicates no text was found or returns an empty string, and displays a helpful message."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "API Endpoint Response for AI Services Success",
+    "description": "Verify that backend API endpoints respond correctly and deliver expected AI service functionalities with valid requests.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send valid API requests to AI service endpoints with proper parameters and authentication."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the response status is success (e.g., HTTP 200) and the returned data matches the expected AI service output."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "API Endpoint Handling of Invalid Requests",
+    "description": "Verify API endpoints handle invalid or malformed requests gracefully and provide appropriate error messages.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send API requests with invalid parameters, missing required fields, or wrong data types to AI service endpoints."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the API responds with proper error codes (e.g., HTTP 400) and meaningful error messages describing the issue."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "API Endpoint Unauthorized Access Prevention",
+    "description": "Verify that backend API endpoints reject unauthorized access attempts and protect secured AI services.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to access AI backend API endpoints without authentication or with invalid credentials."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the API responds with unauthorized status (e.g., HTTP 401) and denies access to the service."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Documentation Accessibility Check",
+    "description": "Verify that developer documentation is accessible from the application and loads without error.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the developer documentation section or URL."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm documentation pages load successfully and display content properly."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Developer Documentation Content Verification",
+    "description": "Verify that developer documentation is clear, comprehensive, and includes guides to support API integration and platform usage.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open key sections of the developer documentation including API guides, authentication instructions, and feature descriptions."
+      },
+      {
+        "type": "assertion",
+        "description": "Check the documentation contains clear examples, detailed explanations, and is easy to understand for developers."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Session Management Post Login",
+    "description": "Verify that after login, user session is maintained correctly across dashboard and API calls until logout.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login with valid credentials."
+      },
+      {
+        "type": "action",
+        "description": "Navigate across dashboard pages and perform API requests requiring authentication."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user remains authenticated and session is active; no need to re-login."
+      },
+      {
+        "type": "action",
+        "description": "Logout from the application."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify session is cleared and user is unable to access protected dashboard or API endpoints."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Password Security Policy Enforcement",
+    "description": "Verify the registration and password change enforce required password complexity policies (e.g., length, characters).",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to registration or password change form."
+      },
+      {
+        "type": "action",
+        "description": "Enter passwords that do not meet policy requirements (e.g., too short, missing character types)."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit the form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that submission is blocked and a descriptive error message is presented specifying password requirements."
+      }
+    ]
+  }
+]
