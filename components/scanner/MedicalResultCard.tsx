@@ -2002,8 +2002,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             <div>
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     {t(`Ask ${AI_DISPLAY_NAME}`, `اسال ${AI_DISPLAY_NAME}`)}
-                                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-200">
-                                        {t("AI", "ذكاء")}
+                                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-200">
+                                        {t("Beta", "تجريبي")}
                                     </span>
                                 </h3>
                                 <p className="text-white/40 text-xs mt-0.5">{t("Interactive medical Q&A", "أسئلة وأجوبة طبية تفاعلية")}</p>
