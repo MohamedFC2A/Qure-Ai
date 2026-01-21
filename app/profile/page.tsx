@@ -397,7 +397,7 @@ export default function ProfilePage() {
         { id: 'account', label: 'Account', icon: User },
         { id: 'credits', label: 'Credits & Plans', icon: CreditCard },
         { id: 'settings', label: 'App Settings', icon: Settings },
-        { id: 'fda', label: 'FDA Drugs', icon: Database, pro: true },
+        { id: 'fda', label: 'FDA Drugs', icon: Database, pro: true, beta: true },
         { id: 'family', label: 'Family Care', icon: Users, pro: true },
         { id: 'private', label: 'Private AI Profile', icon: Shield, pro: true },
         { id: 'memories', label: 'Medication Memories', icon: Activity, pro: true },
@@ -425,6 +425,7 @@ export default function ProfilePage() {
                         >
                             <tab.icon className={cn("w-4 h-4", tab.pro && plan !== 'ultra' ? "text-white/30" : "text-cyan-400")} />
                             <span className="flex-1">{tab.label}</span>
+                            {(tab as any).beta && <span className="text-[10px] bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded text-amber-300">BETA</span>}
                             {tab.pro && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">ULTRA</span>}
                         </button>
                     ))}
