@@ -85,10 +85,15 @@ export const Navbar = () => {
                         {/* Only show content after we've checked auth state to prevent flickering */}
                         {!loading && user ? (
                             <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                                {/* Enhanced Scanning Indicator - Now visible on mobile */}
                                 {isScanning && (
-                                    <Link href="/scan" className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border bg-white/5 border-white/10 text-white/70 hover:bg-white/10 transition-all">
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-300" />
-                                        <span>Scanning · {totalDuration}s</span>
+                                    <Link href="/scan" className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 text-cyan-100 hover:from-cyan-500/30 hover:to-blue-500/30 transition-all shadow-lg shadow-cyan-500/20 animate-pulse">
+                                        <div className="relative">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-300" />
+                                            <div className="absolute inset-0 blur-sm bg-cyan-400/40 rounded-full animate-pulse" />
+                                        </div>
+                                        <span className="hidden xs:inline">Scanning</span>
+                                        <span className="font-mono tabular-nums">{totalDuration}s</span>
                                     </Link>
                                 )}
                                 {/* Credits Chip */}

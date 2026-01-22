@@ -216,23 +216,24 @@ export const ScannerInterface = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500" />
 
                 <div className="relative bg-black/50 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-white/10 shadow-2xl hover:shadow-cyan-500/10 transition-all duration-500">
-                    {/* Header with animated gradient border */}
+                    {/* Header - Compact on mobile */}
                     <div className="relative">
-                        <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-60" />
-                        <div className="relative flex items-start justify-between gap-4 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-white/10">
+                        <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl blur-sm opacity-60" />
+                        <div className="relative flex items-start justify-between gap-3 sm:gap-4 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10">
                             <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
                                     <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl blur-md opacity-50 animate-pulse" />
-                                        <div className="relative p-2.5 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl border border-cyan-400/30">
-                                            <Brain className="w-5 h-5 text-cyan-300" />
+                                        {/* Remove pulsing blur on mobile for performance */}
+                                        <div className="hidden sm:block absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg sm:rounded-xl blur-sm sm:blur-md opacity-50 animate-pulse" />
+                                        <div className="relative p-2 sm:p-2.5 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg sm:rounded-xl border border-cyan-400/30">
+                                            <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />
                                         </div>
                                     </div>
-                                    <h3 className="text-white font-bold text-lg sm:text-xl bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent">
+                                    <h3 className="text-white font-bold text-base sm:text-lg lg:text-xl bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent">
                                         {AI_DISPLAY_NAME} Processor
                                     </h3>
                                 </div>
-                                <p className="text-xs sm:text-sm text-white/60 leading-relaxed ml-[52px]">
+                                <p className="text-[11px] sm:text-xs lg:text-sm text-white/60 leading-relaxed ml-10 sm:ml-[52px]">
                                     {t(
                                         "Browse freely — your scan continues in the background.",
                                         "تقدر تتصفح بحرّية — الفحص مستمر في الخلفية."
@@ -240,17 +241,17 @@ export const ScannerInterface = () => {
                                 </p>
                             </div>
 
-                            <div className="shrink-0 flex flex-col items-end gap-2">
+                            <div className="shrink-0 flex flex-col items-end gap-1.5 sm:gap-2">
                                 {/* Animated Status Badge */}
                                 <div className={cn(
-                                    "px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-sm transition-all duration-300",
+                                    "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold border backdrop-blur-sm transition-all duration-300",
                                     hasError
                                         ? "bg-red-500/20 text-red-200 border-red-400/40 shadow-lg shadow-red-500/20"
                                         : isScanning
                                             ? "bg-cyan-500/20 text-cyan-100 border-cyan-400/40 shadow-lg shadow-cyan-500/20 animate-pulse"
                                             : "bg-emerald-500/20 text-emerald-100 border-emerald-400/40 shadow-lg shadow-emerald-500/10"
                                 )}>
-                                    <span className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-1 sm:gap-1.5">
                                         <span className={cn(
                                             "w-1.5 h-1.5 rounded-full",
                                             hasError ? "bg-red-400" : isScanning ? "bg-cyan-400 animate-pulse" : "bg-emerald-400"
@@ -259,12 +260,12 @@ export const ScannerInterface = () => {
                                     </span>
                                 </div>
 
-                                {/* Timer with gradient border */}
+                                {/* Timer */}
                                 <div className="relative group/timer">
                                     <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full opacity-0 group-hover/timer:opacity-100 transition-opacity duration-300" />
-                                    <div className="relative flex items-center gap-2 px-3 py-1.5 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-full border border-white/20">
-                                        <Timer className="w-4 h-4 text-cyan-300" />
-                                        <span className="text-white font-mono text-sm font-semibold tabular-nums">
+                                    <div className="relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-full border border-white/20">
+                                        <Timer className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
+                                        <span className="text-white font-mono text-xs sm:text-sm font-semibold tabular-nums">
                                             {`${totalDuration}s`}
                                         </span>
                                     </div>
@@ -274,34 +275,34 @@ export const ScannerInterface = () => {
                     </div>
 
                     {/* Enhanced Progress Section */}
-                    <div className="mt-6">
-                        <div className="flex items-center justify-between text-xs text-white/60 mb-3">
+                    <div className="mt-4 sm:mt-6">
+                        <div className="flex items-center justify-between text-[10px] sm:text-xs text-white/60 mb-2 sm:mb-3">
                             <span className="font-semibold">{t("Progress", "التقدم")}</span>
                             <span className="font-mono font-bold tabular-nums text-cyan-300">{doneCount}/{totalStepsCount}</span>
                         </div>
 
-                        {/* Premium Progress Bar */}
+                        {/* Optimized Progress Bar - No shimmer on mobile */}
                         <div className="relative">
                             <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-sm" />
                             <div
-                                className="relative h-3 rounded-full bg-gradient-to-r from-white/5 to-white/10 overflow-hidden border border-white/20 shadow-inner"
+                                className="relative h-2.5 sm:h-3 rounded-full bg-gradient-to-r from-white/5 to-white/10 overflow-hidden border border-white/20 shadow-inner"
                                 role="progressbar"
                                 aria-valuenow={percent}
                                 aria-valuemin={0}
                                 aria-valuemax={100}
                                 aria-label={t("Scan progress", "تقدم الفحص")}
+                                style={{ willChange: 'auto' }}
                             >
-                                {/* Animated gradient fill */}
+                                {/* Simplified gradient fill - no shimmer on mobile */}
                                 <div
                                     className={cn(
-                                        "absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out",
-                                        "shadow-lg shadow-cyan-500/50 relative overflow-hidden",
+                                        "absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out shadow-lg shadow-cyan-500/50",
                                         isArabic && "left-auto right-0 bg-gradient-to-l from-cyan-400 via-blue-500 to-purple-500"
                                     )}
-                                    style={{ width: `${percent}%` }}
+                                    style={{ width: `${percent}%`, willChange: 'width' }}
                                 >
-                                    {/* Shimmer effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]"
+                                    {/* Shimmer effect - desktop only */}
+                                    <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]"
                                         style={{
                                             backgroundSize: '200% 100%',
                                             animation: 'shimmer 2s infinite'
@@ -310,7 +311,7 @@ export const ScannerInterface = () => {
 
                                 {/* Percentage text */}
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-[10px] font-bold text-white/80 drop-shadow-lg">
+                                    <span className="text-[9px] sm:text-[10px] font-bold text-white/90 drop-shadow-lg">
                                         {percent}%
                                     </span>
                                 </div>
@@ -318,10 +319,10 @@ export const ScannerInterface = () => {
                         </div>
                     </div>
 
-                    {/* Enhanced Steps Timeline */}
-                    <div className="relative space-y-4 pl-1 mt-7">
+                    {/* Enhanced Steps Timeline - Optimized for mobile */}
+                    <div className="relative space-y-3 sm:space-y-4 pl-1 mt-5 sm:mt-7">
                         {/* Animated Vertical Line */}
-                        <div className="absolute left-[22px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-cyan-500/30 via-blue-500/20 to-purple-500/10 rounded-full" />
+                        <div className="absolute left-[18px] sm:left-[22px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-cyan-500/30 via-blue-500/20 to-purple-500/10 rounded-full" />
 
                         {steps.map((step, index) => {
                             const isDone = step.status === 'done';
@@ -343,58 +344,57 @@ export const ScannerInterface = () => {
                                         : t("Queued", "قيد الانتظار");
 
                             return (
-                                <div key={step.id} className="relative z-10 group/step">
-                                    <div className="flex items-start justify-between gap-4 p-3 rounded-xl bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
-                                        <div className="flex items-start gap-4 min-w-0 flex-1">
-                                            {/* Premium Step Indicator */}
-                                            <div className="relative shrink-0">
-                                                {/* Glow effect for active/done */}
+                                <div key={step.id} className="relative z-10">
+                                    <div className="flex items-start justify-between gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
+                                        <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                                            {/* Optimized Step Indicator - No jitter */}
+                                            <div className="relative shrink-0" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
+                                                {/* Glow effect - simplified on mobile, no scale animation */}
                                                 {(isDone || isRunning) && (
                                                     <div className={cn(
-                                                        "absolute inset-0 rounded-full blur-md transition-all duration-500",
-                                                        isDone ? "bg-emerald-400/40" : "bg-cyan-400/40 animate-pulse"
+                                                        "absolute inset-0 rounded-full blur-sm sm:blur-md transition-all duration-500",
+                                                        isDone ? "bg-emerald-400/30 sm:bg-emerald-400/40" : "bg-cyan-400/30 sm:bg-cyan-400/40 animate-pulse"
                                                     )} />
                                                 )}
 
                                                 <div className={cn(
-                                                    "relative w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all duration-500 shadow-lg",
-                                                    "bg-gradient-to-br backdrop-blur-sm",
+                                                    "relative w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center border-2 transition-all duration-500 shadow-lg bg-gradient-to-br backdrop-blur-sm",
                                                     isDone
                                                         ? "border-emerald-400/60 from-emerald-500/20 to-emerald-600/10 shadow-emerald-500/30"
                                                         : isRunning
-                                                            ? "border-cyan-400/60 from-cyan-500/20 to-blue-600/10 shadow-cyan-500/30 scale-110"
+                                                            ? "border-cyan-400/60 from-cyan-500/20 to-blue-600/10 shadow-cyan-500/30"
                                                             : isError
                                                                 ? "border-red-400/60 from-red-500/20 to-red-600/10 shadow-red-500/30"
                                                                 : "border-white/20 from-white/5 to-white/[0.02]"
                                                 )}>
                                                     {isDone ? (
-                                                        <CheckCircle className="w-6 h-6 text-emerald-300" />
+                                                        <CheckCircle className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-emerald-300" />
                                                     ) : isRunning ? (
-                                                        <Loader2 className="w-6 h-6 text-cyan-300 animate-spin" />
+                                                        <Loader2 className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-cyan-300 animate-spin" />
                                                     ) : isError ? (
-                                                        <AlertCircle className="w-6 h-6 text-red-300" />
+                                                        <AlertCircle className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-300" />
                                                     ) : (
-                                                        <span className="text-sm font-bold tabular-nums text-white/40">{index + 1}</span>
+                                                        <span className="text-xs sm:text-sm font-bold tabular-nums text-white/40">{index + 1}</span>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            <div className="min-w-0 flex-1 pt-1">
-                                                <div className="flex items-center gap-2 min-w-0 flex-wrap mb-1.5">
+                                            <div className="min-w-0 flex-1 pt-0.5 sm:pt-1">
+                                                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-wrap mb-1 sm:mb-1.5">
                                                     <span className={cn(
-                                                        "text-sm sm:text-base font-bold transition-all duration-300 truncate",
+                                                        "text-xs sm:text-sm lg:text-base font-bold transition-all duration-300 truncate",
                                                         isDone
                                                             ? "text-white"
                                                             : isRunning
-                                                                ? "text-cyan-100 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]"
+                                                                ? "text-cyan-100"
                                                                 : "text-white/50"
                                                     )}>
                                                         {step.label}
                                                     </span>
 
-                                                    {/* Premium Status Badge */}
+                                                    {/* Status Badge */}
                                                     <span className={cn(
-                                                        "px-2.5 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm transition-all duration-300",
+                                                        "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold border backdrop-blur-sm transition-all duration-300",
                                                         isDone
                                                             ? "bg-emerald-500/15 text-emerald-200 border-emerald-400/30 shadow-sm shadow-emerald-500/20"
                                                             : isRunning
@@ -406,15 +406,15 @@ export const ScannerInterface = () => {
                                                         {stepStatusLabel}
                                                     </span>
                                                 </div>
-                                                <div className="text-[11px] text-white/40 font-medium">
+                                                <div className="text-[10px] sm:text-[11px] text-white/40 font-medium">
                                                     {t("Step", "خطوة")} <span className="font-mono tabular-nums text-white/50">{index + 1}/{totalStepsCount}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Duration Badge */}
-                                        <div className="shrink-0 px-3 py-1.5 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-400/20 backdrop-blur-sm">
-                                            <span className="text-xs sm:text-sm text-cyan-300 font-mono font-bold tabular-nums">
+                                        <div className="shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-400/20 backdrop-blur-sm">
+                                            <span className="text-[10px] sm:text-xs lg:text-sm text-cyan-300 font-mono font-bold tabular-nums">
                                                 {seconds}
                                             </span>
                                         </div>
@@ -424,20 +424,20 @@ export const ScannerInterface = () => {
                         })}
 
                         {errorMsg && (
-                            <div className="mt-5 relative group/error animate-in fade-in slide-in-from-top-4 duration-500">
+                            <div className="mt-4 sm:mt-5 relative animate-in fade-in slide-in-from-top-4 duration-500">
                                 <div className="absolute -inset-[1px] bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-xl blur-sm" />
-                                <div className="relative p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 backdrop-blur-sm border border-red-400/30 rounded-xl shadow-lg shadow-red-500/10">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-red-500/20 rounded-lg border border-red-400/30 shrink-0">
-                                            <AlertTriangle className="w-5 h-5 text-red-300" />
+                                <div className="relative p-3 sm:p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 backdrop-blur-sm border border-red-400/30 rounded-xl shadow-lg shadow-red-500/10">
+                                    <div className="flex items-start gap-2.5 sm:gap-3">
+                                        <div className="p-1.5 sm:p-2 bg-red-500/20 rounded-lg border border-red-400/30 shrink-0">
+                                            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-300" />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-red-200 text-sm font-semibold leading-relaxed">{errorMsg}</p>
+                                            <p className="text-red-200 text-xs sm:text-sm font-semibold leading-relaxed">{errorMsg}</p>
 
                                             {errorAction === 'login' && (
-                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
                                                     <Link href={`/login?next=${encodeURIComponent('/scan')}`}>
-                                                        <Button size="sm" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0 shadow-lg shadow-cyan-500/20">
+                                                        <Button size="sm" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0 shadow-lg shadow-cyan-500/20 text-xs sm:text-sm">
                                                             {t("Log in", "تسجيل الدخول")}
                                                         </Button>
                                                     </Link>
@@ -445,7 +445,7 @@ export const ScannerInterface = () => {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="border-white/20 text-white/90 hover:bg-white/10 backdrop-blur-sm"
+                                                            className="border-white/20 text-white/90 hover:bg-white/10 backdrop-blur-sm text-xs sm:text-sm"
                                                         >
                                                             {t("Create account", "إنشاء حساب")}
                                                         </Button>
@@ -454,9 +454,9 @@ export const ScannerInterface = () => {
                                             )}
 
                                             {errorAction === 'terms' && (
-                                                <div className="mt-4">
+                                                <div className="mt-3 sm:mt-4">
                                                     <Link href={`/terms?next=${encodeURIComponent('/scan')}`}>
-                                                        <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0 shadow-lg shadow-amber-500/30">
+                                                        <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0 shadow-lg shadow-amber-500/30 text-xs sm:text-sm">
                                                             {t("Review & accept terms", "مراجعة والموافقة على الشروط")}
                                                         </Button>
                                                     </Link>
