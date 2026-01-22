@@ -12,19 +12,29 @@ export async function POST(req: NextRequest) {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "Unauthorized" }, {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         if (!hasAcceptedTerms(user)) {
-            return NextResponse.json({ error: "Terms acceptance required", code: "TERMS_REQUIRED" }, { status: 403 });
+            return NextResponse.json({ error: "Terms acceptance required", code: "TERMS_REQUIRED" }, {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         // Credits deduction currently requires admin privileges (service role) to bypass RLS.
         // If this key is missing in your server environment, the route will fail.
         if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            console.error("[OCR API] SUPABASE_SERVICE_ROLE_KEY is missing");
             return NextResponse.json(
                 { error: "Server configuration error: SUPABASE_SERVICE_ROLE_KEY is missing (required for credits deduction)." },
-                { status: 503 }
+                {
+                    status: 503,
+                    headers: { 'Content-Type': 'application/json' }
+                }
             );
         }
 
@@ -32,7 +42,10 @@ export async function POST(req: NextRequest) {
         const supabaseAdmin = createAdminClient();
         const status = await getCreditsStatus(user.id, supabaseAdmin);
         if ((status?.totalAvailable ?? 0) < 1) {
-            return NextResponse.json({ error: "Insufficient credits. Please upgrade your plan." }, { status: 402 });
+            return NextResponse.json({ error: "Insufficient credits. Please upgrade your plan." }, {
+                status: 402,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         const { image } = await req.json();
@@ -41,15 +54,21 @@ export async function POST(req: NextRequest) {
         if (!image) {
             return NextResponse.json(
                 { error: "Missing image data." },
-                { status: 400 }
+                {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' }
+                }
             );
         }
 
         if (!apiKey) {
-            console.error("Gemini API Key missing in environment variables.");
+            console.error("[OCR API] Gemini API Key missing in environment variables.");
             return NextResponse.json(
                 { error: "Server Configuration Error: API Key missing." },
-                { status: 500 }
+                {
+                    status: 500,
+                    headers: { 'Content-Type': 'application/json' }
+                }
             );
         }
 
@@ -86,23 +105,40 @@ export async function POST(req: NextRequest) {
         const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/{[\s\S]*}/);
 
         let data;
-        if (jsonMatch) {
-            data = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-        } else {
-            // Fallback: If model returns just text, wrap it
-            data = { extractedText: text };
+        try {
+            if (jsonMatch) {
+                data = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+            } else {
+                // Fallback: If model returns just text, wrap it
+                data = { extractedText: text };
+            }
+        } catch (parseError) {
+            console.error("[OCR API] Failed to parse Gemini response:", text);
+            return NextResponse.json(
+                { error: "OCR response parsing failed. Please try again." },
+                {
+                    status: 500,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
         }
 
         // Only charge after successful OCR output.
         const charged = await deductCredit(user.id, 1, 'scan_pipeline');
         if (!charged) {
-            return NextResponse.json({ error: "Insufficient credits. Please try again." }, { status: 402 });
+            return NextResponse.json({ error: "Insufficient credits. Please try again." }, {
+                status: 402,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        return NextResponse.json({ ...data, serverDurationMs: Date.now() - startTime });
+        return NextResponse.json({ ...data, serverDurationMs: Date.now() - startTime }, {
+            headers: { 'Content-Type': 'application/json' }
+        });
 
     } catch (error: any) {
-        console.error("Gemini OCR Error:", error);
+        console.error("[OCR API] Gemini OCR Error:", error);
+        console.error("[OCR API] Error stack:", error?.stack);
 
         const message = String(error?.message || "Failed to analyze image with Gemini.");
         const retryMatch = message.match(/Please retry in\s+(\d+(?:\.\d+)?)s/i);
@@ -115,12 +151,22 @@ export async function POST(req: NextRequest) {
                     error: message,
                     retryAfterSeconds,
                 },
-                { status: 429 }
+                {
+                    status: 429,
+                    headers: { 'Content-Type': 'application/json' }
+                }
             );
             if (retryAfterSeconds) res.headers.set('Retry-After', String(retryAfterSeconds));
             return res;
         }
 
-        return NextResponse.json({ error: message }, { status: 500 });
+        // Ensure we always return JSON, even for unexpected errors
+        return NextResponse.json(
+            { error: message },
+            {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
     }
 }

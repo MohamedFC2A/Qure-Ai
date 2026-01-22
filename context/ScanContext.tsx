@@ -300,7 +300,18 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                     signal: controller.signal,
                 });
 
-                const ocrData = await ocrResponse.json().catch(() => ({}));
+                let ocrData: any = {};
+                try {
+                    const responseText = await ocrResponse.text();
+                    ocrData = responseText ? JSON.parse(responseText) : {};
+                } catch (parseError) {
+                    console.error("[ScanContext] Failed to parse OCR response:", parseError);
+                    if (!ocrResponse.ok) {
+                        throw new Error(`OCR service error (${ocrResponse.status}). Please try again.`);
+                    }
+                    throw new Error("Invalid response from OCR service. Please try again.");
+                }
+
                 throwIfCancelled();
 
                 if (ocrResponse.status === 401) {
