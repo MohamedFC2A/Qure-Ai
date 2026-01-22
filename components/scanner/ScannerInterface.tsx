@@ -610,26 +610,38 @@ export const ScannerInterface = () => {
                             <img src={previewSrc!} alt="Preview" className={cn("w-full h-[500px] object-contain transition-all duration-500", (isScanning) && "opacity-50 scale-95 blur-sm")} />
 
                             {!isScanning && !finalResult && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <div className="flex gap-4">
-                                        <Button onClick={openCarePickerAndStart} size="lg" className="rounded-full shadow-xl shadow-cyan-500/20 hover:scale-105 transition-transform bg-gradient-to-r from-cyan-500 to-blue-600 border-none text-white font-bold px-8">
-                                            <Zap className="mr-2 w-5 h-5" /> Start Analysis
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                                    <div className="flex flex-col gap-3 items-center translate-y-4">
+                                        <Button
+                                            onClick={openCarePickerAndStart}
+                                            size="lg"
+                                            className="rounded-full shadow-2xl shadow-cyan-500/40 hover:scale-105 transition-all duration-300 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 border-none text-white font-bold px-10 py-7 text-lg group/btn"
+                                        >
+                                            <Zap className="mr-2 w-6 h-6 group-hover/btn:animate-pulse" />
+                                            {t("Start Analysis", "بدء التحليل")}
+                                        </Button>
+
+                                        <Button
+                                            onClick={resetScan}
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-full border-white/20 bg-black/40 text-white/80 hover:bg-white/10 hover:text-white px-6 h-10 backdrop-blur-md"
+                                        >
+                                            <X className="mr-2 w-4 h-4" />
+                                            {t("Change Image", "تغيير الصورة")}
                                         </Button>
                                     </div>
-                                    <button onClick={resetScan} className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white/70 hover:text-white transition-colors">
+
+                                    <button
+                                        onClick={resetScan}
+                                        className="absolute top-4 right-4 p-2.5 bg-black/60 hover:bg-red-500/80 rounded-full text-white/70 hover:text-white transition-all duration-300 backdrop-blur-md border border-white/10 shadow-lg"
+                                        title={t("Cancel", "إلغاء")}
+                                    >
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
                             )}
 
-                            {/* Mobile Start Button (Always Visible if not scanning) */}
-                            {!isScanning && !finalResult && (
-                                <div className="absolute bottom-6 left-0 right-0 flex justify-center lg:hidden">
-                                    <Button onClick={openCarePickerAndStart} size="lg" className="rounded-full shadow-xl bg-cyan-600 text-white">
-                                        Scan Now
-                                    </Button>
-                                </div>
-                            )}
                         </div>
 
                         {/* Right: Timeline */}

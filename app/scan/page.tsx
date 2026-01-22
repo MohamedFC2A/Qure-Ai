@@ -5,7 +5,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { useUser } from "@/context/UserContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Zap, Lock } from "lucide-react";
+import { Zap, Lock, ChevronRight } from "lucide-react";
 
 // Internal Component for Upsell
 const CreditsUpsellBanner = () => {
@@ -48,6 +48,14 @@ export default function ScanPage() {
     return (
         <main className="min-h-screen pt-24 pb-12 px-4 flex flex-col items-center relative">
             <div className="z-10 w-full max-w-4xl flex flex-col items-center">
+                <div className="w-full flex justify-start mb-6">
+                    <Link href="/dashboard">
+                        <Button variant="outline" size="sm" className="gap-2 border-white/10 text-white/60 hover:text-white hover:bg-white/5">
+                            <ChevronRight className="w-4 h-4 rotate-180" /> Back to Dashboard
+                        </Button>
+                    </Link>
+                </div>
+
                 <div className="mb-8 text-center">
                     <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 mb-4">
                         Medical Analysis
