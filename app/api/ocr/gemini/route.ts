@@ -72,16 +72,20 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        console.log("[OCR API] Starting OCR process...");
+
         // Initialize Gemini with the user-provided key
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite"
+            model: process.env.GEMINI_OCR_MODEL || "gemini-2.0-flash-exp"
         });
 
         // Clean base64 string (remove data:image/jpeg;base64, prefix if present)
         const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
 
-        const prompt = `OCR this image and return strict JSON: {"extractedText": "..."}. Extract all visible text verbatim; no summary.`;
+        const prompt = `You are an OCR system. Extract ALL visible text from this image exactly as it appears. Return ONLY a JSON object in this exact format: {"extractedText": "the text you found"}. If no text is found, return {"extractedText": ""}. Do not add any markdown, code blocks, or explanations.`;
+
+        console.log("[OCR API] Calling Gemini API...");
 
         const result = await model.generateContent({
             contents: [
@@ -95,33 +99,89 @@ export async function POST(req: NextRequest) {
             ],
             generationConfig: {
                 responseMimeType: "application/json",
+                temperature: 0.1,
             },
         });
 
         const response = await result.response;
         const text = response.text();
 
-        // Extract JSON from markdown code block if present
-        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/{[\s\S]*}/);
+        console.log("[OCR API] Gemini response received, length:", text.length);
+        console.log("[OCR API] Raw response (first 200 chars):", text.substring(0, 200));
 
+        // Multiple parsing strategies
         let data;
+        let parseSuccess = false;
+
+        // Strategy 1: Direct JSON parse
         try {
-            if (jsonMatch) {
-                data = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-            } else {
-                // Fallback: If model returns just text, wrap it
-                data = { extractedText: text };
+            data = JSON.parse(text);
+            if (data.extractedText !== undefined) {
+                parseSuccess = true;
+                console.log("[OCR API] ✅ Strategy 1 (Direct parse) succeeded");
             }
-        } catch (parseError) {
-            console.error("[OCR API] Failed to parse Gemini response:", text);
-            return NextResponse.json(
-                { error: "OCR response parsing failed. Please try again." },
-                {
-                    status: 500,
-                    headers: { 'Content-Type': 'application/json' }
-                }
-            );
+        } catch (e) {
+            console.log("[OCR API] Strategy 1 (Direct parse) failed");
         }
+
+        // Strategy 2: Extract from markdown code block
+        if (!parseSuccess) {
+            try {
+                const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
+                if (jsonMatch && jsonMatch[1]) {
+                    data = JSON.parse(jsonMatch[1]);
+                    if (data.extractedText !== undefined) {
+                        parseSuccess = true;
+                        console.log("[OCR API] ✅ Strategy 2 (Markdown block) succeeded");
+                    }
+                }
+            } catch (e) {
+                console.log("[OCR API] Strategy 2 (Markdown block) failed");
+            }
+        }
+
+        // Strategy 3: Find any JSON object in the text
+        if (!parseSuccess) {
+            try {
+                const jsonMatch = text.match(/{[\s\S]*}/);
+                if (jsonMatch && jsonMatch[0]) {
+                    data = JSON.parse(jsonMatch[0]);
+                    if (data.extractedText !== undefined) {
+                        parseSuccess = true;
+                        console.log("[OCR API] ✅ Strategy 3 (JSON extraction) succeeded");
+                    }
+                }
+            } catch (e) {
+                console.log("[OCR API] Strategy 3 (JSON extraction) failed");
+            }
+        }
+
+        // Strategy 4: Treat entire response as extracted text (ultimate fallback)
+        if (!parseSuccess) {
+            console.log("[OCR API] ⚠️ All JSON strategies failed, using fallback");
+            console.log("[OCR API] Full response:", text);
+
+            // If response looks like it might be the actual text (not an error), use it
+            if (text && text.length > 0 && !text.toLowerCase().includes('error') && !text.toLowerCase().includes('failed')) {
+                data = { extractedText: text.trim() };
+                parseSuccess = true;
+                console.log("[OCR API] ✅ Strategy 4 (Direct text) succeeded");
+            } else {
+                console.error("[OCR API] ❌ All parsing strategies failed, response appears invalid");
+                return NextResponse.json(
+                    {
+                        error: "OCR failed to extract text. Please ensure the image contains clear, readable text.",
+                        debug: text.substring(0, 100)
+                    },
+                    {
+                        status: 500,
+                        headers: { 'Content-Type': 'application/json' }
+                    }
+                );
+            }
+        }
+
+        console.log("[OCR API] Extracted text length:", data.extractedText?.length || 0);
 
         // Only charge after successful OCR output.
         const charged = await deductCredit(user.id, 1, 'scan_pipeline');
