@@ -134,6 +134,7 @@ interface AiNextQuestion {
 
 interface AiTreeNode {
     title: string;
+    summary?: string;
     answer: string;
     keyPoints?: string[];
     nextQuestions?: AiNextQuestion[];
@@ -177,6 +178,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const [safetyTab, setSafetyTab] = useState<UltraSafetyTab>('interactions');
     const [safetyShowAll, setSafetyShowAll] = useState<Record<string, boolean>>({});
     const [showAllIngredients, setShowAllIngredients] = useState(false);
+    const [showGuardGraph, setShowGuardGraph] = useState(false);
 
     const interactionGuard = (data as any)?.interactionGuard as MedicalData["interactionGuard"] | undefined;
     const guardItems = useMemo(() => {
@@ -207,6 +209,18 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         return counts;
     }, [guardItems]);
 
+    const guardTopList = useMemo(() => {
+        const sevOrder = (s: any) => (String(s || "").toLowerCase() === "danger" ? 2 : String(s || "").toLowerCase() === "caution" ? 1 : 0);
+        return (guardItems as any[])
+            .slice()
+            .sort((a: any, b: any) => {
+                const bySeverity = sevOrder(b?.severity) - sevOrder(a?.severity);
+                if (bySeverity !== 0) return bySeverity;
+                return Number(b?.confidence || 0) - Number(a?.confidence || 0);
+            })
+            .slice(0, 4);
+    }, [guardItems]);
+
     const graphNodes = useMemo(() => (guardItems as any[]).slice(0, 10), [guardItems]);
     const graphLayout = useMemo(() => {
         const n = Math.max(1, graphNodes.length);
@@ -228,6 +242,21 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         if (fromProfile) return fromProfile;
         return "";
     }, [interactionGuard, meta?.subjectProfileName, profile?.full_name, profile?.username]);
+
+    const guardSubjectRelationship = useMemo(() => {
+        const fromMeta = String(meta?.subjectRelationship || "").trim();
+        if (fromMeta) return fromMeta;
+        const fromGuard = String((interactionGuard as any)?.subject?.relationship || "").trim();
+        if (fromGuard) return fromGuard;
+        return "";
+    }, [interactionGuard, meta?.subjectRelationship]);
+
+    const aiSubjectLabel = useMemo(() => {
+        const name = guardSubjectName || (isArabic ? "أنت" : "You");
+        const rel = guardSubjectRelationship;
+        if (!rel) return name;
+        return `${name} (${rel})`;
+    }, [guardSubjectName, guardSubjectRelationship, isArabic]);
 
     const severityUi = (sev: string) => {
         const v = String(sev || "caution").toLowerCase();
@@ -514,15 +543,158 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         fda: (fda as any) || undefined,
     };
 
-    const actionChecklist = useMemo(() => {
-        const items: Array<{ title: string; detail?: string; kind: "info" | "warn" }> = [];
-        if (data.dosage) items.push({ title: t("Confirm the dose schedule", "تأكد من جدول الجرعة"), detail: data.dosage, kind: "info" });
-        if (plan === 'ultra' && data.interactions && data.interactions.length > 0) items.push({ title: t("Avoid key interactions", "تجنب التداخلات المهمة"), detail: data.interactions.slice(0, 4).join(" • "), kind: "warn" });
-        if (data.contraindications && data.contraindications.length > 0) items.push({ title: t("Check contraindications", "راجع موانع الاستعمال"), detail: data.contraindications.slice(0, 3).join(" • "), kind: "warn" });
-        if (plan === 'ultra' && data.whenToSeekHelp && data.whenToSeekHelp.length > 0) items.push({ title: t("Know when to seek help", "اعرف متى تطلب المساعدة"), detail: data.whenToSeekHelp.slice(0, 3).join(" • "), kind: "warn" });
-        if (data.storage) items.push({ title: t("Store it correctly", "احفظه بالشكل الصحيح"), detail: data.storage, kind: "info" });
+    type ActionTone = "danger" | "warn" | "info" | "success";
+    type ActionCard = {
+        id: string;
+        tone: ActionTone;
+        title: string;
+        detail?: string;
+        icon: JSX.Element;
+        cta?: { label: string; href: string };
+    };
+
+    const actionCards = useMemo(() => {
+        const isUltra = plan === "ultra";
+        const compactList = (list: unknown, max: number) => {
+            if (!Array.isArray(list)) return "";
+            return (list as any[])
+                .map((s) => String(s || "").trim())
+                .filter(Boolean)
+                .slice(0, max)
+                .join(" • ");
+        };
+
+        const items: ActionCard[] = [];
+
+        const topGuard = (guardItems as any[])
+            .filter((it) => it && it.otherMedication)
+            .slice()
+            .sort((a: any, b: any) => {
+                const sevOrder = (s: any) => (String(s || "").toLowerCase() === "danger" ? 2 : String(s || "").toLowerCase() === "caution" ? 1 : 0);
+                const bySeverity = sevOrder(b?.severity) - sevOrder(a?.severity);
+                if (bySeverity !== 0) return bySeverity;
+                return Number(b?.confidence || 0) - Number(a?.confidence || 0);
+            })[0];
+
+        if (topGuard?.otherMedication) {
+            const sev = String(topGuard.severity || "caution").toLowerCase();
+            items.push({
+                id: "guard-top",
+                tone: sev === "danger" ? "danger" : sev === "safe" ? "success" : "warn",
+                title: t(
+                    `Possible interaction: ${String(topGuard.otherMedication)}`,
+                    `تداخل محتمل: ${String(topGuard.otherMedication)}`
+                ),
+                detail: String(topGuard.summary || "").trim() || t("Tap Private Context for details.", "اضغط على سياقك الصحي الخاص للتفاصيل."),
+                icon: <ShieldAlert className="w-4 h-4 text-white" />,
+            });
+        } else if (!isUltra) {
+            items.push({
+                id: "unlock-ultra-safety",
+                tone: "info",
+                title: t("Unlock Ultra Safety Pack", "افتح حزمة السلامة (ألترا)"),
+                detail: t(
+                    "Precautions, interactions, side effects, overdose guidance, and when to seek help.",
+                    "احتياطات، تداخلات، آثار جانبية، إرشادات الجرعة الزائدة، ومتى تطلب المساعدة."
+                ),
+                icon: <Sparkles className="w-4 h-4 text-white" />,
+                cta: { label: t("Upgrade", "ترقية"), href: "/pricing" },
+            });
+        }
+
+        if (data.dosage) {
+            items.push({
+                id: "dose",
+                tone: "info",
+                title: t("How to take it", "طريقة الاستخدام"),
+                detail: String(data.dosage || "").trim(),
+                icon: <Thermometer className="w-4 h-4 text-white" />,
+            });
+        }
+
+        const contraind = compactList(data.contraindications, 3);
+        if (contraind) {
+            items.push({
+                id: "contraindications",
+                tone: "danger",
+                title: t("Avoid if any applies", "تجنّب إذا ينطبق عليك"),
+                detail: contraind,
+                icon: <AlertOctagon className="w-4 h-4 text-white" />,
+            });
+        }
+
+        if (isUltra) {
+            const seek = compactList(data.whenToSeekHelp, 3);
+            if (seek) {
+                items.push({
+                    id: "seek-help",
+                    tone: "danger",
+                    title: t("Seek urgent help if", "اطلب مساعدة عاجلة إذا"),
+                    detail: seek,
+                    icon: <AlertTriangle className="w-4 h-4 text-white" />,
+                });
+            }
+        }
+
+        if (data.storage) {
+            items.push({
+                id: "storage",
+                tone: "info",
+                title: t("Storage", "الحفظ"),
+                detail: String(data.storage || "").trim(),
+                icon: <Box className="w-4 h-4 text-white" />,
+            });
+        }
+
+        const productKind = String((data as any)?.productClassification?.kind || "").trim();
+        if (productKind === "human_supplement" || productKind === "veterinary_drug" || productKind === "veterinary_supplement") {
+            items.push({
+                id: "product-kind",
+                tone: "warn",
+                title: t("Product type warning", "تنبيه نوع المنتج"),
+                detail: t(
+                    productKind === "human_supplement"
+                        ? "This looks like a supplement; quality and interactions can vary."
+                        : "This may be veterinary-related; confirm it is intended for humans.",
+                    productKind === "human_supplement"
+                        ? "يبدو كمكمّل غذائي؛ الجودة والتداخلات قد تختلف."
+                        : "قد يكون بيطريًا؛ تأكد أنه مخصص للبشر."
+                ),
+                icon: <Info className="w-4 h-4 text-white" />,
+            });
+        }
+
         return items.slice(0, 5);
-    }, [data.contraindications, data.dosage, data.interactions, data.storage, data.whenToSeekHelp, plan, t]);
+    }, [data, guardItems, plan, t]);
+
+    const actionToneUi = (tone: ActionTone) => {
+        switch (tone) {
+            case "danger":
+                return {
+                    card: "bg-red-500/10 border-red-500/20",
+                    icon: "bg-red-500/15 border-red-500/25 text-red-100",
+                    title: "text-red-50",
+                };
+            case "warn":
+                return {
+                    card: "bg-amber-500/10 border-amber-500/20",
+                    icon: "bg-amber-500/15 border-amber-500/25 text-amber-100",
+                    title: "text-amber-50",
+                };
+            case "success":
+                return {
+                    card: "bg-emerald-500/10 border-emerald-500/20",
+                    icon: "bg-emerald-500/15 border-emerald-500/25 text-emerald-100",
+                    title: "text-emerald-50",
+                };
+            default:
+                return {
+                    card: "bg-white/5 border-white/10",
+                    icon: "bg-white/5 border-white/10 text-white/80",
+                    title: "text-white",
+                };
+        }
+    };
 
     const formatMg = (mg: number) => {
         const rounded = Math.round(mg * 10) / 10;
@@ -634,12 +806,24 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
             const nextNode: AiTreeNode = {
                 title: String(payload?.title || t("AI Answer", "إجابة الذكاء الاصطناعي")),
+                summary: String(payload?.summary || "").trim() || undefined,
                 answer: String(payload?.answer || ""),
                 keyPoints: Array.isArray(payload?.keyPoints) ? payload.keyPoints : [],
                 nextQuestions: Array.isArray(payload?.nextQuestions) ? payload.nextQuestions : [],
             };
 
             setAiNodes((prev) => (params.reset ? [nextNode] : [...prev, nextNode]));
+
+            const next = (nextNode.nextQuestions || [])
+                .map((q: any, idx: number) => ({
+                    id: String(q?.id || `q${idx + 1}`),
+                    label: String(q?.title || "").trim() || t("Question", "سؤال"),
+                    question: String(q?.question || "").trim(),
+                }))
+                .filter((q: any) => q.question)
+                .slice(0, 4);
+
+            if (next.length > 0) setAiSuggestions(next);
         } catch (e: any) {
             setAiError(e?.message || "Failed to get AI answer.");
         } finally {
@@ -724,13 +908,65 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         recognition.start();
     };
 
-    // Quick suggestion chips data
-    const quickSuggestions = useMemo(() => [
-        { label: t("Side effects?", "الآثار الجانبية؟"), question: t("What are the common and serious side effects I should watch for?", "ما هي الآثار الجانبية الشائعة والخطيرة التي يجب مراقبتها؟") },
-        { label: t("Dosage timing", "توقيت الجرعة"), question: t("When is the best time to take this medication?", "ما هو أفضل وقت لتناول هذا الدواء؟") },
-        { label: t("Food interactions", "تفاعل مع الطعام"), question: t("Should I take this with food or on an empty stomach?", "هل يجب تناوله مع الطعام أم على معدة فارغة؟") },
-        { label: t("Pregnancy safe?", "آمن للحامل؟"), question: t("Is this medication safe during pregnancy or breastfeeding?", "هل هذا الدواء آمن أثناء الحمل أو الرضاعة؟") },
+    const fallbackSuggestions = useMemo(() => [
+        { id: "s1", label: t("Side effects?", "الآثار الجانبية؟"), question: t("What are the common and serious side effects I should watch for?", "ما هي الآثار الجانبية الشائعة والخطيرة التي يجب مراقبتها؟") },
+        { id: "s2", label: t("Dosage timing", "توقيت الجرعة"), question: t("When is the best time to take this medication?", "ما هو أفضل وقت لتناول هذا الدواء؟") },
+        { id: "s3", label: t("Food interactions", "تفاعل مع الطعام"), question: t("Should I take this with food or on an empty stomach?", "هل يجب تناوله مع الطعام أم على معدة فارغة؟") },
+        { id: "s4", label: t("Pregnancy safe?", "آمن للحامل؟"), question: t("Is this medication safe during pregnancy or breastfeeding?", "هل هذا الدواء آمن أثناء الحمل أو الرضاعة؟") },
     ], [t]);
+
+    const [aiSuggestions, setAiSuggestions] = useState<Array<{ id: string; label: string; question: string }>>([]);
+    const [aiSuggestionsKey, setAiSuggestionsKey] = useState<string>("");
+
+    const suggestionChips = aiSuggestions.length > 0 ? aiSuggestions : fallbackSuggestions;
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const load = async () => {
+            if (!user || plan !== "ultra") return;
+            const subjectId = String(meta?.subjectProfileId || (interactionGuard as any)?.subject?.profileId || user.id).trim() || user.id;
+            const key = `${subjectId}:${resultsLanguage}:${String(data?.drugName || "").trim()}`;
+            if (key && key === aiSuggestionsKey && aiSuggestions.length > 0) return;
+
+            setAiSuggestionsKey(key);
+
+            try {
+                const res = await fetch("/api/ai/tree", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        preset: "suggestions",
+                        profileId: subjectId,
+                        language: resultsLanguage,
+                        analysis: analysisForAi,
+                        path: [],
+                    }),
+                });
+                const payload = await res.json().catch(() => ({}));
+                if (!res.ok) return;
+
+                const nextQuestions = Array.isArray(payload?.nextQuestions) ? payload.nextQuestions : [];
+                const next = nextQuestions
+                    .map((q: any, idx: number) => ({
+                        id: String(q?.id || `q${idx + 1}`),
+                        label: String(q?.title || "").trim() || t("Question", "سؤال"),
+                        question: String(q?.question || "").trim(),
+                    }))
+                    .filter((q: any) => q.question)
+                    .slice(0, 4);
+
+                if (!cancelled && next.length > 0) setAiSuggestions(next);
+            } catch {
+                // ignore
+            }
+        };
+
+        load();
+        return () => {
+            cancelled = true;
+        };
+    }, [aiSuggestions.length, aiSuggestionsKey, analysisForAi, data?.drugName, interactionGuard, meta?.subjectProfileId, plan, resultsLanguage, t, user]);
 
 
     if (data.error) {
@@ -899,8 +1135,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         </div>
                     </div>
 
-                    {actionChecklist.length > 0 && (
-                        <div className="relative z-10 mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    {actionCards.length > 0 && (
+                        <div className="relative z-10 mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                             <div className="flex items-center justify-between gap-3 mb-3">
                                 <div className="flex items-center gap-2 text-white/80 text-sm font-semibold">
                                     <ListTodo className="w-4 h-4 text-liquid-accent" />
@@ -912,22 +1148,38 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     </span>
                                 )}
                             </div>
-                            <ul className="grid gap-2">
-                                {actionChecklist.map((item, i) => (
-                                    <li
-                                        key={i}
-                                        className={cn(
-                                            "p-3 rounded-xl border text-sm",
-                                            item.kind === "warn"
-                                                ? "bg-red-500/5 border-red-500/15 text-white/80"
-                                                : "bg-white/5 border-white/10 text-white/80"
-                                        )}
-                                    >
-                                        <p className="font-semibold text-white/90">{item.title}</p>
-                                        {item.detail && <p className="mt-1 text-white/60 text-xs leading-relaxed">{item.detail}</p>}
-                                    </li>
-                                ))}
-                            </ul>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {actionCards.map((item) => {
+                                    const ui = actionToneUi(item.tone);
+                                    return (
+                                        <div key={item.id} className={cn("p-4 rounded-2xl border", ui.card)}>
+                                            <div className="flex items-start gap-3">
+                                                <div className={cn("shrink-0 p-2 rounded-xl border", ui.icon)}>
+                                                    {item.icon}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className={cn("font-bold text-sm leading-snug", ui.title)}>{item.title}</p>
+                                                    {item.detail && (
+                                                        <p className="mt-1 text-white/70 text-xs leading-relaxed">
+                                                            {item.detail}
+                                                        </p>
+                                                    )}
+                                                    {item.cta && (
+                                                        <div className="mt-3">
+                                                            <Link href={item.cta.href}>
+                                                                <Button size="sm" className="h-9 px-4 rounded-xl bg-amber-600 hover:bg-amber-500">
+                                                                    {item.cta.label}
+                                                                </Button>
+                                                            </Link>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
 
@@ -1786,8 +2038,59 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         </div>
                                     )}
 
-                                    <div className="mt-4 relative w-full h-[420px] sm:h-[460px] rounded-2xl bg-black/30 border border-white/10 overflow-hidden">
-                                        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
+                                    <div className="mt-4 grid gap-2">
+                                        {guardTopList.map((it: any) => {
+                                            const ui = severityUi(it?.severity);
+                                            const key = String(it?.otherMedication || "").trim();
+                                            if (!key) return null;
+                                            return (
+                                                <button
+                                                    key={key}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedGuardKey(key);
+                                                        setShowGuardGraph(true);
+                                                    }}
+                                                    className={cn(
+                                                        "w-full p-4 rounded-2xl border text-left transition-colors",
+                                                        "bg-white/5 border-white/10 hover:bg-white/10",
+                                                        ui.node
+                                                    )}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-white font-bold truncate">{key}</p>
+                                                            <p className="text-white/60 text-xs mt-1 line-clamp-2">
+                                                                {String(it?.headline || it?.summary || t("Interaction assessment", "تقييم التداخل"))}
+                                                            </p>
+                                                        </div>
+                                                        <span className={cn("px-3 py-1 rounded-full text-xs font-semibold border shrink-0", ui.chip)}>
+                                                            {ui.label}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+
+                                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => setShowGuardGraph((v) => !v)}
+                                                className="border-white/15 text-white/70 hover:bg-white/10"
+                                            >
+                                                {showGuardGraph ? t("Hide graph view", "إخفاء عرض الرسم") : t("Show graph view", "عرض الرسم")}
+                                            </Button>
+                                            <span className="text-xs text-white/40">
+                                                {t("This is an AI risk screen; confirm with a clinician for high-risk combos.", "هذا فحص مخاطر بالذكاء الاصطناعي؛ أكد مع مختص عند وجود خطر.")}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {showGuardGraph && (
+                                        <>
+                                            <div className="mt-4 relative w-full h-[420px] sm:h-[460px] rounded-2xl bg-black/30 border border-white/10 overflow-hidden">
+                                                <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
                                             <defs>
                                                 <marker id="arrowSafe" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
                                                     <path d="M0,0 L6,3 L0,6 Z" fill="rgba(16,185,129,0.9)" />
@@ -1817,7 +2120,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                     />
                                                 );
                                             })}
-                                        </svg>
+                                                </svg>
 
                                         {/* Center node */}
                                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -1874,7 +2177,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         })}
                                     </div>
 
-                                    {selectedGuardItem && (
+                                            {selectedGuardItem && (
                                         <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">
@@ -1935,6 +2238,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                             </div>
                                         </div>
                                     )}
+                                        </>
+                                    )}
 
                                     {interactionGuard?.disclaimer && (
                                         <p className="mt-3 text-[11px] text-white/45 leading-relaxed">
@@ -1992,7 +2297,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 </div>
 
                 {/* AI Follow-up Tree - ENHANCED */}
-                <div className="p-5 sm:p-8 bg-gradient-to-b from-black/20 to-black/5 border-t border-white/10">
+                <div data-export-ignore className="p-5 sm:p-8 bg-gradient-to-b from-black/20 to-black/5 border-t border-white/10">
                     {/* Header with animated gradient */}
                     <div className="flex items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-3">
@@ -2007,6 +2312,21 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     </span>
                                 </h3>
                                 <p className="text-white/40 text-xs mt-0.5">{t("Interactive medical Q&A", "أسئلة وأجوبة طبية تفاعلية")}</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/45">
+                                    <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">
+                                        {t("For:", "لـ:")} {aiSubjectLabel}
+                                    </span>
+                                    {meta?.hasPrivateProfile && (
+                                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-200">
+                                            {t("Profile context", "سياق الملف")}
+                                        </span>
+                                    )}
+                                    {typeof meta?.medicationMemoriesCount === "number" && meta.medicationMemoriesCount > 0 && (
+                                        <span className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-200">
+                                            {t("Memories", "الذاكرة")}: {meta.medicationMemoriesCount}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         {plan === "ultra" && aiNodes.length > 0 && (
@@ -2149,23 +2469,31 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </div>
                             </div>
 
-                            {/* Quick Suggestion Chips */}
-                            {aiNodes.length === 0 && (
-                                <div className="flex flex-wrap gap-2">
-                                    {quickSuggestions.map((suggestion, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            onClick={() => {
-                                                setCustomQuestion(suggestion.question);
-                                                aiInputRef.current?.focus();
-                                            }}
-                                            disabled={aiLoading}
-                                            className="ai-chip"
-                                        >
-                                            {suggestion.label}
-                                        </button>
-                                    ))}
+                            {/* Suggested Questions (AI-generated when possible) */}
+                            {suggestionChips.length > 0 && (
+                                <div>
+                                    <p className="text-xs text-white/40 mb-2">
+                                        {aiNodes.length === 0 ? t("Suggested questions:", "أسئلة مقترحة:") : t("Suggested follow-ups:", "متابعة مقترحة:")}
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {suggestionChips.map((suggestion) => (
+                                            <button
+                                                key={suggestion.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setCustomQuestion(suggestion.question);
+                                                    aiInputRef.current?.focus();
+                                                }}
+                                                disabled={aiLoading}
+                                                className={cn(
+                                                    "ai-chip",
+                                                    aiSuggestions.length > 0 && suggestion.id === suggestionChips[0]?.id && "bg-purple-500/15 border-purple-500/25 text-white"
+                                                )}
+                                            >
+                                                {suggestion.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
@@ -2295,7 +2623,10 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                             <div className="flex items-center gap-1">
                                                                 {/* Copy Button */}
                                                                 <button
-                                                                    onClick={() => copyAnswer(idx, `${node.title}\n\n${node.answer}\n\n${node.keyPoints?.join('\n• ') || ''}`)}
+                                                                    onClick={() => copyAnswer(
+                                                                        idx,
+                                                                        `${node.title}\n\n${node.summary ? `TL;DR: ${node.summary}\n\n` : ""}${node.answer}\n\n${node.keyPoints?.length ? `Key points:\n• ${node.keyPoints.join('\n• ')}` : ""}`
+                                                                    )}
                                                                     className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
                                                                     title={t("Copy", "نسخ")}
                                                                 >
@@ -2315,47 +2646,93 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                             </div>
                                                         </div>
 
-                                                        {/* Answer Text */}
-                                                        <p className="text-white/80 text-sm whitespace-pre-wrap leading-relaxed ai-typing">
-                                                            {node.answer}
-                                                        </p>
+                                                        <div className="mt-2 flex items-center justify-between gap-3">
+                                                            <div className="flex items-center gap-2 text-xs text-white/40">
+                                                                <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
+                                                                <span>{t("Read the key points first", "اقرأ النقاط الرئيسية أولاً")}</span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowSimplified((p) => ({ ...p, [idx]: !p[idx] }))}
+                                                                className="text-xs text-white/60 hover:text-white transition-colors flex items-center gap-1"
+                                                            >
+                                                                <span>{showSimplified[idx] ? t("Hide details", "إخفاء التفاصيل") : t("Show details", "عرض التفاصيل")}</span>
+                                                                <ChevronRight className={cn("w-3.5 h-3.5 transition-transform", showSimplified[idx] ? "rotate-90" : "rotate-0")} />
+                                                            </button>
+                                                        </div>
 
-                                                        {/* Key Points */}
+                                                        {node.summary && (
+                                                            <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                                                                <p className="text-[11px] text-amber-200/80 font-semibold mb-1">{t("TL;DR", "الخلاصة")}</p>
+                                                                <p className="text-white/85 text-sm leading-relaxed">{node.summary}</p>
+                                                            </div>
+                                                        )}
+
                                                         {node.keyPoints && node.keyPoints.length > 0 && (
-                                                            <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
+                                                            <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
                                                                 <p className="text-xs text-white/40 mb-2 flex items-center gap-1">
                                                                     <Lightbulb className="w-3 h-3" />
                                                                     {t("Key Points", "النقاط الرئيسية")}
                                                                 </p>
-                                                                <ul className="space-y-1.5 text-white/70 text-sm">
-                                                                    {node.keyPoints.slice(0, 6).map((p, i) => (
-                                                                        <li key={i} className="flex items-start gap-2">
-                                                                            <span className="text-purple-400 mt-1">•</span>
-                                                                            <span>{p}</span>
+                                                                <ul className="grid gap-2">
+                                                                    {node.keyPoints.slice(0, 7).map((p, i) => (
+                                                                        <li key={i} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white/80 text-sm leading-relaxed">
+                                                                            <span className="text-amber-300 font-bold mr-1">{i + 1}.</span>
+                                                                            {p}
                                                                         </li>
                                                                     ))}
                                                                 </ul>
                                                             </div>
                                                         )}
 
+                                                        {showSimplified[idx] && (
+                                                            <div className="mt-4 p-4 rounded-xl bg-black/20 border border-white/10">
+                                                                <p className="text-white/80 text-sm whitespace-pre-wrap leading-relaxed ai-typing">
+                                                                    {node.answer}
+                                                                </p>
+                                                            </div>
+                                                        )}
+
                                                         {/* Next Questions - Only on Last Node */}
                                                         {isLast && node.nextQuestions && node.nextQuestions.length > 0 && (
                                                             <div className="mt-5 pt-4 border-t border-white/10">
-                                                                <p className="text-xs text-white/40 mb-3">{t("Continue with:", "تابع مع:")}</p>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {node.nextQuestions.slice(0, 4).map((q) => (
+                                                                <p className="text-xs text-white/40 mb-3">{t("Continue with (recommended first):", "تابع مع (الأفضل أولاً):")}</p>
+                                                                <div className="grid gap-3">
+                                                                    {node.nextQuestions.slice(0, 1).map((q) => (
                                                                         <motion.button
                                                                             key={q.id}
-                                                                            whileHover={{ scale: 1.02 }}
-                                                                            whileTap={{ scale: 0.98 }}
+                                                                            whileHover={{ scale: 1.01 }}
+                                                                            whileTap={{ scale: 0.99 }}
                                                                             disabled={aiLoading}
                                                                             onClick={() => askAi({ question: q.question, reset: false })}
-                                                                            className="ai-chip flex items-center gap-1.5"
+                                                                            className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-pink-500/10 to-transparent border border-purple-500/25 hover:border-purple-500/40 transition-colors"
                                                                         >
-                                                                            <ChevronRight className="w-3 h-3" />
-                                                                            {q.title}
+                                                                            <p className="text-white font-bold text-sm flex items-center gap-2">
+                                                                                <Sparkles className="w-4 h-4 text-purple-300" />
+                                                                                {q.title}
+                                                                            </p>
+                                                                            <p className="mt-1 text-white/60 text-xs leading-relaxed">
+                                                                                {q.question}
+                                                                            </p>
                                                                         </motion.button>
                                                                     ))}
+
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {node.nextQuestions.slice(1, 4).map((q) => (
+                                                                            <motion.button
+                                                                                key={q.id}
+                                                                                whileHover={{ scale: 1.02 }}
+                                                                                whileTap={{ scale: 0.98 }}
+                                                                                disabled={aiLoading}
+                                                                                onClick={() => askAi({ question: q.question, reset: false })}
+                                                                                className="ai-chip flex items-center gap-1.5"
+                                                                                title={q.question}
+                                                                            >
+                                                                                <ChevronRight className="w-3 h-3" />
+                                                                                {q.title}
+                                                                            </motion.button>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         )}
@@ -2385,13 +2762,21 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-white/5 border-t border-white/10 flex justify-between items-center">
-                    <p className="text-xs text-white/30">
-                        {t(
-                            `* ${AI_DISPLAY_NAME} summary. Verify with a medical professional. FDA label used when available.`,
-                            `* ملخص بواسطة ${AI_DISPLAY_NAME}. تحقّق مع مختص. تُستخدم بيانات FDA عند توفرها.`
-                        )}
-                    </p>
+                <div className="p-4 bg-white/5 border-t border-white/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                        <p className="text-xs text-white/30">
+                            {t(
+                                "* Medication information summary. Verify with a medical professional.",
+                                "* ملخص معلومات دوائية. تحقّق مع مختص."
+                            )}
+                        </p>
+                        <p data-export-ignore className="text-xs text-white/30">
+                            {t(
+                                `* ${AI_DISPLAY_NAME} summary. Verify with a medical professional. FDA label used when available.`,
+                                `* ملخص بواسطة ${AI_DISPLAY_NAME}. تحقّق مع مختص. تُستخدم بيانات FDA عند توفرها.`
+                            )}
+                        </p>
+                    </div>
                     <div className="flex items-center gap-2 text-xs font-medium">
                         {savedToHistory ? (
                             <Link href="/dashboard/history" className="flex items-center gap-2 text-green-400 hover:underline">

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 
-type PresetId = "alternative" | "personalized" | "history";
+type PresetId = "alternative" | "personalized" | "history" | "suggestions";
 
 function extractJsonCandidate(raw: string): string {
     const text = String(raw || "").trim();
@@ -48,6 +48,10 @@ function presetToQuestion(preset: PresetId, language: "en" | "ar") {
             return isAr
                 ? "افحص هذا الدواء مقارنةً بسجل أدويتي/ذاكرتي الدوائية، واذكر أهم التداخلات أو التعارضات المحتملة وكيف أتجنبها."
                 : "Check this medication against my medication history/memories and list the most important potential interactions or conflicts and how to avoid them.";
+        case "suggestions":
+            return isAr
+                ? "أنشئ 4 أسئلة قصيرة جدًا ومهمة يتوقع أن يسألها المستخدم عن هذا الدواء (جرعة/تداخلات/أعراض/متى أطلب مساعدة). اجعل كل سؤال عمليًا وواضحًا."
+                : "Generate 4 short, high-value questions a user is likely to ask about this medication (dose/interactions/side effects/when to seek help). Make them practical and clear.";
     }
 }
 
@@ -199,13 +203,59 @@ export async function POST(req: NextRequest) {
         const rootQuestion = question || presetToQuestion(preset, language);
         const analysisJson = JSON.stringify(analysis);
 
-        // Merge legacy privateProfile with new userProfile passed from client
-        const mergedProfile = { ...privateProfile, ...userProfile };
+        const normalizedQuestion = String(rootQuestion || "").trim().toLowerCase();
+        const isDeveloperQuestion =
+            normalizedQuestion.includes("مين طورك") ||
+            normalizedQuestion.includes("من طورك") ||
+            normalizedQuestion.includes("مين صممك") ||
+            normalizedQuestion.includes("من صممك") ||
+            normalizedQuestion.includes("من صنعك") ||
+            normalizedQuestion.includes("who developed you") ||
+            normalizedQuestion.includes("who built you") ||
+            normalizedQuestion.includes("who made you");
+
+        if (isDeveloperQuestion) {
+            const answer =
+                language === "ar"
+                    ? "تم تطويري بواسطة شركة NEXUS AI (MatanyLabs)."
+                    : "Developed by NEXUS AI (MatanyLabs).";
+            return NextResponse.json({
+                title: language === "ar" ? "من طوّرني؟" : "Who developed me?",
+                summary: answer,
+                answer,
+                keyPoints: [],
+                nextQuestions: [],
+                meta: {
+                    plan,
+                    subjectProfileId,
+                    subjectProfileName: subjectProfile?.display_name ?? null,
+                    subjectRelationship: subjectProfile?.relationship ?? null,
+                },
+                serverDurationMs: Date.now() - startTime,
+            });
+        }
+
+        // Merge client userProfile carefully:
+        // - Never let account-level fields override a selected care profile (e.g., mother vs self).
+        // - Never let client fields override server-fetched private profile fields.
+        const mergedProfile =
+            subjectProfileId === user.id
+                ? { ...(userProfile || {}), ...(privateProfile || {}) }
+                : (privateProfile || null);
 
         const contextJson = JSON.stringify({
+            subject: {
+                profileId: subjectProfileId,
+                displayName: subjectProfile?.display_name ?? null,
+                relationship: subjectProfile?.relationship ?? null,
+            },
             userProfile: mergedProfile,
             medicationMemories: medicationMemories.map((m) => m.display_name).filter(Boolean),
             recentHistory: recentHistory.map((h) => h.drug_name).filter(Boolean),
+            counts: {
+                medicationMemories: Number(medicationMemories.length || 0),
+                recentHistory: Number(recentHistory.length || 0),
+            },
         });
         const pathJson = JSON.stringify(path);
 
@@ -216,19 +266,29 @@ ${systemLanguageRule}
 
 IMPORTANT:
 - Output VALID JSON ONLY. No markdown. No code fences.
-- Keep it concise but high-signal.
+- Keep it concise but high-signal (avoid long paragraphs).
+- Stay strictly within MEDICAL context about this medication and the provided patient context.
+- If the user asks something not medical/health-related, refuse briefly and ask for a medical question.
 - If you are uncertain, say so explicitly and suggest what to verify with a pharmacist/doctor.
 - Do not invent allergies/conditions/meds. Use only the provided context.
+- If you mention patient-specific info, it MUST match PATIENT_CONTEXT_JSON and MUST be for the selected subject profile only.
 
 Return JSON with this schema:
 {
   "title": "Short title",
-  "answer": "Short structured answer (paragraphs allowed)",
-  "keyPoints": ["3-6 bullet points"],
+  "summary": "One-sentence TL;DR",
+  "answer": "Short structured answer (prefer 4-10 lines, use simple wording)",
+  "keyPoints": ["4-7 short bullet points, actionable"],
   "nextQuestions": [
-    { "id": "q1", "title": "Short title", "question": "The next question to ask" }
+    { "id": "q1", "title": "Short title", "question": "A follow-up question" }
   ]
 }
+
+NEXT QUESTIONS RULES:
+- Provide EXACTLY 4 items.
+- Tailor them to the medication + the user's question + the conversation path.
+- Keep titles ultra-short.
+- Order them by best relevance first.
 
 MEDICATION_ANALYSIS_JSON:
 ${analysisJson}
@@ -250,7 +310,7 @@ ${rootQuestion}
                 { role: "user", content: prompt },
             ],
             response_format: { type: "json_object" },
-            temperature: 0.2,
+            temperature: 0.15,
         });
 
         const content = response.choices[0].message.content;
@@ -267,9 +327,61 @@ ${rootQuestion}
             return NextResponse.json({ error: "AI returned invalid JSON" }, { status: 502 });
         }
 
+        const clampText = (value: unknown, maxLen: number) => {
+            const s = String(value ?? "").trim();
+            if (!s) return "";
+            if (s.length <= maxLen) return s;
+            const cut = s.slice(0, maxLen);
+            const lastStop = Math.max(cut.lastIndexOf("."), cut.lastIndexOf("؟"), cut.lastIndexOf("?"), cut.lastIndexOf("!"), cut.lastIndexOf("۔"));
+            return (lastStop > maxLen * 0.7 ? cut.slice(0, lastStop + 1) : cut).trim() + "…";
+        };
+
+        const safeTitle = clampText(parsed?.title, 80) || (language === "ar" ? "إجابة طبية" : "Medical answer");
+        const safeSummary = clampText(parsed?.summary, 180) || "";
+        const safeAnswer = clampText(parsed?.answer, 1800) || "";
+        const safeKeyPoints = (Array.isArray(parsed?.keyPoints) ? parsed.keyPoints : [])
+            .map((s: any) => clampText(s, 140))
+            .filter(Boolean)
+            .slice(0, 7);
+
+        const rawNext = Array.isArray(parsed?.nextQuestions) ? parsed.nextQuestions : [];
+        const nextQuestions = rawNext
+            .map((q: any, idx: number) => ({
+                id: clampText(q?.id, 24) || `q${idx + 1}`,
+                title: clampText(q?.title, 40) || (language === "ar" ? "سؤال" : "Question"),
+                question: clampText(q?.question, 160) || "",
+            }))
+            .filter((q: any) => q.question)
+            .slice(0, 4);
+
+        const defaultNext = language === "ar"
+            ? [
+                { id: "q1", title: "الجرعة", question: "ما هي الجرعة الصحيحة وكيف أتناوله بأمان؟" },
+                { id: "q2", title: "تداخلات", question: "ما أهم التداخلات الدوائية/الغذائية التي يجب تجنبها؟" },
+                { id: "q3", title: "أعراض", question: "ما الأعراض الجانبية الشائعة والخطيرة ومتى أقلق؟" },
+                { id: "q4", title: "مساعدة", question: "متى يجب طلب المساعدة الطبية فورًا؟" },
+            ]
+            : [
+                { id: "q1", title: "Dose", question: "What is the correct dose and how should I take it safely?" },
+                { id: "q2", title: "Interactions", question: "What key drug/food interactions should I avoid?" },
+                { id: "q3", title: "Side effects", question: "What common and serious side effects should I watch for?" },
+                { id: "q4", title: "Seek help", question: "When should I seek urgent medical help?" },
+            ];
+
+        const filledNext = nextQuestions.length === 4 ? nextQuestions : defaultNext;
+
         return NextResponse.json({
-            ...parsed,
-            meta: { plan, subjectProfileId, subjectProfileName: subjectProfile?.display_name ?? null },
+            title: safeTitle,
+            summary: safeSummary,
+            answer: safeAnswer,
+            keyPoints: safeKeyPoints,
+            nextQuestions: filledNext,
+            meta: {
+                plan,
+                subjectProfileId,
+                subjectProfileName: subjectProfile?.display_name ?? null,
+                subjectRelationship: subjectProfile?.relationship ?? null,
+            },
             serverDurationMs: Date.now() - startTime,
         });
     } catch (error: any) {

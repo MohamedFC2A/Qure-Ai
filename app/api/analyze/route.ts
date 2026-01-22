@@ -354,6 +354,13 @@ export async function POST(req: NextRequest) {
         }
 
         (analysisWithEnrichment as any).interactionGuard = interactionGuard;
+        (analysisWithEnrichment as any).meta = {
+            plan: userPlan,
+            fdaEnabled,
+            subjectProfileId,
+            subjectProfileName: subjectProfile?.display_name ?? null,
+            subjectRelationship: subjectProfile?.relationship ?? null,
+        };
 
         // 2. Save Analysis to Supabase (Protected)
         if (analysisWithEnrichment && (analysisWithEnrichment as any).drugName !== "Unknown") {
