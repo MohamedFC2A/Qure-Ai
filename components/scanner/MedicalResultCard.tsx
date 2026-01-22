@@ -9,6 +9,7 @@ import { useSettings } from "@/context/SettingsContext";
 import { Button } from "@/components/ui/Button";
 import type { OpenFdaLabelSnapshot } from "@/lib/openfda";
 import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
+import { AdUnit } from "@/components/AdUnit";
 
 interface MedicalData {
     drugName: string;
@@ -1133,6 +1134,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 {data.description}
                             </p>
                         </div>
+                        <AdUnit />
                     </div>
 
                     {actionCards.length > 0 && (
@@ -2091,153 +2093,153 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         <>
                                             <div className="mt-4 relative w-full h-[420px] sm:h-[460px] rounded-2xl bg-black/30 border border-white/10 overflow-hidden">
                                                 <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
-                                            <defs>
-                                                <marker id="arrowSafe" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
-                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(16,185,129,0.9)" />
-                                                </marker>
-                                                <marker id="arrowCaution" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
-                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(234,179,8,0.95)" />
-                                                </marker>
-                                                <marker id="arrowDanger" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
-                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(239,68,68,0.9)" />
-                                                </marker>
-                                            </defs>
+                                                    <defs>
+                                                        <marker id="arrowSafe" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(16,185,129,0.9)" />
+                                                        </marker>
+                                                        <marker id="arrowCaution" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(234,179,8,0.95)" />
+                                                        </marker>
+                                                        <marker id="arrowDanger" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(239,68,68,0.9)" />
+                                                        </marker>
+                                                    </defs>
 
-                                            {graphNodes.map((it: any, idx: number) => {
-                                                const ui = severityUi(it?.severity);
-                                                const pos = graphLayout[idx] || { x: 50, y: 12 };
-                                                return (
-                                                    <line
-                                                        key={`l-${idx}`}
-                                                        x1={pos.x}
-                                                        y1={pos.y}
-                                                        x2={50}
-                                                        y2={50}
-                                                        stroke={ui.stroke}
-                                                        strokeWidth={1.8}
-                                                        opacity={0.85}
-                                                        markerEnd={ui.marker}
-                                                    />
-                                                );
-                                            })}
+                                                    {graphNodes.map((it: any, idx: number) => {
+                                                        const ui = severityUi(it?.severity);
+                                                        const pos = graphLayout[idx] || { x: 50, y: 12 };
+                                                        return (
+                                                            <line
+                                                                key={`l-${idx}`}
+                                                                x1={pos.x}
+                                                                y1={pos.y}
+                                                                x2={50}
+                                                                y2={50}
+                                                                stroke={ui.stroke}
+                                                                strokeWidth={1.8}
+                                                                opacity={0.85}
+                                                                markerEnd={ui.marker}
+                                                            />
+                                                        );
+                                                    })}
                                                 </svg>
 
-                                        {/* Center node */}
-                                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                                            <div className="w-[170px] sm:w-[210px] rounded-2xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-4 text-center shadow-[0_0_40px_-18px_rgba(34,211,238,0.45)]">
-                                                <p className="text-[11px] text-white/50">{t("Target medication", "الدواء الأساسي")}</p>
-                                                <p className="text-white font-bold mt-1 leading-tight line-clamp-2">
-                                                    {String(data?.drugName || t("Target medication", "الدواء الأساسي"))}
-                                                </p>
-                                                {data?.genericName && (
-                                                    <p className="text-white/60 text-xs mt-1 line-clamp-2">
-                                                        {data.genericName}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Peripheral nodes */}
-                                        {graphNodes.map((it: any, idx: number) => {
-                                            const pos = graphLayout[idx] || { x: 50, y: 12 };
-                                            const ui = severityUi(it?.severity);
-                                            const key = String(it.otherMedication || "");
-                                            const selected = String(selectedGuardKey || "") === key;
-                                            return (
-                                                <button
-                                                    key={`n-${idx}`}
-                                                    type="button"
-                                                    onClick={() => setSelectedGuardKey(key)}
-                                                    style={{
-                                                        left: `${pos.x}%`,
-                                                        top: `${pos.y}%`,
-                                                        transform: "translate(-50%, -50%)",
-                                                    }}
-                                                    className={cn(
-                                                        "absolute w-[150px] sm:w-[180px] p-3 rounded-2xl border text-left backdrop-blur-md transition-all",
-                                                        ui.node,
-                                                        selected ? "ring-2 ring-white/40" : "hover:ring-2 hover:ring-white/15"
-                                                    )}
-                                                >
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <p className="text-sm font-semibold text-white line-clamp-2">
-                                                            {key}
+                                                {/* Center node */}
+                                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                                                    <div className="w-[170px] sm:w-[210px] rounded-2xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-4 text-center shadow-[0_0_40px_-18px_rgba(34,211,238,0.45)]">
+                                                        <p className="text-[11px] text-white/50">{t("Target medication", "الدواء الأساسي")}</p>
+                                                        <p className="text-white font-bold mt-1 leading-tight line-clamp-2">
+                                                            {String(data?.drugName || t("Target medication", "الدواء الأساسي"))}
                                                         </p>
-                                                        <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold border", ui.chip)}>
-                                                            {ui.label}
-                                                        </span>
+                                                        {data?.genericName && (
+                                                            <p className="text-white/60 text-xs mt-1 line-clamp-2">
+                                                                {data.genericName}
+                                                            </p>
+                                                        )}
                                                     </div>
-                                                    {typeof it?.confidence === "number" && (
-                                                        <p className="text-[11px] text-white/60 mt-1">
-                                                            {t("Confidence", "الثقة")}: <span className="font-mono tabular-nums">{Math.round(it.confidence)}%</span>
-                                                        </p>
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                                </div>
+
+                                                {/* Peripheral nodes */}
+                                                {graphNodes.map((it: any, idx: number) => {
+                                                    const pos = graphLayout[idx] || { x: 50, y: 12 };
+                                                    const ui = severityUi(it?.severity);
+                                                    const key = String(it.otherMedication || "");
+                                                    const selected = String(selectedGuardKey || "") === key;
+                                                    return (
+                                                        <button
+                                                            key={`n-${idx}`}
+                                                            type="button"
+                                                            onClick={() => setSelectedGuardKey(key)}
+                                                            style={{
+                                                                left: `${pos.x}%`,
+                                                                top: `${pos.y}%`,
+                                                                transform: "translate(-50%, -50%)",
+                                                            }}
+                                                            className={cn(
+                                                                "absolute w-[150px] sm:w-[180px] p-3 rounded-2xl border text-left backdrop-blur-md transition-all",
+                                                                ui.node,
+                                                                selected ? "ring-2 ring-white/40" : "hover:ring-2 hover:ring-white/15"
+                                                            )}
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <p className="text-sm font-semibold text-white line-clamp-2">
+                                                                    {key}
+                                                                </p>
+                                                                <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold border", ui.chip)}>
+                                                                    {ui.label}
+                                                                </span>
+                                                            </div>
+                                                            {typeof it?.confidence === "number" && (
+                                                                <p className="text-[11px] text-white/60 mt-1">
+                                                                    {t("Confidence", "الثقة")}: <span className="font-mono tabular-nums">{Math.round(it.confidence)}%</span>
+                                                                </p>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
 
                                             {selectedGuardItem && (
-                                        <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0">
-                                                    <p className="text-white font-bold truncate">{selectedGuardItem.otherMedication}</p>
-                                                    <p className="text-white/60 text-xs mt-1 truncate">
-                                                        {selectedGuardItem.headline || t("Interaction assessment", "تقييم التداخل")}
-                                                    </p>
+                                                <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-white font-bold truncate">{selectedGuardItem.otherMedication}</p>
+                                                            <p className="text-white/60 text-xs mt-1 truncate">
+                                                                {selectedGuardItem.headline || t("Interaction assessment", "تقييم التداخل")}
+                                                            </p>
+                                                        </div>
+                                                        <span className={cn("px-3 py-1 rounded-full text-xs font-semibold border", severityUi(selectedGuardItem.severity).chip)}>
+                                                            {severityUi(selectedGuardItem.severity).label}
+                                                        </span>
+                                                    </div>
+
+                                                    {selectedGuardItem.summary && (
+                                                        <p className="text-white/80 text-sm mt-3 leading-relaxed">
+                                                            {selectedGuardItem.summary}
+                                                        </p>
+                                                    )}
+
+                                                    {selectedGuardItem.mechanism && (
+                                                        <div className="mt-3 text-xs text-white/60">
+                                                            <span className="text-white/80 font-semibold">{t("Mechanism", "الآلية")}: </span>
+                                                            {selectedGuardItem.mechanism}
+                                                        </div>
+                                                    )}
+
+                                                    <div className="mt-4 grid gap-3 md:grid-cols-3">
+                                                        {Array.isArray(selectedGuardItem.whatToDo) && selectedGuardItem.whatToDo.length > 0 && (
+                                                            <div className="p-3 rounded-xl bg-black/20 border border-white/10">
+                                                                <p className="text-white font-semibold text-xs mb-2">{t("What to do", "ماذا تفعل")}</p>
+                                                                <ul className="space-y-1 text-white/70 text-sm">
+                                                                    {selectedGuardItem.whatToDo.slice(0, 6).map((s: string, i: number) => (
+                                                                        <li key={i}>• {s}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        {Array.isArray(selectedGuardItem.monitoring) && selectedGuardItem.monitoring.length > 0 && (
+                                                            <div className="p-3 rounded-xl bg-black/20 border border-white/10">
+                                                                <p className="text-white font-semibold text-xs mb-2">{t("Monitoring", "المتابعة")}</p>
+                                                                <ul className="space-y-1 text-white/70 text-sm">
+                                                                    {selectedGuardItem.monitoring.slice(0, 6).map((s: string, i: number) => (
+                                                                        <li key={i}>• {s}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        {Array.isArray(selectedGuardItem.redFlags) && selectedGuardItem.redFlags.length > 0 && (
+                                                            <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/15">
+                                                                <p className="text-red-100 font-semibold text-xs mb-2">{t("Red flags", "علامات خطر")}</p>
+                                                                <ul className="space-y-1 text-red-100/90 text-sm">
+                                                                    {selectedGuardItem.redFlags.slice(0, 6).map((s: string, i: number) => (
+                                                                        <li key={i}>• {s}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <span className={cn("px-3 py-1 rounded-full text-xs font-semibold border", severityUi(selectedGuardItem.severity).chip)}>
-                                                    {severityUi(selectedGuardItem.severity).label}
-                                                </span>
-                                            </div>
-
-                                            {selectedGuardItem.summary && (
-                                                <p className="text-white/80 text-sm mt-3 leading-relaxed">
-                                                    {selectedGuardItem.summary}
-                                                </p>
                                             )}
-
-                                            {selectedGuardItem.mechanism && (
-                                                <div className="mt-3 text-xs text-white/60">
-                                                    <span className="text-white/80 font-semibold">{t("Mechanism", "الآلية")}: </span>
-                                                    {selectedGuardItem.mechanism}
-                                                </div>
-                                            )}
-
-                                            <div className="mt-4 grid gap-3 md:grid-cols-3">
-                                                {Array.isArray(selectedGuardItem.whatToDo) && selectedGuardItem.whatToDo.length > 0 && (
-                                                    <div className="p-3 rounded-xl bg-black/20 border border-white/10">
-                                                        <p className="text-white font-semibold text-xs mb-2">{t("What to do", "ماذا تفعل")}</p>
-                                                        <ul className="space-y-1 text-white/70 text-sm">
-                                                            {selectedGuardItem.whatToDo.slice(0, 6).map((s: string, i: number) => (
-                                                                <li key={i}>• {s}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                                {Array.isArray(selectedGuardItem.monitoring) && selectedGuardItem.monitoring.length > 0 && (
-                                                    <div className="p-3 rounded-xl bg-black/20 border border-white/10">
-                                                        <p className="text-white font-semibold text-xs mb-2">{t("Monitoring", "المتابعة")}</p>
-                                                        <ul className="space-y-1 text-white/70 text-sm">
-                                                            {selectedGuardItem.monitoring.slice(0, 6).map((s: string, i: number) => (
-                                                                <li key={i}>• {s}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                                {Array.isArray(selectedGuardItem.redFlags) && selectedGuardItem.redFlags.length > 0 && (
-                                                    <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/15">
-                                                        <p className="text-red-100 font-semibold text-xs mb-2">{t("Red flags", "علامات خطر")}</p>
-                                                        <ul className="space-y-1 text-red-100/90 text-sm">
-                                                            {selectedGuardItem.redFlags.slice(0, 6).map((s: string, i: number) => (
-                                                                <li key={i}>• {s}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
                                         </>
                                     )}
 
