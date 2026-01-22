@@ -6,6 +6,12 @@
   :root {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -15,6 +21,19 @@
       radial-gradient(circle at 0% 50%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
       radial-gradient(circle at 100% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
     background-attachment: fixed;
+    min-height: 100dvh;
+  }
+
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
   }
 }
 
@@ -159,10 +178,16 @@
 
 /* Premium Input Field */
 .ai-input {
-  @apply w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30;
+  @apply w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-base leading-6;
   @apply focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20;
   @apply transition-all duration-200;
   backdrop-filter: blur(8px);
+}
+
+@media (max-width: 640px) {
+  body {
+    background-attachment: scroll;
+  }
 }
 
 .ai-input:focus {

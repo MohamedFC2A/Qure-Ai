@@ -44,7 +44,7 @@ export const Navbar = () => {
             <header className="fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl px-0 sm:px-4">
                 <GlassCard className="rounded-full py-2.5 sm:py-3 px-3 sm:px-6 flex items-center justify-between shadow-2xl shadow-black/20 backdrop-blur-xl bg-black/40 border-white/5" hoverEffect={false}>
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-3 font-bold text-lg tracking-tight mr-2 sm:mr-4">
+                    <Link href="/" className="flex items-center gap-3 font-bold text-base sm:text-lg tracking-tight mr-2 sm:mr-4">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
                             <Atom className="w-5 h-5 text-white" />
                         </div>
@@ -127,7 +127,7 @@ export const Navbar = () => {
                                 </Button>
                             </div>
                         ) : !loading && (
-                            <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                            <div className="hidden sm:flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                                 <Link href="/login">
                                     <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">Login</Button>
                                 </Link>

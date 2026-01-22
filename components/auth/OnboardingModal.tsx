@@ -94,14 +94,14 @@ export const OnboardingModal = () => {
                             <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                             <input
                                 {...register("username")}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
                                 placeholder="e.g. Alien_X"
                             />
                         </div>
                         {errors.username && <p className="text-red-400 text-xs ml-1">{errors.username.message}</p>}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Age */}
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-white/70 ml-1">Age</label>
@@ -110,7 +110,7 @@ export const OnboardingModal = () => {
                                 <input
                                     type="number"
                                     {...register("age", { valueAsNumber: true })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
                                     placeholder="25"
                                 />
                             </div>
@@ -124,7 +124,7 @@ export const OnboardingModal = () => {
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                 <select
                                     {...register("gender")}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none"
                                 >
                                     <option value="" className="bg-slate-900 text-white/50">Select</option>
                                     <option value="male" className="bg-slate-900">Male</option>
@@ -136,7 +136,7 @@ export const OnboardingModal = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Height */}
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-white/70 ml-1">Height</label>
@@ -144,7 +144,7 @@ export const OnboardingModal = () => {
                                 <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                 <input
                                     {...register("height")}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
                                     placeholder="180 cm"
                                 />
                             </div>
@@ -158,7 +158,7 @@ export const OnboardingModal = () => {
                                 <Weight className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                 <input
                                     {...register("weight")}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
                                     placeholder="75 kg"
                                 />
                             </div>

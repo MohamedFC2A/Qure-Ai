@@ -184,7 +184,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             <input
                                 {...register("email")}
                                 type="email"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
                                 placeholder="doctor@medvision.ai"
                             />
                         </div>
@@ -200,7 +200,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             <input
                                 {...register("password")}
                                 type="password"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -217,7 +217,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                     <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                     <input
                                         {...register("username")}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
                                         placeholder="e.g. Alien_X"
                                         autoComplete="username"
                                     />
@@ -227,7 +227,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-white/80 ml-1">Age</label>
                                     <div className="relative">
@@ -236,7 +236,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             {...register("age")}
                                             type="number"
                                             inputMode="numeric"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
                                             placeholder="25"
                                             min={1}
                                             max={120}
@@ -253,7 +253,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                         <select
                                             {...register("gender")}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all appearance-none"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-base text-white focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all appearance-none"
                                             defaultValue=""
                                         >
                                             <option value="" disabled className="bg-slate-900 text-white/50">
@@ -270,7 +270,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-white/80 ml-1">Height (cm)</label>
                                     <div className="relative">
@@ -279,7 +279,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             {...register("heightCm")}
                                             type="number"
                                             inputMode="numeric"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
                                             placeholder="180"
                                             min={50}
                                             max={250}
@@ -298,7 +298,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             {...register("weightKg")}
                                             type="number"
                                             inputMode="decimal"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
                                             placeholder="75"
                                             min={10}
                                             max={500}
@@ -360,7 +360,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                 </form>
 
                 <div className="mt-8 pt-6 border-t border-white/10">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Button variant="outline" className="w-full" onClick={() => handleOAuthLogin('github')} disabled={isLoading}>
                             <Github className="w-5 h-5 mr-2" />
                             Github

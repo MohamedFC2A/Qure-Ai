@@ -13,6 +13,7 @@ export type BillboardSlide = {
     badge?: string;
     title?: string;
     subtitle?: string;
+    rtl?: boolean;
 };
 
 export function AdBillboard({
@@ -106,10 +107,12 @@ export function AdBillboard({
                 hoveringRef.current = false;
             }}
         >
+            <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-r from-cyan-500/20 via-purple-500/10 to-fuchsia-500/20 blur-2xl opacity-70" />
+            <div className="absolute inset-0 rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(14,165,233,0.12)]" />
             <div
                 ref={trackRef}
                 className={cn(
-                    "relative flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar",
+                    "relative z-10 flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar",
                     "rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/20"
                 )}
                 onPointerDown={() => {
@@ -127,17 +130,18 @@ export function AdBillboard({
             >
                 {safeSlides.map((slide, i) => {
                     const isSvg = slide.src.toLowerCase().endsWith(".svg");
+                    const isRtl = Boolean(slide.rtl);
                     const Content = (
                         <div className="relative min-w-full snap-center">
                             {isSvg ? (
                                 <img
                                     src={slide.src}
                                     alt={slide.alt}
-                                    className="w-full h-[260px] sm:h-[340px] md:h-[420px] object-cover"
+                                    className="w-full h-[220px] sm:h-[340px] md:h-[420px] object-cover"
                                     loading={i === 0 ? "eager" : "lazy"}
                                 />
                             ) : (
-                                <div className="relative w-full h-[260px] sm:h-[340px] md:h-[420px]">
+                                <div className="relative w-full h-[220px] sm:h-[340px] md:h-[420px]">
                                     <Image
                                         src={slide.src}
                                         alt={slide.alt}
@@ -149,19 +153,23 @@ export function AdBillboard({
                                     />
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-black/0" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/0" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/20" />
 
                             {(slide.badge || slide.title || slide.subtitle) && (
                                 <div className="absolute left-4 right-4 bottom-4 sm:left-6 sm:right-6 sm:bottom-6">
-                                    <div className="max-w-3xl">
+                                    <div className={cn("max-w-3xl", isRtl && "ml-auto text-right")} dir={isRtl ? "rtl" : "ltr"}>
                                         {slide.badge && (
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/35 border border-white/10 backdrop-blur-md text-white/80 text-xs font-semibold">
+                                            <div className={cn(
+                                                "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 border border-white/15 backdrop-blur-md text-white/80 text-[11px] sm:text-xs font-semibold",
+                                                isRtl && "flex-row-reverse"
+                                            )}>
                                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                                                 {slide.badge}
                                             </div>
                                         )}
                                         {slide.title && (
-                                            <div className="mt-3 text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight drop-shadow">
+                                            <div className="mt-3 text-lg sm:text-2xl md:text-3xl font-bold text-white leading-tight drop-shadow">
                                                 {slide.title}
                                             </div>
                                         )}
@@ -176,9 +184,9 @@ export function AdBillboard({
 
                             {slide.href && (
                                 <div className="absolute top-4 right-4">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/35 border border-white/10 backdrop-blur-md text-white/80 text-xs font-semibold">
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 border border-white/15 backdrop-blur-md text-white/85 text-xs font-semibold">
                                         <ExternalLink className="w-3.5 h-3.5" />
-                                        <span className="hidden sm:inline">Open</span>
+                                        <span className="hidden sm:inline">{isRtl ? "فتح" : "Open"}</span>
                                     </div>
                                 </div>
                             )}

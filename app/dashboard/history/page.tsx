@@ -113,10 +113,10 @@ export default function HistoryPage() {
                 {/* Header Section */}
                 <div className="flex flex-col mb-8 gap-6">
                     <div>
-                        <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent font-display tracking-tight">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent font-display tracking-tight">
                             Analysis History
                         </h1>
-                        <p className="text-white/50 text-lg">Your personal pharmaceutical database.</p>
+                        <p className="text-white/50 text-base sm:text-lg">Your personal pharmaceutical database.</p>
                     </div>
 
                     {userId && (
@@ -128,7 +128,7 @@ export default function HistoryPage() {
                             <select
                                 value={profileFilter}
                                 onChange={(e) => setProfileFilter(e.target.value)}
-                                className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full sm:w-auto focus:outline-none focus:border-cyan-500/50"
+                                className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-base text-white w-full sm:w-auto focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                             >
                                 <option value="all">All profiles</option>
                                 {careProfiles.map((p) => (
@@ -152,7 +152,7 @@ export default function HistoryPage() {
                                 placeholder="Search by drug name, manufacturer, or interaction..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-transparent border-none py-4 px-4 text-white placeholder-white/30 text-lg focus:outline-none focus:ring-0"
+                                className="w-full bg-transparent border-none py-4 px-4 text-base sm:text-lg text-white placeholder-white/30 focus:outline-none focus:ring-0"
                             />
                             {searchTerm && (
                                 <button

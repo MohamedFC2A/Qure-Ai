@@ -456,7 +456,7 @@ export default function ProfilePage() {
                                         <p className="text-white/40 text-sm">Joined {new Date(user?.created_at).toLocaleDateString()}</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="bg-white/5 p-4 rounded-lg border border-white/5">
                                         <label className="text-xs text-white/40">Current Plan</label>
                                         <p className="text-lg font-bold text-white uppercase">{plan}</p>
@@ -479,7 +479,7 @@ export default function ProfilePage() {
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">Username</label>
                                             <input
-                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                                                 value={basicProfile.username}
                                                 onChange={(e) => setBasicProfile({ ...basicProfile, username: e.target.value })}
                                                 placeholder="e.g. Alien_X"
@@ -489,7 +489,7 @@ export default function ProfilePage() {
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">Age</label>
                                             <input
-                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                                                 type="number"
                                                 inputMode="numeric"
                                                 value={basicProfile.age}
@@ -503,7 +503,7 @@ export default function ProfilePage() {
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">Gender</label>
                                             <select
-                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                                                 value={basicProfile.gender}
                                                 onChange={(e) => setBasicProfile({ ...basicProfile, gender: e.target.value })}
                                             >
@@ -517,7 +517,7 @@ export default function ProfilePage() {
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">Height (cm)</label>
                                             <input
-                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                                                 type="number"
                                                 inputMode="numeric"
                                                 value={basicProfile.heightCm}
@@ -531,7 +531,7 @@ export default function ProfilePage() {
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">Weight (kg)</label>
                                             <input
-                                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                                                 type="number"
                                                 inputMode="decimal"
                                                 value={basicProfile.weightKg}
@@ -586,7 +586,7 @@ export default function ProfilePage() {
                                             value={redeemCode}
                                             onChange={(e) => setRedeemCode(e.target.value)}
                                             placeholder="Enter voucher code (e.g. 01272...)"
-                                            className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-cyan-500/50"
+                                            className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-base text-white w-full focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                                         />
                                         <Button onClick={handleRedeem} disabled={redeemLoading || !redeemCode} className="min-w-[100px]">
                                             {redeemLoading ? "..." : "Redeem"}
@@ -659,7 +659,7 @@ export default function ProfilePage() {
                             <div className="space-y-6 max-w-lg">
                                 <div>
                                     <label className="block text-sm font-medium text-white/80 mb-3">AI Results Language</label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <button
                                             onClick={() => setResultsLanguage("en")}
                                             className={cn(

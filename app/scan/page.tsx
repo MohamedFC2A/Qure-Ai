@@ -57,10 +57,10 @@ export default function ScanPage() {
                 </div>
 
                 <div className="mb-8 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 mb-4">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 mb-4">
                         Medical Analysis
                     </h1>
-                    <p className="text-white/60">
+                    <p className="text-white/60 text-base sm:text-lg">
                         Upload an image of any medication to receive a comprehensive analysis.
                     </p>
                 </div>
