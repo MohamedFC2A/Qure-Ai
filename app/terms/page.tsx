@@ -40,6 +40,10 @@ export default function TermsPage() {
         setSaving(true);
         setError(null);
         try {
+            if (user?.id === "local-dev-user") {
+                router.replace(nextPath);
+                return;
+            }
             const { error: updateError } = await supabase.auth.updateUser({
                 data: {
                     terms_accepted_at: new Date().toISOString(),

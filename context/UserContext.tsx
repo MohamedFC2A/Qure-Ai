@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { TERMS_VERSION } from "@/lib/legal/terms";
 
 interface UserProfile {
     username?: string;
@@ -34,7 +35,7 @@ const getLocalDevUser = () => {
         user_metadata: {
             username: "local_dev",
             terms_accepted_at: new Date().toISOString(),
-            terms_version: "local-dev",
+            terms_version: TERMS_VERSION,
         },
     };
 };
