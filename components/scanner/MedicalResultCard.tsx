@@ -269,17 +269,17 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const aiInputRef = useRef<HTMLTextAreaElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
+    const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'guard' | 'chat' | 'fda'>('overview');
+    const [safetyTab, setSafetyTab] = useState<UltraSafetyTab>('interactions');
+    const [safetyShowAll, setSafetyShowAll] = useState<Record<string, boolean>>({});
+    const [showAllIngredients, setShowAllIngredients] = useState(false);
+    const [showGuardGraph, setShowGuardGraph] = useState(false);
+
     useEffect(() => {
         if (activeTab === 'chat') {
             chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
     }, [aiNodes.length, aiLoading, activeTab]);
-
-    const [safetyTab, setSafetyTab] = useState<UltraSafetyTab>('interactions');
-    const [safetyShowAll, setSafetyShowAll] = useState<Record<string, boolean>>({});
-    const [showAllIngredients, setShowAllIngredients] = useState(false);
-    const [showGuardGraph, setShowGuardGraph] = useState(false);
-    const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'guard' | 'chat' | 'fda'>('overview');
 
     const interactionGuard = (data as any)?.interactionGuard as MedicalData["interactionGuard"] | undefined;
     const guardItems = useMemo(() => {
