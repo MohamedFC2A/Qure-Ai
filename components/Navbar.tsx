@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
-import { Atom, ScanLine, LayoutDashboard, User, Clock, Gem, Loader2, LogOut } from "lucide-react";
+import {
+    Atom, ScanLine, LayoutDashboard, User, Clock,
+    Gem, Loader2, LogOut, ChevronDown,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-
 import { useUser } from "@/context/UserContext";
 import { useScan } from "@/context/ScanContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -20,7 +21,7 @@ export const Navbar = () => {
     const { resultsLanguage } = useSettings();
     const supabase = createClient();
 
-    const isArabic = resultsLanguage === 'ar';
+    const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
     const handleSignOut = async () => {
@@ -28,95 +29,147 @@ export const Navbar = () => {
             document.cookie = "qure_dev_auth=; path=/; max-age=0; samesite=lax";
         }
         await supabase.auth.signOut();
-        // window.location.reload(); // Context will handle null, or forcing reload is safer
-        window.location.href = '/login';
+        window.location.href = "/login";
     };
 
-    const navItems = user ? [
-        { name: t("Home", "الرئيسية"), href: "/", icon: Atom },
-        { name: t("Scan", "فحص دواء"), href: "/scan", icon: ScanLine },
-        { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem },
-        { name: t("History", "السجل"), href: "/dashboard/history", icon: Clock },
-        { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard", icon: LayoutDashboard },
-    ] : [
-        { name: t("Home", "الرئيسية"), href: "/", icon: Atom },
-        { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem },
-    ];
+    const navItems = user
+        ? [
+              { name: t("Home", "الرئيسية"),       href: "/",                   icon: Atom,           color: "cyan"    },
+              { name: t("Scan", "فحص دواء"),        href: "/scan",               icon: ScanLine,       color: "emerald" },
+              { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem,            color: "amber"   },
+              { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock,          color: "violet"  },
+              { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard, color: "cyan"   },
+          ]
+        : [
+              { name: t("Home", "الرئيسية"),  href: "/",        icon: Atom,  color: "cyan"  },
+              { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem,  color: "amber" },
+          ];
+
+    const activeColorMap: Record<string, string> = {
+        cyan:    "bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/25",
+        emerald: "bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-400/25",
+        amber:   "bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/25",
+        violet:  "bg-violet-400/10 text-violet-300 ring-1 ring-violet-400/25",
+    };
+
+    const activeIconColorMap: Record<string, string> = {
+        cyan:    "text-cyan-400",
+        emerald: "text-emerald-400",
+        amber:   "text-amber-400",
+        violet:  "text-violet-400",
+    };
 
     return (
         <>
             <MobileNav />
             <OnboardingModal />
 
-            <header className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-6xl">
-                <GlassCard className="rounded-xl px-3 py-2.5 sm:px-4 flex items-center justify-between shadow-2xl shadow-black/25 backdrop-blur-2xl bg-slate-950/72 border-white/10" hoverEffect={false}>
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-3 font-bold text-base sm:text-lg tracking-tight mr-2 sm:mr-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 rounded-lg">
-                        <div className="w-9 h-9 rounded-lg bg-cyan-300 text-slate-950 flex items-center justify-center shadow-lg shadow-cyan-950/20">
-                            <Atom className="w-5 h-5 text-slate-950" />
+            <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-16px)] max-w-6xl">
+                <div
+                    className={cn(
+                        "relative overflow-hidden rounded-2xl px-3 py-2.5 sm:px-4",
+                        "flex items-center justify-between gap-2",
+                        "backdrop-blur-2xl border shadow-2xl shadow-black/50",
+                        "transition-all duration-300"
+                    )}
+                    style={{
+                        background: "rgba(6, 9, 14, 0.88)",
+                        borderColor: "rgba(255,255,255,0.08)",
+                        boxShadow: "0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 24px 60px rgba(0,0,0,0.55)",
+                    }}
+                >
+                    {/* Top shimmer */}
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent pointer-events-none" />
+
+                    {/* ── Logo ── */}
+                    <Link
+                        href="/"
+                        className={cn(
+                            "flex items-center gap-2.5 font-bold text-base tracking-tight shrink-0",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 rounded-xl",
+                            isArabic ? "flex-row-reverse" : ""
+                        )}
+                    >
+                        <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-950/40">
+                            <Atom className="w-5 h-5 text-white" />
+                            <div className="absolute inset-0 rounded-xl bg-white/10" />
                         </div>
-                        <span className="text-white font-display">
-                            Qure Ai
+                        <span className="text-white font-display tracking-tight">
+                            Qure <span className="text-cyan-400">Ai</span>
                         </span>
                     </Link>
 
-                    {/* Navigation - Desktop Only */}
-                    <nav className="hidden md:flex flex-1 min-w-0 items-center justify-center gap-1 sm:gap-2 px-1 sm:px-0">
+                    {/* ── Desktop Navigation ── */}
+                    <nav className={cn(
+                        "hidden md:flex flex-1 items-center justify-center gap-0.5",
+                        isArabic ? "flex-row-reverse" : ""
+                    )}>
                         {navItems.map((item) => {
-                            const isActive = pathname === item.href;
+                            const isActive = pathname === item.href ||
+                                (item.href !== "/" && pathname.startsWith(`${item.href}`));
                             return (
                                 <Link key={item.href} href={item.href}>
-                                    <div
-                                    className={cn(
-                                            "relative px-3.5 py-2 rounded-lg text-sm transition-all duration-300 flex items-center justify-center gap-2",
+                                    <div className={cn(
+                                        "relative px-3.5 py-2 rounded-xl text-sm transition-all duration-200",
+                                        "flex items-center gap-2 cursor-pointer select-none",
+                                        isActive
+                                            ? activeColorMap[item.color] || activeColorMap["cyan"]
+                                            : "text-slate-400 hover:text-white hover:bg-white/[0.05]"
+                                    )}>
+                                        <item.icon className={cn(
+                                            "w-4 h-4 shrink-0",
                                             isActive
-                                                ? "bg-cyan-300/10 text-cyan-50 font-semibold ring-1 ring-cyan-300/20"
-                                                : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
-                                        )}
-                                    >
-                                        {isActive && (
-                                            <div className="absolute inset-0 rounded-lg animate-in fade-in zoom-in duration-300" />
-                                        )}
-                                        <item.icon className={cn("w-4 h-4 relative z-10", isActive ? "text-cyan-300" : "")} />
-                                        <span className={cn("relative z-10", isActive ? "text-white" : "")}>
-                                            {item.name}
-                                        </span>
+                                                ? activeIconColorMap[item.color] || "text-cyan-400"
+                                                : "opacity-70"
+                                        )} />
+                                        <span className="font-medium">{item.name}</span>
                                     </div>
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    {/* Auth Buttons */}
-                    <div className="flex items-center gap-2 pl-3 sm:pl-4 md:border-l border-white/10 ml-auto md:ml-2">
-                        {/* Only show content after we've checked auth state to prevent flickering */}
+                    {/* ── Auth Area ── */}
+                    <div className={cn(
+                        "flex items-center gap-2 shrink-0",
+                        isArabic ? "flex-row-reverse" : ""
+                    )}>
                         {!loading && user ? (
-                            <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                                {/* Enha                                {isScanning && (
-                                    <Link href="/scan" className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-100 transition-all hover:bg-cyan-300/15">
-                                        <div className="relative">
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-300" />
-                                            <div className="absolute inset-0 blur-sm bg-cyan-400/40 rounded-full animate-pulse" />
+                            <div className={cn(
+                                "flex items-center gap-2",
+                                isArabic ? "flex-row-reverse" : ""
+                            )}>
+                                {/* Scanning indicator */}
+                                {isScanning && (
+                                    <Link href="/scan">
+                                        <div className="flex items-center gap-1.5 rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-400/15">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            <span className="hidden xs:inline">{t("Scanning", "جاري الفحص")}</span>
+                                            <span className="font-mono tabular-nums">{totalDuration}s</span>
                                         </div>
-                                        <span className="hidden xs:inline">{t("Scanning", "جاري الفحص")}</span>
-                                        <span className="font-mono tabular-nums">{totalDuration}s</span>
                                     </Link>
                                 )}
-                                {/* Credits Chip */}
+
+                                {/* Credits chip */}
                                 <Link href="/profile" aria-label="Open profile">
                                     <div className={cn(
-                                        "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all",
-                                        plan === 'ultra'
-                                            ? "bg-amber-300/10 border-amber-300/25 text-amber-100 hover:bg-amber-300/15"
-                                            : "bg-cyan-300/10 border-cyan-300/25 text-cyan-100 hover:bg-cyan-300/15"
+                                        "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all",
+                                        plan === "ultra"
+                                            ? "bg-amber-400/10 border-amber-400/25 text-amber-300 hover:bg-amber-400/15"
+                                            : "bg-cyan-400/10 border-cyan-400/25 text-cyan-300 hover:bg-cyan-400/15"
                                     )}>
-                                        <span className={cn("w-1.5 h-1.5 rounded-full", plan === 'ultra' ? "bg-amber-400" : "bg-cyan-400")} />
-                                        {credits} {t("Credits", "رصيد")}
+                                        <span className={cn(
+                                            "w-1.5 h-1.5 rounded-full animate-glow-pulse",
+                                            plan === "ultra" ? "bg-amber-400" : "bg-cyan-400"
+                                        )} />
+                                        {credits}
+                                        <span className="hidden sm:inline">{t(" Credits", " رصيد")}</span>
                                     </div>
                                 </Link>
- 
+
+                                {/* Avatar */}
                                 <Link href="/profile">
-                                    <Button variant="ghost" size="sm" className="hidden sm:flex h-9 w-9 p-0 items-center justify-center border border-white/10 bg-white/[0.04] overflow-hidden">
+                                    <button className="hidden sm:flex h-9 w-9 rounded-xl items-center justify-center border border-white/10 bg-white/[0.05] overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
                                         {user?.user_metadata?.avatar_url ? (
                                             <img
                                                 src={user.user_metadata.avatar_url}
@@ -124,34 +177,41 @@ export const Navbar = () => {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <User className="w-4 h-4" />
+                                            <User className="w-4 h-4 text-slate-300" />
                                         )}
+                                    </button>
+                                </Link>
+
+                                {/* Sign out */}
+                                <button
+                                    onClick={handleSignOut}
+                                    className="hidden sm:flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-400/70 hover:text-rose-300 hover:bg-rose-500/10 transition-all"
+                                >
+                                    <LogOut className="h-3.5 w-3.5" />
+                                    <span className="hidden sm:inline">{t("Exit", "خروج")}</span>
+                                </button>
+                            </div>
+                        ) : !loading ? (
+                            <div className={cn(
+                                "hidden sm:flex items-center gap-2",
+                                isArabic ? "flex-row-reverse" : ""
+                            )}>
+                                <Link href="/login">
+                                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                                        {t("Login", "الدخول")}
                                     </Button>
                                 </Link>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleSignOut}
-                                    className="text-red-200 hover:text-red-100 hover:bg-red-500/10 px-3 sm:px-4 hidden sm:flex gap-2"
-                                >
-                                    <LogOut className="h-4 w-4" />
-                                    <span className="hidden sm:inline">{t("Sign Out", "تسجيل الخروج")}</span>
-                                </Button>
-                            </div>
-                        ) : !loading && (
-                            <div className="hidden sm:flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                                <Link href="/login">
-                                    <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">{t("Login", "تسجيل الدخول")}</Button>
-                                </Link>
                                 <Link href="/signup">
-                                    <Button variant="primary" size="sm" className="px-5 font-semibold">
+                                    <Button variant="primary" size="sm" className="px-5" glow>
                                         {t("Get Started", "ابدأ الآن")}
                                     </Button>
                                 </Link>
                             </div>
+                        ) : (
+                            <div className="w-20 h-8 skeleton rounded-xl" />
                         )}
                     </div>
-                </GlassCard>
+                </div>
             </header>
         </>
     );
