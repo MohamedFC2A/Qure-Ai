@@ -1797,7 +1797,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     {t('Overall Risk', 'مستوى المخاطر')}: {data.personalized.riskLevel}
                                 </span>
                             )}
-                            <Link href="/profile" className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline ml-auto font-semibold">
+                            <Link href="/profile" className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline ms-auto font-semibold">
                                 {t('Manage Profile & Memories', 'إدارة الملف الصحي والذاكرة')}
                             </Link>
                         </div>
@@ -1808,7 +1808,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 {/* Left Side: Network Node List & Info */}
                                 <div className="lg:col-span-1 space-y-3">
                                     <p className="text-xs text-white/50 font-bold uppercase tracking-wider mb-1">{t("Scan Results against medications", "نتائج الفحص مقارنة بالأدوية")}</p>
-                                    <div className="grid gap-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                                    <div className="grid gap-2 max-h-[380px] overflow-y-auto pe-1 scrollbar-thin">
                                         {guardItems.map((it: any) => {
                                             const ui = severityUi(it?.severity);
                                             const key = String(it?.otherMedication || "").trim();
@@ -1820,7 +1820,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                     type="button"
                                                     onClick={() => setSelectedGuardKey(key)}
                                                     className={cn(
-                                                        "w-full p-4 rounded-xl border text-left transition-all duration-200",
+                                                        "w-full p-4 rounded-xl border text-start transition-all duration-200",
                                                         selected 
                                                             ? "bg-white/[0.08] border-cyan-500/40 ring-1 ring-cyan-500/25" 
                                                             : "bg-white/[0.02] border-white/5 hover:bg-white/[0.05] hover:border-white/10"
@@ -1924,7 +1924,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                         transform: "translate(-50%, -50%)",
                                                     }}
                                                     className={cn(
-                                                        "absolute px-3 py-1.5 rounded-xl border text-left backdrop-blur-md transition-all duration-300 text-[10px] sm:text-xs font-semibold shadow-lg",
+                                                        "absolute px-3 py-1.5 rounded-xl border text-center backdrop-blur-md transition-all duration-300 text-[10px] sm:text-xs font-semibold shadow-lg",
                                                         ui.node,
                                                         selected 
                                                             ? "ring-2 ring-white border-white scale-[1.08] shadow-white/10" 
@@ -2141,11 +2141,11 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     onChange={(e) => setCustomQuestion(e.target.value.slice(0, 500))}
                                     onKeyDown={handleKeyDown}
                                     placeholder={t("Ask anything about this medication...", "اسأل أي شيء عن هذا الدواء...")}
-                                    className="ai-input resize-none min-h-[90px] pr-28 text-sm sm:text-base"
+                                    className="ai-input resize-none min-h-[90px] pe-28 text-sm sm:text-base"
                                     disabled={aiLoading}
                                     dir={isArabic ? 'rtl' : 'ltr'}
                                 />
-                                <div className="absolute bottom-3 right-3 flex items-center gap-2.5">
+                                <div className="absolute bottom-3 end-3 flex items-center gap-2.5">
                                     <button
                                         type="button"
                                         onClick={toggleVoiceInput}
@@ -2216,7 +2216,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 <button
                                     onClick={() => askAi({ preset: "alternative", reset: true })}
                                     disabled={aiLoading}
-                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-[0_0_15px_-3px_rgba(168,85,247,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-start hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-[0_0_15px_-3px_rgba(168,85,247,0.15)] transition-all duration-300 hover:scale-[1.02]"
                                 >
                                     <div className="flex items-center gap-2 mb-2 text-purple-300">
                                         <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
@@ -2229,7 +2229,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 <button
                                     onClick={() => askAi({ preset: "personalized", reset: true })}
                                     disabled={aiLoading}
-                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:border-amber-500/30 hover:bg-amber-500/5 hover:shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-start hover:border-amber-500/30 hover:bg-amber-500/5 hover:shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)] transition-all duration-300 hover:scale-[1.02]"
                                 >
                                     <div className="flex items-center gap-2 mb-2 text-amber-300">
                                         <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
@@ -2242,7 +2242,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 <button
                                     onClick={() => askAi({ preset: "history", reset: true })}
                                     disabled={aiLoading}
-                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:border-cyan-500/30 hover:bg-cyan-500/5 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-start hover:border-cyan-500/30 hover:bg-cyan-500/5 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] transition-all duration-300 hover:scale-[1.02]"
                                 >
                                     <div className="flex items-center gap-2 mb-2 text-cyan-300">
                                         <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
@@ -2284,14 +2284,14 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         {/* Interactive Conversation Timeline */}
                         {aiNodes.length > 0 && (
                             <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-white/40 text-xs pl-1">
+                                <div className="flex items-center gap-2 text-white/40 text-xs ps-1">
                                     <GitBranch className="w-3.5 h-3.5" />
                                     <span>{t("AI Interaction Flow", "سير الأسئلة والأجوبة الذكية")}</span>
                                     <span>•</span>
                                     <span>{aiNodes.length} {t("responses", "ردود")}</span>
                                 </div>
 
-                                <div className="pl-4 border-l border-purple-500/20 space-y-4">
+                                <div className="ps-4 border-s border-purple-500/20 space-y-4">
                                     {aiNodes.map((node, idx) => {
                                         const isLast = idx === aiNodes.length - 1;
                                         const isCopied = copiedNodeIdx === idx;
@@ -2299,7 +2299,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         return (
                                             <div key={`${idx}-${node.title}`} className="relative ai-node-enter">
                                                 {/* Timeline marker */}
-                                                <div className="absolute -left-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
+                                                <div className="absolute ltr:-left-[21px] rtl:-right-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
 
                                                 <div className={cn("p-5 rounded-2xl border bg-slate-900/60 border-white/5 shadow-xl transition-all duration-300", isCopied && "ai-copy-flash")}>
                                                     {/* Header */}
@@ -2344,7 +2344,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                     {/* Key Points */}
                                                     {node.keyPoints && node.keyPoints.length > 0 && (
                                                         <div className="space-y-1.5 mb-3">
-                                                            <p className="text-xs text-white/40 font-bold uppercase tracking-wider pl-1">{t("Key Takeaways", "النقاط الرئيسية")}</p>
+                                                            <p className="text-xs text-white/40 font-bold uppercase tracking-wider ps-1">{t("Key Takeaways", "النقاط الرئيسية")}</p>
                                                             <ul className="grid gap-2">
                                                                 {node.keyPoints.map((p, i) => (
                                                                     <li key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-white/80 text-xs sm:text-sm leading-relaxed flex items-start gap-2.5">
@@ -2389,7 +2389,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                                     key={q.id}
                                                                     type="button"
                                                                     onClick={() => askAi({ question: q.question, reset: false })}
-                                                                    className="w-full text-left p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/45 transition-all text-xs sm:text-sm text-white"
+                                                                    className="w-full text-start p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/45 transition-all text-xs sm:text-sm text-white"
                                                                 >
                                                                     <div className="flex items-center gap-2 mb-1.5 text-purple-300 font-bold">
                                                                         <Sparkles className="w-4 h-4 text-purple-300" />
@@ -2420,8 +2420,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
                                     {/* Loading follow up */}
                                     {aiLoading && (
-                                        <div className="relative pl-5">
-                                            <div className="absolute -left-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-ping" />
+                                        <div className="relative ps-5">
+                                            <div className="absolute ltr:-left-[21px] rtl:-right-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-ping" />
                                             <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5 flex items-center gap-2.5">
                                                 <div className="ai-thinking">
                                                     <div className="ai-thinking-dot" />
@@ -2602,8 +2602,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     };
 
     return (
-        <div ref={exportRef} className="w-full max-w-5xl">
-            <GlassCard className="w-full p-0 overflow-hidden shadow-2xl shadow-black/25" hoverEffect={false}>
+        <div ref={exportRef} className="w-full max-w-5xl" dir={isArabic ? "rtl" : "ltr"}>
+            <GlassCard className="w-full p-0 overflow-hidden shadow-2xl shadow-black/25 text-start" hoverEffect={false}>
                 {/* Header Section */}
                 <div className="relative p-3.5 sm:p-8 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-black">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
@@ -2621,7 +2621,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         <p className="text-cyan-200/90 font-medium text-xs sm:text-sm mt-1">{displayGenericName}</p>
                                     )}
                                 </div>
-                                <div className="flex flex-wrap gap-1.5 ml-2">
+                                <div className="flex flex-wrap gap-1.5 ms-2">
                                     {fdaStatus === "verified" ? (
                                         <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                                             <CheckCircle2 className="w-3 h-3" /> {t("FDA Verified", "موثّق من FDA")}
@@ -2690,7 +2690,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     disabled={!!exporting}
                                     className="border-white/10 text-white/80 hover:bg-white/10 h-9 rounded-xl text-xs px-3 border-0"
                                 >
-                                    <Download className="w-3.5 h-3.5 mr-1.5" />
+                                    <Download className="w-3.5 h-3.5 me-1.5" />
                                     {exporting === 'png' ? t("Exporting…", "جاري التصدير…") : "PNG"}
                                 </Button>
 
@@ -2704,7 +2704,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         plan === 'ultra' ? "text-white/80" : "border-white/5 text-white/30"
                                     )}
                                 >
-                                    {plan === 'ultra' ? <FileDown className="w-3.5 h-3.5 mr-1.5" /> : <Lock className="w-3.5 h-3.5 mr-1.5 text-amber-400" />}
+                                    {plan === 'ultra' ? <FileDown className="w-3.5 h-3.5 me-1.5" /> : <Lock className="w-3.5 h-3.5 me-1.5 text-amber-400" />}
                                     {exporting === 'pdf' ? t("Exporting…", "جاري التصدير…") : t("PDF Report", "تقرير PDF")}
                                 </Button>
                             </div>

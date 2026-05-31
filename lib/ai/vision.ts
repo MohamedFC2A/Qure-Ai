@@ -89,7 +89,7 @@ export const analyzeMedicationText = async (
 
         // Language specific instructions
         const languageInstruction = language === 'ar'
-            ? `CRITICAL LANGUAGE RULE: You MUST answer completely in Arabic (Modern Standard Arabic). Translate all medical terms, descriptions, uses, side effects, and warnings into professional Arabic. Only keep the keys in English JSON format.`
+            ? `CRITICAL LANGUAGE RULE: You MUST answer in professional Arabic (Modern Standard Arabic) for all textual fields EXCEPT for "drugName", "genericName", "dosage", "strength", "activeIngredients", and "activeIngredientsEn" which MUST ALWAYS be in English (Latin characters/script). Do NOT translate drug names, generic/scientific names, active ingredient lists, or dosage/strength texts to Arabic. Keep them strictly in English.`
             : `CRITICAL LANGUAGE RULE: You MUST answer completely in English.`;
 
         const contextJson = context ? JSON.stringify(context) : "null";
@@ -115,19 +115,19 @@ export const analyzeMedicationText = async (
     
     RETURN FORMAT (JSON):
     {
-        "drugName": "Inferred Name (e.g. Panadol Extra) - In ${language === 'ar' ? 'Arabic' : 'English'}",
+        "drugName": "Inferred Name (e.g. Panadol Extra) - ALWAYS IN ENGLISH",
         "drugNameEn": "The same drug name in English (for FDA lookup). If already English, repeat it.",
-        "genericName": "Scientific Name (e.g. Paracetamol 500mg + Caffeine) - In ${language === 'ar' ? 'Arabic' : 'English'}",
+        "genericName": "Scientific Name (e.g. Paracetamol 500mg + Caffeine) - ALWAYS IN ENGLISH",
         "genericNameEn": "Generic/active ingredient name in English (for FDA lookup). If already English, repeat it.",
         "manufacturer": "Inferred Manufacturer (or 'Generic')",
         "form": "Dosage form (tablet/capsule/syrup/cream/etc) - In ${language === 'ar' ? 'Arabic' : 'English'}",
-        "strength": "Strength if inferable (e.g. 500mg) - In ${language === 'ar' ? 'Arabic' : 'English'}",
-        "activeIngredients": ["List of active ingredients (max 5) - In ${language === 'ar' ? 'Arabic' : 'English'}"],
+        "strength": "Strength if inferable (e.g. 500mg) - ALWAYS IN ENGLISH",
+        "activeIngredients": ["List of active ingredients (max 5) - ALWAYS IN ENGLISH"],
         "activeIngredientsEn": ["List of active ingredients in English (for FDA lookup/reference). If already English, repeat it."],
         "description": "Professional medical description of the drug, suitable for a patient to understand. (In ${language === 'ar' ? 'Arabic' : 'English'})",
         "category": "Therapeutic Category (e.g. Analgesic) (In ${language === 'ar' ? 'Arabic' : 'English'})",
         "uses": ["List of 3-5 primary medical uses (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "dosage": "Standard adult dosage (e.g. '500-1000mg q4-6h') if specific dosage not found in text. (In ${language === 'ar' ? 'Arabic' : 'English'})",
+        "dosage": "Standard adult dosage (e.g. '500-1000mg q4-6h') - ALWAYS IN ENGLISH",
         "missedDose": "What to do if a dose is missed (In ${language === 'ar' ? 'Arabic' : 'English'})",
         "overdose": {
             "symptoms": ["Max 5 overdose symptoms (In ${language === 'ar' ? 'Arabic' : 'English'})"],
