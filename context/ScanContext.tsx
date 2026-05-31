@@ -363,7 +363,13 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             const analyzeResponse = await fetch("/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: ocrText, language: resultsLanguage, fdaEnabled: fdaDrugsEnabled, profileId: effectiveProfileId }),
+                body: JSON.stringify({
+                    text: ocrText,
+                    language: resultsLanguage,
+                    fdaEnabled: fdaDrugsEnabled,
+                    profileId: effectiveProfileId,
+                    scannedImage: imageDataUrl,
+                }),
                 signal: controller.signal,
             });
 

@@ -123,6 +123,7 @@ export const analyzeMedicationText = async (
         "form": "Dosage form (tablet/capsule/syrup/cream/etc) - In ${language === 'ar' ? 'Arabic' : 'English'}",
         "strength": "Strength if inferable (e.g. 500mg) - In ${language === 'ar' ? 'Arabic' : 'English'}",
         "activeIngredients": ["List of active ingredients (max 5) - In ${language === 'ar' ? 'Arabic' : 'English'}"],
+        "activeIngredientsEn": ["List of active ingredients in English (for FDA lookup/reference). If already English, repeat it."],
         "description": "Professional medical description of the drug, suitable for a patient to understand. (In ${language === 'ar' ? 'Arabic' : 'English'})",
         "category": "Therapeutic Category (e.g. Analgesic) (In ${language === 'ar' ? 'Arabic' : 'English'})",
         "uses": ["List of 3-5 primary medical uses (In ${language === 'ar' ? 'Arabic' : 'English'})"],

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import type { OpenFdaLabelSnapshot } from "@/lib/openfda";
 import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
 import { AdUnit } from "@/components/AdUnit";
+import { useScan } from "@/context/ScanContext";
 
 interface MedicalData {
     drugName: string;
@@ -20,6 +21,8 @@ interface MedicalData {
     form?: string;
     strength?: string;
     activeIngredients?: string[];
+    activeIngredientsEn?: string[];
+    scannedImage?: string;
     activeIngredientsDetailed?: Array<{
         name: string;
         strength?: string;
@@ -158,6 +161,18 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
     const isArabic = resultsLanguage === 'ar';
     const t = (en: string, ar: string) => (isArabic ? ar : en);
+
+    let scanContext: any = null;
+    try {
+        scanContext = useScan();
+    } catch {
+        // ignore
+    }
+    const previewSrc = scanContext?.previewSrc || null;
+    const scannedImage = data.scannedImage || previewSrc;
+
+    const displayDrugName = data.drugNameEn || data.drugName;
+    const displayGenericName = data.genericNameEn || data.genericName;
 
     const [fda, setFda] = useState<MedicalData["fda"]>((data as any)?.fda ?? null);
     const [fdaLoading, setFdaLoading] = useState(false);
@@ -768,14 +783,23 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         }
 
         const list = Array.isArray(data.activeIngredients) ? data.activeIngredients : [];
+        const listEn = Array.isArray(data.activeIngredientsEn) ? data.activeIngredientsEn : [];
         return list
-            .map((raw) => {
+            .map((raw, idx) => {
                 const parsed = parseDoseFromText(String(raw || ""));
                 if (!parsed.name) return null;
-                return { name: parsed.name, doseText: parsed.doseText, doseMg: parsed.doseMg, source: "ai" as const };
+                
+                let displayName = parsed.name;
+                if (listEn[idx]) {
+                    const parsedEn = parseDoseFromText(String(listEn[idx]));
+                    if (parsedEn.name) {
+                        displayName = parsedEn.name;
+                    }
+                }
+                return { name: displayName, doseText: parsed.doseText, doseMg: parsed.doseMg, source: "ai" as const };
             })
             .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "ai" }>;
-    }, [data.activeIngredients, (data as any)?.activeIngredientsDetailed, fda, fdaFeatureEnabled]);
+    }, [data.activeIngredients, data.activeIngredientsEn, (data as any)?.activeIngredientsDetailed, fda, fdaFeatureEnabled]);
 
     const askAi = async (params: { preset?: "alternative" | "personalized" | "history"; question?: string; reset?: boolean }) => {
         if (!user) {
@@ -1022,7 +1046,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             {data.description}
                         </p>
                     </div>
-                    <AdUnit />
+                    {scannedImage && typeof scannedImage === "string" && (scannedImage.startsWith("data:") || scannedImage.startsWith("blob:") || scannedImage.startsWith("http")) ? (
+                        <div className="mt-5 overflow-hidden rounded-xl border border-white/10 bg-slate-950/60 p-2.5 transition-all duration-500 hover:border-cyan-500/30 group">
+                            <div className="relative rounded-lg overflow-hidden flex items-center justify-center bg-black/30 border border-white/5 shadow-inner">
+                                <img
+                                    src={scannedImage}
+                                    alt={data.drugNameEn || data.drugName || "Scanned Medication"}
+                                    className="max-h-[280px] sm:max-h-[380px] w-auto h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-350 flex items-end p-3.5">
+                                    <p className="text-[10px] text-cyan-300 font-bold tracking-wider uppercase flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                                        {t("Scanned Medication Image", "صورة الدواء الملتقطة")}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <AdUnit />
+                    )}
                 </div>
 
                 {/* Quick Checklist */}
@@ -1861,7 +1903,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                                             <div className="w-[125px] sm:w-[150px] rounded-2xl border-2 border-cyan-400 bg-slate-950/90 p-3 text-center shadow-[0_0_30px_0_rgba(6,182,212,0.5)] animate-pulse transition-all duration-300">
                                                 <p className="text-[8px] text-cyan-300 font-bold uppercase tracking-wider">{t("Target medication", "الدواء الأساسي")}</p>
-                                                <p className="text-white font-extrabold text-xs sm:text-sm mt-0.5 leading-tight line-clamp-1">{data.drugName}</p>
+                                                <p className="text-white font-extrabold text-xs sm:text-sm mt-0.5 leading-tight line-clamp-1">{displayDrugName}</p>
                                             </div>
                                         </div>
 
@@ -1911,21 +1953,21 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{t("Interaction Analysis", "تفاصيل التداخل الدوائي")}</p>
                                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                             <h4 className="text-white font-bold text-base sm:text-lg">
-                                                {data.drugName} + <span className="text-cyan-300">{selectedGuardItem.otherMedication}</span>
+                                                {displayDrugName} + <span className="text-cyan-300">{selectedGuardItem.otherMedication}</span>
                                             </h4>
                                             <button
                                                 type="button"
                                                 onClick={() => askAiAbout(
-                                                    `${data.drugName} + ${selectedGuardItem.otherMedication}`,
+                                                    `${displayDrugName} + ${selectedGuardItem.otherMedication}`,
                                                     t(
-                                                        `Explain in detail the interaction between ${data.drugName} and ${selectedGuardItem.otherMedication}. Headline: "${selectedGuardItem.headline || ''}". Summary: "${selectedGuardItem.summary || ''}". Mechanism: "${selectedGuardItem.mechanism || ''}". What is the biological pathway and clinical risk?`,
-                                                        `اشرح بالتفصيل التداخل بين ${data.drugName} و ${selectedGuardItem.otherMedication}. العنوان الرئيسي: "${selectedGuardItem.headline || ''}". الملخص: "${selectedGuardItem.summary || ''}". الآلية: "${selectedGuardItem.mechanism || ''}". ما هو المسار البيولوجي والمخاطر السريرية؟`
+                                                        `Explain in detail the interaction between ${displayDrugName} and ${selectedGuardItem.otherMedication}. Headline: "${selectedGuardItem.headline || ''}". Summary: "${selectedGuardItem.summary || ''}". Mechanism: "${selectedGuardItem.mechanism || ''}". What is the biological pathway and clinical risk?`,
+                                                        `اشرح بالتفصيل التداخل بين ${displayDrugName} و ${selectedGuardItem.otherMedication}. العنوان الرئيسي: "${selectedGuardItem.headline || ''}". الملخص: "${selectedGuardItem.summary || ''}". الآلية: "${selectedGuardItem.mechanism || ''}". ما هو المسار البيولوجي والمخاطر السريرية؟`
                                                     )
                                                 )}
                                                 className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all text-[10px] font-semibold"
                                             >
                                                 <Sparkles className="w-3 h-3" />
-                                                <span>{t("Ask AI", "اسأل الذكاء")}</span>
+                                                <span>{t("Ask AI", "اسأل الذكاء الاصطناعي")}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -2574,9 +2616,9 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     <Pill className="w-6 h-6 animate-pulse" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-none">{data.drugName}</h2>
-                                    {data.genericName && (
-                                        <p className="text-cyan-200/90 font-medium text-xs sm:text-sm mt-1">{data.genericName}</p>
+                                    <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-none">{displayDrugName}</h2>
+                                    {displayGenericName && (
+                                        <p className="text-cyan-200/90 font-medium text-xs sm:text-sm mt-1">{displayGenericName}</p>
                                     )}
                                 </div>
                                 <div className="flex flex-wrap gap-1.5 ml-2">
@@ -2702,10 +2744,10 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         <div className="overflow-x-auto whitespace-nowrap flex-nowrap flex md:flex-wrap gap-1.5 rounded-2xl border border-white/10 bg-slate-950/75 p-1.5 backdrop-blur-xl scrollbar-none relative">
                             {[
                                 { id: "overview", label: t("Overview", "نظرة عامة"), icon: <Activity className="w-4 h-4" /> },
-                                { id: "safety", label: t("Safety & Side Effects", "الأمان والآثار"), icon: <ShieldAlert className="w-4 h-4" /> },
-                                { id: "guard", label: t("Interaction Guard", "حارس التداخلات"), icon: <GitBranch className="w-4 h-4" /> },
-                                { id: "chat", label: t("Ask AI", "اسأل الذكاء"), icon: <Sparkles className="w-4 h-4" /> },
-                                { id: "fda", label: t("FDA Database", "بيانات FDA"), icon: <Database className="w-4 h-4" /> },
+                                { id: "safety", label: t("Safety & Side Effects", "الأمان والآثار الجانبية"), icon: <ShieldAlert className="w-4 h-4" /> },
+                                { id: "guard", label: t("Interaction Guard", "حارس التداخلات الدوائية"), icon: <GitBranch className="w-4 h-4" /> },
+                                { id: "chat", label: t("Ask AI", "اسأل الذكاء الاصطناعي"), icon: <Sparkles className="w-4 h-4" /> },
+                                { id: "fda", label: t("FDA Database", "التحقق من FDA"), icon: <Database className="w-4 h-4" /> },
                             ].map((item) => {
                                 const active = activeTab === item.id;
                                 return (

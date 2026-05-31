@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const startTime = Date.now();
     try {
         const body = await req.json();
-        const { text, language } = body;
+        const { text, language, scannedImage } = body;
 
         if (!text) {
             return NextResponse.json({ error: "No text provided" }, { status: 400 });
@@ -308,6 +308,7 @@ export async function POST(req: NextRequest) {
             web: preflight.web,
             productClassification,
             activeIngredientsDetailed,
+            scannedImage,
         };
 
         // Ultra-only: Cross-Interaction Guard (target drug vs current meds + memories)
