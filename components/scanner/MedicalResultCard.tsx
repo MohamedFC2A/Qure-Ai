@@ -180,6 +180,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const [safetyShowAll, setSafetyShowAll] = useState<Record<string, boolean>>({});
     const [showAllIngredients, setShowAllIngredients] = useState(false);
     const [showGuardGraph, setShowGuardGraph] = useState(false);
+    const [activeTab, setActiveTab] = useState<'overview' | 'safety' | 'guard' | 'chat' | 'fda'>('overview');
 
     const interactionGuard = (data as any)?.interactionGuard as MedicalData["interactionGuard"] | undefined;
     const guardItems = useMemo(() => {
@@ -672,26 +673,26 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         switch (tone) {
             case "danger":
                 return {
-                    card: "bg-red-500/10 border-red-500/20",
-                    icon: "bg-red-500/15 border-red-500/25 text-red-100",
-                    title: "text-red-50",
+                    card: "bg-red-500/5 hover:bg-red-500/10 border-red-500/20 shadow-[0_0_15px_-4px_rgba(239,68,68,0.15)]",
+                    icon: "bg-red-500/15 border border-red-500/25 text-red-300 shadow-[0_0_10px_-2px_rgba(239,68,68,0.3)]",
+                    title: "text-red-200",
                 };
             case "warn":
                 return {
-                    card: "bg-amber-500/10 border-amber-500/20",
-                    icon: "bg-amber-500/15 border-amber-500/25 text-amber-100",
-                    title: "text-amber-50",
+                    card: "bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/20 shadow-[0_0_15px_-4px_rgba(245,158,11,0.15)]",
+                    icon: "bg-amber-500/15 border border-amber-500/25 text-amber-300 shadow-[0_0_10px_-2px_rgba(245,158,11,0.3)]",
+                    title: "text-amber-200",
                 };
             case "success":
                 return {
-                    card: "bg-emerald-500/10 border-emerald-500/20",
-                    icon: "bg-emerald-500/15 border-emerald-500/25 text-emerald-100",
-                    title: "text-emerald-50",
+                    card: "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_15px_-4px_rgba(16,185,129,0.15)]",
+                    icon: "bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 shadow-[0_0_10px_-2px_rgba(16,185,129,0.3)]",
+                    title: "text-emerald-200",
                 };
             default:
                 return {
-                    card: "bg-white/5 border-white/10",
-                    icon: "bg-white/5 border-white/10 text-white/80",
+                    card: "bg-white/[0.02] hover:bg-white/[0.04] border-white/10 shadow-[0_0_15px_-4px_rgba(255,255,255,0.05)]",
+                    icon: "bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 shadow-[0_0_10px_-2px_rgba(6,182,212,0.2)]",
                     title: "text-white",
                 };
         }
@@ -982,809 +983,352 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         );
     }
 
-    return (
-        <div ref={exportRef} className="w-full max-w-5xl">
-            <GlassCard className="w-full p-0 overflow-hidden shadow-2xl shadow-black/25" hoverEffect={false}>
-                {/* Header Section */}
-                <div className="relative p-5 sm:p-8 overflow-hidden">
-                    <div className="absolute inset-x-0 top-0 h-px bg-cyan-300/25" />
 
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">{data.drugName}</h2>
-                                {fdaStatus === "verified" ? (
-                                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" /> {t("FDA Verified", "موثّق من FDA")}
-                                    </span>
-                                ) : fdaStatus === "not_found" ? (
-                                    <span className="px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                                        <AlertOctagon className="w-3 h-3" /> {t("Not in FDA database", "غير موجود في قاعدة بيانات FDA")}
-                                    </span>
-                                ) : fdaStatus === "disabled" ? (
-                                    <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                                        <Lock className="w-3 h-3" /> {t("FDA disabled", "تم إيقاف FDA")}
-                                    </span>
-                                ) : (
-                                    <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                                        <AlertTriangle className="w-3 h-3" /> {t("FDA: Not confirmed", "FDA: غير مؤكد")}
-                                    </span>
-                                )}
-                            </div>
-
-                            {data.genericName && (
-                                <p className="text-cyan-200 font-medium text-base sm:text-lg mb-1">{data.genericName}</p>
-                            )}
-
-                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-white/50 text-xs sm:text-sm mt-3">
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 min-w-0 max-w-full">
-                                    <Box className="w-4 h-4" />
-                                    <span className="truncate">{data.manufacturer}</span>
-                                </div>
-                                {productKindLabel && (
-                                    <div
-                                        className={cn(
-                                            "flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-semibold",
-                                            productKind === "human_drug" && "bg-emerald-500/10 border-emerald-500/20 text-emerald-200",
-                                            productKind === "human_supplement" && "bg-purple-500/10 border-purple-500/20 text-purple-200",
-                                            productKind === "veterinary_drug" && "bg-orange-500/10 border-orange-500/20 text-orange-200",
-                                            productKind === "veterinary_supplement" && "bg-amber-500/10 border-amber-500/20 text-amber-200",
-                                            productKind !== "human_drug" &&
-                                            productKind !== "human_supplement" &&
-                                            productKind !== "veterinary_drug" &&
-                                            productKind !== "veterinary_supplement" &&
-                                            "bg-white/5 border-white/10 text-white/60"
-                                        )}
-                                    >
-                                        {productKind.includes("supplement") ? (
-                                            <Sparkles className="w-3.5 h-3.5" />
-                                        ) : (
-                                            <ShieldAlert className="w-3.5 h-3.5" />
-                                        )}
-                                        <span>
-                                            {productKindLabel}
-                                            {fdaStatus === "verified" ? " · 100%" : ""}
-                                        </span>
-                                    </div>
-                                )}
-                                {data.category && (
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5">
-                                        <Pill className="w-3.5 h-3.5" />
-                                        <span>{data.category}</span>
-                                    </div>
-                                )}
-                                {data.form && (
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5">
-                                        <span className="text-white/70">{data.form}</span>
-                                    </div>
-                                )}
-                                {data.strength && (
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5">
-                                        <span className="text-white/70">{data.strength}</span>
-                                    </div>
-                                )}
-                            </div>
+    const renderOverview = () => {
+        return (
+            <div className="space-y-6 p-5 sm:p-8">
+                {/* Description */}
+                <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-md hover:border-cyan-500/20 transition-all duration-300 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3)]">
+                    <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+                            <Info className="w-5 h-5 shrink-0" />
                         </div>
-
-                        <div className="flex items-center gap-2 md:justify-end flex-wrap">
-                            <div id="export" data-export-ignore className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={downloadPng}
-                                    disabled={!!exporting}
-                                    className="border-white/15 text-white/80 hover:bg-white/10"
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Download className="w-4 h-4" />
-                                        {exporting === 'png' ? t("Exporting…", "جارٍ التصدير…") : "PNG"}
-                                    </span>
-                                </Button>
-
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={downloadPdf}
-                                    disabled={!!exporting || plan !== 'ultra'}
-                                    className={cn(
-                                        "border-white/15 hover:bg-white/10",
-                                        plan === 'ultra' ? "text-white/80" : "border-white/10 text-white/40"
-                                    )}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        {plan === 'ultra' ? <FileDown className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                                        {exporting === 'pdf' ? t("Exporting…", "جارٍ التصدير…") : t("PDF (HQ)", "PDF (جودة عالية)")}
-                                    </span>
-                                </Button>
-                            </div>
-
-                            {meta?.plan && (
-                                <span className={cn(
-                                    "px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border",
-                                    meta.plan === 'ultra'
-                                        ? "bg-amber-500/10 text-amber-200 border-amber-500/30"
-                                        : "bg-cyan-500/10 text-cyan-200 border-cyan-500/30"
-                                )}>
-                                    {meta.plan === 'ultra' ? t('Ultra', 'ألترا') : t('Free', 'مجاني')}
-                                </span>
-                            )}
-                            {meta?.usedPrivateContext && (
-                                <span className="px-3 py-1 rounded-md text-xs font-medium border bg-amber-500/10 text-amber-200 border-amber-500/30">
-                                    {t('Private AI Context', 'سياقك الصحي الخاص')}
-                                </span>
-                            )}
-                            {meta?.usedMedicationMemories && (
-                                <span className="px-3 py-1 rounded-md text-xs font-medium border bg-purple-500/10 text-purple-200 border-purple-500/30">
-                                    {t('Medication Memories', 'ذاكرة الأدوية')}
-                                </span>
-                            )}
-                        </div>
+                        <p className="text-slate-300 leading-relaxed text-sm">
+                            {data.description}
+                        </p>
                     </div>
+                    <AdUnit />
+                </div>
 
-                    {exportError && (
-                        <div data-export-ignore className="relative z-10 mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm">
-                            {exportError}
-                        </div>
-                    )}
-
-                    <div className="relative z-10 mt-6 p-4 rounded-lg bg-white/[0.04] border border-white/10 backdrop-blur-md">
-                        <div className="flex items-start gap-3">
-                            <Info className="w-5 h-5 text-cyan-200 mt-1 shrink-0" />
-                            <p className="text-slate-300 leading-relaxed text-sm">
-                                {data.description}
-                            </p>
-                        </div>
-                        <AdUnit />
-                    </div>
-
-                    <div data-export-ignore className="relative z-10 mt-4 flex flex-wrap gap-2 rounded-lg border border-white/10 bg-slate-950/45 p-2">
-                        {[
-                            { href: "#overview", label: t("Overview", "نظرة عامة") },
-                            { href: "#safety", label: t("Safety", "الأمان") },
-                            { href: "#verification", label: t("Verification", "التحقق") },
-                            { href: "#ask-ai", label: t("Ask AI", "اسأل الذكاء") },
-                            { href: "#export", label: t("Export", "تصدير") },
-                        ].map((item) => (
-                            <a
-                                key={item.href}
-                                href={item.href}
-                                className="rounded-md px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
-                            >
-                                {item.label}
-                            </a>
-                        ))}
-                    </div>
-
-                    {actionCards.length > 0 && (
-                        <div className="relative z-10 mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                            <div className="flex items-center justify-between gap-3 mb-3">
-                                <div className="flex items-center gap-2 text-white/80 text-sm font-semibold">
-                                    <ListTodo className="w-4 h-4 text-liquid-accent" />
-                                    {t("Quick Action Checklist", "قائمة سريعة لما يجب فعله")}
-                                </div>
-                                {fdaConfirmedLabel && (
-                                    <span className="text-[11px] text-emerald-200/80 flex items-center gap-1">
-                                        <Database className="w-3 h-3" /> {t("Backed by FDA label", "مدعوم ببيانات FDA")}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                {actionCards.map((item) => {
-                                    const ui = actionToneUi(item.tone);
-                                    return (
-                                        <div key={item.id} className={cn("p-4 rounded-2xl border", ui.card)}>
-                                            <div className="flex items-start gap-3">
-                                                <div className={cn("shrink-0 p-2 rounded-xl border", ui.icon)}>
-                                                    {item.icon}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className={cn("font-bold text-sm leading-snug", ui.title)}>{item.title}</p>
-                                                    {item.detail && (
-                                                        <p className="mt-1 text-white/70 text-xs leading-relaxed">
-                                                            {item.detail}
-                                                        </p>
-                                                    )}
-                                                    {item.cta && (
-                                                        <div className="mt-3">
-                                                            <Link href={item.cta.href}>
-                                                                <Button size="sm" className="h-9 px-4 rounded-xl bg-amber-600 hover:bg-amber-500">
-                                                                    {item.cta.label}
-                                                                </Button>
-                                                            </Link>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {ingredientRows.length > 0 && (
-                        <div className="relative z-10 mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                            <div className="flex items-center justify-between gap-3 text-white/70 text-sm font-semibold mb-2">
-                                <div className="flex items-center gap-2">
-                                    <FileText className="w-4 h-4 text-liquid-accent" />
-                                    {t('Active Ingredients', 'المواد الفعالة')}
-                                </div>
-                                {fdaFeatureEnabled && ingredientRows[0]?.source === "fda" && (
-                                    <span className="text-[11px] text-emerald-200/80 flex items-center gap-1">
-                                        <Database className="w-3 h-3" /> {t("From FDA (NDC)", "من FDA (NDC)")}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                                <table className={cn("w-full text-xs sm:text-sm table-fixed", isArabic && "text-right")}>
-                                    <thead className="bg-white/5">
-                                        <tr>
-                                            <th className="px-3 py-2 text-white/60 font-semibold w-10 text-center">#</th>
-                                            <th className="px-3 py-2 text-white/60 font-semibold">
-                                                {t("Ingredient", "المادة")}
-                                            </th>
-                                            <th className="px-3 py-2 text-white/60 font-semibold w-24 sm:w-28 text-center">
-                                                {t("Dose", "الجرعة")}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(showAllIngredients ? ingredientRows : ingredientRows.slice(0, 10)).map((row, i) => (
-                                            <tr key={i} className="border-t border-white/10">
-                                                <td className="px-3 py-2 text-white/50 font-mono tabular-nums text-center">{i + 1}</td>
-                                                <td className="px-3 py-2 text-white/80 leading-relaxed break-words">{row.name}</td>
-                                                <td className="px-3 py-2 text-white/70 font-mono tabular-nums text-center">{row.doseText}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                {ingredientRows.length > 10 && (
-                                    <div className="flex items-center justify-between gap-3 px-3 py-2 border-t border-white/10 bg-white/5">
-                                        <p className="text-[11px] text-white/50">
-                                            {t(
-                                                `${ingredientRows.length} ingredients detected`,
-                                                `تم رصد ${ingredientRows.length} مادة`
-                                            )}
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowAllIngredients((v) => !v)}
-                                            className="text-[11px] font-semibold text-white/70 hover:text-white hover:underline"
-                                        >
-                                            {showAllIngredients
-                                                ? t("Show less", "عرض أقل")
-                                                : t("Show all", "عرض الكل")}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* FDA Verification (openFDA) */}
-                    <div id="verification" className="relative z-10 mt-4 p-4 rounded-lg bg-white/[0.04] border border-white/10">
-                        <div className="flex items-center justify-between gap-4">
+                {/* Quick Checklist */}
+                {actionCards.length > 0 && (
+                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-xl shadow-lg">
+                        <div className="flex items-center justify-between gap-3 mb-4">
                             <div className="flex items-center gap-2 text-white/80 text-sm font-semibold">
-                                <Database className="w-4 h-4 text-emerald-300" />
-                                {t("FDA Database", "قاعدة بيانات FDA")}
+                                <ListTodo className="w-4 h-4 text-cyan-300 animate-pulse" />
+                                <span className="text-white font-bold">{t("Quick Action Checklist", "قائمة سريعة لما يجب فعله")}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <a
-                                    href="https://open.fda.gov/apis/drug/"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs text-white/50 hover:text-white/80 transition-colors flex items-center gap-1"
+                            {fdaConfirmedLabel && (
+                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] font-medium flex items-center gap-1">
+                                    <Database className="w-3 h-3" /> {t("Backed by FDA label", "مدعوم ببيانات FDA")}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {actionCards.map((item) => {
+                                const ui = actionToneUi(item.tone);
+                                return (
+                                    <div key={item.id} className={cn("p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.01] hover:shadow-md", ui.card)}>
+                                        <div className="flex items-start gap-3">
+                                            <div className={cn("shrink-0 p-2.5 rounded-xl", ui.icon)}>
+                                                {item.icon}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className={cn("text-sm leading-snug", ui.title)}>{item.title}</p>
+                                                {item.detail && (
+                                                    <p className="mt-1 text-white/70 text-xs leading-relaxed">
+                                                        {item.detail}
+                                                    </p>
+                                                )}
+                                                {item.cta && (
+                                                    <div className="mt-3">
+                                                        <Link href={item.cta.href}>
+                                                            <Button size="sm" className="h-9 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold border-0 shadow-sm transition-all duration-200">
+                                                                {item.cta.label}
+                                                            </Button>
+                                                        </Link>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Active Ingredients (Responsive grid/table) */}
+                {ingredientRows.length > 0 && (
+                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-xl shadow-lg">
+                        <div className="flex items-center justify-between gap-3 text-white/70 text-sm font-semibold mb-4">
+                            <div className="flex items-center gap-2 text-cyan-300 font-bold">
+                                <FileText className="w-5 h-5" />
+                                {t('Active Ingredients', 'المواد الفعالة')}
+                            </div>
+                            {fdaFeatureEnabled && ingredientRows[0]?.source === "fda" && (
+                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] font-medium flex items-center gap-1">
+                                    <Database className="w-3 h-3" /> {t("From FDA (NDC)", "من FDA (NDC)")}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Desktop View */}
+                        <div className="hidden md:block overflow-hidden rounded-xl border border-white/10 bg-black/20">
+                            <table className={cn("w-full text-sm table-fixed", isArabic && "text-right")}>
+                                <thead className="bg-white/5">
+                                    <tr>
+                                        <th className="px-4 py-2.5 text-white/60 font-semibold w-12 text-center">#</th>
+                                        <th className="px-4 py-2.5 text-white/60 font-semibold">{t("Ingredient", "المادة")}</th>
+                                        <th className="px-4 py-2.5 text-white/60 font-semibold w-32 text-center">{t("Dose", "الجرعة")}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(showAllIngredients ? ingredientRows : ingredientRows.slice(0, 10)).map((row, i) => (
+                                        <tr key={i} className="border-t border-white/10 hover:bg-white/[0.02] transition-colors">
+                                            <td className="px-4 py-3 text-white/50 font-mono tabular-nums text-center">{i + 1}</td>
+                                            <td className="px-4 py-3 text-white/80 font-medium leading-relaxed break-words">{row.name}</td>
+                                            <td className="px-4 py-3 text-white/70 font-mono tabular-nums text-center">{row.doseText}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile View - Beautiful space-saving 2-column Grid */}
+                        <div className="md:hidden grid grid-cols-2 gap-2.5">
+                            {(showAllIngredients ? ingredientRows : ingredientRows.slice(0, 6)).map((row, i) => (
+                                <div key={i} className="p-3 rounded-xl border border-white/5 bg-slate-900/40 flex flex-col justify-between gap-2 hover:border-cyan-500/20 transition-all duration-300">
+                                    <div className="min-w-0">
+                                        <p className="text-[9px] text-white/35 font-bold uppercase tracking-wider">{t(`Active #${i+1}`, `مادة #${i+1}`)}</p>
+                                        <p className="text-white font-semibold text-xs mt-0.5 truncate" title={row.name}>{row.name}</p>
+                                    </div>
+                                    <div className="w-max px-2.5 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold">
+                                        {row.doseText}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {ingredientRows.length > 6 && (
+                            <div className="flex items-center justify-between gap-3 mt-3.5 px-1">
+                                <p className="text-xs text-white/45">
+                                    {t(`${ingredientRows.length} ingredients detected`, `تم رصد ${ingredientRows.length} مادة`)}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAllIngredients((v) => !v)}
+                                    className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 hover:underline"
                                 >
-                                    {t("Docs", "التوثيق")} <ExternalLink className="w-3 h-3" />
-                                </a>
-                                {plan === 'ultra' ? (
-                                    !fdaFeatureEnabled ? (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            disabled
-                                            className="border-white/10 text-white/40"
-                                        >
-                                            <span className="flex items-center gap-2">
-                                                <Lock className="w-4 h-4" />
-                                                {t("Disabled", "مُعطّل")}
-                                            </span>
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => setShowFdaDetails((v) => !v)}
-                                            className="border-white/15 text-white/70 hover:bg-white/10"
-                                            disabled={fdaLoading || !fdaLabelFound}
-                                        >
-                                            {showFdaDetails ? t("Hide", "إخفاء") : t("Show", "عرض")}
-                                        </Button>
-                                    )
-                                ) : (
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        disabled
-                                        className="border-white/10 text-white/40"
-                                    >
-                                        <span className="flex items-center gap-2">
-                                            <Lock className="w-4 h-4" />
-                                            {t("Label (Ultra)", "النشرة (ألترا)")}
-                                        </span>
-                                    </Button>
-                                )}
+                                    {showAllIngredients ? t("Show less", "عرض أقل") : t("Show all", "عرض الكل")}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Primary Uses & Dosage (Layout Grid) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Uses */}
+                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-xl shadow-lg">
+                        <div className="flex items-center gap-2 mb-4 text-cyan-300">
+                            <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+                                <Activity className="w-5 h-5" />
+                            </div>
+                            <h3 className="font-bold text-white text-base sm:text-lg">{t('Indication & Uses', 'الاستخدامات')}</h3>
+                        </div>
+                        <ul className="grid gap-2">
+                            {(data.uses || []).map((use, i) => (
+                                <li key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.01] border border-white/5 transition-all duration-200 hover:bg-white/[0.03]">
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                                    <span className="text-white/80 text-sm leading-relaxed">{use}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Dosage */}
+                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-xl space-y-4 shadow-lg">
+                        <div>
+                            <div className="flex items-center gap-2 mb-3 text-blue-400">
+                                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300">
+                                    <Thermometer className="w-5 h-5" />
+                                </div>
+                                <h3 className="font-bold text-white text-base sm:text-lg">{t('Standard Dosage', 'الجرعة المعتادة')}</h3>
+                            </div>
+                            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-blue-100 text-sm leading-relaxed">
+                                {data.dosage || t("Consult a doctor for precise dosage.", "استشر الطبيب لمعرفة الجرعة الدقيقة.")}
                             </div>
                         </div>
 
-                        {!fdaFeatureEnabled ? (
-                            <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-xs leading-relaxed">
-                                <p>
-                                    {t(
-                                        "FDA verification is disabled in your profile settings (Ultra). Enable it to use FDA/NDC cross-checks.",
-                                        "تم إيقاف التحقق من FDA من إعدادات ملفك (ألترا). فعّل الخيار لاستخدام التحقق عبر FDA/NDC."
-                                    )}
-                                </p>
-                                <div className="mt-2">
-                                    <Link href="/profile" className="text-liquid-accent hover:underline font-medium">
-                                        {t("Open Profile", "فتح الملف الشخصي")}
-                                    </Link>
-                                </div>
-                            </div>
-                        ) : fdaLoading ? (
-                            <p className="mt-3 text-xs text-white/40">{t("Checking FDA label…", "جارٍ التحقق من بيانات FDA…")}</p>
-                        ) : fdaError ? (
-                            <p className="mt-3 text-xs text-red-200/80">{fdaError}</p>
-                        ) : fdaLabelFound ? (
-                            <div className="mt-3 grid gap-3">
-                                <div className="flex flex-wrap gap-2">
-                                    {((fda as any)?.openfda?.brand_name || []).slice(0, 2).map((v: string, i: number) => (
-                                        <span key={`b-${i}`} className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs font-medium">
-                                            {t("Brand", "الاسم التجاري")}: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.generic_name || []).slice(0, 2).map((v: string, i: number) => (
-                                        <span key={`g-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 text-xs font-medium">
-                                            {t("Generic", "الاسم العلمي")}: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.substance_name || []).slice(0, 2).map((v: string, i: number) => (
-                                        <span key={`s-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs">
-                                            {t("Substance", "المادة")}: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.manufacturer_name || []).slice(0, 1).map((v: string, i: number) => (
-                                        <span key={`m-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs">
-                                            {t("FDA Manufacturer", "الشركة (FDA)")}: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.route || []).slice(0, 2).map((v: string, i: number) => (
-                                        <span key={`r-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs">
-                                            {t("Route", "طريقة الاستخدام")}: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.product_type || []).slice(0, 1).map((v: string, i: number) => (
-                                        <span key={`pt-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs">
-                                            {t("Type", "النوع")}: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.unii || []).slice(0, 2).map((v: string, i: number) => (
-                                        <span key={`unii-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs font-mono break-all max-w-full">
-                                            UNII: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.product_ndc || []).slice(0, 1).map((v: string, i: number) => (
-                                        <span key={`ndc-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs font-mono break-all max-w-full">
-                                            NDC: {v}
-                                        </span>
-                                    ))}
-                                    {((fda as any)?.openfda?.spl_set_id || []).slice(0, 1).map((v: string, i: number) => (
-                                        <span key={`spl-${i}`} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs font-mono break-all max-w-full">
-                                            SPL: {v}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                <p className="text-[11px] text-white/40 leading-relaxed">
-                                    {t(
-                                        "FDA label snippets via openFDA. Availability varies by region/product.",
-                                        "مقتطفات من نشرة FDA عبر openFDA. توفر البيانات يختلف حسب الدولة/المنتج."
-                                    )}
-                                </p>
-
-                                {plan === 'ultra' && showFdaDetails && (
-                                    <div className="grid gap-3">
-                                        {((fda as any)?.label?.indications_and_usage || []).length > 0 && (
-                                            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                                <p className="text-white font-semibold text-sm mb-2">{t("Indications & Usage (FDA)", "الاستخدامات (FDA)")}</p>
-                                                {((fda as any).label.indications_and_usage as string[]).map((s, i) => (
-                                                    <p key={i} className="text-white/70 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {((fda as any)?.label?.dosage_and_administration || []).length > 0 && (
-                                            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                                <p className="text-white font-semibold text-sm mb-2">{t("Dosage (FDA)", "الجرعة (FDA)")}</p>
-                                                {((fda as any).label.dosage_and_administration as string[]).map((s, i) => (
-                                                    <p key={i} className="text-white/70 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {((fda as any)?.label?.warnings_and_precautions || []).length > 0 && (
-                                            <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/15">
-                                                <p className="text-white font-semibold text-sm mb-2">{t("Warnings & Precautions (FDA)", "التحذيرات والاحتياطات (FDA)")}</p>
-                                                {((fda as any).label.warnings_and_precautions as string[]).map((s, i) => (
-                                                    <p key={i} className="text-red-100/90 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {((fda as any)?.label?.contraindications || []).length > 0 && (
-                                            <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/15">
-                                                <p className="text-white font-semibold text-sm mb-2">{t("Contraindications (FDA)", "موانع الاستعمال (FDA)")}</p>
-                                                {((fda as any).label.contraindications as string[]).map((s, i) => (
-                                                    <p key={i} className="text-red-100/90 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {((fda as any)?.label?.drug_interactions || []).length > 0 && (
-                                            <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/15">
-                                                <p className="text-white font-semibold text-sm mb-2">{t("Drug Interactions (FDA)", "التداخلات (FDA)")}</p>
-                                                {((fda as any).label.drug_interactions as string[]).map((s, i) => (
-                                                    <p key={i} className="text-orange-100/90 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {((fda as any)?.label?.overdosage || []).length > 0 && (
-                                            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                                <p className="text-white font-semibold text-sm mb-2">{t("Overdosage (FDA)", "الجرعة الزائدة (FDA)")}</p>
-                                                {((fda as any).label.overdosage as string[]).map((s, i) => (
-                                                    <p key={i} className="text-white/70 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {((fda as any)?.label?.storage_and_handling || []).length > 0 && (
-                                            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                                <p className="text-white font-semibold text-sm mb-2">{t("Storage (FDA)", "الحفظ (FDA)")}</p>
-                                                {((fda as any).label.storage_and_handling as string[]).map((s, i) => (
-                                                    <p key={i} className="text-white/70 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
-                                                ))}
-                                            </div>
-                                        )}
+                        {data.missedDose && (
+                            <div>
+                                <div className="flex items-center gap-2 mb-3 text-slate-300">
+                                    <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70">
+                                        <Clock className="w-4 h-4" />
                                     </div>
-                                )}
-
-                                {plan !== 'ultra' && (
-                                    <div className="mt-4 relative overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                                        <div className="p-4 blur-sm opacity-60 pointer-events-none select-none">
-                                            <div className="grid gap-3 md:grid-cols-2">
-                                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                                    <p className="text-white font-semibold text-sm mb-2">{t("FDA: Warnings & Precautions", "FDA: تحذيرات واحتياطات")}</p>
-                                                    <p className="text-white/70 text-xs leading-relaxed">
-                                                        {t("Official label excerpts (high confidence).", "مقتطفات من النشرة الرسمية (ثقة عالية).")}
-                                                    </p>
-                                                </div>
-                                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                                    <p className="text-white font-semibold text-sm mb-2">{t("FDA: Interactions & Adverse", "FDA: تداخلات وآثار")}</p>
-                                                    <p className="text-white/70 text-xs leading-relaxed">
-                                                        {t("Interactions, adverse reactions, overdose, and more.", "تداخلات، آثار جانبية، جرعة زائدة، وأكثر.")}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="absolute inset-0 flex items-center justify-center p-4">
-                                            <div className="w-full max-w-md p-5 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                                        <Lock className="w-5 h-5 text-amber-200" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-white font-bold">{t("Unlock FDA label sections", "افتح أقسام نشرة FDA")}</p>
-                                                        <p className="text-white/60 text-sm mt-1">
-                                                            {t(
-                                                                "Read official warnings, interactions, adverse reactions, and overdose sections.",
-                                                                "اقرأ التحذيرات الرسمية والتداخلات والآثار الجانبية والجرعة الزائدة."
-                                                            )}
-                                                        </p>
-                                                        <div className="mt-3">
-                                                            <Link href="/pricing">
-                                                                <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-black">
-                                                                    {t("Upgrade to Ultra", "ترقية إلى ألترا")}
-                                                                </Button>
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : fdaNdcFound ? (
-                            <div className="mt-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-emerald-100/90 text-xs leading-relaxed">
-                                {t(
-                                    "Found in FDA NDC listing, but an official label snippet was not available via openFDA label dataset.",
-                                    "تم العثور عليه في بيانات NDC التابعة لـ FDA، لكن لم تتوفر نشرة رسمية عبر قاعدة بيانات openFDA (labels)."
-                                )}
-                            </div>
-                        ) : (
-                            <div
-                                className={cn(
-                                    "mt-3 p-3 rounded-xl border text-xs leading-relaxed",
-                                    fdaStatus === "not_found"
-                                        ? "bg-red-500/5 border-red-500/15 text-red-100/90"
-                                        : "bg-amber-500/5 border-amber-500/15 text-amber-100/90"
-                                )}
-                            >
-                                {t(
-                                    fdaNotEnoughIdentifiers
-                                        ? "FDA verification needs an English drug name or an NDC. Try scanning the name more clearly or include an NDC if present on the package."
-                                        : fdaStatus === "not_found"
-                                            ? "Not found in FDA databases (openFDA). It may be outside FDA coverage, a supplement, or not FDA-classified."
-                                            : "FDA match is not fully confirmed. Try scanning the name/NDC more clearly.",
-                                    fdaNotEnoughIdentifiers
-                                        ? "تعذر التحقق من FDA لأن الاسم بالإنجليزية أو رقم NDC غير متوفر. جرّب تصوير الاسم بوضوح أو تضمين رقم NDC إن كان موجودًا على العبوة."
-                                        : fdaStatus === "not_found"
-                                            ? "غير موجود في قواعد بيانات FDA (openFDA). قد يكون خارج تغطية FDA أو مكملًا غذائيًا أو غير مُدرج."
-                                            : "مطابقة FDA غير مؤكدة بالكامل. جرّب تصوير الاسم/NDC بوضوح أكبر."
-                                )}
+                                    <h3 className="font-bold text-white text-sm sm:text-base">{t('Missed Dose', 'نسيان الجرعة')}</h3>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white/[0.01] border border-white/5 text-white/70 text-xs sm:text-sm leading-relaxed">
+                                    {data.missedDose}
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
+            </div>
+        );
+    };
 
-                {/* Main Content Grid */}
-                <div id="overview" className="p-5 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 bg-slate-950/30">
-
-                    {/* Left Column: Usage & Dosage */}
-                    <div className="space-y-6 sm:space-y-8">
-                        {/* Primary Uses */}
-                        <section>
-                            <div className="flex items-center gap-2 mb-4 text-liquid-accent">
-                                <Activity className="w-5 h-5" />
-                                <h3 className="font-bold text-white text-lg">{t('Indication & Uses', 'الاستخدامات')}</h3>
-                            </div>
-                            <ul className="grid gap-2">
-                                {(data.uses || []).map((use, i) => (
-                                    <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
-                                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-liquid-accent shrink-0" />
-                                        <span className="text-white/80 text-sm">{use}</span>
+    const renderSafety = () => {
+        return (
+            <div className="space-y-6 p-5 sm:p-8">
+                {/* Warnings & Contraindications Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Critical Warnings */}
+                    <div className="p-5 rounded-2xl bg-red-950/10 border border-red-500/20 backdrop-blur-xl">
+                        <div className="flex items-center gap-2 mb-4 text-red-400 font-bold">
+                            <ShieldAlert className="w-5 h-5 text-red-400 animate-pulse" />
+                            <h3 className="text-white text-base sm:text-lg">{t('Safety Warnings', 'تحذيرات السلامة')}</h3>
+                        </div>
+                        {(data.warnings && data.warnings.length > 0) ? (
+                            <ul className="space-y-2.5">
+                                {data.warnings.map((w, i) => (
+                                    <li key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20">
+                                        <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                                        <span className="text-red-100/90 text-sm leading-relaxed">{w}</span>
                                     </li>
                                 ))}
                             </ul>
-                        </section>
-
-                        {/* Dosage Information */}
-                        <section>
-                            <div className="flex items-center gap-2 mb-4 text-blue-400">
-                                <Thermometer className="w-5 h-5" />
-                                <h3 className="font-bold text-white text-lg">{t('Standard Dosage', 'الجرعة المعتادة')}</h3>
-                            </div>
-                            <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-100 text-sm leading-relaxed">
-                                {data.dosage || "Consult a doctor for precise dosage."}
-                            </div>
-                        </section>
-
-                        {data.missedDose && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-4 text-white/70">
-                                    <Clock className="w-5 h-5 text-white/50" />
-                                    <h3 className="font-bold text-white text-lg">{t('Missed Dose', 'نسيان الجرعة')}</h3>
-                                </div>
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm leading-relaxed">
-                                    {data.missedDose}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Storage */}
-                        {data.storage && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-2 text-white/40 text-sm uppercase tracking-wider font-bold">
-                                    <Box className="w-4 h-4" /> {t('Storage', 'الحفظ')}
-                                </div>
-                                <p className="text-white/60 text-sm">{data.storage}</p>
-                            </section>
+                        ) : (
+                            <p className="text-white/40 text-sm italic">{t("No specific critical warnings listed.", "لا توجد تحذيرات حرجة محددة.")}</p>
                         )}
                     </div>
 
-                    {/* Right Column: Safety & Warnings */}
-                    <div className="space-y-8">
-                        {/* Critical Warnings */}
-                        <section>
-                            <div className="flex items-center gap-2 mb-4 text-red-400">
-                                <ShieldAlert className="w-5 h-5" />
-                                <h3 className="font-bold text-white text-lg">{t('Safety Warnings', 'تحذيرات السلامة')}</h3>
-                            </div>
-                            {(data.warnings && data.warnings.length > 0) ? (
-                                <ul className="space-y-2">
-                                    {data.warnings.map((w, i) => (
-                                        <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                                            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                                            <span className="text-red-100/90 text-sm">{w}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-white/40 text-sm italic">No specific critical warnings listed.</p>
-                            )}
-                        </section>
-
-                        {(data.contraindications && data.contraindications.length > 0) && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-4 text-red-300">
-                                    <AlertOctagon className="w-5 h-5" />
-                                    <h3 className="font-bold text-white text-lg">{t('Contraindications', 'موانع الاستعمال')}</h3>
-                                </div>
-                                <ul className="space-y-2">
-                                    {data.contraindications.map((c, i) => (
-                                        <li key={i} className="flex items-start gap-3 p-3 rounded-lg bg-red-500/5 border border-red-500/10">
-                                            <AlertTriangle className="w-4 h-4 text-red-300 shrink-0 mt-0.5" />
-                                            <span className="text-white/80 text-sm">{c}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </section>
+                    {/* Contraindications */}
+                    <div className="p-5 rounded-2xl bg-orange-950/10 border border-orange-500/20 backdrop-blur-xl">
+                        <div className="flex items-center gap-2 mb-4 text-orange-400 font-bold">
+                            <AlertOctagon className="w-5 h-5 text-orange-400" />
+                            <h3 className="text-white text-base sm:text-lg">{t('Contraindications', 'موانع الاستعمال')}</h3>
+                        </div>
+                        {(data.contraindications && data.contraindications.length > 0) ? (
+                            <ul className="space-y-2.5">
+                                {data.contraindications.map((c, i) => (
+                                    <li key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                                        <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                                        <span className="text-orange-100/90 text-sm leading-relaxed">{c}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-white/40 text-sm italic">{t("No contraindications listed.", "لا توجد موانع استعمال مذكورة.")}</p>
                         )}
-
                     </div>
                 </div>
 
-                {/* Ultra: Advanced Safety Pack */}
-                <div id="safety" className="p-5 sm:p-8 bg-slate-950/20 border-t border-white/10">
+                {/* Advanced Safety Pack */}
+                <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
                     <div className="flex items-center justify-between gap-4 mb-4">
-                        <h3 className="text-lg font-bold text-white">{t('Advanced Safety Pack', 'حزمة الأمان المتقدمة')}</h3>
+                        <div className="flex items-center gap-2 text-cyan-300 font-bold">
+                            <Sparkles className="w-5 h-5 text-amber-300" />
+                            <h3 className="text-white text-base sm:text-lg">{t('Advanced Safety Pack', 'حزمة الأمان المتقدمة')}</h3>
+                        </div>
                         {plan !== 'ultra' && (
-                            <Link href="/pricing" className="text-xs text-amber-300 hover:underline">
-                                {t('Upgrade to Ultra', 'ترقية إلى ألترا')}
-                            </Link>
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
+                                <Lock className="w-3 h-3" /> {t("Ultra", "ألترا")}
+                            </span>
                         )}
                     </div>
 
                     {plan !== 'ultra' ? (
-                        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                            <div className="p-5 blur-sm opacity-60 pointer-events-none select-none">
-                                <div className="flex flex-wrap gap-2">
-                                    {[
-                                        t('Precautions', 'احتياطات'),
-                                        t('Interactions', 'التداخلات'),
-                                        t('Side effects', 'الآثار الجانبية'),
-                                        t('Overdose', 'الجرعة الزائدة'),
-                                        t('Seek help', 'متى تطلب المساعدة'),
-                                    ].map((label, i) => (
-                                        <span key={i} className="px-3 py-1 rounded-full text-xs border bg-black/20 border-white/10 text-white/70">
-                                            {label}
-                                        </span>
+                        <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5">
+                            <div className="p-5 blur-[2px] opacity-40 pointer-events-none select-none">
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    {[t('Precautions', 'احتياطات'), t('Interactions', 'التداخلات'), t('Side effects', 'الآثار الجانبية'), t('Overdose', 'الجرعة الزائدة')].map((label, i) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-full text-xs border border-white/10 bg-black/20 text-white/50">{label}</span>
                                     ))}
                                 </div>
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                        <p className="text-white font-semibold text-sm">{t("Example: interaction risk", "مثال: خطر تداخل")}</p>
-                                        <p className="text-white/60 text-xs mt-1">{t("May interact with blood thinners or alcohol.", "قد يتداخل مع مميعات الدم أو الكحول.")}</p>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+                                        <p className="text-white/80 font-bold text-sm">Example Interaction Risk</p>
+                                        <p className="text-white/50 text-xs mt-1">May interact with blood thinners.</p>
                                     </div>
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                        <p className="text-white font-semibold text-sm">{t("Example: when to seek help", "مثال: متى تطلب المساعدة")}</p>
-                                        <p className="text-white/60 text-xs mt-1">{t("Severe rash, breathing trouble, fainting.", "طفح شديد، صعوبة تنفس، إغماء.")}</p>
+                                    <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+                                        <p className="text-white/80 font-bold text-sm">Red Flag Symptoms</p>
+                                        <p className="text-white/50 text-xs mt-1">Fainting or severe breathing issues.</p>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="absolute inset-0 flex items-center justify-center p-4">
-                                <div className="w-full max-w-md p-5 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                            <Lock className="w-5 h-5 text-amber-200" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-white font-bold">
-                                                {!user
-                                                    ? t("Login to unlock safety details", "سجّل الدخول لفتح تفاصيل الأمان")
-                                                    : t("Upgrade to unlock Advanced Safety Pack", "ترقية لفتح حزمة الأمان المتقدمة")}
-                                            </p>
-                                            <p className="text-white/60 text-sm mt-1">
-                                                {t(
-                                                    "Precautions, interactions, common side effects, overdose, and red flags.",
-                                                    "احتياطات + تداخلات + آثار جانبية + جرعة زائدة + علامات تستدعي المساعدة."
-                                                )}
-                                            </p>
-                                            <div className="mt-3 flex items-center gap-2">
-                                                {!user ? (
-                                                    <Link href="/login">
-                                                        <Button size="sm">{t("Log in", "تسجيل الدخول")}</Button>
-                                                    </Link>
-                                                ) : (
-                                                    <Link href="/pricing">
-                                                        <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-black">
-                                                            {t("Upgrade to Ultra", "ترقية إلى ألترا")}
-                                                        </Button>
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        </div>
+                            <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-[1px]">
+                                <div className="w-full max-w-sm p-5 rounded-2xl bg-slate-950/90 border border-white/10 shadow-2xl text-center">
+                                    <Lock className="w-8 h-8 text-amber-300 mx-auto mb-3" />
+                                    <p className="text-white font-bold text-base">{t("Unlock Advanced Safety details", "افتح تفاصيل الأمان المتقدمة")}</p>
+                                    <p className="text-white/60 text-xs mt-1.5 leading-relaxed">
+                                        {t("Upgrade to get personalized precautions, drug-food interactions, side effects, and warning signs.", "قم بالترقية للحصول على الاحتياطات، التداخلات، الآثار الجانبية، وعلامات الخطر.")}
+                                    </p>
+                                    <div className="mt-4 flex justify-center gap-2">
+                                        {!user ? (
+                                            <Link href="/login">
+                                                <Button size="sm">{t("Log in", "تسجيل الدخول")}</Button>
+                                            </Link>
+                                        ) : (
+                                            <Link href="/pricing">
+                                                <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
+                                                    {t("Upgrade to Ultra", "ترقية إلى ألترا")}
+                                                </Button>
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-                            <div className="p-3 border-b border-white/10 flex flex-wrap gap-2">
-                                <button
-                                    onClick={() => setSafetyTab('precautions')}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                                        safetyTab === 'precautions' ? "bg-yellow-500/15 border-yellow-500/30 text-yellow-200" : "bg-black/20 border-white/10 text-white/60 hover:text-white"
-                                    )}
-                                >
-                                    {t('Precautions', 'احتياطات')}
-                                </button>
-                                <button
-                                    onClick={() => setSafetyTab('interactions')}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                                        safetyTab === 'interactions' ? "bg-orange-500/15 border-orange-500/30 text-orange-200" : "bg-black/20 border-white/10 text-white/60 hover:text-white"
-                                    )}
-                                >
-                                    {t('Drug Interactions', 'التداخلات الدوائية')}
-                                </button>
-                                <button
-                                    onClick={() => setSafetyTab('sideEffects')}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                                        safetyTab === 'sideEffects' ? "bg-yellow-500/15 border-yellow-500/30 text-yellow-200" : "bg-black/20 border-white/10 text-white/60 hover:text-white"
-                                    )}
-                                >
-                                    {t('Common Side Effects', 'الآثار الجانبية الشائعة')}
-                                </button>
-                                <button
-                                    onClick={() => setSafetyTab('overdose')}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                                        safetyTab === 'overdose' ? "bg-red-500/15 border-red-500/30 text-red-200" : "bg-black/20 border-white/10 text-white/60 hover:text-white"
-                                    )}
-                                >
-                                    {t('Overdose', 'الجرعة الزائدة')}
-                                </button>
-                                <button
-                                    onClick={() => setSafetyTab('seekHelp')}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                                        safetyTab === 'seekHelp' ? "bg-red-500/15 border-red-500/30 text-red-200" : "bg-black/20 border-white/10 text-white/60 hover:text-white"
-                                    )}
-                                >
-                                    {t('When to seek help', 'متى تطلب المساعدة')}
-                                </button>
+                        <div className="rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
+                            <div className="relative w-full border-b border-white/10 bg-white/[0.02]">
+                                <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-slate-950 via-slate-950/10 to-transparent pointer-events-none md:hidden z-10" />
+                                <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-slate-950 via-slate-950/10 to-transparent pointer-events-none md:hidden z-10" />
+                                <div className="p-2.5 overflow-x-auto flex-nowrap flex gap-1.5 scrollbar-none">
+                                    {[
+                                        { id: 'precautions', label: t('Precautions', 'احتياطات'), active: safetyTab === 'precautions' },
+                                        { id: 'interactions', label: t('Drug Interactions', 'التداخلات الدوائية'), active: safetyTab === 'interactions' },
+                                        { id: 'sideEffects', label: t('Common Side Effects', 'الآثار الجانبية'), active: safetyTab === 'sideEffects' },
+                                        { id: 'overdose', label: t('Overdose', 'الجرعة الزائدة'), active: safetyTab === 'overdose' },
+                                        { id: 'seekHelp', label: t('When to seek help', 'متى تطلب المساعدة'), active: safetyTab === 'seekHelp' },
+                                    ].map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            type="button"
+                                            onClick={() => setSafetyTab(tab.id as any)}
+                                            className={cn(
+                                                "px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 shrink-0",
+                                                tab.active 
+                                                    ? "bg-amber-500/15 border-amber-500/30 text-amber-200 shadow-[0_0_12px_-3px_rgba(245,158,11,0.3)]" 
+                                                    : "bg-black/10 border-transparent text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                                            )}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="p-5">
                                 {safetyTab === 'precautions' && (
                                     <div>
                                         <div className="flex items-center justify-between gap-3 mb-3">
-                                            <p className="text-white/80 text-sm font-semibold">{t('Precautions', 'احتياطات')}</p>
+                                            <p className="text-white font-bold text-sm">{t('Precautions', 'الاحتياطات اللازمة')}</p>
                                             {(data.precautions?.length || 0) > 6 && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
+                                                <button
+                                                    type="button"
                                                     onClick={() => setSafetyShowAll((p) => ({ ...p, precautions: !p.precautions }))}
-                                                    className="border-white/15 text-white/70 hover:bg-white/10"
+                                                    className="text-xs text-cyan-400 hover:underline font-semibold"
                                                 >
                                                     {safetyShowAll.precautions ? t('Show less', 'عرض أقل') : t('Show all', 'عرض الكل')}
-                                                </Button>
+                                                </button>
                                             )}
                                         </div>
                                         {(data.precautions && data.precautions.length > 0) ? (
-                                            <ul className="grid gap-2 md:grid-cols-2">
+                                            <ul className="grid gap-2.5 md:grid-cols-2">
                                                 {(safetyShowAll.precautions ? data.precautions : data.precautions.slice(0, 6)).map((p, i) => (
-                                                    <li key={i} className="flex items-start gap-3 p-3 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
-                                                        <AlertTriangle className="w-4 h-4 text-yellow-300 shrink-0 mt-0.5" />
-                                                        <span className="text-white/80 text-sm">{p}</span>
+                                                    <li key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                                                        <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+                                                        <span className="text-white/80 text-sm leading-relaxed">{p}</span>
                                                     </li>
                                                 ))}
                                             </ul>
                                         ) : (
-                                            <p className="text-white/40 text-sm">{t("No precautions listed.", "لا توجد احتياطات مذكورة.")}</p>
+                                            <p className="text-white/40 text-sm italic">{t("No precautions listed.", "لا توجد احتياطات مذكورة.")}</p>
                                         )}
                                     </div>
                                 )}
@@ -1792,28 +1336,27 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 {safetyTab === 'interactions' && (
                                     <div>
                                         <div className="flex items-center justify-between gap-3 mb-3">
-                                            <p className="text-white/80 text-sm font-semibold">{t('Drug Interactions', 'التداخلات الدوائية')}</p>
+                                            <p className="text-white font-bold text-sm">{t('Drug Interactions', 'التداخلات الدوائية المعروفة')}</p>
                                             {(data.interactions?.length || 0) > 10 && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
+                                                <button
+                                                    type="button"
                                                     onClick={() => setSafetyShowAll((p) => ({ ...p, interactions: !p.interactions }))}
-                                                    className="border-white/15 text-white/70 hover:bg-white/10"
+                                                    className="text-xs text-cyan-400 hover:underline font-semibold"
                                                 >
                                                     {safetyShowAll.interactions ? t('Show less', 'عرض أقل') : t('Show all', 'عرض الكل')}
-                                                </Button>
+                                                </button>
                                             )}
                                         </div>
                                         {(data.interactions && data.interactions.length > 0) ? (
                                             <div className="flex flex-wrap gap-2">
                                                 {(safetyShowAll.interactions ? data.interactions : data.interactions.slice(0, 10)).map((interaction, i) => (
-                                                    <span key={i} className="px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-200 text-xs font-medium">
+                                                    <span key={i} className="px-3.5 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-200 text-xs font-semibold">
                                                         {interaction}
                                                     </span>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-white/40 text-sm">{t("No interactions listed.", "لا توجد تداخلات مذكورة.")}</p>
+                                            <p className="text-white/40 text-sm italic">{t("No interactions listed.", "لا توجد تداخلات مذكورة.")}</p>
                                         )}
                                     </div>
                                 )}
@@ -1821,48 +1364,47 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 {safetyTab === 'sideEffects' && (
                                     <div>
                                         <div className="flex items-center justify-between gap-3 mb-3">
-                                            <p className="text-white/80 text-sm font-semibold">{t('Common Side Effects', 'الآثار الجانبية الشائعة')}</p>
+                                            <p className="text-white font-bold text-sm">{t('Common Side Effects', 'الآثار الجانبية الشائعة')}</p>
                                             {(data.sideEffects?.length || 0) > 8 && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
+                                                <button
+                                                    type="button"
                                                     onClick={() => setSafetyShowAll((p) => ({ ...p, sideEffects: !p.sideEffects }))}
-                                                    className="border-white/15 text-white/70 hover:bg-white/10"
+                                                    className="text-xs text-cyan-400 hover:underline font-semibold"
                                                 >
                                                     {safetyShowAll.sideEffects ? t('Show less', 'عرض أقل') : t('Show all', 'عرض الكل')}
-                                                </Button>
+                                                </button>
                                             )}
                                         </div>
                                         {(data.sideEffects && data.sideEffects.length > 0) ? (
-                                            <ul className="grid gap-2 md:grid-cols-2">
+                                            <ul className="grid gap-2.5 md:grid-cols-2">
                                                 {(safetyShowAll.sideEffects ? data.sideEffects : data.sideEffects.slice(0, 8)).map((s, i) => (
-                                                    <li key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                                                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0" />
-                                                        <span className="text-white/80 text-sm">{s}</span>
+                                                    <li key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                                                        <div className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                                                        <span className="text-white/80 text-sm leading-relaxed">{s}</span>
                                                     </li>
                                                 ))}
                                             </ul>
                                         ) : (
-                                            <p className="text-white/40 text-sm">{t("No side effects listed.", "لا توجد آثار جانبية مذكورة.")}</p>
+                                            <p className="text-white/40 text-sm italic">{t("No side effects listed.", "لا توجد آثار جانبية مذكورة.")}</p>
                                         )}
                                     </div>
                                 )}
 
                                 {safetyTab === 'overdose' && (
                                     <div>
-                                        <p className="text-white/80 text-sm font-semibold mb-3">{t('Overdose', 'الجرعة الزائدة')}</p>
+                                        <p className="text-white font-bold text-sm mb-3">{t('Overdose Guidelines', 'إرشادات الجرعة الزائدة')}</p>
                                         {data.overdose && ((data.overdose.symptoms?.length || 0) > 0 || (data.overdose.whatToDo?.length || 0) > 0) ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {(data.overdose.symptoms && data.overdose.symptoms.length > 0) && (
                                                     <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-                                                        <p className="text-red-100 font-semibold text-sm mb-2">{t('Symptoms', 'الأعراض')}</p>
-                                                        <ul className="space-y-1 text-red-100/90 text-sm">
+                                                        <p className="text-red-200 font-bold text-xs sm:text-sm mb-2">{t('Overdose Symptoms', 'أعراض الجرعة الزائدة')}</p>
+                                                        <ul className="space-y-1.5 text-red-100/90 text-sm leading-relaxed">
                                                             {(safetyShowAll.overdose ? data.overdose.symptoms : data.overdose.symptoms.slice(0, 6)).map((s, i) => <li key={i}>• {s}</li>)}
                                                         </ul>
                                                         {(data.overdose.symptoms.length > 6) && (
                                                             <button
                                                                 onClick={() => setSafetyShowAll((p) => ({ ...p, overdose: !p.overdose }))}
-                                                                className="mt-3 text-xs text-red-200/80 hover:underline"
+                                                                className="mt-3 text-xs text-red-200/80 hover:underline font-semibold"
                                                             >
                                                                 {safetyShowAll.overdose ? t('Show less', 'عرض أقل') : t('Show all', 'عرض الكل')}
                                                             </button>
@@ -1871,15 +1413,15 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                 )}
                                                 {(data.overdose.whatToDo && data.overdose.whatToDo.length > 0) && (
                                                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                                        <p className="text-white font-semibold text-sm mb-2">{t('What to do', 'ماذا تفعل')}</p>
-                                                        <ul className="space-y-1 text-white/70 text-sm">
+                                                        <p className="text-white font-bold text-xs sm:text-sm mb-2">{t('What to do', 'خطوات التصرف السريع')}</p>
+                                                        <ul className="space-y-1.5 text-white/70 text-sm leading-relaxed">
                                                             {(safetyShowAll.overdose ? data.overdose.whatToDo : data.overdose.whatToDo.slice(0, 6)).map((s, i) => <li key={i}>• {s}</li>)}
                                                         </ul>
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
-                                            <p className="text-white/40 text-sm">{t("No overdose info available.", "لا توجد معلومات عن الجرعة الزائدة.")}</p>
+                                            <p className="text-white/40 text-sm italic">{t("No overdose info available.", "لا توجد معلومات عن الجرعة الزائدة.")}</p>
                                         )}
                                     </div>
                                 )}
@@ -1887,28 +1429,27 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 {safetyTab === 'seekHelp' && (
                                     <div>
                                         <div className="flex items-center justify-between gap-3 mb-3">
-                                            <p className="text-white/80 text-sm font-semibold">{t('When to seek help', 'متى تطلب المساعدة')}</p>
+                                            <p className="text-white font-bold text-sm">{t('Red Flag Symptoms (Seek Emergency Care)', 'أعراض الخطر (اطلب الرعاية الطبية الفورية)')}</p>
                                             {(data.whenToSeekHelp?.length || 0) > 8 && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
+                                                <button
+                                                    type="button"
                                                     onClick={() => setSafetyShowAll((p) => ({ ...p, seekHelp: !p.seekHelp }))}
-                                                    className="border-white/15 text-white/70 hover:bg-white/10"
+                                                    className="text-xs text-cyan-400 hover:underline font-semibold"
                                                 >
                                                     {safetyShowAll.seekHelp ? t('Show less', 'عرض أقل') : t('Show all', 'عرض الكل')}
-                                                </Button>
+                                                </button>
                                             )}
                                         </div>
                                         {(data.whenToSeekHelp && data.whenToSeekHelp.length > 0) ? (
-                                            <ul className="grid gap-2 md:grid-cols-2">
+                                            <ul className="grid gap-2.5 md:grid-cols-2">
                                                 {(safetyShowAll.seekHelp ? data.whenToSeekHelp : data.whenToSeekHelp.slice(0, 8)).map((s, i) => (
-                                                    <li key={i} className="p-3 rounded-xl bg-red-500/5 border border-red-500/15 text-white/80 text-sm">
+                                                    <li key={i} className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-100 text-sm leading-relaxed">
                                                         • {s}
                                                     </li>
                                                 ))}
                                             </ul>
                                         ) : (
-                                            <p className="text-white/40 text-sm">{t("No red-flag symptoms listed.", "لا توجد علامات تحذيرية مذكورة.")}</p>
+                                            <p className="text-white/40 text-sm italic">{t("No red-flag symptoms listed.", "لا توجد علامات تحذيرية مذكورة.")}</p>
                                         )}
                                     </div>
                                 )}
@@ -1916,891 +1457,1076 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         </div>
                     )}
                 </div>
+            </div>
+        );
+    };
 
-                {/* PRO: Personalized Context */}
-                <div className="p-5 sm:p-8 bg-black/10 border-t border-white/10">
-                    <div className="flex items-center justify-between gap-4 mb-4">
-                        <h3 className="text-lg font-bold text-white">{t('Private AI Context', 'سياقك الصحي الخاص')}</h3>
-                        {plan !== 'ultra' && (
-                            <Link href="/pricing" className="text-xs text-amber-300 hover:underline">
-                                {t('Upgrade to Ultra', 'ترقية إلى ألترا')}
-                            </Link>
-                        )}
+    const renderGuard = () => {
+        return (
+            <div className="space-y-6 p-5 sm:p-8">
+                <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
+                    <div className="flex items-center gap-2 text-cyan-300 font-bold">
+                        <GitBranch className="w-5 h-5" />
+                        <h3 className="text-white text-base sm:text-lg">{t('Private AI Context & Interaction Guard', 'سياقك الصحي وحارس التداخلات')}</h3>
                     </div>
+                    {plan !== 'ultra' && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
+                            <Lock className="w-3 h-3" /> {t("Ultra", "ألترا")}
+                        </span>
+                    )}
+                </div>
 
-                    {plan !== 'ultra' ? (
-                        <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/5">
-                            <div className="p-5 blur-sm opacity-60 pointer-events-none select-none">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-red-500/10 text-red-200 border-red-500/30">
-                                        {t('Risk', 'المخاطر')}: high
-                                    </span>
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-200 border-purple-500/30">
-                                        {t('Memories', 'الذاكرة')}: 12
-                                    </span>
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium border bg-white/5 text-white/70 border-white/10">
-                                        {t('Interactions', 'تداخلات')}: 3
-                                    </span>
-                                </div>
-                                <div className="mt-3 grid gap-2">
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                        <p className="text-white font-semibold text-sm">{t("Personalized warning", "تحذير مخصص")}</p>
-                                        <p className="text-white/70 text-sm mt-1">{t("This medication may worsen a chronic condition.", "قد يزيد هذا الدواء من مشكلة صحية مزمنة.")}</p>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                        <p className="text-white font-semibold text-sm">{t("Profile-based dosing note", "ملاحظة جرعة حسب الملف")}</p>
-                                        <p className="text-white/70 text-sm mt-1">{t("Dose adjustments may be needed based on your profile.", "قد تحتاج الجرعة لتعديل حسب بياناتك.")}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="absolute inset-0 flex items-center justify-center p-4">
-                                <div className="w-full max-w-md p-5 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                            <Lock className="w-5 h-5 text-amber-200" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-white font-bold">
-                                                {!user
-                                                    ? t("Login to enable Private AI Context", "سجّل الدخول لتفعيل سياقك الصحي الخاص")
-                                                    : t("Upgrade to unlock Private AI Context", "ترقية لفتح سياقك الصحي الخاص")}
-                                            </p>
-                                            <p className="text-white/60 text-sm mt-1">
-                                                {t(
-                                                    "Patient-specific warnings + interaction checks using your Private AI Profile and Medication Memories.",
-                                                    "تحذيرات وتداخلات مخصصة حسب ملفك الصحي وذاكرة الأدوية."
-                                                )}
-                                            </p>
-                                            <div className="mt-3 flex items-center gap-2">
-                                                {!user ? (
-                                                    <Link href="/login">
-                                                        <Button size="sm">{t("Log in", "تسجيل الدخول")}</Button>
-                                                    </Link>
-                                                ) : (
-                                                    <Link href="/pricing">
-                                                        <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-black">{t("Upgrade to Ultra", "ترقية إلى ألترا")}</Button>
-                                                    </Link>
-                                                )}
-                                                <Link href="/profile">
-                                                    <Button size="sm" variant="outline" className="border-white/15 text-white/80 hover:bg-white/10">
-                                                        {t("Profile", "الملف")}
-                                                    </Button>
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
+                {plan !== 'ultra' ? (
+                    <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 p-6">
+                        <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-sm z-15">
+                            <div className="w-full max-w-sm p-6 rounded-2xl bg-slate-950/90 border border-white/10 shadow-2xl text-center">
+                                <Lock className="w-8 h-8 text-amber-300 mx-auto mb-3" />
+                                <p className="text-white font-bold text-base">{t("Unlock Interaction Guard", "افتح حارس التداخلات الخاص")}</p>
+                                <p className="text-white/60 text-xs mt-1.5 leading-relaxed">
+                                    {t("Automatically screen this medicine against all your current medications, chronic conditions, and allergies.", "قم بفحص هذا الدواء تلقائياً ومقارنته بجميع أدويتك الحالية، الأمراض المزمنة، والحساسية التي تعاني منها.")}
+                                </p>
+                                <div className="mt-4 flex justify-center gap-2">
+                                    {!user ? (
+                                        <Link href="/login">
+                                            <Button size="sm">{t("Log in", "تسجيل الدخول")}</Button>
+                                        </Link>
+                                    ) : (
+                                        <Link href="/pricing">
+                                            <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
+                                                {t("Upgrade to Ultra", "ترقية إلى ألترا")}
+                                            </Button>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="grid gap-4">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                {guardSubjectName && (
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium border bg-white/5 text-white/80 border-white/10">
-                                        {t("Profile", "الملف")}: {guardSubjectName}
-                                    </span>
-                                )}
-
-                                {guardItems.length > 0 && (
-                                    <>
-                                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-200 border-emerald-500/25">
-                                            {t("Safe", "آمن")}: {guardCounts.safe}
-                                        </span>
-                                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-yellow-500/10 text-yellow-200 border-yellow-500/25">
-                                            {t("Caution", "تحذير")}: {guardCounts.caution}
-                                        </span>
-                                        <span className="px-3 py-1 rounded-full text-xs font-medium border bg-red-500/10 text-red-200 border-red-500/25">
-                                            {t("Danger", "خطر")}: {guardCounts.danger}
-                                        </span>
-                                    </>
-                                )}
-
-                                {data.personalized?.riskLevel && (
-                                    <span className={cn(
-                                        "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
-                                        String(data.personalized.riskLevel).toLowerCase().includes('high')
-                                            ? "bg-red-500/10 text-red-200 border-red-500/30"
-                                            : String(data.personalized.riskLevel).toLowerCase().includes('medium')
-                                                ? "bg-yellow-500/10 text-yellow-200 border-yellow-500/30"
-                                                : "bg-green-500/10 text-green-200 border-green-500/30"
-                                    )}>
-                                        {t('Risk', 'المخاطر')}: {data.personalized.riskLevel}
-                                    </span>
-                                )}
-
-                                {Number(meta?.medicationMemoriesCount || 0) > 0 && (
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-200 border-purple-500/30">
-                                        {t('Memories', 'الذاكرة')}: {meta?.medicationMemoriesCount}
-                                    </span>
-                                )}
-
-                                <Link href="/profile" className="text-xs text-white/50 hover:text-white hover:underline">
-                                    {t('Edit profile & memories', 'تعديل الملف والذاكرة')}
-                                </Link>
-                            </div>
-
+                        <div className="blur-[3px] opacity-25 pointer-events-none select-none space-y-4">
+                            <div className="h-6 w-1/4 bg-white/10 rounded" />
+                            <div className="h-24 w-full bg-white/5 rounded" />
+                            <div className="h-32 w-full bg-white/5 rounded" />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="grid gap-6">
+                        {/* Profile badges */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {guardSubjectName && (
+                                <span className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border bg-white/5 text-white/80 border-white/10">
+                                    {t("Active Profile", "الملف النشط")}: {guardSubjectName}
+                                </span>
+                            )}
                             {guardItems.length > 0 && (
-                                <div className="p-4 sm:p-5 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <GitBranch className="w-5 h-5 text-cyan-300" />
-                                            <p className="text-white font-bold truncate">{t("Cross‑Interaction Guard", "حارس التداخلات الدوائية")}</p>
-                                        </div>
-                                        <span className="text-xs text-white/40">
-                                            {t("Tap a node for details", "اضغط على أي دواء لعرض التفاصيل")}
-                                        </span>
-                                    </div>
+                                <>
+                                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border bg-emerald-500/10 text-emerald-300 border-emerald-500/20">
+                                        {t("Safe", "آمن")}: {guardCounts.safe}
+                                    </span>
+                                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border bg-yellow-500/10 text-yellow-300 border-yellow-500/20">
+                                        {t("Caution", "تحذير")}: {guardCounts.caution}
+                                    </span>
+                                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-semibold border bg-red-500/10 text-red-300 border-red-500/20">
+                                        {t("Danger", "خطر")}: {guardCounts.danger}
+                                    </span>
+                                </>
+                            )}
+                            {data.personalized?.riskLevel && (
+                                <span className={cn(
+                                    "px-3.5 py-1.5 rounded-xl text-xs font-bold border uppercase tracking-wider",
+                                    String(data.personalized.riskLevel).toLowerCase().includes('high')
+                                        ? "bg-red-500/10 text-red-300 border-red-500/30 shadow-[0_0_15px_-5px_rgba(239,68,68,0.4)]"
+                                        : String(data.personalized.riskLevel).toLowerCase().includes('medium')
+                                            ? "bg-yellow-500/10 text-yellow-300 border-yellow-500/30"
+                                            : "bg-green-500/10 text-green-300 border-green-500/30"
+                                )}>
+                                    {t('Overall Risk', 'مستوى المخاطر')}: {data.personalized.riskLevel}
+                                </span>
+                            )}
+                            <Link href="/profile" className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline ml-auto font-semibold">
+                                {t('Manage Profile & Memories', 'إدارة الملف الصحي والذاكرة')}
+                            </Link>
+                        </div>
 
-                                    {interactionGuard?.overallRisk && (
-                                        <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-white/80 text-sm">
-                                            {interactionGuard.overallRisk}
-                                        </div>
-                                    )}
-
-                                    <div className="mt-4 grid gap-2">
-                                        {guardTopList.map((it: any) => {
+                        {/* Summary & Graph Section */}
+                        {guardItems.length > 0 ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Left Side: Network Node List & Info */}
+                                <div className="lg:col-span-1 space-y-3">
+                                    <p className="text-xs text-white/50 font-bold uppercase tracking-wider mb-1">{t("Scan Results against medications", "نتائج الفحص مقارنة بالأدوية")}</p>
+                                    <div className="grid gap-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                                        {guardItems.map((it: any) => {
                                             const ui = severityUi(it?.severity);
                                             const key = String(it?.otherMedication || "").trim();
                                             if (!key) return null;
+                                            const selected = String(selectedGuardKey || "") === key;
                                             return (
                                                 <button
                                                     key={key}
                                                     type="button"
-                                                    onClick={() => {
-                                                        setSelectedGuardKey(key);
-                                                        setShowGuardGraph(true);
-                                                    }}
+                                                    onClick={() => setSelectedGuardKey(key)}
                                                     className={cn(
-                                                        "w-full p-4 rounded-2xl border text-left transition-colors",
-                                                        "bg-white/5 border-white/10 hover:bg-white/10",
-                                                        ui.node
+                                                        "w-full p-4 rounded-xl border text-left transition-all duration-200",
+                                                        selected 
+                                                            ? "bg-white/[0.08] border-cyan-500/40 ring-1 ring-cyan-500/25" 
+                                                            : "bg-white/[0.02] border-white/5 hover:bg-white/[0.05] hover:border-white/10"
                                                     )}
                                                 >
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <p className="text-white font-bold truncate">{key}</p>
-                                                            <p className="text-white/60 text-xs mt-1 line-clamp-2">
-                                                                {String(it?.headline || it?.summary || t("Interaction assessment", "تقييم التداخل"))}
-                                                            </p>
-                                                        </div>
-                                                        <span className={cn("px-3 py-1 rounded-full text-xs font-semibold border shrink-0", ui.chip)}>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-white font-bold text-sm truncate">{key}</span>
+                                                        <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase shrink-0", ui.chip)}>
                                                             {ui.label}
                                                         </span>
                                                     </div>
+                                                    <p className="text-white/60 text-xs mt-1.5 line-clamp-1">
+                                                        {it.headline || it.summary || t("View details", "عرض التفاصيل")}
+                                                    </p>
                                                 </button>
                                             );
                                         })}
-
-                                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => setShowGuardGraph((v) => !v)}
-                                                className="border-white/15 text-white/70 hover:bg-white/10"
-                                            >
-                                                {showGuardGraph ? t("Hide graph view", "إخفاء عرض الرسم") : t("Show graph view", "عرض الرسم")}
-                                            </Button>
-                                            <span className="text-xs text-white/40">
-                                                {t("This is an AI risk screen; confirm with a clinician for high-risk combos.", "هذا فحص مخاطر بالذكاء الاصطناعي؛ أكد مع مختص عند وجود خطر.")}
-                                            </span>
-                                        </div>
                                     </div>
 
-                                    {showGuardGraph && (
-                                        <>
-                                            <div className="mt-4 relative w-full h-[420px] sm:h-[460px] rounded-2xl bg-black/30 border border-white/10 overflow-hidden">
-                                                <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
-                                                    <defs>
-                                                        <marker id="arrowSafe" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
-                                                            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(16,185,129,0.9)" />
-                                                        </marker>
-                                                        <marker id="arrowCaution" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
-                                                            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(234,179,8,0.95)" />
-                                                        </marker>
-                                                        <marker id="arrowDanger" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
-                                                            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(239,68,68,0.9)" />
-                                                        </marker>
-                                                    </defs>
-
-                                                    {graphNodes.map((it: any, idx: number) => {
-                                                        const ui = severityUi(it?.severity);
-                                                        const pos = graphLayout[idx] || { x: 50, y: 12 };
-                                                        return (
-                                                            <line
-                                                                key={`l-${idx}`}
-                                                                x1={pos.x}
-                                                                y1={pos.y}
-                                                                x2={50}
-                                                                y2={50}
-                                                                stroke={ui.stroke}
-                                                                strokeWidth={1.8}
-                                                                opacity={0.85}
-                                                                markerEnd={ui.marker}
-                                                            />
-                                                        );
-                                                    })}
-                                                </svg>
-
-                                                {/* Center node */}
-                                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                                                    <div className="w-[170px] sm:w-[210px] rounded-2xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 p-4 text-center shadow-[0_0_40px_-18px_rgba(34,211,238,0.45)]">
-                                                        <p className="text-[11px] text-white/50">{t("Target medication", "الدواء الأساسي")}</p>
-                                                        <p className="text-white font-bold mt-1 leading-tight line-clamp-2">
-                                                            {String(data?.drugName || t("Target medication", "الدواء الأساسي"))}
-                                                        </p>
-                                                        {data?.genericName && (
-                                                            <p className="text-white/60 text-xs mt-1 line-clamp-2">
-                                                                {data.genericName}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Peripheral nodes */}
-                                                {graphNodes.map((it: any, idx: number) => {
-                                                    const pos = graphLayout[idx] || { x: 50, y: 12 };
-                                                    const ui = severityUi(it?.severity);
-                                                    const key = String(it.otherMedication || "");
-                                                    const selected = String(selectedGuardKey || "") === key;
-                                                    return (
-                                                        <button
-                                                            key={`n-${idx}`}
-                                                            type="button"
-                                                            onClick={() => setSelectedGuardKey(key)}
-                                                            style={{
-                                                                left: `${pos.x}%`,
-                                                                top: `${pos.y}%`,
-                                                                transform: "translate(-50%, -50%)",
-                                                            }}
-                                                            className={cn(
-                                                                "absolute w-[150px] sm:w-[180px] p-3 rounded-2xl border text-left backdrop-blur-md transition-all",
-                                                                ui.node,
-                                                                selected ? "ring-2 ring-white/40" : "hover:ring-2 hover:ring-white/15"
-                                                            )}
-                                                        >
-                                                            <div className="flex items-start justify-between gap-2">
-                                                                <p className="text-sm font-semibold text-white line-clamp-2">
-                                                                    {key}
-                                                                </p>
-                                                                <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold border", ui.chip)}>
-                                                                    {ui.label}
-                                                                </span>
-                                                            </div>
-                                                            {typeof it?.confidence === "number" && (
-                                                                <p className="text-[11px] text-white/60 mt-1">
-                                                                    {t("Confidence", "الثقة")}: <span className="font-mono tabular-nums">{Math.round(it.confidence)}%</span>
-                                                                </p>
-                                                            )}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {selectedGuardItem && (
-                                                <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <p className="text-white font-bold truncate">{selectedGuardItem.otherMedication}</p>
-                                                            <p className="text-white/60 text-xs mt-1 truncate">
-                                                                {selectedGuardItem.headline || t("Interaction assessment", "تقييم التداخل")}
-                                                            </p>
-                                                        </div>
-                                                        <span className={cn("px-3 py-1 rounded-full text-xs font-semibold border", severityUi(selectedGuardItem.severity).chip)}>
-                                                            {severityUi(selectedGuardItem.severity).label}
-                                                        </span>
-                                                    </div>
-
-                                                    {selectedGuardItem.summary && (
-                                                        <p className="text-white/80 text-sm mt-3 leading-relaxed">
-                                                            {selectedGuardItem.summary}
-                                                        </p>
-                                                    )}
-
-                                                    {selectedGuardItem.mechanism && (
-                                                        <div className="mt-3 text-xs text-white/60">
-                                                            <span className="text-white/80 font-semibold">{t("Mechanism", "الآلية")}: </span>
-                                                            {selectedGuardItem.mechanism}
-                                                        </div>
-                                                    )}
-
-                                                    <div className="mt-4 grid gap-3 md:grid-cols-3">
-                                                        {Array.isArray(selectedGuardItem.whatToDo) && selectedGuardItem.whatToDo.length > 0 && (
-                                                            <div className="p-3 rounded-xl bg-black/20 border border-white/10">
-                                                                <p className="text-white font-semibold text-xs mb-2">{t("What to do", "ماذا تفعل")}</p>
-                                                                <ul className="space-y-1 text-white/70 text-sm">
-                                                                    {selectedGuardItem.whatToDo.slice(0, 6).map((s: string, i: number) => (
-                                                                        <li key={i}>• {s}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-                                                        )}
-                                                        {Array.isArray(selectedGuardItem.monitoring) && selectedGuardItem.monitoring.length > 0 && (
-                                                            <div className="p-3 rounded-xl bg-black/20 border border-white/10">
-                                                                <p className="text-white font-semibold text-xs mb-2">{t("Monitoring", "المتابعة")}</p>
-                                                                <ul className="space-y-1 text-white/70 text-sm">
-                                                                    {selectedGuardItem.monitoring.slice(0, 6).map((s: string, i: number) => (
-                                                                        <li key={i}>• {s}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-                                                        )}
-                                                        {Array.isArray(selectedGuardItem.redFlags) && selectedGuardItem.redFlags.length > 0 && (
-                                                            <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/15">
-                                                                <p className="text-red-100 font-semibold text-xs mb-2">{t("Red flags", "علامات خطر")}</p>
-                                                                <ul className="space-y-1 text-red-100/90 text-sm">
-                                                                    {selectedGuardItem.redFlags.slice(0, 6).map((s: string, i: number) => (
-                                                                        <li key={i}>• {s}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-                                    {interactionGuard?.disclaimer && (
-                                        <p className="mt-3 text-[11px] text-white/45 leading-relaxed">
-                                            {interactionGuard.disclaimer}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-
-                            {data.personalized ? (
-                                <div className="grid gap-3">
-                                    {data.personalized.riskSummary && (
-                                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/80 text-sm">
-                                            {data.personalized.riskSummary}
-                                        </div>
-                                    )}
-
-                                    {data.personalized.alerts && data.personalized.alerts.length > 0 && (
-                                        <div className="grid gap-2">
-                                            {data.personalized.alerts.slice(0, 6).map((a, i) => (
-                                                <div key={i} className={cn(
-                                                    "p-4 rounded-xl border",
-                                                    String(a.severity || '').toLowerCase() === 'high'
-                                                        ? "bg-red-500/10 border-red-500/20"
-                                                        : String(a.severity || '').toLowerCase() === 'medium'
-                                                            ? "bg-yellow-500/10 border-yellow-500/20"
-                                                            : "bg-white/5 border-white/10"
-                                                )}>
-                                                    <p className="text-white font-semibold text-sm">
-                                                        {a.title || t('Personalized Alert', 'تنبيه مخصص')}
-                                                    </p>
-                                                    {a.details && (
-                                                        <p className="text-white/70 text-sm mt-1">{a.details}</p>
-                                                    )}
-                                                </div>
-                                            ))}
+                                    {interactionGuard?.overallRisk && (
+                                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 text-white/70 text-xs leading-relaxed">
+                                            <span className="text-cyan-300 font-bold block mb-1">{t("Summary Analysis:", "تحليل الخلاصة:")}</span>
+                                            {interactionGuard.overallRisk}
                                         </div>
                                     )}
                                 </div>
-                            ) : guardItems.length === 0 ? (
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm">
-                                    {t(
-                                        'Add your Private AI Profile to get personalized warnings (allergies, conditions, current meds).',
-                                        'أضف ملفك الصحي الخاص للحصول على تحذيرات مخصصة (حساسية، أمراض مزمنة، أدوية حالية).'
-                                    )}
-                                    <div className="mt-2">
-                                        <Link href="/profile" className="text-liquid-accent hover:underline text-sm font-medium">
-                                            {t('Open Profile', 'فتح الملف الشخصي')}
-                                        </Link>
+
+                                {/* Right Side: Visualizer Graph */}
+                                <div className="lg:col-span-2 flex flex-col h-full justify-between p-4 rounded-2xl bg-black/30 border border-white/10 min-h-[320px]">
+                                    <div className="flex items-center justify-between gap-3 mb-2">
+                                        <span className="text-xs text-white/40 font-semibold">{t("Interactive Safety Connection Map", "خريطة التداخلات التفاعلية")}</span>
+                                        <span className="text-xs text-cyan-400 font-semibold">{t("Tap nodes to investigate", "اضغط على الأدوية للتحقق")}</span>
                                     </div>
-                                </div>
-                            ) : null}
-                        </div>
-                    )}
-                </div>
 
-                {/* AI Follow-up Tree - ENHANCED */}
-                <div id="ask-ai" data-export-ignore className="p-5 sm:p-8 bg-slate-950/20 border-t border-white/10">
-                    {/* Header with animated gradient */}
-                    <div className="flex items-center justify-between gap-4 mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-                                <Sparkles className="w-5 h-5 text-purple-300" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                    {t(`Ask ${AI_DISPLAY_NAME}`, `اسال ${AI_DISPLAY_NAME}`)}
-                                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-200">
-                                        {t("Beta", "تجريبي")}
-                                    </span>
-                                </h3>
-                                <p className="text-white/40 text-xs mt-0.5">{t("Interactive medical Q&A", "أسئلة وأجوبة طبية تفاعلية")}</p>
-                                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/45">
-                                    <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">
-                                        {t("For:", "لـ:")} {aiSubjectLabel}
-                                    </span>
-                                    {meta?.hasPrivateProfile && (
-                                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-200">
-                                            {t("Profile context", "سياق الملف")}
-                                        </span>
-                                    )}
-                                    {typeof meta?.medicationMemoriesCount === "number" && meta.medicationMemoriesCount > 0 && (
-                                        <span className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-200">
-                                            {t("Memories", "الذاكرة")}: {meta.medicationMemoriesCount}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        {plan === "ultra" && aiNodes.length > 0 && (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                    setAiNodes([]);
-                                    setCustomQuestion('');
-                                }}
-                                className="border-white/15 text-white/70 hover:bg-white/10 gap-1.5"
-                            >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                                {t("Reset", "إعادة")}
-                            </Button>
-                        )}
-                    </div>
+                                    <div className="relative w-full h-[280px] sm:h-[320px] rounded-xl bg-black/40 overflow-hidden border border-white/5 shadow-inner">
+                                        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
+                                            <style>{`
+                                                @keyframes dash {
+                                                    to {
+                                                        stroke-dashoffset: -40;
+                                                    }
+                                                }
+                                                .animate-dash-slow {
+                                                    animation: dash 5s linear infinite;
+                                                }
+                                            `}</style>
+                                            <defs>
+                                                <marker id="arrowSafe" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(16,185,129,0.9)" />
+                                                </marker>
+                                                <marker id="arrowCaution" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(234,179,8,0.95)" />
+                                                </marker>
+                                                <marker id="arrowDanger" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                                                    <path d="M0,0 L6,3 L0,6 Z" fill="rgba(239,68,68,0.9)" />
+                                                </marker>
+                                            </defs>
+                                            {graphNodes.map((it: any, idx: number) => {
+                                                const ui = severityUi(it?.severity);
+                                                const pos = graphLayout[idx] || { x: 50, y: 12 };
+                                                return (
+                                                    <line
+                                                        key={`l-${idx}`}
+                                                        x1={pos.x}
+                                                        y1={pos.y}
+                                                        x2={50}
+                                                        y2={50}
+                                                        stroke={ui.stroke}
+                                                        strokeWidth={1.5}
+                                                        strokeDasharray="3,3"
+                                                        className="animate-dash-slow"
+                                                        opacity={0.8}
+                                                        markerEnd={ui.marker}
+                                                    />
+                                                );
+                                            })}
+                                        </svg>
 
-                    {(!user || plan !== "ultra") ? (
-                        /* Locked State - Premium Teaser */
-                        <div className="relative overflow-hidden rounded-2xl ai-gradient-border">
-                            <div className="p-6 blur-[2px] opacity-50 pointer-events-none select-none">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    {[
-                                        { icon: Zap, title: t("Alternative medication", "بدائل هذا الدواء"), subtitle: t("Safer options & same use", "بدائل أكثر أمانًا لنفس الاستخدام") },
-                                        { icon: Lightbulb, title: t("Based on my profile", "حسب بياناتي الصحية"), subtitle: t("Allergies, conditions, meds", "حساسية + أمراض + أدوية") },
-                                        { icon: MessageSquare, title: t("Against my history", "مقارنةً بسجلي"), subtitle: t("Memories + recent scans", "الذاكرة + آخر التحاليل") },
-                                    ].map((card, idx) => (
-                                        <div key={idx} className="p-4 rounded-xl border bg-black/40 border-white/10">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <card.icon className="w-4 h-4 text-purple-300" />
-                                                <p className="text-white font-semibold text-sm">{card.title}</p>
-                                            </div>
-                                            <p className="text-white/50 text-xs">{card.subtitle}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                                    <div className="h-10 w-full ai-skeleton mb-2" />
-                                    <div className="h-4 w-2/3 ai-skeleton" />
-                                </div>
-                            </div>
-
-                            {/* Overlay CTA */}
-                            <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-sm">
-                                <div className="w-full max-w-md p-6 rounded-2xl ai-chat-bubble">
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
-                                            <Lock className="w-6 h-6 text-amber-200" />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-white font-bold text-lg">
-                                                {!user
-                                                    ? t(`Login to unlock ${AI_DISPLAY_NAME}`, `سجّل الدخول لفتح ${AI_DISPLAY_NAME}`)
-                                                    : t(`Upgrade to unlock ${AI_DISPLAY_NAME}`, `ترقية لفتح ${AI_DISPLAY_NAME}`)}
-                                            </p>
-                                            <p className="text-white/60 text-sm mt-2 leading-relaxed">
-                                                {t(
-                                                    "Ask any question about this medication. Get personalized answers based on your health profile.",
-                                                    "اسأل أي سؤال عن هذا الدواء. احصل على إجابات مخصصة حسب ملفك الصحي."
-                                                )}
-                                            </p>
-                                            <div className="mt-4 flex items-center gap-3">
-                                                {!user ? (
-                                                    <Link href="/login">
-                                                        <Button size="sm" className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">
-                                                            {t("Log in", "تسجيل الدخول")}
-                                                        </Button>
-                                                    </Link>
-                                                ) : (
-                                                    <Link href="/pricing">
-                                                        <Button size="sm" className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
-                                                            <Sparkles className="w-4 h-4" />
-                                                            {t("Upgrade to Ultra", "ترقية إلى ألترا")}
-                                                        </Button>
-                                                    </Link>
-                                                )}
+                                        {/* Center Target Med */}
+                                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                                            <div className="w-[125px] sm:w-[150px] rounded-2xl border-2 border-cyan-400 bg-slate-950/90 p-3 text-center shadow-[0_0_30px_0_rgba(6,182,212,0.5)] animate-pulse transition-all duration-300">
+                                                <p className="text-[8px] text-cyan-300 font-bold uppercase tracking-wider">{t("Target medication", "الدواء الأساسي")}</p>
+                                                <p className="text-white font-extrabold text-xs sm:text-sm mt-0.5 leading-tight line-clamp-1">{data.drugName}</p>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        /* Unlocked State - Full Ask NEXUS AI */
-                        <div className="space-y-5">
-                            {/* Custom Question Input - Premium */}
-                            <div className="ai-gradient-border p-4">
-                                <div className="relative">
-                                    <textarea
-                                        ref={aiInputRef}
-                                        value={customQuestion}
-                                        onChange={(e) => setCustomQuestion(e.target.value.slice(0, 500))}
-                                        onKeyDown={handleKeyDown}
-                                        placeholder={t("Ask anything about this medication...", "اسأل أي شيء عن هذا الدواء...")}
-                                        className="ai-input resize-none min-h-[80px] pr-24"
-                                        disabled={aiLoading}
-                                        dir={isArabic ? 'rtl' : 'ltr'}
-                                    />
-                                    <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                                        {/* Voice Input Button */}
-                                        <button
-                                            type="button"
-                                            onClick={toggleVoiceInput}
-                                            disabled={aiLoading}
-                                            className={cn(
-                                                "p-2 rounded-lg transition-all ai-voice-btn",
-                                                isListening
-                                                    ? "bg-red-500/20 text-red-400 listening"
-                                                    : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
-                                            )}
-                                            title={t("Voice input", "إدخال صوتي")}
-                                        >
-                                            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                                        </button>
-                                        {/* Submit Button */}
-                                        <button
-                                            type="button"
-                                            onClick={submitCustomQuestion}
-                                            disabled={aiLoading || !customQuestion.trim()}
-                                            className={cn(
-                                                "p-2 rounded-lg transition-all",
-                                                customQuestion.trim()
-                                                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                                                    : "bg-white/5 text-white/30"
-                                            )}
-                                        >
-                                            <Send className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                                {/* Character Counter */}
-                                <div className="flex items-center justify-between mt-2 px-1">
-                                    <p className="text-[11px] text-white/30">
-                                        {t("Press Enter to send, Shift+Enter for new line", "اضغط Enter للإرسال، Shift+Enter لسطر جديد")}
-                                    </p>
-                                    <p className={cn("text-[11px]", customQuestion.length > 450 ? "text-amber-400" : "text-white/30")}>
-                                        {customQuestion.length}/500
-                                    </p>
-                                </div>
-                            </div>
 
-                            {/* Suggested Questions (AI-generated when possible) */}
-                            {suggestionChips.length > 0 && (
-                                <div>
-                                    <p className="text-xs text-white/40 mb-2">
-                                        {aiNodes.length === 0 ? t("Suggested questions:", "أسئلة مقترحة:") : t("Suggested follow-ups:", "متابعة مقترحة:")}
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {suggestionChips.map((suggestion) => (
-                                            <button
-                                                key={suggestion.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    setCustomQuestion(suggestion.question);
-                                                    aiInputRef.current?.focus();
-                                                }}
-                                                disabled={aiLoading}
-                                                className={cn(
-                                                    "ai-chip",
-                                                    aiSuggestions.length > 0 && suggestion.id === suggestionChips[0]?.id && "bg-purple-500/15 border-purple-500/25 text-white"
-                                                )}
-                                            >
-                                                {suggestion.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Preset Buttons - Compact Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    disabled={aiLoading || !user}
-                                    onClick={() => askAi({ preset: "alternative", reset: true })}
-                                    className={cn(
-                                        "ai-chat-bubble p-4 text-left transition-all",
-                                        (aiLoading || !user) && "opacity-60 cursor-not-allowed"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Zap className="w-4 h-4 text-purple-300" />
-                                        <p className="text-white font-semibold text-sm">{t("Alternatives", "البدائل")}</p>
-                                    </div>
-                                    <p className="text-white/50 text-xs">{t("Safer options for the same use.", "بدائل أكثر أمانًا لنفس الاستخدام.")}</p>
-                                </motion.button>
-
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    disabled={aiLoading || !user}
-                                    onClick={() => askAi({ preset: "personalized", reset: true })}
-                                    className="ai-chat-bubble p-4 text-left transition-all"
-                                >
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Lightbulb className="w-4 h-4 text-amber-300" />
-                                        <p className="text-white font-semibold text-sm">{t("For My Profile", "حسب ملفي")}</p>
-                                    </div>
-                                    <p className="text-white/50 text-xs">{t("Personalized based on your health data.", "مخصص حسب بياناتك الصحية.")}</p>
-                                </motion.button>
-
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    disabled={aiLoading || !user}
-                                    onClick={() => askAi({ preset: "history", reset: true })}
-                                    className="ai-chat-bubble p-4 text-left transition-all"
-                                >
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Clock className="w-4 h-4 text-cyan-300" />
-                                        <p className="text-white font-semibold text-sm">{t("Check History", "فحص السجل")}</p>
-                                    </div>
-                                    <p className="text-white/50 text-xs">{t("Against your medication memories.", "مقارنة بذاكرة أدويتك.")}</p>
-                                </motion.button>
-                            </div>
-
-                            {/* Error Display */}
-                            {aiError && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm flex items-center gap-3"
-                                >
-                                    <AlertTriangle className="w-5 h-5 shrink-0" />
-                                    <span>{aiError}</span>
-                                    <button
-                                        onClick={() => setAiError(null)}
-                                        className="ml-auto text-red-300 hover:text-red-200"
-                                    >
-                                        ✕
-                                    </button>
-                                </motion.div>
-                            )}
-
-                            {/* Loading State - Skeleton */}
-                            {aiLoading && aiNodes.length === 0 && (
-                                <div className="ai-chat-bubble p-5">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="ai-thinking">
-                                            <div className="ai-thinking-dot" />
-                                            <div className="ai-thinking-dot" />
-                                            <div className="ai-thinking-dot" />
-                                        </div>
-                                        <span className="text-white/60 text-sm">{t("Analyzing...", "جارٍ التحليل...")}</span>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="h-4 w-3/4 ai-skeleton" />
-                                        <div className="h-4 w-full ai-skeleton" />
-                                        <div className="h-4 w-5/6 ai-skeleton" />
-                                        <div className="h-4 w-2/3 ai-skeleton" />
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Decision Tree - Enhanced */}
-                            {aiNodes.length > 0 && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2 text-white/50 text-sm">
-                                        <GitBranch className="w-4 h-4" />
-                                        <span>{t("Conversation", "المحادثة")}</span>
-                                        <span className="text-white/30">•</span>
-                                        <span className="text-white/30">{aiNodes.length} {t("responses", "ردود")}</span>
-                                    </div>
-
-                                    <div className="relative pl-5 border-l-2 border-purple-500/30 space-y-4">
-                                        {aiNodes.map((node, idx) => {
-                                            const isLast = idx === aiNodes.length - 1;
-                                            const isCopied = copiedNodeIdx === idx;
-                                            const isSaved = savedAnswers.includes(idx);
-
+                                        {/* Peripheral Nodes */}
+                                        {graphNodes.map((it: any, idx: number) => {
+                                            const pos = graphLayout[idx] || { x: 50, y: 12 };
+                                            const ui = severityUi(it?.severity);
+                                            const key = String(it.otherMedication || "");
+                                            const selected = String(selectedGuardKey || "") === key;
                                             return (
-                                                <motion.div
-                                                    key={`${idx}-${node.title}`}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: idx * 0.1 }}
-                                                    className="relative ai-node-enter"
+                                                <button
+                                                    key={`n-${idx}`}
+                                                    type="button"
+                                                    onClick={() => setSelectedGuardKey(key)}
+                                                    style={{
+                                                        left: `${pos.x}%`,
+                                                        top: `${pos.y}%`,
+                                                        transform: "translate(-50%, -50%)",
+                                                    }}
+                                                    className={cn(
+                                                        "absolute px-3 py-1.5 rounded-xl border text-left backdrop-blur-md transition-all duration-300 text-[10px] sm:text-xs font-semibold shadow-lg",
+                                                        ui.node,
+                                                        selected 
+                                                            ? "ring-2 ring-white border-white scale-[1.08] shadow-white/10" 
+                                                            : "hover:scale-[1.04]"
+                                                    )}
                                                 >
-                                                    {/* Timeline Node */}
-                                                    <div className="absolute -left-[11px] top-5 w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-black flex items-center justify-center">
-                                                        <span className="text-[10px] text-white font-bold">{idx + 1}</span>
-                                                    </div>
-
-                                                    {/* Answer Card */}
-                                                    <div className={cn("ai-chat-bubble p-5", isCopied && "ai-copy-flash")}>
-                                                        {/* Header with Actions */}
-                                                        <div className="flex items-start justify-between gap-3 mb-3">
-                                                            <p className="text-white font-bold flex items-center gap-2">
-                                                                <MessageSquare className="w-4 h-4 text-purple-300" />
-                                                                {node.title}
-                                                            </p>
-                                                            <div className="flex items-center gap-1">
-                                                                {/* Copy Button */}
-                                                                <button
-                                                                    onClick={() => copyAnswer(
-                                                                        idx,
-                                                                        `${node.title}\n\n${node.summary ? `TL;DR: ${node.summary}\n\n` : ""}${node.answer}\n\n${node.keyPoints?.length ? `Key points:\n• ${node.keyPoints.join('\n• ')}` : ""}`
-                                                                    )}
-                                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
-                                                                    title={t("Copy", "نسخ")}
-                                                                >
-                                                                    {isCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                                                                </button>
-                                                                {/* Bookmark Button */}
-                                                                <button
-                                                                    onClick={() => toggleSaveAnswer(idx)}
-                                                                    className={cn(
-                                                                        "p-1.5 rounded-lg hover:bg-white/10 transition-colors",
-                                                                        isSaved ? "text-amber-400" : "text-white/40 hover:text-white"
-                                                                    )}
-                                                                    title={t("Save", "حفظ")}
-                                                                >
-                                                                    <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="mt-2 flex items-center justify-between gap-3">
-                                                            <div className="flex items-center gap-2 text-xs text-white/40">
-                                                                <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
-                                                                <span>{t("Read the key points first", "اقرأ النقاط الرئيسية أولاً")}</span>
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setShowSimplified((p) => ({ ...p, [idx]: !p[idx] }))}
-                                                                className="text-xs text-white/60 hover:text-white transition-colors flex items-center gap-1"
-                                                            >
-                                                                <span>{showSimplified[idx] ? t("Hide details", "إخفاء التفاصيل") : t("Show details", "عرض التفاصيل")}</span>
-                                                                <ChevronRight className={cn("w-3.5 h-3.5 transition-transform", showSimplified[idx] ? "rotate-90" : "rotate-0")} />
-                                                            </button>
-                                                        </div>
-
-                                                        {node.summary && (
-                                                            <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                                                <p className="text-[11px] text-amber-200/80 font-semibold mb-1">{t("TL;DR", "الخلاصة")}</p>
-                                                                <p className="text-white/85 text-sm leading-relaxed">{node.summary}</p>
-                                                            </div>
-                                                        )}
-
-                                                        {node.keyPoints && node.keyPoints.length > 0 && (
-                                                            <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                                                                <p className="text-xs text-white/40 mb-2 flex items-center gap-1">
-                                                                    <Lightbulb className="w-3 h-3" />
-                                                                    {t("Key Points", "النقاط الرئيسية")}
-                                                                </p>
-                                                                <ul className="grid gap-2">
-                                                                    {node.keyPoints.slice(0, 7).map((p, i) => (
-                                                                        <li key={i} className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-white/80 text-sm leading-relaxed">
-                                                                            <span className="text-amber-300 font-bold mr-1">{i + 1}.</span>
-                                                                            {p}
-                                                                        </li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-                                                        )}
-
-                                                        {showSimplified[idx] && (
-                                                            <div className="mt-4 p-4 rounded-xl bg-black/20 border border-white/10">
-                                                                <p className="text-white/80 text-sm whitespace-pre-wrap leading-relaxed ai-typing">
-                                                                    {node.answer}
-                                                                </p>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Next Questions - Only on Last Node */}
-                                                        {isLast && node.nextQuestions && node.nextQuestions.length > 0 && (
-                                                            <div className="mt-5 pt-4 border-t border-white/10">
-                                                                <p className="text-xs text-white/40 mb-3">{t("Continue with (recommended first):", "تابع مع (الأفضل أولاً):")}</p>
-                                                                <div className="grid gap-3">
-                                                                    {node.nextQuestions.slice(0, 1).map((q) => (
-                                                                        <motion.button
-                                                                            key={q.id}
-                                                                            whileHover={{ scale: 1.01 }}
-                                                                            whileTap={{ scale: 0.99 }}
-                                                                            disabled={aiLoading}
-                                                                            onClick={() => askAi({ question: q.question, reset: false })}
-                                                                            className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-pink-500/10 to-transparent border border-purple-500/25 hover:border-purple-500/40 transition-colors"
-                                                                        >
-                                                                            <p className="text-white font-bold text-sm flex items-center gap-2">
-                                                                                <Sparkles className="w-4 h-4 text-purple-300" />
-                                                                                {q.title}
-                                                                            </p>
-                                                                            <p className="mt-1 text-white/60 text-xs leading-relaxed">
-                                                                                {q.question}
-                                                                            </p>
-                                                                        </motion.button>
-                                                                    ))}
-
-                                                                    <div className="flex flex-wrap gap-2">
-                                                                        {node.nextQuestions.slice(1, 4).map((q) => (
-                                                                            <motion.button
-                                                                                key={q.id}
-                                                                                whileHover={{ scale: 1.02 }}
-                                                                                whileTap={{ scale: 0.98 }}
-                                                                                disabled={aiLoading}
-                                                                                onClick={() => askAi({ question: q.question, reset: false })}
-                                                                                className="ai-chip flex items-center gap-1.5"
-                                                                                title={q.question}
-                                                                            >
-                                                                                <ChevronRight className="w-3 h-3" />
-                                                                                {q.title}
-                                                                            </motion.button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </motion.div>
+                                                    <span className="block truncate max-w-[70px] sm:max-w-[100px] text-white">{key}</span>
+                                                </button>
                                             );
                                         })}
                                     </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-center text-white/50 text-sm">
+                                <Info className="w-8 h-8 text-cyan-300 mx-auto mb-2 opacity-65" />
+                                {t("No cross-interaction data found. Make sure you have added medication history or other items in your profile.", "لم يتم العثور على بيانات تداخلات دوائية. تأكد من إدخال أدويتك الأخرى في ملفك الشخصي.")}
+                            </div>
+                        )}
 
-                                    {/* Loading indicator for follow-up */}
+                        {/* Selected Interaction Details Card */}
+                        {selectedGuardItem && (
+                            <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
+                                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3 mb-4">
+                                    <div>
+                                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{t("Interaction Analysis", "تفاصيل التداخل الدوائي")}</p>
+                                        <h4 className="text-white font-bold text-base sm:text-lg mt-0.5">
+                                            {data.drugName} + <span className="text-cyan-300">{selectedGuardItem.otherMedication}</span>
+                                        </h4>
+                                    </div>
+                                    <span className={cn("px-3.5 py-1 rounded-xl text-xs font-bold border uppercase shrink-0", severityUi(selectedGuardItem.severity).chip)}>
+                                        {severityUi(selectedGuardItem.severity).label}
+                                    </span>
+                                </div>
+
+                                {selectedGuardItem.headline && (
+                                    <p className="text-white font-semibold text-sm leading-relaxed mb-2">{selectedGuardItem.headline}</p>
+                                )}
+                                {selectedGuardItem.summary && (
+                                    <p className="text-white/70 text-sm leading-relaxed mb-4">{selectedGuardItem.summary}</p>
+                                )}
+
+                                {selectedGuardItem.mechanism && (
+                                    <div className="p-3.5 rounded-xl bg-black/20 border border-white/5 text-xs text-white/60 mb-4 leading-relaxed">
+                                        <strong className="text-white/90">{t("Biological Mechanism: ", "الآلية البيولوجية للتفاعل: ")}</strong>
+                                        {selectedGuardItem.mechanism}
+                                    </div>
+                                )}
+
+                                <div className="grid gap-4 md:grid-cols-3">
+                                    {Array.isArray(selectedGuardItem.whatToDo) && selectedGuardItem.whatToDo.length > 0 && (
+                                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                            <p className="text-white font-bold text-xs sm:text-sm mb-2.5 text-cyan-300">{t("Recommended Action", "ما يجب عليك فعله")}</p>
+                                            <ul className="space-y-1.5 text-white/70 text-xs leading-relaxed">
+                                                {selectedGuardItem.whatToDo.map((s: string, i: number) => <li key={i}>• {s}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {Array.isArray(selectedGuardItem.monitoring) && selectedGuardItem.monitoring.length > 0 && (
+                                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                            <p className="text-white font-bold text-xs sm:text-sm mb-2.5 text-amber-300">{t("Monitoring & Tests", "المتابعة والفحوصات")}</p>
+                                            <ul className="space-y-1.5 text-white/70 text-xs leading-relaxed">
+                                                {selectedGuardItem.monitoring.map((s: string, i: number) => <li key={i}>• {s}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {Array.isArray(selectedGuardItem.redFlags) && selectedGuardItem.redFlags.length > 0 && (
+                                        <div className="p-4 rounded-xl bg-red-950/10 border border-red-500/15">
+                                            <p className="text-red-300 font-bold text-xs sm:text-sm mb-2.5">{t("Red Flag Warning Symptoms", "أعراض خطيرة تستدعي الطبيب")}</p>
+                                            <ul className="space-y-1.5 text-red-100/90 text-xs leading-relaxed">
+                                                {selectedGuardItem.redFlags.map((s: string, i: number) => <li key={i}>• {s}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Personalized Profile Alerts */}
+                        {data.personalized && (data.personalized.riskSummary || (data.personalized.alerts && data.personalized.alerts.length > 0)) && (
+                            <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl space-y-4">
+                                <h4 className="text-white font-bold text-sm sm:text-base flex items-center gap-2 text-cyan-300">
+                                    <Lock className="w-4 h-4 text-cyan-300" />
+                                    {t("Health Profile Safety Analysis", "تحليل سلامة الدواء لملفك الصحي الخاص")}
+                                </h4>
+                                {data.personalized.riskSummary && (
+                                    <p className="text-white/80 text-sm leading-relaxed p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                        {data.personalized.riskSummary}
+                                    </p>
+                                )}
+
+                                {data.personalized.alerts && data.personalized.alerts.length > 0 && (
+                                    <div className="grid gap-3">
+                                        {data.personalized.alerts.slice(0, 6).map((a, i) => (
+                                            <div key={i} className={cn(
+                                                "p-4 rounded-xl border",
+                                                String(a.severity || '').toLowerCase() === 'high'
+                                                    ? "bg-red-500/10 border-red-500/20"
+                                                    : String(a.severity || '').toLowerCase() === 'medium'
+                                                        ? "bg-yellow-500/10 border-yellow-500/20"
+                                                        : "bg-white/5 border-white/10"
+                                            )}>
+                                                <p className="text-white font-bold text-sm">{a.title || t('Personalized Alert', 'تنبيه مخصص')}</p>
+                                                {a.details && (
+                                                    <p className="text-white/70 text-xs sm:text-sm mt-1 leading-relaxed">{a.details}</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderChat = () => {
+        return (
+            <div className="space-y-6 p-5 sm:p-8">
+                {/* Header info */}
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 animate-pulse">
+                            <Sparkles className="w-5 h-5 text-purple-300" />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold text-base sm:text-lg flex items-center gap-2">
+                                {t(`Ask ${AI_DISPLAY_NAME}`, `اسأل ${AI_DISPLAY_NAME}`)}
+                                <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-200 text-[9px] font-bold tracking-wider uppercase">
+                                    {t("Beta", "تجريبي")}
+                                </span>
+                            </h3>
+                            <p className="text-white/40 text-xs mt-0.5">{t("Interactive medical Q&A with context-awareness", "أسئلة وأجوبة طبية تفاعلية مدعومة بسياقك الصحي")}</p>
+                        </div>
+                    </div>
+                    {plan === "ultra" && aiNodes.length > 0 && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                                setAiNodes([]);
+                                setCustomQuestion('');
+                            }}
+                            className="border-white/15 text-white/70 hover:bg-white/10 gap-1.5 border-0"
+                        >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            {t("Reset Chat", "إعادة المحادثة")}
+                        </Button>
+                    )}
+                </div>
+
+                {(!user || plan !== "ultra") ? (
+                    <div className="relative overflow-hidden rounded-2xl ai-gradient-border p-6 text-center">
+                        <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-sm z-10">
+                            <div className="w-full max-w-sm p-6 rounded-2xl bg-slate-950/90 border border-white/10 shadow-2xl">
+                                <Lock className="w-8 h-8 text-amber-300 mx-auto mb-3" />
+                                <p className="text-white font-bold text-base">
+                                    {!user
+                                        ? t(`Login to unlock ${AI_DISPLAY_NAME}`, `سجّل الدخول لفتح ${AI_DISPLAY_NAME}`)
+                                        : t(`Upgrade to unlock ${AI_DISPLAY_NAME}`, `ترقية لفتح ${AI_DISPLAY_NAME}`)}
+                                </p>
+                                <p className="text-white/60 text-xs mt-2 leading-relaxed">
+                                    {t("Ask any health question, get drug timing, food/milk interactions, and alternatives specifically checked for your profile.", "اسأل أي سؤال صحي، احصل على مواعيد تناول الدواء، التداخلات مع الأطعمة أو الحليب، والبدائل المخصصة لملفك.")}
+                                </p>
+                                <div className="mt-4 flex justify-center gap-2">
+                                    {!user ? (
+                                        <Link href="/login">
+                                            <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold border-0">
+                                                {t("Log in", "تسجيل الدخول")}
+                                            </Button>
+                                        </Link>
+                                    ) : (
+                                        <Link href="/pricing">
+                                            <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
+                                                {t("Upgrade to Ultra", "ترقية إلى ألترا")}
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="blur-[3px] opacity-25 pointer-events-none select-none space-y-3">
+                            <div className="h-10 w-2/3 bg-white/10 rounded mx-auto" />
+                            <div className="h-6 w-full bg-white/5 rounded" />
+                            <div className="h-6 w-5/6 bg-white/5 rounded" />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-5">
+                        {/* Custom Question Area */}
+                        <div className="ai-gradient-border p-4">
+                            <div className="relative">
+                                <textarea
+                                    ref={aiInputRef}
+                                    value={customQuestion}
+                                    onChange={(e) => setCustomQuestion(e.target.value.slice(0, 500))}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder={t("Ask anything about this medication...", "اسأل أي شيء عن هذا الدواء...")}
+                                    className="ai-input resize-none min-h-[90px] pr-28 text-sm sm:text-base"
+                                    disabled={aiLoading}
+                                    dir={isArabic ? 'rtl' : 'ltr'}
+                                />
+                                <div className="absolute bottom-3 right-3 flex items-center gap-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={toggleVoiceInput}
+                                        disabled={aiLoading}
+                                        className={cn(
+                                            "p-2 rounded-lg transition-all",
+                                            isListening
+                                                ? "bg-red-500/20 text-red-400 listening scale-[1.05]"
+                                                : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                                        )}
+                                        title={t("Voice input", "إدخال صوتي")}
+                                    >
+                                        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={submitCustomQuestion}
+                                        disabled={aiLoading || !customQuestion.trim()}
+                                        className={cn(
+                                            "p-2 rounded-lg transition-all",
+                                            customQuestion.trim()
+                                                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/15"
+                                                : "bg-white/5 text-white/30"
+                                        )}
+                                    >
+                                        <Send className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between mt-2.5 px-1">
+                                <p className="text-[10px] text-white/30">
+                                    {t("Press Enter to send, Shift+Enter for new line", "اضغط Enter للإرسال، Shift+Enter لسطر جديد")}
+                                </p>
+                                <p className={cn("text-[10px]", customQuestion.length > 450 ? "text-amber-400" : "text-white/30")}>
+                                    {customQuestion.length}/500
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Preset Suggestions */}
+                        {suggestionChips.length > 0 && (
+                            <div>
+                                <p className="text-[11px] text-white/45 mb-2 font-semibold">
+                                    {aiNodes.length === 0 ? t("Suggested questions:", "أسئلة مقترحة لبدء الحوار:") : t("Suggested follow-ups:", "أسئلة متابعة مقترحة:")}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {suggestionChips.map((suggestion) => (
+                                        <button
+                                            key={suggestion.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setCustomQuestion(suggestion.question);
+                                                aiInputRef.current?.focus();
+                                            }}
+                                            disabled={aiLoading}
+                                            className="ai-chip text-xs font-semibold py-2 px-3.5 rounded-xl border border-white/5 hover:border-purple-500/25 hover:bg-purple-500/5 transition-all"
+                                        >
+                                            {suggestion.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Preset quick category buttons */}
+                        {aiNodes.length === 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <button
+                                    onClick={() => askAi({ preset: "alternative", reset: true })}
+                                    disabled={aiLoading}
+                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-[0_0_15px_-3px_rgba(168,85,247,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                >
+                                    <div className="flex items-center gap-2 mb-2 text-purple-300">
+                                        <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                            <Zap className="w-4 h-4 text-purple-300" />
+                                        </div>
+                                        <span className="font-bold text-sm text-white">{t("Alternatives", "البدائل الدوائية")}</span>
+                                    </div>
+                                    <p className="text-white/50 text-xs leading-relaxed">{t("Search for therapeutic equivalents and generic substitutes.", "ابحث عن بدائل علمية وتجارية متوفرة لنفس المرض.")}</p>
+                                </button>
+                                <button
+                                    onClick={() => askAi({ preset: "personalized", reset: true })}
+                                    disabled={aiLoading}
+                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:border-amber-500/30 hover:bg-amber-500/5 hover:shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                >
+                                    <div className="flex items-center gap-2 mb-2 text-amber-300">
+                                        <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                            <Lightbulb className="w-4 h-4 text-amber-300" />
+                                        </div>
+                                        <span className="font-bold text-sm text-white">{t("For My Profile", "التوافق مع حالتي")}</span>
+                                    </div>
+                                    <p className="text-white/50 text-xs leading-relaxed">{t("Screen safety Specifically for your age, allergies, and chronic conditions.", "افحص السلامة بناءً على عمرك، أمراضك المزمنة وحساسيتك.")}</p>
+                                </button>
+                                <button
+                                    onClick={() => askAi({ preset: "history", reset: true })}
+                                    disabled={aiLoading}
+                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:border-cyan-500/30 hover:bg-cyan-500/5 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                >
+                                    <div className="flex items-center gap-2 mb-2 text-cyan-300">
+                                        <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                                            <Clock className="w-4 h-4 text-cyan-300" />
+                                        </div>
+                                        <span className="font-bold text-sm text-white">{t("Check History", "مطابقة السجل")}</span>
+                                    </div>
+                                    <p className="text-white/50 text-xs leading-relaxed">{t("Check if this interacts with previously scanned medications.", "تحقق من التداخلات مع الأدوية التي قمت بفحصها مسبقاً.")}</p>
+                                </button>
+                            </div>
+                        )}
+
+                        {aiError && (
+                            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm flex items-center justify-between gap-3">
+                                <span>{aiError}</span>
+                                <button type="button" onClick={() => setAiError(null)} className="text-red-400 font-bold">✕</button>
+                            </div>
+                        )}
+
+                        {/* Loading State */}
+                        {aiLoading && aiNodes.length === 0 && (
+                            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="ai-thinking">
+                                        <div className="ai-thinking-dot" />
+                                        <div className="ai-thinking-dot" />
+                                        <div className="ai-thinking-dot" />
+                                    </div>
+                                    <span className="text-white/50 text-xs sm:text-sm font-semibold">{t("AI is processing medication data…", "المعالج الذكي يقوم بفحص بيانات الدواء…")}</span>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="h-4 w-3/4 bg-white/5 rounded ai-skeleton" />
+                                    <div className="h-4 w-full bg-white/5 rounded ai-skeleton" />
+                                    <div className="h-4 w-5/6 bg-white/5 rounded ai-skeleton" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Interactive Conversation Timeline */}
+                        {aiNodes.length > 0 && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 text-white/40 text-xs pl-1">
+                                    <GitBranch className="w-3.5 h-3.5" />
+                                    <span>{t("AI Interaction Flow", "سير الأسئلة والأجوبة الذكية")}</span>
+                                    <span>•</span>
+                                    <span>{aiNodes.length} {t("responses", "ردود")}</span>
+                                </div>
+
+                                <div className="pl-4 border-l border-purple-500/20 space-y-4">
+                                    {aiNodes.map((node, idx) => {
+                                        const isLast = idx === aiNodes.length - 1;
+                                        const isCopied = copiedNodeIdx === idx;
+                                        const isSaved = savedAnswers.includes(idx);
+                                        return (
+                                            <div key={`${idx}-${node.title}`} className="relative ai-node-enter">
+                                                {/* Timeline marker */}
+                                                <div className="absolute -left-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
+
+                                                <div className={cn("p-5 rounded-2xl border bg-slate-900/60 border-white/5 shadow-xl transition-all duration-300", isCopied && "ai-copy-flash")}>
+                                                    {/* Header */}
+                                                    <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2 mb-3">
+                                                        <h5 className="text-white font-bold text-sm sm:text-base flex items-center gap-2">
+                                                            <MessageSquare className="w-4 h-4 text-purple-300" />
+                                                            {node.title}
+                                                        </h5>
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => copyAnswer(idx, `${node.title}\n\n${node.summary ? `TL;DR: ${node.summary}\n\n` : ""}${node.answer}`)}
+                                                                className="p-1.5 rounded-lg bg-white/5 border border-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                                                                title={t("Copy", "نسخ")}
+                                                            >
+                                                                {isCopied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleSaveAnswer(idx)}
+                                                                className={cn(
+                                                                    "p-1.5 rounded-lg border transition-all duration-200",
+                                                                    isSaved 
+                                                                        ? "bg-amber-500/15 border-amber-500/30 text-amber-300" 
+                                                                        : "bg-white/5 border-white/5 text-white/50 hover:text-white"
+                                                                )}
+                                                                title={t("Bookmark", "حفظ")}
+                                                            >
+                                                                <Bookmark className={cn("w-3.5 h-3.5", isSaved && "fill-current")} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Summary */}
+                                                    {node.summary && (
+                                                        <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-200 text-sm leading-relaxed mb-3">
+                                                            <span className="font-bold text-xs uppercase tracking-wider block mb-1 text-purple-300">{t("Summary Answer (TL;DR)", "الخلاصة السريعة")}</span>
+                                                            {node.summary}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Key Points */}
+                                                    {node.keyPoints && node.keyPoints.length > 0 && (
+                                                        <div className="space-y-1.5 mb-3">
+                                                            <p className="text-xs text-white/40 font-bold uppercase tracking-wider pl-1">{t("Key Takeaways", "النقاط الرئيسية")}</p>
+                                                            <ul className="grid gap-2">
+                                                                {node.keyPoints.map((p, i) => (
+                                                                    <li key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-white/80 text-xs sm:text-sm leading-relaxed flex items-start gap-2.5">
+                                                                        <span className="text-purple-300 font-bold font-mono text-xs">{i+1}.</span>
+                                                                        <span>{p}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Collapsible Full Answer */}
+                                                    <div className="border-t border-white/5 pt-3.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowSimplified((p) => ({ ...p, [idx]: !p[idx] }))}
+                                                            className="flex items-center justify-between w-full text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                                                        >
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
+                                                                {t("Detailed medical explanation", "شرح طبي تفصيلي مفصل")}
+                                                            </span>
+                                                            <div className="flex items-center gap-1">
+                                                                <span>{showSimplified[idx] ? t("Hide details", "إخفاء") : t("Show full detail", "عرض كامل التفاصيل")}</span>
+                                                                <ChevronRight className={cn("w-3.5 h-3.5 transition-transform", showSimplified[idx] ? "rotate-90" : "rotate-0")} />
+                                                            </div>
+                                                        </button>
+
+                                                        {showSimplified[idx] && (
+                                                            <div className="mt-3 p-4 rounded-xl bg-black/45 border border-white/5 text-white/70 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">
+                                                                {node.answer}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Follow-up suggestions on the last node */}
+                                                    {isLast && node.nextQuestions && node.nextQuestions.length > 0 && (
+                                                        <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
+                                                            <p className="text-xs text-white/40 font-bold uppercase tracking-wider">{t("Recommended Follow-up Question:", "سؤال المتابعة المقترح:")}</p>
+                                                            {node.nextQuestions.slice(0, 1).map((q) => (
+                                                                <button
+                                                                    key={q.id}
+                                                                    type="button"
+                                                                    onClick={() => askAi({ question: q.question, reset: false })}
+                                                                    className="w-full text-left p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/45 transition-all text-xs sm:text-sm text-white"
+                                                                >
+                                                                    <div className="flex items-center gap-2 mb-1.5 text-purple-300 font-bold">
+                                                                        <Sparkles className="w-4 h-4 text-purple-300" />
+                                                                        {q.title}
+                                                                    </div>
+                                                                    <p className="text-white/60 leading-relaxed text-xs">{q.question}</p>
+                                                                </button>
+                                                            ))}
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {node.nextQuestions.slice(1, 4).map((q) => (
+                                                                    <button
+                                                                        key={q.id}
+                                                                        type="button"
+                                                                        onClick={() => askAi({ question: q.question, reset: false })}
+                                                                        className="ai-chip text-[11px] font-semibold py-2 px-3 rounded-lg flex items-center gap-1"
+                                                                    >
+                                                                        <ChevronRight className="w-3 h-3 text-cyan-300" />
+                                                                        {q.title}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Loading follow up */}
                                     {aiLoading && (
-                                        <div className="pl-5 border-l-2 border-purple-500/30">
-                                            <div className="ai-chat-bubble p-4 flex items-center gap-3">
+                                        <div className="relative pl-5">
+                                            <div className="absolute -left-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-ping" />
+                                            <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5 flex items-center gap-2.5">
                                                 <div className="ai-thinking">
                                                     <div className="ai-thinking-dot" />
                                                     <div className="ai-thinking-dot" />
                                                     <div className="ai-thinking-dot" />
                                                 </div>
-                                                <span className="text-white/50 text-sm">{t("Thinking...", "جارٍ التفكير...")}</span>
+                                                <span className="text-white/40 text-xs sm:text-sm font-semibold">{t("AI is generating next response…", "جاري توليد إجابة المتابعة…")}</span>
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderFda = () => {
+        return (
+            <div className="space-y-6 p-5 sm:p-8">
+                {/* FDA Status header */}
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-2 text-cyan-300 font-bold">
+                        <Database className="w-5 h-5 text-emerald-300" />
+                        <h3 className="text-white text-base sm:text-lg">{t('FDA Official Databases Verification', 'التحقق الرسمي من إدارة الغذاء والدواء الأمريكية FDA')}</h3>
+                    </div>
+                    {plan === 'ultra' ? (
+                        fdaFeatureEnabled && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setShowFdaDetails((v) => !v)}
+                                className="border-white/15 text-white/70 hover:bg-white/10"
+                                disabled={fdaLoading || !fdaLabelFound}
+                            >
+                                {showFdaDetails ? t("Hide Full Label", "إخفاء النشرة الكاملة") : t("Show Full Label", "عرض النشرة الكاملة")}
+                            </Button>
+                        )
+                    ) : (
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
+                            <Lock className="w-3 h-3" /> {t("Ultra", "ألترا")}
+                        </span>
                     )}
                 </div>
 
+                {!fdaFeatureEnabled ? (
+                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-sm text-white/70 leading-relaxed">
+                        <p>{t("FDA database cross-checks are disabled in your settings. Please enable them in your profile to search and verify drug barcodes and names.", "تم تعطيل التحقق من قواعد بيانات FDA في إعداداتك. يرجى تفعيلها في ملفك الشخصي لتتمكن من فحص ومطابقة أسماء الأدوية.")}</p>
+                        <div className="mt-3">
+                            <Link href="/profile" className="text-cyan-400 hover:underline font-semibold">{t("Go to profile settings", "انتقل إلى إعدادات ملفك الشخصي")}</Link>
+                        </div>
+                    </div>
+                ) : fdaLoading ? (
+                    <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
+                        <div className="h-4 w-1/3 bg-white/5 rounded ai-skeleton" />
+                        <div className="h-4 w-full bg-white/5 rounded ai-skeleton" />
+                        <div className="h-4 w-5/6 bg-white/5 rounded ai-skeleton" />
+                    </div>
+                ) : fdaError ? (
+                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm">
+                        {fdaError}
+                    </div>
+                ) : fdaLabelFound ? (
+                    <div className="space-y-4">
+                        {/* Summary Badges Grid */}
+                        <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl space-y-3">
+                            <h4 className="text-white font-bold text-sm sm:text-base">{t("Official FDA Registration Info", "بيانات التسجيل الرسمية للـ FDA")}</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {((fda as any)?.openfda?.brand_name || []).slice(0, 2).map((v: string, i: number) => (
+                                    <span key={`b-${i}`} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs font-semibold">
+                                        {t("Brand: ", "العلامة التجارية: ")}{v}
+                                    </span>
+                                ))}
+                                {((fda as any)?.openfda?.generic_name || []).slice(0, 2).map((v: string, i: number) => (
+                                    <span key={`g-${i}`} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/80 text-xs font-semibold">
+                                        {t("Generic: ", "الاسم العلمي: ")}{v}
+                                    </span>
+                                ))}
+                                {((fda as any)?.openfda?.manufacturer_name || []).slice(0, 1).map((v: string, i: number) => (
+                                    <span key={`m-${i}`} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 text-xs">
+                                        {t("Manufacturer: ", "المصنع (FDA): ")}{v}
+                                    </span>
+                                ))}
+                                {((fda as any)?.openfda?.route || []).slice(0, 2).map((v: string, i: number) => (
+                                    <span key={`r-${i}`} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 text-xs">
+                                        {t("Route: ", "طريقة التعاطي: ")}{v}
+                                    </span>
+                                ))}
+                                {((fda as any)?.openfda?.product_ndc || []).slice(0, 1).map((v: string, i: number) => (
+                                    <span key={`ndc-${i}`} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs font-mono">
+                                        NDC: {v}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* FDA Full Details */}
+                        {plan === 'ultra' && showFdaDetails ? (
+                            <div className="grid gap-4">
+                                {((fda as any)?.label?.indications_and_usage || []).length > 0 && (
+                                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
+                                        <p className="text-white font-bold text-sm sm:text-base mb-2.5 border-b border-white/5 pb-2 text-cyan-300">{t("Indications & Usage (FDA)", "الاستخدامات الطبية المعتمدة (FDA)")}</p>
+                                        {((fda as any).label.indications_and_usage as string[]).map((s, i) => (
+                                            <p key={i} className="text-white/70 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
+                                        ))}
+                                    </div>
+                                )}
+                                {((fda as any)?.label?.dosage_and_administration || []).length > 0 && (
+                                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
+                                        <p className="text-white font-bold text-sm sm:text-base mb-2.5 border-b border-white/5 pb-2 text-blue-400">{t("Dosage & Administration (FDA)", "إرشادات الجرعات والتعاطي (FDA)")}</p>
+                                        {((fda as any).label.dosage_and_administration as string[]).map((s, i) => (
+                                            <p key={i} className="text-white/70 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
+                                        ))}
+                                    </div>
+                                )}
+                                {((fda as any)?.label?.warnings_and_precautions || []).length > 0 && (
+                                    <div className="p-5 rounded-2xl bg-red-950/10 border border-red-500/15 backdrop-blur-xl">
+                                        <p className="text-red-300 font-bold text-sm sm:text-base mb-2.5 border-b border-red-500/10 pb-2">{t("Warnings & Precautions (FDA)", "التحذيرات والاحتياطات الرسمية (FDA)")}</p>
+                                        {((fda as any).label.warnings_and_precautions as string[]).map((s, i) => (
+                                            <p key={i} className="text-red-100/80 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
+                                        ))}
+                                    </div>
+                                )}
+                                {((fda as any)?.label?.contraindications || []).length > 0 && (
+                                    <div className="p-5 rounded-2xl bg-red-950/10 border border-red-500/15 backdrop-blur-xl">
+                                        <p className="text-red-300 font-bold text-sm sm:text-base mb-2.5 border-b border-red-500/10 pb-2">{t("Contraindications (FDA)", "موانع الاستعمال الرسمية (FDA)")}</p>
+                                        {((fda as any).label.contraindications as string[]).map((s, i) => (
+                                            <p key={i} className="text-red-100/80 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
+                                        ))}
+                                    </div>
+                                )}
+                                {((fda as any)?.label?.drug_interactions || []).length > 0 && (
+                                    <div className="p-5 rounded-2xl bg-orange-950/10 border border-orange-500/15 backdrop-blur-xl">
+                                        <p className="text-orange-300 font-bold text-sm sm:text-base mb-2.5 border-b border-orange-500/10 pb-2">{t("Drug Interactions (FDA)", "التداخلات الدوائية الموثقة (FDA)")}</p>
+                                        {((fda as any).label.drug_interactions as string[]).map((s, i) => (
+                                            <p key={i} className="text-orange-100/80 text-sm whitespace-pre-wrap leading-relaxed">{s}</p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            plan !== 'ultra' && (
+                                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
+                                    <Lock className="w-6 h-6 text-amber-300 mx-auto mb-2" />
+                                    <p className="text-white font-bold text-sm">{t("Official FDA Drug Monograph Locked", "النشرة الطبية الرسمية مغلقة")}</p>
+                                    <p className="text-white/60 text-xs mt-1 max-w-sm mx-auto">{t("Unlock direct excerpts from the FDA drug label dataset regarding safety warnings, drug combinations, and adverse reactions.", "افتح النشرات المباشرة من الغذاء والدواء للتحذيرات، تفاعلات الدواء، والأعراض الجانبية.")}</p>
+                                    <div className="mt-3">
+                                        <Link href="/pricing">
+                                            <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-bold border-0">
+                                                {t("Upgrade to Ultra", "ترقية إلى ألترا")}
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            )
+                        )}
+                    </div>
+                ) : fdaNdcFound ? (
+                    <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/15 text-emerald-100 text-sm leading-relaxed">
+                        {t("This medication matches an official FDA NDC code. However, the complete drug label details are not available in the openFDA database at this time.", "يتطابق هذا الدواء مع الكود الوطني الموحد لـ FDA. ولكن النشرة الطبية الكاملة غير متوفرة حالياً في خوادم openFDA.")}
+                    </div>
+                ) : (
+                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-slate-400 text-sm leading-relaxed">
+                        {t(
+                            fdaNotEnoughIdentifiers
+                                ? "FDA verification needs an English drug name or an NDC. Try scanning the name more clearly or include an NDC if present on the package."
+                                : "Not found in FDA databases (openFDA). It may be outside FDA coverage, a supplement, or not FDA-classified.",
+                            fdaNotEnoughIdentifiers
+                                ? "تعذر التحقق من FDA لأن الاسم بالإنجليزية أو رقم NDC غير متوفر. جرّب تصوير الاسم بوضوح أو تضمين رقم NDC إن كان موجودًا على العبوة."
+                                : "غير موجود في قواعد بيانات FDA (openFDA). قد يكون خارج تغطية FDA أو مكملًا غذائيًا أو غير مُدرج."
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div ref={exportRef} className="w-full max-w-5xl">
+            <GlassCard className="w-full p-0 overflow-hidden shadow-2xl shadow-black/25" hoverEffect={false}>
+                {/* Header Section */}
+                <div className="relative p-5 sm:p-8 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-black">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-5">
+                        <div className="space-y-3.5">
+                            {/* Title & FDA status */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-300">
+                                    <Pill className="w-6 h-6 animate-pulse" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-none">{data.drugName}</h2>
+                                    {data.genericName && (
+                                        <p className="text-cyan-200/90 font-medium text-xs sm:text-sm mt-1">{data.genericName}</p>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap gap-1.5 ml-2">
+                                    {fdaStatus === "verified" ? (
+                                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                            <CheckCircle2 className="w-3 h-3" /> {t("FDA Verified", "موثّق من FDA")}
+                                        </span>
+                                    ) : fdaStatus === "not_found" ? (
+                                        <span className="px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/25 text-red-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                            <AlertOctagon className="w-3 h-3" /> {t("Not in FDA database", "غير موجود في FDA")}
+                                        </span>
+                                    ) : fdaStatus === "disabled" ? (
+                                        <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                            <Lock className="w-3 h-3" /> {t("FDA disabled", "تم إيقاف FDA")}
+                                        </span>
+                                    ) : (
+                                        <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                            <AlertTriangle className="w-3 h-3" /> {t("FDA: Unconfirmed", "FDA: غير مؤكد")}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Badges/Category */}
+                            <div className="flex flex-wrap items-center gap-2 text-white/60 text-xs mt-2">
+                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 border border-white/5 max-w-full">
+                                    <Box className="w-3.5 h-3.5" />
+                                    <span className="truncate">{data.manufacturer}</span>
+                                </div>
+                                {productKindLabel && (
+                                    <div className={cn(
+                                        "flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs font-semibold",
+                                        productKind === "human_drug" && "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
+                                        productKind === "human_supplement" && "bg-purple-500/10 border-purple-500/20 text-purple-300",
+                                        productKind === "veterinary_drug" && "bg-orange-500/10 border-orange-500/20 text-orange-300",
+                                        productKind === "veterinary_supplement" && "bg-amber-500/10 border-amber-500/20 text-amber-300",
+                                        "bg-white/5 border-white/10 text-white/60"
+                                    )}>
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        <span>{productKindLabel}</span>
+                                    </div>
+                                )}
+                                {data.category && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5">
+                                        <Pill className="w-3.5 h-3.5" />
+                                        <span>{data.category}</span>
+                                    </div>
+                                )}
+                                {data.form && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 text-white/80">
+                                        <span>{data.form}</span>
+                                    </div>
+                                )}
+                                {data.strength && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 text-white/80">
+                                        <span>{data.strength}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Export & Actions */}
+                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                            <div id="export" data-export-ignore className="flex flex-wrap items-center gap-1.5">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={downloadPng}
+                                    disabled={!!exporting}
+                                    className="border-white/10 text-white/80 hover:bg-white/10 h-9 rounded-xl text-xs px-3 border-0"
+                                >
+                                    <Download className="w-3.5 h-3.5 mr-1.5" />
+                                    {exporting === 'png' ? t("Exporting…", "جاري التصدير…") : "PNG"}
+                                </Button>
+
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={downloadPdf}
+                                    disabled={!!exporting || plan !== 'ultra'}
+                                    className={cn(
+                                        "border-white/10 hover:bg-white/10 h-9 rounded-xl text-xs px-3 border-0",
+                                        plan === 'ultra' ? "text-white/80" : "border-white/5 text-white/30"
+                                    )}
+                                >
+                                    {plan === 'ultra' ? <FileDown className="w-3.5 h-3.5 mr-1.5" /> : <Lock className="w-3.5 h-3.5 mr-1.5 text-amber-400" />}
+                                    {exporting === 'pdf' ? t("Exporting…", "جاري التصدير…") : t("PDF Report", "تقرير PDF")}
+                                </Button>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                                {meta?.plan && (
+                                    <span className={cn(
+                                        "px-2.5 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-wider",
+                                        meta.plan === 'ultra'
+                                            ? "bg-amber-500/10 text-amber-200 border-amber-500/30"
+                                            : "bg-cyan-500/10 text-cyan-200 border-cyan-500/30"
+                                    )}>
+                                        {meta.plan === 'ultra' ? t('Ultra', 'ألترا') : t('Free', 'مجاني')}
+                                    </span>
+                                )}
+                                {meta?.usedPrivateContext && (
+                                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold border bg-amber-500/10 text-amber-200 border-amber-500/25">
+                                        {t('Personalized', 'مخصص لحالتك')}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {exportError && (
+                        <div data-export-ignore className="relative z-10 mt-3.5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-xs">
+                            {exportError}
+                        </div>
+                    )}
+
+                    {/* Premium STATEFUL TAB NAVIGATION SYSTEM (Horizontal Scrolling on Mobile, Grid/Flex on Desktop) */}
+                    <div data-export-ignore className="relative z-10 mt-6 w-full">
+                        {/* Scroll indicator fades on mobile */}
+                        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent pointer-events-none md:hidden z-20 rounded-l-2xl" />
+                        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-slate-950 via-slate-950/20 to-transparent pointer-events-none md:hidden z-20 rounded-r-2xl" />
+                        
+                        <div className="overflow-x-auto whitespace-nowrap flex-nowrap flex md:flex-wrap gap-1.5 rounded-2xl border border-white/10 bg-slate-950/75 p-1.5 backdrop-blur-xl scrollbar-none relative">
+                            {[
+                                { id: "overview", label: t("Overview", "نظرة عامة"), icon: <Activity className="w-4 h-4" /> },
+                                { id: "safety", label: t("Safety & Side Effects", "الأمان والآثار"), icon: <ShieldAlert className="w-4 h-4" /> },
+                                { id: "guard", label: t("Interaction Guard", "حارس التداخلات"), icon: <GitBranch className="w-4 h-4" /> },
+                                { id: "chat", label: t("Ask AI", "اسأل الذكاء"), icon: <Sparkles className="w-4 h-4" /> },
+                                { id: "fda", label: t("FDA Database", "بيانات FDA"), icon: <Database className="w-4 h-4" /> },
+                            ].map((item) => {
+                                const active = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => setActiveTab(item.id as any)}
+                                        className={cn(
+                                            "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 shrink-0",
+                                            active 
+                                                ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-100 shadow-[0_0_20px_-3px_rgba(6,182,212,0.45)] scale-[1.02]" 
+                                                : "border border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-white"
+                                        )}
+                                    >
+                                        {item.icon}
+                                        <span>{item.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Dashboard Tab Panels */}
+                <div className="bg-slate-950/20">
+                    {activeTab === 'overview' && renderOverview()}
+                    {activeTab === 'safety' && renderSafety()}
+                    {activeTab === 'guard' && renderGuard()}
+                    {activeTab === 'chat' && renderChat()}
+                    {activeTab === 'fda' && renderFda()}
+                </div>
+
                 {/* Footer */}
-                <div className="p-4 bg-white/5 border-t border-white/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="p-4 bg-white/[0.02] border-t border-white/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                     <div className="flex flex-col gap-1">
-                        <p className="text-xs text-white/30">
+                        <p className="text-[10px] text-white/30">
                             {t(
                                 "* Medication information summary. Verify with a medical professional.",
                                 "* ملخص معلومات دوائية. تحقّق مع مختص."
                             )}
                         </p>
-                        <p data-export-ignore className="text-xs text-white/30">
+                        <p data-export-ignore className="text-[10px] text-white/30">
                             {t(
                                 `* ${AI_DISPLAY_NAME} summary. Verify with a medical professional. FDA label used when available.`,
                                 `* ملخص بواسطة ${AI_DISPLAY_NAME}. تحقّق مع مختص. تُستخدم بيانات FDA عند توفرها.`
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-medium">
+                    <div className="flex items-center gap-2 text-xs font-semibold">
                         {savedToHistory ? (
-                            <Link href="/dashboard/history" className="flex items-center gap-2 text-green-400 hover:underline">
-                                <CheckCircle2 className="w-3 h-3" /> {t('Saved to History', 'تم الحفظ في السجل')}
+                            <Link href="/dashboard/history" className="flex items-center gap-1.5 text-green-400 hover:underline">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> {t('Saved to History', 'تم الحفظ في السجل')}
                             </Link>
                         ) : (
                             <span className="text-white/40">{t('Not saved', 'لم يتم الحفظ')}</span>
