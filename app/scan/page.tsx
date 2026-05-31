@@ -58,7 +58,7 @@ export default function ScanPage() {
     };
 
     return (
-        <main className="min-h-screen pt-24 sm:pt-28 pb-28 md:pb-14 px-4 sm:px-6 flex flex-col items-center relative">
+        <main className="min-h-screen pt-24 sm:pt-28 pb-28 md:pb-14 px-2.5 sm:px-6 flex flex-col items-center relative">
             <div className="z-10 w-full max-w-6xl flex flex-col items-center">
                 <div className="w-full mb-5">
                     <button
@@ -95,7 +95,7 @@ export default function ScanPage() {
 
                 <CreditsUpsellBanner />
 
-                <section className="w-full min-h-[470px] rounded-xl border border-white/10 bg-slate-950/45 p-3 sm:p-4 md:p-5 shadow-2xl shadow-black/20">
+                <section className="w-full min-h-[470px] rounded-xl border border-white/10 bg-slate-950/45 p-1.5 sm:p-4 md:p-5 shadow-2xl shadow-black/20">
                     <ScannerInterface />
                 </section>
             </div>

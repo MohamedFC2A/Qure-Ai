@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -10,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 
 import { useUser } from "@/context/UserContext";
 import { useScan } from "@/context/ScanContext";
+import { useSettings } from "@/context/SettingsContext";
 import { MobileNav } from "./layout/MobileNav";
 import { OnboardingModal } from "@/components/auth/OnboardingModal";
 
@@ -17,7 +17,11 @@ export const Navbar = () => {
     const pathname = usePathname();
     const { user, credits, plan, loading } = useUser();
     const { isScanning, totalDuration } = useScan();
+    const { resultsLanguage } = useSettings();
     const supabase = createClient();
+
+    const isArabic = resultsLanguage === 'ar';
+    const t = (en: string, ar: string) => (isArabic ? ar : en);
 
     const handleSignOut = async () => {
         if (process.env.NODE_ENV === "development") {
@@ -29,14 +33,14 @@ export const Navbar = () => {
     };
 
     const navItems = user ? [
-        { name: "Home", href: "/", icon: Atom },
-        { name: "Scan", href: "/scan", icon: ScanLine },
-        { name: "Pricing", href: "/pricing", icon: Gem },
-        { name: "History", href: "/dashboard/history", icon: Clock },
-        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { name: t("Home", "الرئيسية"), href: "/", icon: Atom },
+        { name: t("Scan", "فحص دواء"), href: "/scan", icon: ScanLine },
+        { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem },
+        { name: t("History", "السجل"), href: "/dashboard/history", icon: Clock },
+        { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard", icon: LayoutDashboard },
     ] : [
-        { name: "Home", href: "/", icon: Atom },
-        { name: "Pricing", href: "/pricing", icon: Gem },
+        { name: t("Home", "الرئيسية"), href: "/", icon: Atom },
+        { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem },
     ];
 
     return (
@@ -88,14 +92,13 @@ export const Navbar = () => {
                         {/* Only show content after we've checked auth state to prevent flickering */}
                         {!loading && user ? (
                             <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                                {/* Enhanced Scanning Indicator - Now visible on mobile */}
-                                {isScanning && (
+                                {/* Enha                                {isScanning && (
                                     <Link href="/scan" className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-100 transition-all hover:bg-cyan-300/15">
                                         <div className="relative">
                                             <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-300" />
                                             <div className="absolute inset-0 blur-sm bg-cyan-400/40 rounded-full animate-pulse" />
                                         </div>
-                                        <span className="hidden xs:inline">Scanning</span>
+                                        <span className="hidden xs:inline">{t("Scanning", "جاري الفحص")}</span>
                                         <span className="font-mono tabular-nums">{totalDuration}s</span>
                                     </Link>
                                 )}
@@ -108,10 +111,10 @@ export const Navbar = () => {
                                             : "bg-cyan-300/10 border-cyan-300/25 text-cyan-100 hover:bg-cyan-300/15"
                                     )}>
                                         <span className={cn("w-1.5 h-1.5 rounded-full", plan === 'ultra' ? "bg-amber-400" : "bg-cyan-400")} />
-                                        {credits} C
+                                        {credits} {t("Credits", "رصيد")}
                                     </div>
                                 </Link>
-
+ 
                                 <Link href="/profile">
                                     <Button variant="ghost" size="sm" className="hidden sm:flex h-9 w-9 p-0 items-center justify-center border border-white/10 bg-white/[0.04] overflow-hidden">
                                         {user?.user_metadata?.avatar_url ? (
@@ -132,17 +135,17 @@ export const Navbar = () => {
                                     className="text-red-200 hover:text-red-100 hover:bg-red-500/10 px-3 sm:px-4 hidden sm:flex gap-2"
                                 >
                                     <LogOut className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Sign Out</span>
+                                    <span className="hidden sm:inline">{t("Sign Out", "تسجيل الخروج")}</span>
                                 </Button>
                             </div>
                         ) : !loading && (
                             <div className="hidden sm:flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                                 <Link href="/login">
-                                    <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">Login</Button>
+                                    <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">{t("Login", "تسجيل الدخول")}</Button>
                                 </Link>
                                 <Link href="/signup">
                                     <Button variant="primary" size="sm" className="px-5 font-semibold">
-                                        Get Started
+                                        {t("Get Started", "ابدأ الآن")}
                                     </Button>
                                 </Link>
                             </div>

@@ -40,6 +40,13 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
+    useEffect(() => {
+        if (typeof document !== "undefined") {
+            document.documentElement.dir = resultsLanguage === "ar" ? "rtl" : "ltr";
+            document.documentElement.lang = resultsLanguage;
+        }
+    }, [resultsLanguage]);
+
     const updateFdaDrugsEnabled = (enabled: boolean) => {
         setFdaDrugsEnabled(Boolean(enabled));
         if (typeof window !== "undefined") {

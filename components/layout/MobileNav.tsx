@@ -5,24 +5,29 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Atom, ScanLine, User, Clock, Gem, LogIn, UserPlus } from "lucide-react";
 import { useUser } from "@/context/UserContext";
+import { useSettings } from "@/context/SettingsContext";
 
 export const MobileNav = () => {
     const pathname = usePathname();
     const { user } = useUser();
+    const { resultsLanguage } = useSettings();
+
+    const isArabic = resultsLanguage === 'ar';
+    const t = (en: string, ar: string) => (isArabic ? ar : en);
 
     const navItems = user
         ? [
-            { name: "Home", href: "/", icon: Atom },
-            { name: "Scan", href: "/scan", icon: ScanLine },
-            { name: "History", href: "/dashboard/history", icon: Clock },
-            { name: "Plans", href: "/pricing", icon: Gem },
-            { name: "Profile", href: "/profile", icon: User },
+            { name: t("Home", "الرئيسية"), href: "/", icon: Atom },
+            { name: t("Scan", "الفحص"), href: "/scan", icon: ScanLine },
+            { name: t("History", "السجل"), href: "/dashboard/history", icon: Clock },
+            { name: t("Plans", "الباقات"), href: "/pricing", icon: Gem },
+            { name: t("Profile", "الحساب"), href: "/profile", icon: User },
         ]
         : [
-            { name: "Home", href: "/", icon: Atom },
-            { name: "Plans", href: "/pricing", icon: Gem },
-            { name: "Login", href: "/login", icon: LogIn },
-            { name: "Sign Up", href: "/signup", icon: UserPlus },
+            { name: t("Home", "الرئيسية"), href: "/", icon: Atom },
+            { name: t("Plans", "الباقات"), href: "/pricing", icon: Gem },
+            { name: t("Login", "الدخول"), href: "/login", icon: LogIn },
+            { name: t("Sign Up", "التسجيل"), href: "/signup", icon: UserPlus },
         ];
 
     return (

@@ -1011,7 +1011,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
     const renderOverview = () => {
         return (
-            <div className="space-y-6 p-5 sm:p-8">
+            <div className="space-y-6 p-3.5 sm:p-8">
                 {/* Description */}
                 <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-md hover:border-cyan-500/20 transition-all duration-300 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3)]">
                     <div className="flex items-start gap-3">
@@ -1264,7 +1264,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
     const renderSafety = () => {
         return (
-            <div className="space-y-6 p-5 sm:p-8">
+            <div className="space-y-6 p-3.5 sm:p-8">
                 {/* Warnings & Contraindications Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Critical Warnings */}
@@ -1678,7 +1678,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
     const renderGuard = () => {
         return (
-            <div className="space-y-6 p-5 sm:p-8">
+            <div className="space-y-6 p-3.5 sm:p-8">
                 <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
                     <div className="flex items-center gap-2 text-cyan-300 font-bold">
                         <GitBranch className="w-5 h-5" />
@@ -2019,7 +2019,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
     const renderChat = () => {
         return (
-            <div className="space-y-6 p-5 sm:p-8">
+            <div className="space-y-6 p-3.5 sm:p-8">
                 {/* Header info */}
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-3">
@@ -2401,7 +2401,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
     const renderFda = () => {
         return (
-            <div className="space-y-6 p-5 sm:p-8">
+            <div className="space-y-6 p-3.5 sm:p-8">
                 {/* FDA Status header */}
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-2 text-cyan-300 font-bold">
@@ -2563,7 +2563,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         <div ref={exportRef} className="w-full max-w-5xl">
             <GlassCard className="w-full p-0 overflow-hidden shadow-2xl shadow-black/25" hoverEffect={false}>
                 {/* Header Section */}
-                <div className="relative p-5 sm:p-8 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-black">
+                <div className="relative p-3.5 sm:p-8 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-black">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
 
                     <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-5">

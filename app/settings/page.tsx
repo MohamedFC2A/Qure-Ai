@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
     const { resultsLanguage, setResultsLanguage } = useSettings();
+    const isArabic = resultsLanguage === 'ar';
+    const t = (en: string, ar: string) => (isArabic ? ar : en);
 
     return (
         <main className="min-h-screen pt-28 pb-28 md:pb-12 px-4 sm:px-6">
@@ -19,8 +21,8 @@ export default function SettingsPage() {
                         <SettingsIcon className="w-8 h-8" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">Settings</h1>
-                        <p className="text-slate-400 text-lg">Customize your Qure Ai experience.</p>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">{t("Settings", "الإعدادات")}</h1>
+                        <p className="text-slate-400 text-lg">{t("Customize your Qure Ai experience.", "قم بتخصيص تجربتك مع Qure Ai.")}</p>
                     </div>
                 </div>
 
@@ -30,10 +32,10 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                                 <Globe className="w-5 h-5 text-cyan-200" />
-                                Card Results Language
+                                {t("Card Results & App Language", "لغة بطاقة النتائج والتطبيق")}
                             </h2>
                             <p className="text-slate-400 max-w-lg">
-                                Select the language for AI analysis results. New scans will be generated in this language.
+                                {t("Select the language for AI analysis results and UI interface.", "اختر لغة نتائج تحليل الذكاء الاصطناعي وواجهة المستخدم.")}
                             </p>
                         </div>
 

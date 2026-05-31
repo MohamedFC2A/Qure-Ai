@@ -481,7 +481,7 @@ export const ScannerInterface = () => {
 
     if (finalResult && !isScanning) {
         return (
-            <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-4">
+            <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
                 <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
                     <div className="flex items-center gap-3">
                         <div className="p-3 rounded-full bg-green-500/20 border border-green-500/30">
