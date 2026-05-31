@@ -142,7 +142,83 @@ interface AiTreeNode {
     answer: string;
     keyPoints?: string[];
     nextQuestions?: AiNextQuestion[];
+    userQuestion?: string;
 }
+
+const renderFormattedText = (text: string) => {
+    if (!text) return null;
+    
+    // Split by newlines
+    const lines = text.split("\n");
+    
+    return lines.map((line, lineIdx) => {
+        let cleanLine = line.trim();
+        if (!cleanLine) return <div key={lineIdx} className="h-2" />;
+        
+        // Check for lists
+        let isBullet = false;
+        let isNumbered = false;
+        let numberPrefix = "";
+        
+        if (cleanLine.startsWith("- ") || cleanLine.startsWith("* ")) {
+            isBullet = true;
+            cleanLine = cleanLine.substring(2);
+        } else {
+            const numMatch = cleanLine.match(/^(\d+)\.\s+/);
+            if (numMatch) {
+                isNumbered = true;
+                numberPrefix = numMatch[1] + ".";
+                cleanLine = cleanLine.substring(numMatch[0].length);
+            }
+        }
+        
+        // Parse bold text **bold**
+        const parts = [];
+        let index = 0;
+        const boldRegex = /\*\*([^*]+)\*\*/g;
+        let match;
+        
+        while ((match = boldRegex.exec(cleanLine)) !== null) {
+            // Text before bold
+            if (match.index > index) {
+                parts.push(cleanLine.substring(index, match.index));
+            }
+            // Bold text
+            parts.push(<strong key={match.index} className="font-extrabold text-white text-shadow-sm">{match[1]}</strong>);
+            index = boldRegex.lastIndex;
+        }
+        
+        if (index < cleanLine.length) {
+            parts.push(cleanLine.substring(index));
+        }
+        
+        const content = parts.length > 0 ? parts : cleanLine;
+        
+        if (isBullet) {
+            return (
+                <div key={lineIdx} className="flex items-start gap-2 my-1 ps-2">
+                    <span className="text-purple-400 mt-1.5 shrink-0 select-none">•</span>
+                    <span className="text-white/80 text-sm leading-relaxed">{content}</span>
+                </div>
+            );
+        }
+        
+        if (isNumbered) {
+            return (
+                <div key={lineIdx} className="flex items-start gap-2 my-1 ps-2">
+                    <span className="text-purple-400 font-bold font-mono text-xs mt-1 shrink-0 select-none">{numberPrefix}</span>
+                    <span className="text-white/80 text-sm leading-relaxed">{content}</span>
+                </div>
+            );
+        }
+        
+        return (
+            <p key={lineIdx} className="text-white/80 text-sm leading-relaxed mb-2">
+                {content}
+            </p>
+        );
+    });
+};
 
 type UltraSafetyTab = 'precautions' | 'interactions' | 'sideEffects' | 'overdose' | 'seekHelp';
 
@@ -188,8 +264,16 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const [isListening, setIsListening] = useState(false);
     const [copiedNodeIdx, setCopiedNodeIdx] = useState<number | null>(null);
     const [savedAnswers, setSavedAnswers] = useState<number[]>([]);
+    const [pendingUserQuestion, setPendingUserQuestion] = useState<string | null>(null);
     const [showSimplified, setShowSimplified] = useState<Record<number, boolean>>({});
     const aiInputRef = useRef<HTMLTextAreaElement>(null);
+    const chatEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (activeTab === 'chat') {
+            chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [aiNodes.length, aiLoading, activeTab]);
 
     const [safetyTab, setSafetyTab] = useState<UltraSafetyTab>('interactions');
     const [safetyShowAll, setSafetyShowAll] = useState<Record<string, boolean>>({});
@@ -813,6 +897,15 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         const effectiveProfileId = String(meta?.subjectProfileId || (interactionGuard as any)?.subject?.profileId || "").trim() || undefined;
         setAiError(null);
         setAiLoading(true);
+        
+        const getPresetLabelText = (pr?: string) => {
+            if (pr === "alternative") return t("Suggest potential alternatives for this medication", "اقترح بدائل محتملة لهذا الدواء");
+            if (pr === "personalized") return t("Analyze compatibility with my profile", "حلّل مدى التوافق مع حالتي الصحية");
+            if (pr === "history") return t("Cross-check with my medication history", "طابق هذا الدواء مع سجلي الدوائي");
+            return t("Ask AI", "اسأل المعالج الذكي");
+        };
+        setPendingUserQuestion(params.question || getPresetLabelText(params.preset));
+
         try {
             const res = await fetch("/api/ai/tree", {
                 method: "POST",
@@ -839,12 +932,20 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 throw new Error(payload?.error || "AI request failed");
             }
 
+            const getPresetLabel = (pr?: string) => {
+                if (pr === "alternative") return t("Suggest potential alternatives for this medication", "اقترح بدائل محتملة لهذا الدواء");
+                if (pr === "personalized") return t("Analyze compatibility with my profile", "حلّل مدى التوافق مع حالتي الصحية");
+                if (pr === "history") return t("Cross-check with my medication history", "طابق هذا الدواء مع سجلي الدوائي");
+                return t("Ask AI", "اسأل المعالج الذكي");
+            };
+
             const nextNode: AiTreeNode = {
                 title: String(payload?.title || t("AI Answer", "إجابة الذكاء الاصطناعي")),
                 summary: String(payload?.summary || "").trim() || undefined,
                 answer: String(payload?.answer || ""),
                 keyPoints: Array.isArray(payload?.keyPoints) ? payload.keyPoints : [],
                 nextQuestions: Array.isArray(payload?.nextQuestions) ? payload.nextQuestions : [],
+                userQuestion: params.question || getPresetLabel(params.preset),
             };
 
             setAiNodes((prev) => (params.reset ? [nextNode] : [...prev, nextNode]));
@@ -863,6 +964,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
             setAiError(e?.message || "Failed to get AI answer.");
         } finally {
             setAiLoading(false);
+            setPendingUserQuestion(null);
         }
     };
 
@@ -2133,28 +2235,29 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 ) : (
                     <div className="space-y-5">
                         {/* Custom Question Area */}
-                        <div className="ai-gradient-border p-4">
-                            <div className="relative">
+                        <div className="space-y-2">
+                            <div className="ai-premium-input-container">
                                 <textarea
                                     ref={aiInputRef}
                                     value={customQuestion}
                                     onChange={(e) => setCustomQuestion(e.target.value.slice(0, 500))}
                                     onKeyDown={handleKeyDown}
                                     placeholder={t("Ask anything about this medication...", "اسأل أي شيء عن هذا الدواء...")}
-                                    className="ai-input resize-none min-h-[90px] pe-28 text-sm sm:text-base"
+                                    className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder-white/35 resize-none min-h-[44px] max-h-[160px] py-2 px-1 text-sm sm:text-base leading-relaxed"
                                     disabled={aiLoading}
                                     dir={isArabic ? 'rtl' : 'ltr'}
+                                    style={{ height: "auto" }}
                                 />
-                                <div className="absolute bottom-3 end-3 flex items-center gap-2.5">
+                                <div className="flex items-center gap-2 pb-1">
                                     <button
                                         type="button"
                                         onClick={toggleVoiceInput}
                                         disabled={aiLoading}
                                         className={cn(
-                                            "p-2 rounded-lg transition-all",
+                                            "p-2.5 rounded-full transition-all shrink-0",
                                             isListening
-                                                ? "bg-red-500/20 text-red-400 listening scale-[1.05]"
-                                                : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                                                ? "bg-red-500/20 text-red-400 scale-[1.08] animate-pulse"
+                                                : "bg-white/5 text-white/55 hover:bg-white/10 hover:text-white"
                                         )}
                                         title={t("Voice input", "إدخال صوتي")}
                                     >
@@ -2165,21 +2268,21 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         onClick={submitCustomQuestion}
                                         disabled={aiLoading || !customQuestion.trim()}
                                         className={cn(
-                                            "p-2 rounded-lg transition-all",
+                                            "p-2.5 rounded-full transition-all shrink-0",
                                             customQuestion.trim()
-                                                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/15"
-                                                : "bg-white/5 text-white/30"
+                                                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/20 hover:scale-[1.04]"
+                                                : "bg-white/5 text-white/25"
                                         )}
                                     >
-                                        <Send className="w-4 h-4" />
+                                        <Send className={cn("w-4 h-4", isArabic && "rotate-180")} />
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex items-center justify-between mt-2.5 px-1">
-                                <p className="text-[10px] text-white/30">
+                            <div className="flex items-center justify-between px-2 text-[10px]">
+                                <p className="text-white/25">
                                     {t("Press Enter to send, Shift+Enter for new line", "اضغط Enter للإرسال، Shift+Enter لسطر جديد")}
                                 </p>
-                                <p className={cn("text-[10px]", customQuestion.length > 450 ? "text-amber-400" : "text-white/30")}>
+                                <p className={cn(customQuestion.length > 450 ? "text-amber-400" : "text-white/25")}>
                                     {customQuestion.length}/500
                                 </p>
                             </div>
@@ -2262,167 +2365,198 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             </div>
                         )}
 
-                        {/* Loading State */}
+                        {/* First-time Loading Bubble State */}
                         {aiLoading && aiNodes.length === 0 && (
-                            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="ai-thinking">
-                                        <div className="ai-thinking-dot" />
-                                        <div className="ai-thinking-dot" />
-                                        <div className="ai-thinking-dot" />
+                            <div className="space-y-4">
+                                {pendingUserQuestion && (
+                                    <div className="ai-message-wrapper ai-message-user">
+                                        <div className="ai-bubble-user animate-in fade-in slide-in-from-right-4 duration-300">
+                                            {pendingUserQuestion}
+                                        </div>
+                                        <div className="ai-chat-avatar ai-avatar-user select-none shrink-0 font-bold">
+                                            {user?.email ? user.email.slice(0, 2).toUpperCase() : "ME"}
+                                        </div>
                                     </div>
-                                    <span className="text-white/50 text-xs sm:text-sm font-semibold">{t("AI is processing medication data…", "المعالج الذكي يقوم بفحص بيانات الدواء…")}</span>
+                                )}
+                                <div className="ai-message-wrapper ai-message-assistant">
+                                    <div className="ai-chat-avatar ai-avatar-assistant select-none shrink-0">
+                                        <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                                    </div>
+                                    <div className="ai-bubble-assistant w-full animate-in fade-in slide-in-from-left-4 duration-300 p-5 border-white/5 space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="ai-thinking">
+                                                <div className="ai-thinking-dot" />
+                                                <div className="ai-thinking-dot" />
+                                                <div className="ai-thinking-dot" />
+                                            </div>
+                                            <span className="text-white/50 text-xs sm:text-sm font-semibold">{t("AI is processing medication data…", "المعالج الذكي يقوم بفحص بيانات الدواء…")}</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="h-4 w-3/4 bg-white/5 rounded ai-skeleton" />
+                                            <div className="h-4 w-full bg-white/5 rounded ai-skeleton" />
+                                            <div className="h-4 w-5/6 bg-white/5 rounded ai-skeleton" />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <div className="h-4 w-3/4 bg-white/5 rounded ai-skeleton" />
-                                    <div className="h-4 w-full bg-white/5 rounded ai-skeleton" />
-                                    <div className="h-4 w-5/6 bg-white/5 rounded ai-skeleton" />
-                                </div>
+                                <div ref={chatEndRef} />
                             </div>
                         )}
 
-                        {/* Interactive Conversation Timeline */}
+                        {/* Interactive Conversation Chat Bubbles */}
                         {aiNodes.length > 0 && (
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-white/40 text-xs ps-1">
-                                    <GitBranch className="w-3.5 h-3.5" />
-                                    <span>{t("AI Interaction Flow", "سير الأسئلة والأجوبة الذكية")}</span>
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                    <span>{t("Conversation with NEXUS AI", "محادثتك مع NEXUS AI")}</span>
                                     <span>•</span>
-                                    <span>{aiNodes.length} {t("responses", "ردود")}</span>
+                                    <span>{aiNodes.length} {t("exchanges", "تبادلات")}</span>
                                 </div>
 
-                                <div className="ps-4 border-s border-purple-500/20 space-y-4">
+                                <div className="space-y-6">
                                     {aiNodes.map((node, idx) => {
                                         const isLast = idx === aiNodes.length - 1;
                                         const isCopied = copiedNodeIdx === idx;
                                         const isSaved = savedAnswers.includes(idx);
                                         return (
-                                            <div key={`${idx}-${node.title}`} className="relative ai-node-enter">
-                                                {/* Timeline marker */}
-                                                <div className="absolute ltr:-left-[21px] rtl:-right-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
-
-                                                <div className={cn("p-5 rounded-2xl border bg-slate-900/60 border-white/5 shadow-xl transition-all duration-300", isCopied && "ai-copy-flash")}>
-                                                    {/* Header */}
-                                                    <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2 mb-3">
-                                                        <h5 className="text-white font-bold text-sm sm:text-base flex items-center gap-2">
-                                                            <MessageSquare className="w-4 h-4 text-purple-300" />
-                                                            {node.title}
-                                                        </h5>
-                                                        <div className="flex items-center gap-1.5 shrink-0">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => copyAnswer(idx, `${node.title}\n\n${node.summary ? `TL;DR: ${node.summary}\n\n` : ""}${node.answer}`)}
-                                                                className="p-1.5 rounded-lg bg-white/5 border border-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-                                                                title={t("Copy", "نسخ")}
-                                                            >
-                                                                {isCopied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => toggleSaveAnswer(idx)}
-                                                                className={cn(
-                                                                    "p-1.5 rounded-lg border transition-all duration-200",
-                                                                    isSaved 
-                                                                        ? "bg-amber-500/15 border-amber-500/30 text-amber-300" 
-                                                                        : "bg-white/5 border-white/5 text-white/50 hover:text-white"
-                                                                )}
-                                                                title={t("Bookmark", "حفظ")}
-                                                            >
-                                                                <Bookmark className={cn("w-3.5 h-3.5", isSaved && "fill-current")} />
-                                                            </button>
+                                            <div key={`${idx}-${node.title}`} className="space-y-4">
+                                                {/* User Bubble */}
+                                                {node.userQuestion && (
+                                                    <div className="ai-message-wrapper ai-message-user">
+                                                        <div className="ai-bubble-user animate-in fade-in slide-in-from-right-4 duration-300">
+                                                            {node.userQuestion}
+                                                        </div>
+                                                        <div className="ai-chat-avatar ai-avatar-user select-none shrink-0 font-bold">
+                                                            {user?.email ? user.email.slice(0, 2).toUpperCase() : "ME"}
                                                         </div>
                                                     </div>
+                                                )}
 
-                                                    {/* Summary */}
-                                                    {node.summary && (
-                                                        <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-200 text-sm leading-relaxed mb-3">
-                                                            <span className="font-bold text-xs uppercase tracking-wider block mb-1 text-purple-300">{t("Summary Answer (TL;DR)", "الخلاصة السريعة")}</span>
-                                                            {node.summary}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Key Points */}
-                                                    {node.keyPoints && node.keyPoints.length > 0 && (
-                                                        <div className="space-y-1.5 mb-3">
-                                                            <p className="text-xs text-white/40 font-bold uppercase tracking-wider ps-1">{t("Key Takeaways", "النقاط الرئيسية")}</p>
-                                                            <ul className="grid gap-2">
-                                                                {node.keyPoints.map((p, i) => (
-                                                                    <li key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-white/80 text-xs sm:text-sm leading-relaxed flex items-start gap-2.5">
-                                                                        <span className="text-purple-300 font-bold font-mono text-xs">{i+1}.</span>
-                                                                        <span>{p}</span>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Collapsible Full Answer */}
-                                                    <div className="border-t border-white/5 pt-3.5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setShowSimplified((p) => ({ ...p, [idx]: !p[idx] }))}
-                                                            className="flex items-center justify-between w-full text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-                                                        >
-                                                            <span className="flex items-center gap-1.5">
-                                                                <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
-                                                                {t("Detailed medical explanation", "شرح طبي تفصيلي مفصل")}
-                                                            </span>
-                                                            <div className="flex items-center gap-1">
-                                                                <span>{showSimplified[idx] ? t("Hide details", "إخفاء") : t("Show full detail", "عرض كامل التفاصيل")}</span>
-                                                                <ChevronRight className={cn("w-3.5 h-3.5 transition-transform", showSimplified[idx] ? "rotate-90" : "rotate-0")} />
+                                                {/* Assistant Bubble */}
+                                                <div className="ai-message-wrapper ai-message-assistant">
+                                                    <div className="ai-chat-avatar ai-avatar-assistant select-none shrink-0">
+                                                        <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                                                    </div>
+                                                    <div className={cn(
+                                                        "ai-bubble-assistant w-full animate-in fade-in slide-in-from-left-4 duration-300",
+                                                        isCopied && "ai-copy-flash"
+                                                    )}>
+                                                        {/* Header */}
+                                                        <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2.5 mb-3">
+                                                            <h5 className="text-white font-bold text-sm sm:text-base flex items-center gap-2">
+                                                                <Brain className="w-4 h-4 text-purple-400" />
+                                                                {node.title}
+                                                            </h5>
+                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => copyAnswer(idx, `${node.title}\n\n${node.summary ? `TL;DR: ${node.summary}\n\n` : ""}${node.answer}`)}
+                                                                    className="p-1.5 rounded-lg bg-white/5 border border-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                                                                    title={t("Copy", "نسخ")}
+                                                                >
+                                                                    {isCopied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleSaveAnswer(idx)}
+                                                                    className={cn(
+                                                                        "p-1.5 rounded-lg border transition-all duration-200",
+                                                                        isSaved 
+                                                                            ? "bg-amber-500/15 border-amber-500/30 text-amber-300" 
+                                                                            : "bg-white/5 border-white/5 text-white/50 hover:text-white"
+                                                                    )}
+                                                                    title={t("Bookmark", "حفظ")}
+                                                                >
+                                                                    <Bookmark className={cn("w-3.5 h-3.5", isSaved && "fill-current")} />
+                                                                </button>
                                                             </div>
-                                                        </button>
+                                                        </div>
 
-                                                        {showSimplified[idx] && (
-                                                            <div className="mt-3 p-4 rounded-xl bg-black/45 border border-white/5 text-white/70 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">
-                                                                {node.answer}
+                                                        {/* Summary (TL;DR) */}
+                                                        {node.summary && (
+                                                            <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-200 text-sm leading-relaxed mb-3.5">
+                                                                <span className="font-bold text-xs uppercase tracking-wider block mb-1 text-purple-300">{t("Summary Answer (TL;DR)", "الخلاصة السريعة")}</span>
+                                                                {node.summary}
                                                             </div>
                                                         )}
-                                                    </div>
 
-                                                    {/* Follow-up suggestions on the last node */}
-                                                    {isLast && node.nextQuestions && node.nextQuestions.length > 0 && (
-                                                        <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
-                                                            <p className="text-xs text-white/40 font-bold uppercase tracking-wider">{t("Recommended Follow-up Question:", "سؤال المتابعة المقترح:")}</p>
-                                                            {node.nextQuestions.slice(0, 1).map((q) => (
-                                                                <button
-                                                                    key={q.id}
-                                                                    type="button"
-                                                                    onClick={() => askAi({ question: q.question, reset: false })}
-                                                                    className="w-full text-start p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/45 transition-all text-xs sm:text-sm text-white"
-                                                                >
-                                                                    <div className="flex items-center gap-2 mb-1.5 text-purple-300 font-bold">
-                                                                        <Sparkles className="w-4 h-4 text-purple-300" />
-                                                                        {q.title}
-                                                                    </div>
-                                                                    <p className="text-white/60 leading-relaxed text-xs">{q.question}</p>
-                                                                </button>
-                                                            ))}
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {node.nextQuestions.slice(1, 4).map((q) => (
+                                                        {/* Answer Text - Displayed DIRECTLY as formatted text */}
+                                                        <div className="text-white/85 text-sm leading-relaxed mb-3">
+                                                            {renderFormattedText(node.answer)}
+                                                        </div>
+
+                                                        {/* Key Points */}
+                                                        {node.keyPoints && node.keyPoints.length > 0 && (
+                                                            <div className="space-y-1.5 border-t border-white/5 pt-3.5 mt-3.5">
+                                                                <p className="text-xs text-white/40 font-bold uppercase tracking-wider ps-1">{t("Key Takeaways", "النقاط الرئيسية")}</p>
+                                                                <ul className="grid gap-2 mt-1.5">
+                                                                    {node.keyPoints.map((p, i) => (
+                                                                        <li key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-white/80 text-xs sm:text-sm leading-relaxed flex items-start gap-2.5">
+                                                                            <span className="text-purple-300 font-bold font-mono text-xs">{i+1}.</span>
+                                                                            <span>{p}</span>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Follow-up suggestions on the last node */}
+                                                        {isLast && node.nextQuestions && node.nextQuestions.length > 0 && (
+                                                            <div className="mt-5 pt-4 border-t border-white/10 space-y-3.5">
+                                                                <p className="text-xs text-white/40 font-bold uppercase tracking-wider">{t("Recommended Follow-up Question:", "سؤال المتابعة المقترح:")}</p>
+                                                                {node.nextQuestions.slice(0, 1).map((q) => (
                                                                     <button
                                                                         key={q.id}
                                                                         type="button"
                                                                         onClick={() => askAi({ question: q.question, reset: false })}
-                                                                        className="ai-chip text-[11px] font-semibold py-2 px-3 rounded-lg flex items-center gap-1"
+                                                                        className="w-full text-start p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/45 transition-all text-xs sm:text-sm text-white"
                                                                     >
-                                                                        <ChevronRight className="w-3 h-3 text-cyan-300" />
-                                                                        {q.title}
+                                                                        <div className="flex items-center gap-2 mb-1.5 text-purple-300 font-bold">
+                                                                            <Sparkles className="w-4 h-4 text-purple-300 animate-pulse" />
+                                                                            {q.title}
+                                                                        </div>
+                                                                        <p className="text-white/60 leading-relaxed text-xs">{q.question}</p>
                                                                     </button>
                                                                 ))}
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {node.nextQuestions.slice(1, 4).map((q) => (
+                                                                        <button
+                                                                            key={q.id}
+                                                                            type="button"
+                                                                            onClick={() => askAi({ question: q.question, reset: false })}
+                                                                            className="ai-chip text-[11px] font-semibold py-2 px-3 rounded-lg flex items-center gap-1"
+                                                                        >
+                                                                            <ChevronRight className="w-3 h-3 text-cyan-300" />
+                                                                            {q.title}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
                                     })}
 
+                                    {/* User Pending Message Bubble */}
+                                    {aiLoading && pendingUserQuestion && (
+                                        <div className="ai-message-wrapper ai-message-user">
+                                            <div className="ai-bubble-user animate-in fade-in slide-in-from-right-4 duration-300">
+                                                {pendingUserQuestion}
+                                            </div>
+                                            <div className="ai-chat-avatar ai-avatar-user select-none shrink-0 font-bold">
+                                                {user?.email ? user.email.slice(0, 2).toUpperCase() : "ME"}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Loading follow up */}
                                     {aiLoading && (
-                                        <div className="relative ps-5">
-                                            <div className="absolute ltr:-left-[21px] rtl:-right-[21px] top-4 w-3 h-3 rounded-full bg-purple-500 border border-black shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-ping" />
-                                            <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/5 flex items-center gap-2.5">
+                                        <div className="ai-message-wrapper ai-message-assistant">
+                                            <div className="ai-chat-avatar ai-avatar-assistant select-none shrink-0">
+                                                <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                                            </div>
+                                            <div className="ai-bubble-assistant w-full animate-in fade-in slide-in-from-left-4 duration-300 p-4 flex items-center gap-2.5">
                                                 <div className="ai-thinking">
                                                     <div className="ai-thinking-dot" />
                                                     <div className="ai-thinking-dot" />
@@ -2433,6 +2567,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         </div>
                                     )}
                                 </div>
+                                <div ref={chatEndRef} />
                             </div>
                         )}
                     </div>
