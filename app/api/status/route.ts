@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
 
 export async function GET() {
     const status = {
@@ -56,10 +57,10 @@ export async function GET() {
         try {
             const deepseek = new OpenAI({
                 apiKey: deepseekKey,
-                baseURL: "https://api.deepseek.com"
+                baseURL: DEEPSEEK_BASE_URL
             });
             await deepseek.models.list();
-            status.deepseek = "connected";
+            status.deepseek = `connected:${DEEPSEEK_MODEL}`;
         } catch (err) {
             status.deepseek = "invalid_key";
         }

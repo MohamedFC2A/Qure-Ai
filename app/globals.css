@@ -4,8 +4,13 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
+    --background: 216 48% 6%;
     --foreground: 0 0% 98%;
+    --clinical-bg: #050A10;
+    --clinical-panel: rgba(9, 18, 28, 0.82);
+    --clinical-panel-soft: rgba(15, 25, 38, 0.72);
+    --clinical-border: rgba(148, 163, 184, 0.16);
+    --clinical-muted: rgba(226, 232, 240, 0.62);
     color-scheme: dark;
   }
 
@@ -15,11 +20,14 @@
   }
 
   body {
-    @apply bg-black text-white antialiased overflow-x-hidden;
-    background-image: 
-      radial-gradient(circle at 50% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 0% 50%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 100% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+    @apply text-white antialiased overflow-x-hidden;
+    background-color: var(--clinical-bg);
+    background-image:
+      linear-gradient(180deg, rgba(8, 145, 178, 0.08), transparent 420px),
+      radial-gradient(circle at 85% 10%, rgba(20, 184, 166, 0.10), transparent 360px),
+      linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+    background-size: auto, auto, 64px 64px, 64px 64px;
     background-attachment: fixed;
     min-height: 100dvh;
   }
@@ -38,7 +46,10 @@
 }
 
 .glass-card {
-  @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl;
+  @apply backdrop-blur-xl border shadow-2xl;
+  background: linear-gradient(180deg, rgba(15, 25, 38, 0.86), rgba(8, 14, 22, 0.84));
+  border-color: var(--clinical-border);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.26);
 }
 
 .liquid-shape {
@@ -53,14 +64,35 @@
   scrollbar-width: none;
 }
 
+.clinical-page {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.clinical-eyebrow {
+  @apply inline-flex items-center gap-2 rounded-md border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100;
+}
+
+.clinical-panel {
+  @apply border border-white/10 bg-slate-950/50 shadow-2xl shadow-black/20 backdrop-blur-xl;
+  border-radius: 8px;
+}
+
+.clinical-input {
+  @apply w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-base text-white placeholder:text-slate-500 outline-none transition;
+  @apply focus:border-cyan-300/45 focus:ring-2 focus:ring-cyan-300/15;
+}
+
+.clinical-muted {
+  color: var(--clinical-muted);
+}
+
 /* =============================================
    ASK NEXUS AI - Premium Styles
    ============================================= */
 
 /* Glassmorphism AI Chat Bubble */
 .ai-chat-bubble {
-  @apply relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden;
-  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+  @apply relative overflow-hidden rounded-lg border border-white/10 bg-slate-950/55 backdrop-blur-xl;
 }
 
 .ai-chat-bubble::before {

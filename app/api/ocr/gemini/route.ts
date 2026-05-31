@@ -4,12 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 import { deductCredit, getCreditsStatus } from "@/lib/creditService";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
+import { getLocalDevUser } from "@/lib/devAuth";
 
 export async function POST(req: NextRequest) {
     const startTime = Date.now();
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const localDevUser = getLocalDevUser(req);
+        const supabase = localDevUser ? null : await createClient();
+        const { data: { user } } = localDevUser
+            ? { data: { user: localDevUser } }
+            : await supabase!.auth.getUser();
 
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, {
@@ -18,7 +22,7 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        if (!hasAcceptedTerms(user)) {
+        if (!localDevUser && !hasAcceptedTerms(user)) {
             return NextResponse.json({ error: "Terms acceptance required", code: "TERMS_REQUIRED" }, {
                 status: 403,
                 headers: { 'Content-Type': 'application/json' }
@@ -27,7 +31,7 @@ export async function POST(req: NextRequest) {
 
         // Credits deduction currently requires admin privileges (service role) to bypass RLS.
         // If this key is missing in your server environment, the route will fail.
-        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        if (!localDevUser && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
             console.error("[OCR API] SUPABASE_SERVICE_ROLE_KEY is missing");
             return NextResponse.json(
                 { error: "Server configuration error: SUPABASE_SERVICE_ROLE_KEY is missing (required for credits deduction)." },
@@ -39,13 +43,15 @@ export async function POST(req: NextRequest) {
         }
 
         // Pre-check credits (don't charge if OCR fails).
-        const supabaseAdmin = createAdminClient();
-        const status = await getCreditsStatus(user.id, supabaseAdmin);
-        if ((status?.totalAvailable ?? 0) < 1) {
-            return NextResponse.json({ error: "Insufficient credits. Please upgrade your plan." }, {
-                status: 402,
-                headers: { 'Content-Type': 'application/json' }
-            });
+        if (!localDevUser) {
+            const supabaseAdmin = createAdminClient();
+            const status = await getCreditsStatus(user.id, supabaseAdmin);
+            if ((status?.totalAvailable ?? 0) < 1) {
+                return NextResponse.json({ error: "Insufficient credits. Please upgrade your plan." }, {
+                    status: 402,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
         }
 
         const { image } = await req.json();
@@ -184,12 +190,14 @@ export async function POST(req: NextRequest) {
         console.log("[OCR API] Extracted text length:", data.extractedText?.length || 0);
 
         // Only charge after successful OCR output.
-        const charged = await deductCredit(user.id, 1, 'scan_pipeline');
-        if (!charged) {
-            return NextResponse.json({ error: "Insufficient credits. Please try again." }, {
-                status: 402,
-                headers: { 'Content-Type': 'application/json' }
-            });
+        if (!localDevUser) {
+            const charged = await deductCredit(user.id, 1, 'scan_pipeline');
+            if (!charged) {
+                return NextResponse.json({ error: "Insufficient credits. Please try again." }, {
+                    status: 402,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
         }
 
         return NextResponse.json({ ...data, serverDurationMs: Date.now() - startTime }, {

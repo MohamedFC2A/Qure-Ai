@@ -1,9 +1,10 @@
 import OpenAI from "openai";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
 
 // Initialize DeepSeek client (text-only)
 const deepseek = new OpenAI({
     apiKey: process.env.DEEPSEEK_API_KEY || "placeholder-key",
-    baseURL: "https://api.deepseek.com",
+    baseURL: DEEPSEEK_BASE_URL,
 });
 
 export interface AnalyzeContext {
@@ -172,7 +173,7 @@ export const analyzeMedicationText = async (
   `;
 
         const response = await deepseek.chat.completions.create({
-            model: "deepseek-chat",
+            model: DEEPSEEK_MODEL,
             messages: [
                 { role: "system", content: "You are a specialized medical analysis AI. Output valid JSON only." },
                 { role: "user", content: systemPrompt }

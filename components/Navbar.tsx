@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
-import { Atom, ScanLine, LayoutDashboard, User, Clock, Gem, Loader2 } from "lucide-react";
+import { Atom, ScanLine, LayoutDashboard, User, Clock, Gem, Loader2, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 import { useUser } from "@/context/UserContext";
@@ -20,6 +20,9 @@ export const Navbar = () => {
     const supabase = createClient();
 
     const handleSignOut = async () => {
+        if (process.env.NODE_ENV === "development") {
+            document.cookie = "qure_dev_auth=; path=/; max-age=0; samesite=lax";
+        }
         await supabase.auth.signOut();
         // window.location.reload(); // Context will handle null, or forcing reload is safer
         window.location.href = '/login';
@@ -41,14 +44,14 @@ export const Navbar = () => {
             <MobileNav />
             <OnboardingModal />
 
-            <header className="fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl px-0 sm:px-4">
-                <GlassCard className="rounded-full py-2.5 sm:py-3 px-3 sm:px-6 flex items-center justify-between shadow-2xl shadow-black/20 backdrop-blur-xl bg-black/40 border-white/5" hoverEffect={false}>
+            <header className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-6xl">
+                <GlassCard className="rounded-xl px-3 py-2.5 sm:px-4 flex items-center justify-between shadow-2xl shadow-black/25 backdrop-blur-2xl bg-slate-950/72 border-white/10" hoverEffect={false}>
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-3 font-bold text-base sm:text-lg tracking-tight mr-2 sm:mr-4">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                            <Atom className="w-5 h-5 text-white" />
+                    <Link href="/" className="flex items-center gap-3 font-bold text-base sm:text-lg tracking-tight mr-2 sm:mr-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 rounded-lg">
+                        <div className="w-9 h-9 rounded-lg bg-cyan-300 text-slate-950 flex items-center justify-center shadow-lg shadow-cyan-950/20">
+                            <Atom className="w-5 h-5 text-slate-950" />
                         </div>
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 font-display">
+                        <span className="text-white font-display">
                             Qure Ai
                         </span>
                     </Link>
@@ -60,17 +63,17 @@ export const Navbar = () => {
                             return (
                                 <Link key={item.href} href={item.href}>
                                     <div
-                                        className={cn(
-                                            "relative px-4 py-2 rounded-full text-sm transition-all duration-300 flex items-center justify-center gap-2",
+                                    className={cn(
+                                            "relative px-3.5 py-2 rounded-lg text-sm transition-all duration-300 flex items-center justify-center gap-2",
                                             isActive
-                                                ? "text-white font-medium"
-                                                : "text-white/60 hover:text-white hover:bg-white/5"
+                                                ? "bg-cyan-300/10 text-cyan-50 font-semibold ring-1 ring-cyan-300/20"
+                                                : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
                                         )}
                                     >
                                         {isActive && (
-                                            <div className="absolute inset-0 bg-white/10 rounded-full animate-in fade-in zoom-in duration-300" />
+                                            <div className="absolute inset-0 rounded-lg animate-in fade-in zoom-in duration-300" />
                                         )}
-                                        <item.icon className={cn("w-4 h-4 relative z-10", isActive ? "text-cyan-400" : "")} />
+                                        <item.icon className={cn("w-4 h-4 relative z-10", isActive ? "text-cyan-300" : "")} />
                                         <span className={cn("relative z-10", isActive ? "text-white" : "")}>
                                             {item.name}
                                         </span>
@@ -87,7 +90,7 @@ export const Navbar = () => {
                             <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                                 {/* Enhanced Scanning Indicator - Now visible on mobile */}
                                 {isScanning && (
-                                    <Link href="/scan" className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 text-cyan-100 hover:from-cyan-500/30 hover:to-blue-500/30 transition-all shadow-lg shadow-cyan-500/20 animate-pulse">
+                                    <Link href="/scan" className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-100 transition-all hover:bg-cyan-300/15">
                                         <div className="relative">
                                             <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-300" />
                                             <div className="absolute inset-0 blur-sm bg-cyan-400/40 rounded-full animate-pulse" />
@@ -97,12 +100,12 @@ export const Navbar = () => {
                                     </Link>
                                 )}
                                 {/* Credits Chip */}
-                                <Link href="/profile">
+                                <Link href="/profile" aria-label="Open profile">
                                     <div className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                                        "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all",
                                         plan === 'ultra'
-                                            ? "bg-amber-500/10 border-amber-500/30 text-amber-200 hover:bg-amber-500/20"
-                                            : "bg-cyan-500/10 border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/20"
+                                            ? "bg-amber-300/10 border-amber-300/25 text-amber-100 hover:bg-amber-300/15"
+                                            : "bg-cyan-300/10 border-cyan-300/25 text-cyan-100 hover:bg-cyan-300/15"
                                     )}>
                                         <span className={cn("w-1.5 h-1.5 rounded-full", plan === 'ultra' ? "bg-amber-400" : "bg-cyan-400")} />
                                         {credits} C
@@ -110,7 +113,7 @@ export const Navbar = () => {
                                 </Link>
 
                                 <Link href="/profile">
-                                    <Button variant="ghost" size="sm" className="hidden sm:flex rounded-full h-9 w-9 p-0 items-center justify-center border border-white/10 bg-white/5 overflow-hidden">
+                                    <Button variant="ghost" size="sm" className="hidden sm:flex h-9 w-9 p-0 items-center justify-center border border-white/10 bg-white/[0.04] overflow-hidden">
                                         {user?.user_metadata?.avatar_url ? (
                                             <img
                                                 src={user.user_metadata.avatar_url}
@@ -126,8 +129,9 @@ export const Navbar = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleSignOut}
-                                    className="text-red-300 hover:text-red-200 hover:bg-red-500/10 rounded-full px-3 sm:px-4 hidden sm:flex"
+                                    className="text-red-200 hover:text-red-100 hover:bg-red-500/10 px-3 sm:px-4 hidden sm:flex gap-2"
                                 >
+                                    <LogOut className="h-4 w-4" />
                                     <span className="hidden sm:inline">Sign Out</span>
                                 </Button>
                             </div>
@@ -137,11 +141,7 @@ export const Navbar = () => {
                                     <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">Login</Button>
                                 </Link>
                                 <Link href="/signup">
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        className="rounded-full px-6 bg-white text-black hover:bg-white/90 border-0 shadow-none font-semibold"
-                                    >
+                                    <Button variant="primary" size="sm" className="px-5 font-semibold">
                                         Get Started
                                     </Button>
                                 </Link>

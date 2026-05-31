@@ -71,9 +71,9 @@ function BillingContent() {
 
     if (success) {
         return (
-            <main className="min-h-screen flex items-center justify-center p-6">
+            <main className="min-h-screen flex items-center justify-center p-6 pt-28">
                 <GlassCard className="max-w-md w-full p-8 text-center flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mb-6">
+                    <div className="w-16 h-16 rounded-lg bg-amber-300/15 border border-amber-300/20 flex items-center justify-center mb-6">
                         <AlertTriangle className="w-8 h-8 text-yellow-400" />
                     </div>
                     <h1 className="text-2xl font-bold text-white mb-4">Payment System Updating</h1>
@@ -90,11 +90,15 @@ function BillingContent() {
     }
 
     return (
-        <main className="min-h-screen pt-24 pb-12 px-4 sm:px-6 flex items-center justify-center">
-            <GlassCard className="max-w-2xl w-full p-8 sm:p-12">
+        <main className="min-h-screen pt-28 pb-28 md:pb-12 px-4 sm:px-6 flex items-center justify-center">
+            <GlassCard className="max-w-2xl w-full p-6 sm:p-10">
                 <div className="mb-8 border-b border-white/10 pb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">Data Secure Checkout</h1>
-                    <p className="text-white/50">Complete your upgrade to <span className="text-cyan-400 font-bold uppercase">{plan}</span></p>
+                    <div className="clinical-eyebrow mb-4">
+                        <ShieldCheck className="h-4 w-4" />
+                        Secure checkout
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Upgrade workspace</h1>
+                    <p className="text-slate-400">Complete your upgrade to <span className="text-cyan-100 font-bold uppercase">{plan}</span></p>
                 </div>
 
                 <div className="space-y-6">
@@ -136,7 +140,7 @@ function BillingContent() {
                         disabled={loading}
                         className="w-full text-left"
                     >
-                        <GlassCard className="p-4 flex items-center gap-4 border-cyan-500/30 bg-cyan-500/5 group hover:bg-cyan-500/10 transition-colors">
+                        <GlassCard className="p-4 flex items-center gap-4 border-cyan-300/25 bg-cyan-300/10 group hover:bg-cyan-300/15 transition-colors">
                             <div className="p-3 bg-cyan-500/20 rounded-lg text-cyan-400">
                                 <Banknote className="w-6 h-6" />
                             </div>
@@ -157,7 +161,7 @@ function BillingContent() {
                                 value={voucherCode}
                                 onChange={(e) => setVoucherCode(e.target.value)}
                                 placeholder="Enter code (e.g. 01272...)"
-                                className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50"
+                                className="clinical-input flex-1"
                             />
                             <Button
                                 onClick={handleRedeemVoucher}
@@ -188,7 +192,7 @@ function BillingContent() {
 export default function BillingPage() {
     return (
         <React.Suspense fallback={
-            <div className="min-h-screen pt-24 pb-12 px-4 flex items-center justify-center">
+                <div className="min-h-screen pt-24 pb-12 px-4 flex items-center justify-center">
                 <div className="text-white/50">Loading billing options...</div>
             </div>
         }>

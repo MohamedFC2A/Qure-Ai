@@ -17,6 +17,7 @@ export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'family' | 'private' | 'memories'>('account');
     const supabase = createClient();
     const router = useRouter();
+    const isLocalDevUser = process.env.NODE_ENV === "development" && user?.id === "local-dev-user";
 
     const [redeemCode, setRedeemCode] = useState("");
     const [redeemMsg, setRedeemMsg] = useState("");
@@ -98,6 +99,13 @@ export default function ProfilePage() {
     }, [user, profile]);
 
     const fetchTransactions = async () => {
+        if (isLocalDevUser) {
+            setTransactions([
+                { id: "local-credit", created_at: new Date().toISOString(), amount: 999, reason: "Local dev credits" },
+            ]);
+            return;
+        }
+
         const { data, error } = await supabase
             .from('credit_ledger')
             .select('*')
@@ -170,6 +178,13 @@ export default function ProfilePage() {
 
     const fetchCareProfiles = async () => {
         if (!user) return;
+        if (isLocalDevUser) {
+            const rows = [{ id: user.id, display_name: "Local Dev", relationship: "self" }];
+            setCareProfiles(rows);
+            setActiveCareProfileId(user.id);
+            return;
+        }
+
         setCareLoading(true);
         setCareMsg(null);
         try {
@@ -298,6 +313,17 @@ export default function ProfilePage() {
             notes: "",
         };
 
+        if (isLocalDevUser) {
+            setPrivateProfile({
+                ...defaults,
+                allergies: "Penicillin",
+                chronic_conditions: "Asthma",
+                current_medications: "Ibuprofen, Paracetamol",
+                notes: "Local development sample profile.",
+            });
+            return;
+        }
+
         if (pid === user.id) {
             defaults.age = profile?.age == null ? "" : String(profile.age);
             defaults.sex = String(profile?.gender || "");
@@ -361,6 +387,17 @@ export default function ProfilePage() {
 
     const fetchMemories = async (profileId: string) => {
         if (!user) return;
+        if (isLocalDevUser) {
+            setMemories([
+                {
+                    id: "local-memory-1",
+                    display_name: "Ibuprofen",
+                    last_seen_at: new Date().toISOString(),
+                },
+            ]);
+            return;
+        }
+
         const pid = String(profileId || "").trim() || user.id;
 
         let res = await supabase
@@ -403,15 +440,22 @@ export default function ProfilePage() {
         { id: 'memories', label: 'Medication Memories', icon: Activity, pro: true },
     ];
 
-    if (userLoading) return <div className="min-h-screen pt-24 flex justify-center"><div className="animate-spin w-8 h-8 border-2 border-cyan-500 rounded-full border-t-transparent" /></div>;
+    if (userLoading) return <div className="min-h-screen pt-28 flex justify-center"><div className="animate-spin w-8 h-8 border-2 border-cyan-300 rounded-full border-t-transparent" /></div>;
 
     return (
-        <main className="min-h-screen pt-24 pb-12 px-4 sm:px-6 max-w-6xl mx-auto">
-            <h1 className="text-3xl font-bold text-white mb-8">My Profile</h1>
+        <main className="min-h-screen pt-28 pb-28 md:pb-14 px-4 sm:px-6 max-w-6xl mx-auto">
+            <div className="mb-8">
+                <div className="clinical-eyebrow">
+                    <User className="h-4 w-4" />
+                    Account center
+                </div>
+                <h1 className="mt-4 text-4xl font-bold text-white tracking-tight">My Profile</h1>
+                <p className="mt-2 text-slate-400">Manage account details, credits, safety context, and family profiles.</p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Sidebar Navigation */}
-                <GlassCard className="p-4 md:col-span-1 h-fit flex flex-col gap-2">
+                <GlassCard className="p-3 md:col-span-1 h-fit flex flex-col gap-1" hoverEffect={false}>
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
@@ -419,11 +463,11 @@ export default function ProfilePage() {
                             className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left",
                                 activeTab === tab.id
-                                    ? "bg-cyan-500/20 text-cyan-200 border border-cyan-500/30"
-                                    : "text-white/60 hover:bg-white/5 hover:text-white"
+                                    ? "bg-cyan-300/10 text-cyan-100 border border-cyan-300/20"
+                                    : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
                             )}
                         >
-                            <tab.icon className={cn("w-4 h-4", tab.pro && plan !== 'ultra' ? "text-white/30" : "text-cyan-400")} />
+                            <tab.icon className={cn("w-4 h-4", tab.pro && plan !== 'ultra' ? "text-slate-600" : "text-cyan-300")} />
                             <span className="flex-1">{tab.label}</span>
                             {(tab as any).beta && <span className="text-[10px] bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded text-amber-300">BETA</span>}
                             {tab.pro && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">ULTRA</span>}
@@ -432,7 +476,7 @@ export default function ProfilePage() {
 
                     <div className="h-px bg-white/10 my-2" />
 
-                    <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors">
+                    <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-300 hover:bg-red-500/10 transition-colors">
                         <LogOut className="w-4 h-4" /> Sign Out
                     </button>
                 </GlassCard>

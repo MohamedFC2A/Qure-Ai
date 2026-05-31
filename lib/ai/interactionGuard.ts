@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
 
 export type InteractionSeverity = "safe" | "caution" | "danger";
 
@@ -192,11 +193,11 @@ ${otherJson}
 
     const deepseek = new OpenAI({
         apiKey: process.env.DEEPSEEK_API_KEY,
-        baseURL: "https://api.deepseek.com",
+        baseURL: DEEPSEEK_BASE_URL,
     });
 
     const response = await deepseek.chat.completions.create({
-        model: "deepseek-chat",
+        model: DEEPSEEK_MODEL,
         messages: [
             { role: "system", content: "You are a medical safety assistant. Output valid JSON only." },
             { role: "user", content: prompt },
@@ -249,9 +250,8 @@ ${otherJson}
         overallRisk: typeof parsed?.overallRisk === "string" ? parsed.overallRisk : undefined,
         items,
         disclaimer: typeof parsed?.disclaimer === "string" ? parsed.disclaimer : undefined,
-        model: "deepseek-chat",
+        model: DEEPSEEK_MODEL,
         generatedAt: new Date().toISOString(),
         serverDurationMs: Date.now() - startedAt,
     };
 }
-

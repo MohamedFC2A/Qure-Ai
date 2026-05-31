@@ -74,7 +74,7 @@ export async function middleware(request: NextRequest) {
     const isApi = pathname.startsWith('/api');
     const isAuthFlow = pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup';
 
-    const publicApiPrefixes = ['/api/status', '/api/credits/status', '/api/v1/analyze'];
+    const publicApiPrefixes = ['/api/status', '/api/credits/status', '/api/v1/analyze', '/api/dev/login'];
     const isPublicApi = isApi && publicApiPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
     const protectedPagePrefixes = ['/dashboard', '/profile', '/scan'];
@@ -84,6 +84,10 @@ export async function middleware(request: NextRequest) {
 
     const requiresAuth = isProtectedPage || isProtectedApi;
     const requiresTerms = requiresAuth && !isAuthFlow && pathname !== '/terms';
+    const isLocalDevSession =
+        process.env.NODE_ENV === 'development' &&
+        request.cookies.get('qure_dev_auth')?.value === '1' &&
+        (request.nextUrl.hostname === 'localhost' || request.nextUrl.hostname === '127.0.0.1' || request.nextUrl.hostname === '::1');
 
     const nextPath = `${pathname}${request.nextUrl.search || ''}`;
 
@@ -97,7 +101,7 @@ export async function middleware(request: NextRequest) {
         }
     };
 
-    if (requiresAuth && !user) {
+    if (requiresAuth && !user && !isLocalDevSession) {
         if (isApi) {
             const unauthorized = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             copyCookies(response, unauthorized);
@@ -128,7 +132,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // If logged in and already accepted terms, keep auth pages clean.
-    if (user && hasAcceptedTerms(user) && (pathname === '/login' || pathname === '/signup')) {
+    if ((isLocalDevSession || (user && hasAcceptedTerms(user))) && (pathname === '/login' || pathname === '/signup')) {
         const target = request.nextUrl.clone();
         const requestedNext = safeNextPath(target.searchParams.get('next'), '/scan');
         const parsed = new URL(requestedNext, request.nextUrl.origin);

@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { MedicalResultCard } from "@/components/scanner/MedicalResultCard";
 import { Activity, Calendar, ChevronRight, Pill, Search, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { useUser } from "@/context/UserContext";
 
 export default function HistoryPage() {
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -17,26 +19,58 @@ export default function HistoryPage() {
     const [userId, setUserId] = useState<string | null>(null);
     const [careProfiles, setCareProfiles] = useState<Array<{ id: string; display_name: string }>>([]);
     const [profileFilter, setProfileFilter] = useState<string>("all"); // "all" | profile_id
+    const { user } = useUser();
+    const hasLocalDevCookie =
+        typeof document !== "undefined" &&
+        document.cookie.split("; ").some((cookie) => cookie === "qure_dev_auth=1");
+    const isLocalDevUser = process.env.NODE_ENV === "development" && (user?.id === "local-dev-user" || hasLocalDevCookie);
 
     useEffect(() => {
         const init = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
+                if (isLocalDevUser) {
+                    const localUserId = user?.id || "local-dev-user";
+                    setUserId(localUserId);
+                    setCareProfiles([{ id: localUserId, display_name: "Local Dev" }]);
+                    setProfileFilter("all");
+                    setHistory([
+                        {
+                            id: "local-history-1",
+                            user_id: localUserId,
+                            profile_id: localUserId,
+                            drug_name: "Ibuprofen 200 mg",
+                            manufacturer: "Sample label",
+                            created_at: new Date().toISOString(),
+                            analysis_json: {
+                                drugName: "Ibuprofen 200 mg",
+                                manufacturer: "Sample label",
+                                description: "Local development sample report.",
+                                uses: ["Pain relief", "Fever reduction"],
+                                warnings: ["NSAID caution"],
+                                sideEffects: ["Stomach upset"],
+                                dosage: "Follow package instructions.",
+                            },
+                        },
+                    ]);
+                    return;
+                }
+
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (!authUser) {
                     setUserId(null);
                     setHistory([]);
                     return;
                 }
-                setUserId(user.id);
+                setUserId(authUser.id);
 
                 const careRes = await supabase
                     .from("care_profiles")
                     .select("id, display_name")
-                    .eq("owner_user_id", user.id);
+                    .eq("owner_user_id", authUser.id);
 
                 const rows = (careRes.data || []).map((r: any) => ({ id: String(r.id), display_name: String(r.display_name || "Me") }));
-                rows.sort((a, b) => (a.id === user.id ? -1 : b.id === user.id ? 1 : a.display_name.localeCompare(b.display_name)));
-                setCareProfiles(rows.length ? rows : [{ id: user.id, display_name: "Me" }]);
+                rows.sort((a, b) => (a.id === authUser.id ? -1 : b.id === authUser.id ? 1 : a.display_name.localeCompare(b.display_name)));
+                setCareProfiles(rows.length ? rows : [{ id: authUser.id, display_name: "Me" }]);
 
                 const saved = typeof window !== "undefined" ? localStorage.getItem("qure_active_care_profile") : null;
                 const preferred = saved && rows.some((p) => p.id === saved) ? saved : null;
@@ -50,11 +84,12 @@ export default function HistoryPage() {
         };
 
         init();
-    }, []);
+    }, [isLocalDevUser, supabase, user?.id]);
 
     useEffect(() => {
         const fetchHistory = async () => {
             if (!userId) return;
+            if (isLocalDevUser) return;
             setLoading(true);
             try {
                 let res = await supabase
@@ -99,7 +134,7 @@ export default function HistoryPage() {
         };
 
         fetchHistory();
-    }, [profileFilter, supabase, userId]);
+    }, [isLocalDevUser, profileFilter, supabase, userId]);
 
     const filteredHistory = history.filter(item =>
         item.drug_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -107,16 +142,28 @@ export default function HistoryPage() {
     );
 
     return (
-        <div className="min-h-screen w-full text-white pt-24 pb-12 px-4 md:px-8">
+        <div className="min-h-screen w-full text-white pt-28 pb-28 md:pb-12 px-4 md:px-8">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header Section */}
                 <div className="flex flex-col mb-8 gap-6">
-                    <div>
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent font-display tracking-tight">
-                            Analysis History
-                        </h1>
-                        <p className="text-white/50 text-base sm:text-lg">Your personal pharmaceutical database.</p>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                        <div>
+                            <p className="clinical-eyebrow mb-3">
+                                <Activity className="h-4 w-4" />
+                                Saved analyses
+                            </p>
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 text-white font-display tracking-tight">
+                                Analysis History
+                            </h1>
+                            <p className="text-slate-400 text-base sm:text-lg">Your personal medication review database.</p>
+                        </div>
+
+                        <Link href="/scan" className="w-full sm:w-auto">
+                            <Button className="w-full sm:w-auto">
+                                Start new analysis
+                            </Button>
+                        </Link>
                     </div>
 
                     {userId && (
@@ -128,7 +175,7 @@ export default function HistoryPage() {
                             <select
                                 value={profileFilter}
                                 onChange={(e) => setProfileFilter(e.target.value)}
-                                className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-base text-white w-full sm:w-auto focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                            className="clinical-input w-full sm:w-auto"
                             >
                                 <option value="all">All profiles</option>
                                 {careProfiles.map((p) => (
@@ -152,7 +199,7 @@ export default function HistoryPage() {
                                 placeholder="Search by drug name, manufacturer, or interaction..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-transparent border-none py-4 px-4 text-base sm:text-lg text-white placeholder-white/30 focus:outline-none focus:ring-0"
+                                className="w-full bg-transparent border-none py-4 px-4 text-base sm:text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-0"
                             />
                             {searchTerm && (
                                 <button
@@ -182,7 +229,7 @@ export default function HistoryPage() {
                                 onClick={() => setSelectedItem(item)}
                                 className="cursor-pointer group"
                             >
-                                <GlassCard className="h-full p-6 border-white/5 hover:border-liquid-primary/30 transition-colors group-hover:bg-white/10 relative overflow-hidden">
+                                <GlassCard className="h-full p-6 border-white/10 hover:border-cyan-300/25 transition-colors group-hover:bg-white/[0.055] relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-br from-liquid-primary/0 via-transparent to-transparent group-hover:from-liquid-primary/10 transition-all duration-500" />
 
                                     <div className="flex justify-between items-start mb-4">

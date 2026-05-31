@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
 
 type PresetId = "alternative" | "personalized" | "history" | "suggestions";
 
@@ -192,7 +193,7 @@ export async function POST(req: NextRequest) {
 
         const deepseek = new OpenAI({
             apiKey: process.env.DEEPSEEK_API_KEY,
-            baseURL: "https://api.deepseek.com",
+            baseURL: DEEPSEEK_BASE_URL,
         });
 
         const systemLanguageRule =
@@ -304,7 +305,7 @@ ${rootQuestion}
 `;
 
         const response = await deepseek.chat.completions.create({
-            model: "deepseek-chat",
+            model: DEEPSEEK_MODEL,
             messages: [
                 { role: "system", content: "You are a medical analysis assistant. Output valid JSON only." },
                 { role: "user", content: prompt },

@@ -11,11 +11,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant = "primary", size = "md", isLoading, children, ...props }, ref) => {
         const variants = {
-            primary: "bg-gradient-to-r from-liquid-primary to-liquid-secondary hover:from-liquid-primary/90 hover:to-liquid-secondary/90 text-white shadow-lg",
-            secondary: "bg-white text-black hover:bg-gray-100",
-            glass: "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/30",
-            outline: "border border-white/20 bg-transparent hover:bg-white/5 text-white",
-            ghost: "hover:bg-white/5 text-white/80 hover:text-white",
+            primary: "bg-cyan-300 text-slate-950 hover:bg-cyan-200 border border-cyan-200/70 shadow-lg shadow-cyan-950/20",
+            secondary: "bg-white text-slate-950 hover:bg-slate-100 border border-white",
+            glass: "bg-slate-900/70 backdrop-blur-md border border-white/10 text-white hover:bg-slate-800/80 hover:border-cyan-300/30",
+            outline: "border border-white/10 bg-slate-950/20 hover:bg-white/[0.06] text-white",
+            ghost: "hover:bg-white/[0.06] text-slate-300 hover:text-white",
         };
 
         const sizes = {
@@ -29,7 +29,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 ref={ref}
                 disabled={isLoading || props.disabled}
                 className={cn(
-                    "inline-flex items-center justify-center rounded-full font-medium transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+                    "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black",
                     variants[variant],
                     sizes[size],
                     className

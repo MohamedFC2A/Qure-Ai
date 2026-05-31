@@ -58,40 +58,41 @@ export default function TermsPage() {
     };
 
     return (
-        <main className="min-h-screen pt-24 pb-12 px-4 flex items-center justify-center">
+        <main className="min-h-screen pt-28 pb-28 md:pb-12 px-4 flex items-center justify-center">
             <GlassCard className="w-full max-w-2xl p-8" hoverEffect={false}>
                 <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="p-3 rounded-lg bg-amber-300/10 border border-amber-300/20">
                         <ShieldAlert className="w-6 h-6 text-amber-300" />
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-2xl md:text-3xl font-bold text-white">الشروط وإخلاء المسؤولية</h1>
-                        <p className="text-white/60 mt-2 text-sm leading-relaxed">
-                            قبل استخدام ميزات التحليل، يلزم الموافقة على الشروط التالية.
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">Terms and medical disclaimer</h1>
+                        <p className="text-slate-400 mt-2 text-sm leading-relaxed">
+                            Review these terms before using medication analysis features.
                         </p>
-                        <p className="text-white/30 mt-2 text-xs font-mono">Version: {TERMS_VERSION}</p>
+                        <p className="text-slate-600 mt-2 text-xs font-mono">Version: {TERMS_VERSION}</p>
                     </div>
                 </div>
 
-                <div className="mt-6 space-y-3 text-white/70 text-sm leading-relaxed">
-                    <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/15">
+                <div className="mt-6 space-y-3 text-slate-300 text-sm leading-relaxed">
+                    <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                         <div className="flex items-start gap-2">
                             <AlertTriangle className="w-4 h-4 text-red-300 mt-0.5 shrink-0" />
                             <p>
-                                هذا الموقع يقدم معلومات مساعدة فقط. قد تحتوي نتائج OCR/التحليل على أخطاء أو نقص.
+                                QURE AI provides supporting medication information only. OCR and AI analysis can be
+                                incorrect, incomplete, or outdated.
                             </p>
                         </div>
                     </div>
 
-                    <ul className="space-y-2">
-                        <li>لا تعتمد على النتائج كبديل عن استشارة طبيب/صيدلي.</li>
-                        <li>أي قرار علاجي يجب أن يكون بناءً على مرجع طبي موثوق/النشرة الرسمية للدواء.</li>
-                        <li>قد تختلف الأدوية حسب الدولة والشركة والتركيز، حتى لو تشابه الاسم.</li>
-                        <li>في الحالات الطارئة أو أعراض خطيرة: تواصل مع خدمات الطوارئ فورًا.</li>
+                    <ul className="space-y-2 list-disc pl-5">
+                        <li>Do not use results as a replacement for a doctor, pharmacist, official label, or emergency care.</li>
+                        <li>Verify critical medication decisions with a qualified professional and authoritative references.</li>
+                        <li>Medication names, strengths, and formulations can differ by country, manufacturer, and package.</li>
+                        <li>For severe symptoms or emergencies, contact emergency services immediately.</li>
                     </ul>
 
-                    <p className="text-white/50 text-xs">
-                        يمكنك مراجعة صفحة التسعير والعودة لاحقًا. لكن لن يتم تفعيل التحليل بدون الموافقة.
+                    <p className="text-slate-500 text-xs">
+                        You can review plans and return later. Analysis remains disabled until these terms are accepted.
                     </p>
                 </div>
 
@@ -110,24 +111,25 @@ export default function TermsPage() {
                         className="mt-1 h-4 w-4 rounded border-white/20 bg-white/10"
                         disabled={saving || loading || !user}
                     />
-                    <label htmlFor="agree" className="text-white/70 text-sm">
-                        أقر أنني فهمت ما سبق وأوافق على الشروط، وأتفهم أن الموقع غير مسؤول عن أي قرار طبي بدون مرجع/استشارة مختص.
+                    <label htmlFor="agree" className="text-slate-300 text-sm">
+                        I understand and agree that QURE AI is an informational tool and that medical decisions must be
+                        verified with a qualified professional or official source.
                     </label>
                 </div>
 
                 <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                    <Link href="/pricing" className="text-xs text-white/50 hover:text-white/80 hover:underline">
-                        عرض الخطط والتسعير
+                    <Link href="/pricing" className="text-xs text-slate-400 hover:text-white hover:underline">
+                        View plans and pricing
                     </Link>
 
                     {!user ? (
                         <div className="flex gap-2 sm:justify-end">
                             <Link href={`/login?next=${encodeURIComponent(nextPath)}`}>
-                                <Button size="sm">تسجيل الدخول</Button>
+                                <Button size="sm">Log in</Button>
                             </Link>
                             <Link href={`/signup?next=${encodeURIComponent(nextPath)}`}>
                                 <Button size="sm" variant="outline" className="border-white/15 text-white/80 hover:bg-white/10">
-                                    إنشاء حساب
+                                    Create account
                                 </Button>
                             </Link>
                         </div>
@@ -138,9 +140,9 @@ export default function TermsPage() {
                             size="sm"
                             className="bg-emerald-500 hover:bg-emerald-600 text-black"
                         >
-                            {saving ? "جارٍ الحفظ..." : (
+                            {saving ? "Saving..." : (
                                 <span className="flex items-center gap-2">
-                                    <CheckCircle2 className="w-4 h-4" /> موافق وتفعيل
+                                    <CheckCircle2 className="w-4 h-4" /> Accept and continue
                                 </span>
                             )}
                         </Button>
@@ -150,4 +152,3 @@ export default function TermsPage() {
         </main>
     );
 }
-

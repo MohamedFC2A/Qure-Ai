@@ -8,21 +8,38 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
+                clinical: {
+                    ink: "#EEF6F7",
+                    muted: "#94A3B8",
+                    panel: "rgba(9, 18, 28, 0.78)",
+                    panelSolid: "#09121C",
+                    border: "rgba(148, 163, 184, 0.16)",
+                    cyan: "#22D3EE",
+                    emerald: "#34D399",
+                    amber: "#FBBF24",
+                    red: "#F87171",
+                },
                 glass: {
-                    100: "rgba(255, 255, 255, 0.1)",
-                    200: "rgba(255, 255, 255, 0.2)",
-                    300: "rgba(255, 255, 255, 0.3)",
-                    border: "rgba(255, 255, 255, 0.1)",
+                    100: "rgba(148, 163, 184, 0.08)",
+                    200: "rgba(148, 163, 184, 0.14)",
+                    300: "rgba(148, 163, 184, 0.2)",
+                    border: "rgba(148, 163, 184, 0.16)",
                 },
                 liquid: {
-                    primary: "#4F46E5", // Indigo
-                    secondary: "#EC4899", // Pink
-                    accent: "#8B5CF6", // Violet
+                    primary: "#0891B2",
+                    secondary: "#0D9488",
+                    accent: "#22D3EE",
                 }
+            },
+            fontFamily: {
+                display: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+            },
+            screens: {
+                xs: "420px",
             },
             backgroundImage: {
                 "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-                "liquid-mesh": "conic-gradient(at 0% 0%, #1e1e2e 0, #0000 50%), conic-gradient(at 50% 100%, #1e1e2e 0, #0000 50%), conic-gradient(at 100% 0%, #1e1e2e 0, #0000 50%)",
+                "liquid-mesh": "linear-gradient(135deg, rgba(8,145,178,0.12), rgba(13,148,136,0.08))",
             },
             animation: {
                 "blob": "blob 7s infinite",

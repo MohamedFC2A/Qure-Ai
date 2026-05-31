@@ -27,9 +27,9 @@ export const MobileNav = () => {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-[env(safe-area-inset-bottom)]">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.45)]" />
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-2xl border-t border-white/10 shadow-[0_-18px_40px_rgba(0,0,0,0.45)]" />
 
-            <div className="relative flex items-center justify-around px-2.5 py-4">
+            <div className="relative flex items-center justify-around px-2.5 py-3">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
                     return (
@@ -38,20 +38,20 @@ export const MobileNav = () => {
                             href={item.href}
                             aria-label={item.name}
                             aria-current={isActive ? "page" : undefined}
-                            className="flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-2xl"
+                            className="flex-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                         >
                             <div className="flex flex-col items-center gap-1.5 group">
                                 <div className={cn(
-                                    "p-2.5 rounded-full transition-all duration-300",
+                                    "p-2 rounded-lg transition-all duration-300",
                                     isActive
-                                        ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_-3px_rgba(34,211,238,0.4)]"
-                                        : "text-white/40 group-hover:text-white/80"
+                                        ? "bg-cyan-300/10 text-cyan-200 ring-1 ring-cyan-300/20"
+                                        : "text-slate-500 group-hover:text-slate-200"
                                 )}>
-                                    <item.icon className={cn("w-5 h-5", isActive && "fill-current/20")} />
+                                    <item.icon className="w-5 h-5" />
                                 </div>
                                 <span className={cn(
-                                    "text-[11px] font-medium tracking-wide transition-colors leading-none",
-                                    isActive ? "text-cyan-100" : "text-white/40"
+                                    "text-[10px] font-semibold tracking-wide transition-colors leading-none",
+                                    isActive ? "text-cyan-100" : "text-slate-500"
                                 )}>
                                     {item.name}
                                 </span>

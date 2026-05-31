@@ -48,6 +48,7 @@ export const ScannerInterface = () => {
     const [careLoading, setCareLoading] = useState(false);
     const [carePickerOpen, setCarePickerOpen] = useState(false);
     const [careTempId, setCareTempId] = useState<string | null>(null);
+    const isLocalDevUser = process.env.NODE_ENV === "development" && user?.id === "local-dev-user";
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles[0]) {
@@ -56,7 +57,7 @@ export const ScannerInterface = () => {
     }, [setFile]);
 
     const fetchRecentHistory = useCallback(async () => {
-        if (!user?.id) {
+        if (!user?.id || isLocalDevUser) {
             setRecentHistory([]);
             return;
         }
@@ -83,7 +84,7 @@ export const ScannerInterface = () => {
             }
 
             if (res.error) {
-                console.error("History fetch error:", res.error);
+                console.warn("History unavailable:", res.error.message || "Unable to fetch recent history");
                 setRecentHistory([]);
                 return;
             }
@@ -92,7 +93,7 @@ export const ScannerInterface = () => {
         } finally {
             setHistoryLoading(false);
         }
-    }, [supabase, subjectProfileId, user?.id]);
+    }, [isLocalDevUser, supabase, subjectProfileId, user?.id]);
 
     useEffect(() => {
         fetchRecentHistory();
@@ -101,6 +102,11 @@ export const ScannerInterface = () => {
     const fetchCareProfiles = useCallback(async () => {
         if (!user?.id) {
             setCareProfiles([]);
+            return;
+        }
+
+        if (isLocalDevUser) {
+            setCareProfiles([{ id: user.id, display_name: String(user.email || "Local Dev"), relationship: "self" }]);
             return;
         }
 
@@ -137,7 +143,7 @@ export const ScannerInterface = () => {
         } finally {
             setCareLoading(false);
         }
-    }, [supabase, user?.id]);
+    }, [isLocalDevUser, supabase, user?.email, user?.id]);
 
     useEffect(() => {
         fetchCareProfiles();
@@ -487,14 +493,14 @@ export const ScannerInterface = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
                         <Link href="/dashboard/history">
                             <Button variant="outline" size="sm" className="gap-2 border-white/20 text-white hover:bg-white/10">
                                 <History className="w-4 h-4" /> History
                             </Button>
                         </Link>
-                        <Button onClick={resetScan} variant="outline" size="sm" className="gap-2 border-white/20 text-white hover:bg-white/10">
-                            <ScanLine className="w-4 h-4" /> New Scan
+                        <Button onClick={resetScan} variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+                            Analyze another
                         </Button>
                     </div>
                 </div>
@@ -504,7 +510,7 @@ export const ScannerInterface = () => {
     }
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-6 relative p-4 lg:p-12 overflow-y-auto">
+        <div className="w-full h-full flex flex-col items-center justify-center gap-6 relative p-2 sm:p-3 lg:p-4 overflow-y-auto">
 
             <AnimatePresence>
                 {carePickerOpen && (
@@ -606,40 +612,40 @@ export const ScannerInterface = () => {
 
             <AnimatePresence mode="wait">
                 {!previewSrc && (
-                    <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-lg">
+                    <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
                         <div {...getRootProps()} className={cn(
-                            "relative border-2 border-dashed rounded-3xl p-12 flex flex-col items-center text-center cursor-pointer transition-all duration-300 group",
-                            isDragActive ? "border-liquid-primary bg-liquid-primary/10" : "border-white/20 hover:border-liquid-primary/50 hover:bg-white/5"
+                            "relative min-h-[320px] border-2 border-dashed rounded-xl p-7 sm:p-9 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group",
+                            isDragActive ? "border-cyan-300 bg-cyan-300/10" : "border-white/15 hover:border-cyan-300/40 hover:bg-white/[0.04]"
                         )}>
                             <input {...getInputProps()} />
-                            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <ScanLine className="w-10 h-10 text-liquid-primary" />
+                            <div className="w-16 h-16 rounded-lg bg-cyan-300/10 border border-cyan-300/20 flex items-center justify-center mb-6 group-hover:border-cyan-300/40 transition-colors duration-300">
+                                <ScanLine className="w-8 h-8 text-cyan-200" />
                             </div>
-                            <h3 className="text-xl font-medium text-white mb-2">Upload Medication Image</h3>
-                            <p className="text-white/50 text-sm max-w-xs mx-auto">
+                            <h3 className="text-xl font-bold text-white mb-2">Upload medication image</h3>
+                            <p className="text-slate-400 text-sm max-w-xs mx-auto">
                                 Drag & drop or click to upload. Supports JPEG, PNG (Max 10MB)
                             </p>
-                            <div className="mt-8 flex gap-4">
-                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/40">Pills</span>
-                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/40">Bottles</span>
-                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/40">Prescriptions</span>
+                            <div className="mt-7 flex flex-wrap justify-center gap-2">
+                                <span className="px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-xs text-slate-400">Pills</span>
+                                <span className="px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-xs text-slate-400">Bottles</span>
+                                <span className="px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-xs text-slate-400">Prescriptions</span>
                             </div>
                         </div>
 
-                        <div className="mt-6">
+                        <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
                             <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2 text-white/50 text-xs font-semibold uppercase tracking-wider">
+                                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase tracking-wider">
                                     <History className="w-4 h-4" />
                                     Recent History
                                 </div>
-                                <Link href="/dashboard/history" className="text-xs text-white/40 hover:text-white hover:underline">
+                                <Link href="/dashboard/history" className="text-xs text-cyan-100 hover:underline">
                                     Open
                                 </Link>
                             </div>
 
                             {user && activeCareProfile && careProfiles.length > 1 && (
-                                <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                                    <div className="flex items-center gap-2 text-xs text-white/60 min-w-0">
+                                <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3">
+                                    <div className="flex items-center gap-2 text-xs text-slate-400 min-w-0">
                                         <Users className="w-4 h-4 text-cyan-300 shrink-0" />
                                         <span className="shrink-0">{t("Active:", "الحالي:")}</span>
                                         <span className="text-white/80 font-semibold truncate">{activeCareProfile.display_name}</span>
@@ -657,7 +663,7 @@ export const ScannerInterface = () => {
                             )}
 
                             {!user ? (
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm">
+                                <div className="p-4 rounded-lg bg-white/[0.04] border border-white/10 text-slate-400 text-sm">
                                     <p className="mb-3">Log in to use your History and build Medication Memories.</p>
                                     <Link href="/login">
                                         <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/10">
@@ -666,18 +672,18 @@ export const ScannerInterface = () => {
                                     </Link>
                                 </div>
                             ) : historyLoading ? (
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/40 text-sm">
+                                <div className="p-4 rounded-lg bg-white/[0.04] border border-white/10 text-slate-500 text-sm">
                                     Loading your history...
                                 </div>
                             ) : recentHistory.length === 0 ? (
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-white/50 text-sm">
+                                <div className="p-4 rounded-lg bg-white/[0.04] border border-white/10 text-slate-400 text-sm">
                                     No scans yet. Run your first scan to start your personal database.
                                 </div>
                             ) : (
                                 <div className="space-y-2">
                                     {recentHistory.map((item) => (
                                         <Link key={item.id} href="/dashboard/history">
-                                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] transition-colors">
                                                 <div className="min-w-0">
                                                     <p className="text-white font-medium truncate">{item.drug_name}</p>
                                                     <p className="text-white/40 text-xs truncate">{item.manufacturer || "Generic"} • {new Date(item.created_at).toLocaleDateString()}</p>
@@ -693,19 +699,19 @@ export const ScannerInterface = () => {
                 )}
 
                 {previewSrc && (
-                    <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full flex flex-col lg:flex-row gap-8 max-w-6xl items-start">
+                    <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full flex flex-col lg:flex-row gap-6 max-w-6xl items-start">
 
                         {/* Left: Image Preview */}
-                        <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden border border-white/10 bg-black/40 shadow-2xl group">
-                            <img src={previewSrc!} alt="Preview" className={cn("w-full h-[500px] object-contain transition-all duration-500", (isScanning) && "opacity-50 scale-95 blur-sm")} />
+                        <div className="w-full lg:w-1/2 relative rounded-xl overflow-hidden border border-white/10 bg-slate-950/65 shadow-2xl group">
+                            <img src={previewSrc!} alt="Preview" className={cn("w-full h-[420px] object-contain transition-all duration-500", (isScanning) && "opacity-50 scale-95 blur-sm")} />
 
                             {!isScanning && !finalResult && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-                                    <div className="flex flex-col gap-3 items-center translate-y-4">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/60 backdrop-blur-sm">
+                                    <div className="flex flex-col gap-3 items-center">
                                         <Button
                                             onClick={openCarePickerAndStart}
                                             size="lg"
-                                            className="rounded-full shadow-2xl shadow-cyan-500/40 hover:scale-105 transition-all duration-300 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 border-none text-white font-bold px-10 py-7 text-lg group/btn"
+                                            className="shadow-2xl shadow-cyan-950/40 transition-all duration-300 font-bold px-8 py-6 text-lg group/btn"
                                         >
                                             <Zap className="mr-2 w-6 h-6 group-hover/btn:animate-pulse" />
                                             {t("Start Analysis", "بدء التحليل")}
@@ -715,7 +721,7 @@ export const ScannerInterface = () => {
                                             onClick={resetScan}
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-full border-white/20 bg-black/40 text-white/80 hover:bg-white/10 hover:text-white px-6 h-10 backdrop-blur-md"
+                                            className="border-white/20 bg-slate-950/70 text-white/80 hover:bg-white/10 hover:text-white px-6 h-10 backdrop-blur-md"
                                         >
                                             <X className="mr-2 w-4 h-4" />
                                             {t("Change Image", "تغيير الصورة")}
@@ -724,7 +730,7 @@ export const ScannerInterface = () => {
 
                                     <button
                                         onClick={resetScan}
-                                        className="absolute top-4 right-4 p-2.5 bg-black/60 hover:bg-red-500/80 rounded-full text-white/70 hover:text-white transition-all duration-300 backdrop-blur-md border border-white/10 shadow-lg"
+                                        className="absolute top-4 right-4 p-2.5 bg-slate-950/70 hover:bg-red-500/80 rounded-lg text-white/70 hover:text-white transition-all duration-300 backdrop-blur-md border border-white/10 shadow-lg"
                                         title={t("Cancel", "إلغاء")}
                                     >
                                         <X className="w-5 h-5" />

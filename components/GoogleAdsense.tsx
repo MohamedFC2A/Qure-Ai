@@ -8,6 +8,7 @@ type Props = {
 
 export const GoogleAdsense = ({ pId }: Props) => {
     if (!pId) return null;
+    if (process.env.NODE_ENV !== "production") return null;
 
     return (
         <Script

@@ -23,6 +23,22 @@ interface UserState {
 
 const UserContext = createContext<UserState | undefined>(undefined);
 
+const getLocalDevUser = () => {
+    if (process.env.NODE_ENV !== "development" || typeof document === "undefined") return null;
+    if (!document.cookie.split("; ").some((cookie) => cookie === "qure_dev_auth=1")) return null;
+
+    return {
+        id: "local-dev-user",
+        email: "local.dev@qure-ai.local",
+        created_at: new Date("2026-01-01T00:00:00.000Z").toISOString(),
+        user_metadata: {
+            username: "local_dev",
+            terms_accepted_at: new Date().toISOString(),
+            terms_version: "local-dev",
+        },
+    };
+};
+
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -33,6 +49,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const refreshUser = useCallback(async () => {
         try {
+            const localDevUser = getLocalDevUser();
+            if (localDevUser) {
+                setUser(localDevUser);
+                setProfile({
+                    username: "local_dev",
+                    gender: "other",
+                    age: 30,
+                    height: "175 cm",
+                    weight: "75 kg",
+                });
+                setPlan("ultra");
+                setCredits(999);
+                return;
+            }
+
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
 

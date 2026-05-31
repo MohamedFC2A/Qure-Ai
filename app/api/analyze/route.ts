@@ -6,6 +6,7 @@ import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot 
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { preflightMedicationEvidence, type ProductClassification } from "@/lib/medicationEnrichment";
 import { generateInteractionGuard } from "@/lib/ai/interactionGuard";
+import { getLocalDevUser } from "@/lib/devAuth";
 
 function normalizeMedicationName(name: string): string {
     return String(name || "")
@@ -58,18 +59,21 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No text provided" }, { status: 400 });
         }
 
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const localDevUser = getLocalDevUser(req);
+        const supabase = localDevUser ? null : await createClient();
+        const { data: { user } } = localDevUser
+            ? { data: { user: localDevUser } }
+            : await supabase!.auth.getUser();
 
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (!hasAcceptedTerms(user)) {
+        if (!localDevUser && !hasAcceptedTerms(user)) {
             return NextResponse.json({ error: "Terms acceptance required", code: "TERMS_REQUIRED" }, { status: 403 });
         }
 
-        const userPlan = await getUserPlan(user.id, supabase);
+        const userPlan = localDevUser ? "ultra" : await getUserPlan(user.id, supabase);
         const isUltra = userPlan === 'ultra';
         const requestedFdaEnabled = (body as any)?.fdaEnabled;
         const fdaEnabled = isUltra ? requestedFdaEnabled !== false : true;
@@ -89,6 +93,7 @@ export async function POST(req: NextRequest) {
         // Owner profile (account-level basics). Used as fallback for "self" subject.
         let ownerProfileBasics: any = null;
         try {
+            if (!supabase) throw new Error("Local dev mode");
             const { data } = await supabase
                 .from('profiles')
                 .select('username, full_name, gender, age, height, weight')
@@ -102,6 +107,7 @@ export async function POST(req: NextRequest) {
         // Resolve subject care-profile (must belong to the current account)
         let subjectProfile: any = null;
         try {
+            if (!supabase) throw new Error("Local dev mode");
             const { data } = await supabase
                 .from('care_profiles')
                 .select('id, display_name, relationship')
@@ -117,6 +123,7 @@ export async function POST(req: NextRequest) {
         if (!subjectProfile) {
             subjectProfileId = user.id;
             try {
+                if (!supabase) throw new Error("Local dev mode");
                 const { data } = await supabase
                     .from('care_profiles')
                     .select('id, display_name, relationship')
@@ -144,6 +151,7 @@ export async function POST(req: NextRequest) {
         let analysisContext: any = undefined;
         if (isUltra) {
             try {
+                if (!supabase) throw new Error("Local dev mode");
                 const { data: carePrivate } = await supabase
                     .from('care_private_profiles')
                     .select('age, sex, height, weight, allergies, chronic_conditions, current_medications, notes')
@@ -363,8 +371,10 @@ export async function POST(req: NextRequest) {
         };
 
         // 2. Save Analysis to Supabase (Protected)
-        if (analysisWithEnrichment && (analysisWithEnrichment as any).drugName !== "Unknown") {
+        if (!localDevUser && analysisWithEnrichment && (analysisWithEnrichment as any).drugName !== "Unknown") {
             try {
+                if (!supabase) throw new Error("Supabase client unavailable");
+                const db = supabase;
                 const historyPayload: any = {
                     user_id: user.id,
                     profile_id: subjectProfileId,
@@ -373,7 +383,7 @@ export async function POST(req: NextRequest) {
                     analysis_json: analysisWithEnrichment,
                 };
 
-                let historyRes = await supabase
+                let historyRes = await db
                     .from("medication_history")
                     .insert(historyPayload)
                     .select("id")
@@ -382,7 +392,7 @@ export async function POST(req: NextRequest) {
                 if (historyRes.error && String(historyRes.error.message || "").toLowerCase().includes("profile_id")) {
                     const legacyPayload = { ...historyPayload };
                     delete legacyPayload.profile_id;
-                    historyRes = await supabase
+                    historyRes = await db
                         .from("medication_history")
                         .insert(legacyPayload)
                         .select("id")
@@ -408,7 +418,7 @@ export async function POST(req: NextRequest) {
                     if (displayName && displayName !== 'Unknown' && normalizedName) {
                         const nowIso = new Date().toISOString();
                         let existing: any = null;
-                        const existingRes = await supabase
+                        const existingRes = await db
                             .from('memories_medications')
                             .select('id, count')
                             .eq('user_id', user.id)
@@ -418,7 +428,7 @@ export async function POST(req: NextRequest) {
 
                         if (existingRes.error) {
                             // Legacy fallback (before profile_id existed)
-                            const legacyRes = await supabase
+                            const legacyRes = await db
                                 .from('memories_medications')
                                 .select('id, count')
                                 .eq('user_id', user.id)
@@ -430,7 +440,7 @@ export async function POST(req: NextRequest) {
                         }
 
                         if (existing?.id) {
-                            const { error: updateError } = await supabase
+                            const { error: updateError } = await db
                                 .from('memories_medications')
                                 .update({
                                     display_name: displayName,
@@ -459,7 +469,7 @@ export async function POST(req: NextRequest) {
                                 metadata: { source: 'scan', genericName: (analysisWithEnrichment as any).genericName },
                             };
 
-                            let insertRes = await supabase
+                            let insertRes = await db
                                 .from('memories_medications')
                                 .insert(insertPayload)
                                 .select('display_name, normalized_name, count, last_seen_at')
@@ -468,7 +478,7 @@ export async function POST(req: NextRequest) {
                             if (insertRes.error && String(insertRes.error.message || "").toLowerCase().includes("profile_id")) {
                                 const legacyPayload = { ...insertPayload };
                                 delete legacyPayload.profile_id;
-                                insertRes = await supabase
+                                insertRes = await db
                                     .from('memories_medications')
                                     .insert(legacyPayload)
                                     .select('display_name, normalized_name, count, last_seen_at')

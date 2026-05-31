@@ -21,6 +21,10 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 ts-debug.log*
+.next-dev.*.log
+
+# local env files
+.env*.local
 
 # local env files
 .env*.local
@@ -33,3 +37,6 @@ ts-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright-cli
+.playwright-cli/

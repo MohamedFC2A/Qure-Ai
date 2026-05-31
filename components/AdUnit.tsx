@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 declare global {
     interface Window {
@@ -9,17 +9,27 @@ declare global {
 }
 
 export const AdUnit = () => {
+    const adRef = useRef<HTMLModElement | null>(null);
+
     useEffect(() => {
+        if (process.env.NODE_ENV !== "production") return;
+        if (!adRef.current) return;
+        if (adRef.current.dataset.adsbygoogleStatus === "done") return;
+
         try {
             (window.adsbygoogle = window.adsbygoogle || []).push({});
         } catch (e) {
-            console.error("AdSense error:", e);
+            const message = e instanceof Error ? e.message : String(e || "");
+            if (!message.includes("already have ads")) {
+                console.warn("AdSense unavailable:", message);
+            }
         }
     }, []);
 
     return (
         <div className="w-full my-4 overflow-hidden rounded-xl border border-white/10 bg-black/20">
             <ins
+                ref={adRef}
                 className="adsbygoogle"
                 style={{ display: "block" }}
                 data-ad-format="fluid"

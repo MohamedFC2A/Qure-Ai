@@ -19,23 +19,27 @@ export default function DocsPage() {
     };
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4 md:px-8 max-w-7xl mx-auto space-y-16">
+        <div className="min-h-screen pt-28 pb-28 md:pb-12 px-4 md:px-8 max-w-7xl mx-auto space-y-12">
 
             {/* Header */}
             <div className="text-center space-y-4">
-                <h1 className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-100 to-blue-200">
+                <div className="clinical-eyebrow mx-auto">
+                    <Terminal className="h-4 w-4" />
+                    API documentation
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold text-white">
                     Developer Hub
                 </h1>
-                <p className="text-xl text-white/50 max-w-3xl mx-auto">
-                    Complete integration guide for the MedVision Pharmaceutical Analysis Engine.
-                    Connect your applications with military-grade OCR and drug data.
+                <p className="text-lg text-slate-400 max-w-3xl mx-auto">
+                    Complete integration guide for the QURE AI Pharmaceutical Analysis Engine.
+                    Connect your applications with OCR and drug analysis workflows.
                 </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Sidebar Navigation */}
                 <div className="lg:col-span-3 hidden lg:block">
-                    <div className="sticky top-28 space-y-1 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl">
+                    <div className="sticky top-28 space-y-1 p-5 rounded-lg bg-slate-950/60 border border-white/10 backdrop-blur-xl">
                         <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Documentation</h3>
 
                         <a href="#authentication" className="flex items-center gap-3 px-3 py-2 text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-all group">
@@ -104,7 +108,7 @@ export default function DocsPage() {
                                         Use this when you have an IMAGE (e.g., pill bottle photo).
                                         You must first extract text using an OCR engine like
                                         <code className="bg-white/10 px-1 rounded mx-1 text-white">tesseract.js</code>
-                                        before sending the raw text to our API.
+                                        before sending the raw text to the QURE AI API.
                                     </p>
                                 </div>
                                 <div className="space-y-4">

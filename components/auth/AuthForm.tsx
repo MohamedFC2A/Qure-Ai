@@ -51,6 +51,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const router = useRouter();
     const supabase = createClient();
     const schema = type === "signup" ? signupSchema : loginSchema;
+    const isLocalDev = process.env.NODE_ENV === "development";
 
     const getNextPath = () => {
         if (typeof window === "undefined") return "/scan";
@@ -151,27 +152,62 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         }
     };
 
-    return (
-        <GlassCard className="w-full max-w-md p-8 relative overflow-hidden" hoverEffect={false}>
-            {/* Decorative elements */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-liquid-primary/30 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-liquid-secondary/30 rounded-full blur-3xl animate-pulse delay-1000" />
+    const handleLocalDevLogin = async () => {
+        setIsLoading(true);
+        setError(null);
 
+        try {
+            const response = await fetch("/api/dev/login", { method: "POST" });
+            const payload = await response.json();
+
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to prepare local dev login");
+            }
+
+            document.cookie = "qure_dev_auth=1; path=/; max-age=2592000; samesite=lax";
+
+            if (payload.mode === "offline") {
+                window.location.href = getNextPath();
+                return;
+            }
+
+            const result = await supabase.auth.signInWithPassword({
+                email: payload.email,
+                password: payload.password,
+            });
+
+            if (result.error) {
+                throw result.error;
+            }
+
+            window.location.href = getNextPath();
+        } catch (err: any) {
+            setError(err.message || "Local dev login failed");
+            console.error("Local dev login error:", err);
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <GlassCard className="w-full max-w-lg p-6 sm:p-8 relative overflow-hidden" hoverEffect={false}>
             <div className="relative z-10">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+                    <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-md border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                        {type === "login" ? "Secure access" : "Create workspace"}
+                    </div>
+                    <h2 className="text-3xl font-bold text-white">
                         {type === "login" ? "Welcome Back" : "Create Account"}
                     </h2>
-                    <p className="text-white/60 mt-2">
+                    <p className="text-slate-400 mt-2">
                         {type === "login"
                             ? "Enter your credentials to access your workspace"
-                            : "Join clearly the future of pharmaceutical analysis"}
+                            : "Set up your account for medication analysis and safety review"}
                     </p>
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/25 flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-300 shrink-0 mt-0.5" />
                         <p className="text-sm text-red-200">{error}</p>
                     </div>
                 )}
@@ -184,7 +220,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             <input
                                 {...register("email")}
                                 type="email"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                className="clinical-input !pl-12"
                                 placeholder="doctor@medvision.ai"
                             />
                         </div>
@@ -200,7 +236,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             <input
                                 {...register("password")}
                                 type="password"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                className="clinical-input !pl-12"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -217,7 +253,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                     <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                     <input
                                         {...register("username")}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                        className="clinical-input !pl-12"
                                         placeholder="e.g. Alien_X"
                                         autoComplete="username"
                                     />
@@ -236,7 +272,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             {...register("age")}
                                             type="number"
                                             inputMode="numeric"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            className="clinical-input !pl-12"
                                             placeholder="25"
                                             min={1}
                                             max={120}
@@ -253,7 +289,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                         <select
                                             {...register("gender")}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-base text-white focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all appearance-none"
+                                            className="clinical-input !pl-12 pr-4 appearance-none"
                                             defaultValue=""
                                         >
                                             <option value="" disabled className="bg-slate-900 text-white/50">
@@ -279,7 +315,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             {...register("heightCm")}
                                             type="number"
                                             inputMode="numeric"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            className="clinical-input !pl-12"
                                             placeholder="180"
                                             min={50}
                                             max={250}
@@ -298,7 +334,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             {...register("weightKg")}
                                             type="number"
                                             inputMode="decimal"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-10 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-liquid-primary/50 focus:ring-1 focus:ring-liquid-primary/50 transition-all"
+                                            className="clinical-input !pl-12"
                                             placeholder="75"
                                             min={10}
                                             max={500}
@@ -314,7 +350,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     )}
 
                     {type === "signup" && (
-                        <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                        <div className="p-4 rounded-lg bg-amber-300/10 border border-amber-300/20">
                             <div className="flex items-start gap-3">
                                 <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
                                 <div className="min-w-0">
@@ -349,17 +385,23 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                         </div>
                     )}
 
-                    <Button
-                        type="submit"
-                        className="w-full bg-gradient-to-r from-liquid-primary to-liquid-secondary hover:opacity-90 transition-opacity"
-                        size="lg"
-                        isLoading={isLoading}
-                    >
+                    <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
                         {type === "login" ? "Sign In" : "Create Account"}
                     </Button>
                 </form>
 
                 <div className="mt-8 pt-6 border-t border-white/10">
+                    {isLocalDev && (
+                        <Button
+                            variant="outline"
+                            className="w-full mb-4 border-emerald-400/30 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/15"
+                            onClick={handleLocalDevLogin}
+                            disabled={isLoading}
+                        >
+                            <User className="w-5 h-5 mr-2" />
+                            Local Dev Login
+                        </Button>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Button variant="outline" className="w-full" onClick={() => handleOAuthLogin('github')} disabled={isLoading}>
                             <Github className="w-5 h-5 mr-2" />
@@ -389,18 +431,18 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     </div>
                 </div>
 
-                <div className="mt-6 text-center text-sm text-white/60">
+                <div className="mt-6 text-center text-sm text-slate-400">
                     {type === "login" ? (
                         <>
                             Don't have an account?{" "}
-                            <Link href="/signup" className="text-white hover:underline font-medium">
+                            <Link href="/signup" className="text-cyan-100 hover:underline font-medium">
                                 Sign up
                             </Link>
                         </>
                     ) : (
                         <>
                             Already have an account?{" "}
-                            <Link href="/login" className="text-white hover:underline font-medium">
+                            <Link href="/login" className="text-cyan-100 hover:underline font-medium">
                                 Log in
                             </Link>
                         </>

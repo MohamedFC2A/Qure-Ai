@@ -983,11 +983,11 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     }
 
     return (
-        <div ref={exportRef} className="w-full max-w-4xl">
-            <GlassCard className="w-full p-0 overflow-hidden shadow-2xl shadow-liquid-primary/10" hoverEffect={false}>
+        <div ref={exportRef} className="w-full max-w-5xl">
+            <GlassCard className="w-full p-0 overflow-hidden shadow-2xl shadow-black/25" hoverEffect={false}>
                 {/* Header Section */}
                 <div className="relative p-5 sm:p-8 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-liquid-primary/20 via-liquid-secondary/10 to-transparent" />
+                    <div className="absolute inset-x-0 top-0 h-px bg-cyan-300/25" />
 
                     <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div>
@@ -1013,7 +1013,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             </div>
 
                             {data.genericName && (
-                                <p className="text-liquid-accent font-medium text-base sm:text-lg mb-1">{data.genericName}</p>
+                                <p className="text-cyan-200 font-medium text-base sm:text-lg mb-1">{data.genericName}</p>
                             )}
 
                             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-white/50 text-xs sm:text-sm mt-3">
@@ -1067,7 +1067,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         </div>
 
                         <div className="flex items-center gap-2 md:justify-end flex-wrap">
-                            <div data-export-ignore className="flex flex-wrap items-center gap-2">
+                            <div id="export" data-export-ignore className="flex flex-wrap items-center gap-2">
                                 <Button
                                     size="sm"
                                     variant="outline"
@@ -1100,7 +1100,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
                             {meta?.plan && (
                                 <span className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
+                                    "px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border",
                                     meta.plan === 'ultra'
                                         ? "bg-amber-500/10 text-amber-200 border-amber-500/30"
                                         : "bg-cyan-500/10 text-cyan-200 border-cyan-500/30"
@@ -1109,12 +1109,12 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </span>
                             )}
                             {meta?.usedPrivateContext && (
-                                <span className="px-3 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-200 border-amber-500/30">
+                                <span className="px-3 py-1 rounded-md text-xs font-medium border bg-amber-500/10 text-amber-200 border-amber-500/30">
                                     {t('Private AI Context', 'سياقك الصحي الخاص')}
                                 </span>
                             )}
                             {meta?.usedMedicationMemories && (
-                                <span className="px-3 py-1 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-200 border-purple-500/30">
+                                <span className="px-3 py-1 rounded-md text-xs font-medium border bg-purple-500/10 text-purple-200 border-purple-500/30">
                                     {t('Medication Memories', 'ذاكرة الأدوية')}
                                 </span>
                             )}
@@ -1127,14 +1127,32 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         </div>
                     )}
 
-                    <div className="relative z-10 mt-6 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
+                    <div className="relative z-10 mt-6 p-4 rounded-lg bg-white/[0.04] border border-white/10 backdrop-blur-md">
                         <div className="flex items-start gap-3">
-                            <Info className="w-5 h-5 text-liquid-primary mt-1 shrink-0" />
-                            <p className="text-white/80 leading-relaxed text-sm">
+                            <Info className="w-5 h-5 text-cyan-200 mt-1 shrink-0" />
+                            <p className="text-slate-300 leading-relaxed text-sm">
                                 {data.description}
                             </p>
                         </div>
                         <AdUnit />
+                    </div>
+
+                    <div data-export-ignore className="relative z-10 mt-4 flex flex-wrap gap-2 rounded-lg border border-white/10 bg-slate-950/45 p-2">
+                        {[
+                            { href: "#overview", label: t("Overview", "نظرة عامة") },
+                            { href: "#safety", label: t("Safety", "الأمان") },
+                            { href: "#verification", label: t("Verification", "التحقق") },
+                            { href: "#ask-ai", label: t("Ask AI", "اسأل الذكاء") },
+                            { href: "#export", label: t("Export", "تصدير") },
+                        ].map((item) => (
+                            <a
+                                key={item.href}
+                                href={item.href}
+                                className="rounded-md px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                            >
+                                {item.label}
+                            </a>
+                        ))}
                     </div>
 
                     {actionCards.length > 0 && (
@@ -1247,7 +1265,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                     )}
 
                     {/* FDA Verification (openFDA) */}
-                    <div className="relative z-10 mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div id="verification" className="relative z-10 mt-4 p-4 rounded-lg bg-white/[0.04] border border-white/10">
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-white/80 text-sm font-semibold">
                                 <Database className="w-4 h-4 text-emerald-300" />
@@ -1519,7 +1537,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="p-5 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 bg-black/20">
+                <div id="overview" className="p-5 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 bg-slate-950/30">
 
                     {/* Left Column: Usage & Dosage */}
                     <div className="space-y-6 sm:space-y-8">
@@ -1616,7 +1634,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 </div>
 
                 {/* Ultra: Advanced Safety Pack */}
-                <div className="p-5 sm:p-8 bg-black/10 border-t border-white/10">
+                <div id="safety" className="p-5 sm:p-8 bg-slate-950/20 border-t border-white/10">
                     <div className="flex items-center justify-between gap-4 mb-4">
                         <h3 className="text-lg font-bold text-white">{t('Advanced Safety Pack', 'حزمة الأمان المتقدمة')}</h3>
                         {plan !== 'ultra' && (
@@ -2299,7 +2317,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 </div>
 
                 {/* AI Follow-up Tree - ENHANCED */}
-                <div data-export-ignore className="p-5 sm:p-8 bg-gradient-to-b from-black/20 to-black/5 border-t border-white/10">
+                <div id="ask-ai" data-export-ignore className="p-5 sm:p-8 bg-slate-950/20 border-t border-white/10">
                     {/* Header with animated gradient */}
                     <div className="flex items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-3">

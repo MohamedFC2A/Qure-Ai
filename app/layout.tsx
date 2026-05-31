@@ -10,7 +10,7 @@ import { ScanProvider } from "@/context/ScanContext";
 import { GoogleAdsense } from "@/components/GoogleAdsense";
 import { Footer } from "@/components/Footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
     title: "Qure Ai | Pharmaceutical Analysis",
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={clsx(inter.className, "min-h-screen relative")} suppressHydrationWarning>
+            <body className={clsx(inter.className, inter.variable, "min-h-screen relative")} suppressHydrationWarning>
                 <GoogleAdsense pId="8970399272088568" />
                 <LiquidBackground />
                 <SettingsProvider>
