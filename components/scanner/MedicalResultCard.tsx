@@ -707,14 +707,21 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         const text = String(raw || "").trim();
         if (!text) return { name: "", doseText: "—", doseMg: undefined as number | undefined };
 
-        const match = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|ug|g)\b/i);
+        const match = text.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|ug|g|ml|%|iu|units|unit)\b/i);
         if (!match) return { name: text, doseText: "—", doseMg: undefined as number | undefined };
 
         const value = Number(match[1]);
-        const unit = String(match[2] || "").toLowerCase();
-        let mg = Number.isFinite(value) ? value : NaN;
-        if (unit === "g") mg = value * 1000;
-        else if (unit === "mcg" || unit === "ug") mg = value / 1000;
+        const unit = String(match[2] || "");
+        
+        // Round to max 2 decimal places to keep it clean and correct, keeping the original unit
+        const roundedValue = Math.round(value * 100) / 100;
+        const doseText = `${roundedValue} ${unit}`;
+
+        let mg = NaN;
+        const unitLower = unit.toLowerCase();
+        if (unitLower === "g") mg = value * 1000;
+        else if (unitLower === "mg") mg = value;
+        else if (unitLower === "mcg" || unitLower === "ug") mg = value / 1000;
 
         const doseMg = Number.isFinite(mg) ? mg : undefined;
         const cleanedName = text
@@ -725,7 +732,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
         return {
             name: cleanedName || text,
-            doseText: doseMg !== undefined ? formatMg(doseMg) : match[0],
+            doseText,
             doseMg,
         };
     };
@@ -737,7 +744,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                     const name = String(it?.name || "").trim();
                     const strength = String(it?.strength || "").trim();
                     const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
-                    const doseText = strengthMg !== undefined ? formatMg(strengthMg) : strength || "—";
+                    // Prioritize raw strength string to preserve original units
+                    const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
                     if (!name) return null;
                     return { name, doseText, doseMg: strengthMg, source: "fda" as const };
                 })
@@ -751,7 +759,8 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                     const name = String(it?.name || "").trim();
                     const strength = String(it?.strength || "").trim();
                     const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
-                    const doseText = strengthMg !== undefined ? formatMg(strengthMg) : strength || "—";
+                    // Prioritize raw strength string to preserve original units
+                    const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
                     if (!name) return null;
                     return { name, doseText, doseMg: strengthMg, source: "fda" as const };
                 })
@@ -831,6 +840,22 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         } finally {
             setAiLoading(false);
         }
+    };
+
+    const askAiAbout = (topic: string, question: string) => {
+        if (!user) {
+            setAiError(t("Login required to ask AI.", "يجب تسجيل الدخول لسؤال الذكاء الاصطناعي."));
+            setActiveTab('chat');
+            return;
+        }
+        if (plan !== "ultra") {
+            setAiError(t("Ultra plan required to ask AI.", "يلزم الاشتراك ألترا لسؤال الذكاء الاصطناعي."));
+            setActiveTab('chat');
+            return;
+        }
+        setActiveTab('chat');
+        setCustomQuestion(question);
+        void askAi({ question, reset: false });
     };
 
     // Copy answer to clipboard
@@ -1078,7 +1103,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     {(showAllIngredients ? ingredientRows : ingredientRows.slice(0, 10)).map((row, i) => (
                                         <tr key={i} className="border-t border-white/10 hover:bg-white/[0.02] transition-colors">
                                             <td className="px-4 py-3 text-white/50 font-mono tabular-nums text-center">{i + 1}</td>
-                                            <td className="px-4 py-3 text-white/80 font-medium leading-relaxed break-words">{row.name}</td>
+                                            <td className="px-4 py-3 text-white/80 font-medium leading-relaxed break-words">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="truncate">{row.name}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => askAiAbout(
+                                                            row.name,
+                                                            t(
+                                                                `What is the medical role of ${row.name} in ${data.drugName}? Explain its mechanism, purpose, and precautions.`,
+                                                                `ما هو الدور الطبي للمادة الفعالة ${row.name} في دواء ${data.drugName}؟ اشرح آليتها، الغرض منها، والاحتياطات الخاصة بها.`
+                                                            )
+                                                        )}
+                                                        className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
+                                                        title={t("Ask AI about this ingredient", "اسأل الذكاء الاصطناعي عن هذه المادة")}
+                                                    >
+                                                        <Sparkles className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td className="px-4 py-3 text-white/70 font-mono tabular-nums text-center">{row.doseText}</td>
                                         </tr>
                                     ))}
@@ -1089,9 +1132,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         {/* Mobile View - Beautiful space-saving 2-column Grid */}
                         <div className="md:hidden grid grid-cols-2 gap-2.5">
                             {(showAllIngredients ? ingredientRows : ingredientRows.slice(0, 6)).map((row, i) => (
-                                <div key={i} className="p-3 rounded-xl border border-white/5 bg-slate-900/40 flex flex-col justify-between gap-2 hover:border-cyan-500/20 transition-all duration-300">
+                                <div key={i} className="p-3 rounded-xl border border-white/5 bg-slate-900/40 flex flex-col justify-between gap-2 hover:border-cyan-500/20 transition-all duration-300 relative group">
                                     <div className="min-w-0">
-                                        <p className="text-[9px] text-white/35 font-bold uppercase tracking-wider">{t(`Active #${i+1}`, `مادة #${i+1}`)}</p>
+                                        <div className="flex items-center justify-between gap-1">
+                                            <p className="text-[9px] text-white/35 font-bold uppercase tracking-wider">{t(`Active #${i+1}`, `مادة #${i+1}`)}</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => askAiAbout(
+                                                    row.name,
+                                                    t(
+                                                        `What is the medical role of ${row.name} in ${data.drugName}? Explain its mechanism, purpose, and precautions.`,
+                                                        `ما هو الدور الطبي للمادة الفعالة ${row.name} في دواء ${data.drugName}؟ اشرح آليتها، الغرض منها، والاحتياطات الخاصة بها.`
+                                                    )
+                                                )}
+                                                className="p-1 rounded-md bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
+                                                title={t("Ask AI about this ingredient", "اسأل الذكاء الاصطناعي عن هذه المادة")}
+                                            >
+                                                <Sparkles className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                         <p className="text-white font-semibold text-xs mt-0.5 truncate" title={row.name}>{row.name}</p>
                                     </div>
                                     <div className="w-max px-2.5 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold">
@@ -1130,9 +1189,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         </div>
                         <ul className="grid gap-2">
                             {(data.uses || []).map((use, i) => (
-                                <li key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.01] border border-white/5 transition-all duration-200 hover:bg-white/[0.03]">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                                    <span className="text-white/80 text-sm leading-relaxed">{use}</span>
+                                <li key={i} className="flex items-start justify-between gap-2.5 p-3 rounded-xl bg-white/[0.01] border border-white/5 transition-all duration-200 hover:bg-white/[0.03]">
+                                    <div className="flex items-start gap-2.5">
+                                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                                        <span className="text-white/80 text-sm leading-relaxed">{use}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => askAiAbout(
+                                            use,
+                                            t(
+                                                `How does ${data.drugName} treat or support: "${use}"? What is the expected timeframe for relief?`,
+                                                `كيف يعالج أو يساعد دواء ${data.drugName} في حالة: "${use}"؟ وما هو الإطار الزمني المتوقع للتحسن؟`
+                                            )
+                                        )}
+                                        className="p-1.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
+                                        title={t("Ask AI about this indication", "اسأل الذكاء الاصطناعي عن دواعي الاستعمال")}
+                                    >
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                    </button>
                                 </li>
                             ))}
                         </ul>
@@ -1147,8 +1222,24 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </div>
                                 <h3 className="font-bold text-white text-base sm:text-lg">{t('Standard Dosage', 'الجرعة المعتادة')}</h3>
                             </div>
-                            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-blue-100 text-sm leading-relaxed">
-                                {data.dosage || t("Consult a doctor for precise dosage.", "استشر الطبيب لمعرفة الجرعة الدقيقة.")}
+                            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-blue-100 text-sm leading-relaxed flex items-start justify-between gap-3">
+                                <span>{data.dosage || t("Consult a doctor for precise dosage.", "استشر الطبيب لمعرفة الجرعة الدقيقة.")}</span>
+                                {data.dosage && (
+                                    <button
+                                        type="button"
+                                        onClick={() => askAiAbout(
+                                            t("Dosage Details", "تفاصيل الجرعة"),
+                                            t(
+                                                `Please explain the dosage instructions for ${data.drugName}: "${data.dosage}". Are there custom adjustments for liver/kidney/elderly?`,
+                                                `يرجى شرح تعليمات جرعة دواء ${data.drugName}: "${data.dosage}". وهل هناك تعديلات مخصصة لمرضى الكبد/الكلى أو كبار السن؟`
+                                            )
+                                        )}
+                                        className="p-1.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
+                                        title={t("Ask AI about this dosage", "اسأل الذكاء الاصطناعي عن الجرعة")}
+                                    >
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -1185,9 +1276,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         {(data.warnings && data.warnings.length > 0) ? (
                             <ul className="space-y-2.5">
                                 {data.warnings.map((w, i) => (
-                                    <li key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20">
-                                        <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                                        <span className="text-red-100/90 text-sm leading-relaxed">{w}</span>
+                                    <li key={i} className="flex items-start justify-between gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 group">
+                                        <div className="flex items-start gap-3">
+                                            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                                            <span className="text-red-100/90 text-sm leading-relaxed">{w}</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => askAiAbout(
+                                                w,
+                                                t(
+                                                    `Why is "${w}" a warning for ${data.drugName}? Explain the potential risks and what precautions to take.`,
+                                                    `لماذا يعتبر "${w}" تحذيراً لدواء ${data.drugName}؟ اشرح المخاطر المحتملة والاحتياطات الواجب اتخاذها.`
+                                                )
+                                            )}
+                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
+                                            title={t("Ask AI about this warning", "اسأل الذكاء الاصطناعي عن هذا التحذير")}
+                                        >
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
@@ -1205,9 +1312,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         {(data.contraindications && data.contraindications.length > 0) ? (
                             <ul className="space-y-2.5">
                                 {data.contraindications.map((c, i) => (
-                                    <li key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                                        <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-                                        <span className="text-orange-100/90 text-sm leading-relaxed">{c}</span>
+                                    <li key={i} className="flex items-start justify-between gap-3 p-3.5 rounded-xl bg-orange-500/10 border border-orange-500/20 group">
+                                        <div className="flex items-start gap-3">
+                                            <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                                            <span className="text-orange-100/90 text-sm leading-relaxed">{c}</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => askAiAbout(
+                                                c,
+                                                t(
+                                                    `Why is "${c}" a contraindication for ${data.drugName}? What are the biological reasons or interactions?`,
+                                                    `لماذا يمنع استعمال دواء ${data.drugName} في حالة: "${c}"؟ ما هي الأسباب البيولوجية أو التداخلات؟`
+                                                )
+                                            )}
+                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
+                                            title={t("Ask AI about this contraindication", "اسأل الذكاء الاصطناعي عن مانع الاستعمال")}
+                                        >
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
@@ -1321,9 +1444,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         {(data.precautions && data.precautions.length > 0) ? (
                                             <ul className="grid gap-2.5 md:grid-cols-2">
                                                 {(safetyShowAll.precautions ? data.precautions : data.precautions.slice(0, 6)).map((p, i) => (
-                                                    <li key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                                                        <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
-                                                        <span className="text-white/80 text-sm leading-relaxed">{p}</span>
+                                                    <li key={i} className="flex items-start justify-between gap-3 p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 group">
+                                                        <div className="flex items-start gap-3">
+                                                            <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+                                                            <span className="text-white/80 text-sm leading-relaxed">{p}</span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => askAiAbout(
+                                                                p,
+                                                                t(
+                                                                    `What precautions should I take regarding "${p}" when using ${data.drugName}? Explain the details.`,
+                                                                    `ما هي الاحتياطات التي يجب أن أتخذها بخصوص "${p}" عند استخدام ${data.drugName}؟ اشرح التفاصيل.`
+                                                                )
+                                                            )}
+                                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
+                                                            title={t("Ask AI about this precaution", "اسأل الذكاء الاصطناعي عن هذا الاحتياط")}
+                                                        >
+                                                            <Sparkles className="w-3.5 h-3.5" />
+                                                        </button>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -1350,9 +1489,21 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         {(data.interactions && data.interactions.length > 0) ? (
                                             <div className="flex flex-wrap gap-2">
                                                 {(safetyShowAll.interactions ? data.interactions : data.interactions.slice(0, 10)).map((interaction, i) => (
-                                                    <span key={i} className="px-3.5 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-200 text-xs font-semibold">
-                                                        {interaction}
-                                                    </span>
+                                                    <button
+                                                        key={i}
+                                                        type="button"
+                                                        onClick={() => askAiAbout(
+                                                            interaction,
+                                                            t(
+                                                                `Explain the drug-drug or drug-food interaction between ${data.drugName} and "${interaction}". What are the risks and recommendations?`,
+                                                                `اشرح التداخل الدوائي أو الغذائي بين ${data.drugName} و"${interaction}". ما هي المخاطر والتوصيات؟`
+                                                            )
+                                                        )}
+                                                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-200 text-xs font-semibold hover:bg-orange-500/20 hover:border-orange-500/30 transition-all text-start"
+                                                    >
+                                                        <span>{interaction}</span>
+                                                        <Sparkles className="w-3 h-3 text-purple-300 shrink-0" />
+                                                    </button>
                                                 ))}
                                             </div>
                                         ) : (
@@ -1378,9 +1529,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         {(data.sideEffects && data.sideEffects.length > 0) ? (
                                             <ul className="grid gap-2.5 md:grid-cols-2">
                                                 {(safetyShowAll.sideEffects ? data.sideEffects : data.sideEffects.slice(0, 8)).map((s, i) => (
-                                                    <li key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                                                        <div className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                                                        <span className="text-white/80 text-sm leading-relaxed">{s}</span>
+                                                    <li key={i} className="flex items-start justify-between gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5 group">
+                                                        <div className="flex items-start gap-2.5">
+                                                            <div className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                                                            <span className="text-white/80 text-sm leading-relaxed">{s}</span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => askAiAbout(
+                                                                s,
+                                                                t(
+                                                                    `What should I know about the side effect: "${s}" when taking ${data.drugName}? How common is it, and how can I manage it?`,
+                                                                    `ما الذي يجب معرفته عن الأثر الجانبي: "${s}" عند تناول ${data.drugName}؟ ما مدى شيوعه وكيف يمكنني التعامل معه؟`
+                                                                )
+                                                            )}
+                                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
+                                                            title={t("Ask AI about this side effect", "اسأل الذكاء الاصطناعي عن هذا العرض")}
+                                                        >
+                                                            <Sparkles className="w-3.5 h-3.5" />
+                                                        </button>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -1399,7 +1566,24 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                     <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
                                                         <p className="text-red-200 font-bold text-xs sm:text-sm mb-2">{t('Overdose Symptoms', 'أعراض الجرعة الزائدة')}</p>
                                                         <ul className="space-y-1.5 text-red-100/90 text-sm leading-relaxed">
-                                                            {(safetyShowAll.overdose ? data.overdose.symptoms : data.overdose.symptoms.slice(0, 6)).map((s, i) => <li key={i}>• {s}</li>)}
+                                                            {(safetyShowAll.overdose ? data.overdose.symptoms : data.overdose.symptoms.slice(0, 6)).map((s, i) => (
+                                                                <li key={i} className="flex items-center justify-between gap-2 p-1 rounded hover:bg-red-500/5 transition-colors">
+                                                                    <span>• {s}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => askAiAbout(
+                                                                            s,
+                                                                            t(
+                                                                                `What should I do if I notice the overdose symptom "${s}" while taking ${data.drugName}?`,
+                                                                                `ماذا يجب أن أفعل إذا لاحظت عرض الجرعة الزائدة "${s}" أثناء تناول ${data.drugName}؟`
+                                                                            )
+                                                                        )}
+                                                                        className="p-0.5 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
+                                                                    >
+                                                                        <Sparkles className="w-3 h-3" />
+                                                                    </button>
+                                                                </li>
+                                                            ))}
                                                         </ul>
                                                         {(data.overdose.symptoms.length > 6) && (
                                                             <button
@@ -1415,7 +1599,24 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                                                         <p className="text-white font-bold text-xs sm:text-sm mb-2">{t('What to do', 'خطوات التصرف السريع')}</p>
                                                         <ul className="space-y-1.5 text-white/70 text-sm leading-relaxed">
-                                                            {(safetyShowAll.overdose ? data.overdose.whatToDo : data.overdose.whatToDo.slice(0, 6)).map((s, i) => <li key={i}>• {s}</li>)}
+                                                            {(safetyShowAll.overdose ? data.overdose.whatToDo : data.overdose.whatToDo.slice(0, 6)).map((s, i) => (
+                                                                <li key={i} className="flex items-center justify-between gap-2 p-1 rounded hover:bg-white/5 transition-colors">
+                                                                    <span>• {s}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => askAiAbout(
+                                                                            s,
+                                                                            t(
+                                                                                `Explain the overdose action step: "${s}" for ${data.drugName}. When should emergency services be called?`,
+                                                                                `اشرح خطوة التصرف في حال الجرعة الزائدة: "${s}" لدواء ${data.drugName}. متى يجب الاتصال بخدمات الطوارئ؟`
+                                                                            )
+                                                                        )}
+                                                                        className="p-0.5 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
+                                                                    >
+                                                                        <Sparkles className="w-3 h-3" />
+                                                                    </button>
+                                                                </li>
+                                                            ))}
                                                         </ul>
                                                     </div>
                                                 )}
@@ -1443,8 +1644,22 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                         {(data.whenToSeekHelp && data.whenToSeekHelp.length > 0) ? (
                                             <ul className="grid gap-2.5 md:grid-cols-2">
                                                 {(safetyShowAll.seekHelp ? data.whenToSeekHelp : data.whenToSeekHelp.slice(0, 8)).map((s, i) => (
-                                                    <li key={i} className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-100 text-sm leading-relaxed">
-                                                        • {s}
+                                                    <li key={i} className="flex items-center justify-between gap-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-100 text-sm leading-relaxed group">
+                                                        <span>• {s}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => askAiAbout(
+                                                                s,
+                                                                t(
+                                                                    `Why is "${s}" considered a red flag symptom for ${data.drugName}? What immediate medical interventions are typically required?`,
+                                                                    `لماذا يعتبر عرض الخطر "${s}" علامة تحذيرية حمراء لدواء ${data.drugName}؟ وما هي التدخلات الطبية الفورية المطلوبة عادة؟`
+                                                                )
+                                                            )}
+                                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
+                                                            title={t("Ask AI about this urgent symptom", "اسأل الذكاء الاصطناعي عن هذا العرض الطارئ")}
+                                                        >
+                                                            <Sparkles className="w-3.5 h-3.5" />
+                                                        </button>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -1694,9 +1909,25 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3 mb-4">
                                     <div>
                                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{t("Interaction Analysis", "تفاصيل التداخل الدوائي")}</p>
-                                        <h4 className="text-white font-bold text-base sm:text-lg mt-0.5">
-                                            {data.drugName} + <span className="text-cyan-300">{selectedGuardItem.otherMedication}</span>
-                                        </h4>
+                                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                            <h4 className="text-white font-bold text-base sm:text-lg">
+                                                {data.drugName} + <span className="text-cyan-300">{selectedGuardItem.otherMedication}</span>
+                                            </h4>
+                                            <button
+                                                type="button"
+                                                onClick={() => askAiAbout(
+                                                    `${data.drugName} + ${selectedGuardItem.otherMedication}`,
+                                                    t(
+                                                        `Explain in detail the interaction between ${data.drugName} and ${selectedGuardItem.otherMedication}. Headline: "${selectedGuardItem.headline || ''}". Summary: "${selectedGuardItem.summary || ''}". Mechanism: "${selectedGuardItem.mechanism || ''}". What is the biological pathway and clinical risk?`,
+                                                        `اشرح بالتفصيل التداخل بين ${data.drugName} و ${selectedGuardItem.otherMedication}. العنوان الرئيسي: "${selectedGuardItem.headline || ''}". الملخص: "${selectedGuardItem.summary || ''}". الآلية: "${selectedGuardItem.mechanism || ''}". ما هو المسار البيولوجي والمخاطر السريرية؟`
+                                                    )
+                                                )}
+                                                className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all text-[10px] font-semibold"
+                                            >
+                                                <Sparkles className="w-3 h-3" />
+                                                <span>{t("Ask AI", "اسأل الذكاء")}</span>
+                                            </button>
+                                        </div>
                                     </div>
                                     <span className={cn("px-3.5 py-1 rounded-xl text-xs font-bold border uppercase shrink-0", severityUi(selectedGuardItem.severity).chip)}>
                                         {severityUi(selectedGuardItem.severity).label}
