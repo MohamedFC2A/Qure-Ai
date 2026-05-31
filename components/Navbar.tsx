@@ -162,7 +162,7 @@ export const Navbar = () => {
                                             "w-1.5 h-1.5 rounded-full animate-glow-pulse",
                                             plan === "ultra" ? "bg-amber-400" : "bg-cyan-400"
                                         )} />
-                                        {credits}
+                                        {credits > 10000 ? "∞" : credits}
                                         <span className="hidden sm:inline">{t(" Credits", " رصيد")}</span>
                                     </div>
                                 </Link>

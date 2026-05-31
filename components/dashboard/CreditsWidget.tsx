@@ -107,7 +107,9 @@ export const CreditsWidget = () => {
 
                 <div className="mb-8">
                     <div className="flex items-baseline gap-1 mb-2">
-                        <span className="text-5xl font-bold text-white tracking-tight">{status.totalAvailable}</span>
+                        <span className="text-5xl font-bold text-white tracking-tight">
+                            {status.totalAvailable > 10000 ? "∞" : status.totalAvailable}
+                        </span>
                         <span className="text-white/40 font-medium">credits left</span>
                     </div>
 
