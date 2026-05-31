@@ -317,17 +317,18 @@ export default function Home() {
                     </div>
 
                     <h1 className="mt-6 text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
-                        {t(
-                            <>
-                                Turn medication labels into{" "}
-                                <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
-                                    clear safety reports.
-                                </span>
-                            </>,
+                        {isArabic ? (
                             <>
                                 حوّل ملصقات الأدوية إلى{" "}
                                 <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
                                     تقارير أمان واضحة.
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                Turn medication labels into{" "}
+                                <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
+                                    clear safety reports.
                                 </span>
                             </>
                         )}

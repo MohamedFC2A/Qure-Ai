@@ -196,17 +196,18 @@ export default function PricingPage() {
                             {t("Pricing", "الأسعار")}
                         </div>
                         <h1 className="mt-5 text-4xl font-bold leading-tight text-white sm:text-5xl">
-                            {t(
-                                <>
-                                    Choose the plan that{" "}
-                                    <span className="bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">
-                                        fits your scan needs.
-                                    </span>
-                                </>,
+                            {isArabic ? (
                                 <>
                                     اختر الخطة التي{" "}
                                     <span className="bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">
                                         تناسب احتياجاتك.
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    Choose the plan that{" "}
+                                    <span className="bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                                        fits your scan needs.
                                     </span>
                                 </>
                             )}

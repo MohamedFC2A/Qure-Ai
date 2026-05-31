@@ -288,9 +288,10 @@ export default function DashboardPage() {
                                 {t("Your Workspace", "مساحة عملك")}
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                                {t(
-                                    <>Welcome back<span className="text-cyan-400">.</span></>,
+                                {isArabic ? (
                                     <>أهلاً بك<span className="text-cyan-400">.</span></>
+                                ) : (
+                                    <>Welcome back<span className="text-cyan-400">.</span></>
                                 )}
                             </h1>
                             <p className="mt-2 text-slate-500 text-sm">
