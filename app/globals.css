@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -28,808 +26,209 @@
     --q-border-md:   rgba(255, 255, 255, 0.12);
     --q-border-lg:   rgba(255, 255, 255, 0.18);
 
-    /* ── Brand Colors ── */
+    /* ── Accents ── */
     --q-cyan:        #22D3EE;
-    --q-cyan-glow:   rgba(34, 211, 238, 0.15);
-    --q-cyan-soft:   rgba(34, 211, 238, 0.08);
-
-    --q-emerald:     #10B981;
-    --q-emerald-glow: rgba(16, 185, 129, 0.15);
-    --q-emerald-soft: rgba(16, 185, 129, 0.08);
-
-    --q-amber:       #F59E0B;
-    --q-amber-glow:  rgba(245, 158, 11, 0.15);
-    --q-amber-soft:  rgba(245, 158, 11, 0.08);
-
-    --q-violet:      #8B5CF6;
-    --q-violet-glow: rgba(139, 92, 246, 0.15);
-    --q-violet-soft: rgba(139, 92, 246, 0.08);
-
-    --q-rose:        #F43F5E;
-    --q-rose-glow:   rgba(244, 63, 94, 0.15);
-    --q-rose-soft:   rgba(244, 63, 94, 0.08);
+    --q-emerald:     #34D399;
+    --q-amber:       #FBBF24;
+    --q-violet:      #A78BFA;
+    --q-rose:        #FB7185;
 
     /* ── Text ── */
-    --q-text-primary:   rgba(255, 255, 255, 0.95);
-    --q-text-secondary: rgba(255, 255, 255, 0.65);
-    --q-text-muted:     rgba(255, 255, 255, 0.38);
-    --q-text-faint:     rgba(255, 255, 255, 0.20);
-
-    /* Legacy compatibility */
-    --background: 224 71% 4%;
-    --foreground: 0 0% 98%;
-    --clinical-bg: #050709;
-    --clinical-panel: rgba(8, 14, 22, 0.82);
-    --clinical-panel-soft: rgba(12, 19, 30, 0.72);
-    --clinical-border: rgba(255, 255, 255, 0.07);
-    --clinical-muted: rgba(255, 255, 255, 0.65);
-
-    color-scheme: dark;
+    --q-text:        #F1F7FA;
+    --q-text-muted:  rgba(255, 255, 255, 0.50);
+    --q-text-dim:    rgba(255, 255, 255, 0.30);
   }
+}
 
-  html {
-    scroll-behavior: smooth;
-    text-size-adjust: 100%;
-  }
-
-  /* RTL Support */
-  html[dir="rtl"],
-  html.rtl {
-    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+@layer base {
+  * {
+    @apply border-[var(--q-border)];
   }
 
   body {
-    @apply antialiased overflow-x-hidden;
-    color: var(--q-text-primary);
-    background-color: var(--q-base);
-    background-image:
-      /* Top teal glow */
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.07) 0%, transparent 60%),
-      /* Left violet ambient */
-      radial-gradient(ellipse 60% 40% at -10% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 55%),
-      /* Right emerald ambient */
-      radial-gradient(ellipse 50% 50% at 110% 70%, rgba(16, 185, 129, 0.04) 0%, transparent 55%),
-      /* Subtle grid */
-      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-    background-size: auto, auto, auto, 72px 72px, 72px 72px;
-    background-attachment: fixed;
-    min-height: 100dvh;
+    @apply bg-[var(--q-base)] text-[var(--q-text)] antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
   }
 
-  a, button {
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+  /* ── Arabic Overrides ── */
+  html[dir="rtl"] body,
+  html[dir="rtl"] * {
+    font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif !important;
   }
 
-  img, video {
-    max-width: 100%;
-    height: auto;
+  html[dir="rtl"] .font-inter {
+    font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif !important;
   }
 
-  /* Arabic font for RTL context */
-  [dir="rtl"] h1,
-  [dir="rtl"] h2,
-  [dir="rtl"] h3,
-  [dir="rtl"] h4,
-  [dir="rtl"] p,
-  [dir="rtl"] span,
-  [dir="rtl"] button,
-  [dir="rtl"] a,
-  [dir="rtl"] label,
-  [dir="rtl"] input,
-  [dir="rtl"] textarea,
-  [dir="rtl"] li {
-    font-family: 'Cairo', system-ui, sans-serif;
-    letter-spacing: 0;
+  /* ── Force RTL for specific utility classes ── */
+  html[dir="rtl"] .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  html[dir="rtl"] .rtl-text-right {
+    text-align: right !important;
+  }
+
+  html[dir="rtl"] .rtl-text-left {
+    text-align: left !important;
+  }
+
+  html[dir="rtl"] .rtl-mr-auto {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+  }
+
+  html[dir="rtl"] .rtl-ml-auto {
+    margin-right: auto !important;
+    margin-left: 0 !important;
+  }
+
+  html[dir="rtl"] .rtl-flex-row-reverse {
+    flex-direction: row-reverse !important;
+  }
+
+  /* ── Chat bubble RTL flip ── */
+  [dir="rtl"] .ai-bubble-user {
+    border-radius: 18px 18px 4px 18px !important;
+  }
+
+  [dir="rtl"] .ai-bubble-assistant {
+    border-radius: 18px 18px 18px 4px !important;
   }
 }
 
 /* ================================================================
-   GLASS CARD SYSTEM
+   ANIMATIONS — smooth, premium, performant
    ================================================================ */
 
-.glass-card {
-  @apply backdrop-blur-xl border;
-  background: var(--q-glass-1);
-  border-color: var(--q-border);
-  box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.04) inset,
-    0 20px 60px rgba(0, 0, 0, 0.45),
-    0 1px 0 rgba(255, 255, 255, 0.06) inset;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  .animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
 }
 
-.glass-card:hover {
-  background: var(--q-glass-hover);
-  border-color: var(--q-border-md);
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Elevated glass — floating panels */
-.glass-elevated {
-  @apply backdrop-blur-2xl border;
-  background: linear-gradient(135deg, rgba(12, 20, 32, 0.90) 0%, rgba(8, 14, 22, 0.95) 100%);
-  border-color: var(--q-border-md);
-  box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.06) inset,
-    0 32px 80px rgba(0, 0, 0, 0.55),
-    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Inset glass — inner panels */
-.glass-inset {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--q-border);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-/* ================================================================
-   ACCENT BORDERS (top shimmer line per color)
-   ================================================================ */
-
-.accent-top-cyan::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--q-cyan), transparent);
-  opacity: 0.5;
+@keyframes glowPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-.accent-top-emerald::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--q-emerald), transparent);
-  opacity: 0.5;
-}
-
-.accent-top-amber::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--q-amber), transparent);
-  opacity: 0.5;
-}
-
-.accent-top-violet::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--q-violet), transparent);
-  opacity: 0.5;
-}
-
-.accent-top-rose::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--q-rose), transparent);
-  opacity: 0.5;
-}
-
-/* ================================================================
-   LAYOUT UTILITIES
-   ================================================================ */
-
-.clinical-page {
-  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
-}
-
-.section-gap {
-  @apply mt-8 md:mt-12;
-}
-
-.section-header {
-  @apply mb-6 md:mb-8;
-}
-
-/* ================================================================
-   EYEBROW / BADGE
-   ================================================================ */
-
-.clinical-eyebrow {
-  @apply inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em];
-  background: var(--q-cyan-soft);
-  border-color: rgba(34, 211, 238, 0.2);
-  color: #A5F3FC;
-}
-
-.eyebrow-emerald {
-  @apply inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em];
-  background: var(--q-emerald-soft);
-  border-color: rgba(16, 185, 129, 0.2);
-  color: #6EE7B7;
-}
-
-.eyebrow-amber {
-  @apply inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em];
-  background: var(--q-amber-soft);
-  border-color: rgba(245, 158, 11, 0.2);
-  color: #FDE68A;
-}
-
-.eyebrow-violet {
-  @apply inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em];
-  background: var(--q-violet-soft);
-  border-color: rgba(139, 92, 246, 0.2);
-  color: #C4B5FD;
-}
-
-/* ================================================================
-   CLINICAL PANEL (legacy compatibility)
-   ================================================================ */
-
-.clinical-panel {
-  @apply border backdrop-blur-xl;
-  background: var(--q-glass-2);
-  border-color: var(--q-border);
-  border-radius: 12px;
-  box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.04) inset,
-    0 16px 48px rgba(0, 0, 0, 0.4);
-  transition: all 0.25s ease;
-}
-
-.clinical-panel:hover {
-  border-color: var(--q-border-md);
-  background: var(--q-glass-hover);
-}
-
-/* ================================================================
-   CLINICAL INPUT
-   ================================================================ */
-
-.clinical-input {
-  @apply w-full rounded-xl border px-4 py-3 text-base outline-none transition-all duration-200;
-  background: rgba(0, 0, 0, 0.3);
-  border-color: var(--q-border-md);
-  color: var(--q-text-primary);
-}
-
-.clinical-input::placeholder {
-  color: var(--q-text-muted);
-}
-
-.clinical-input:focus {
-  border-color: rgba(34, 211, 238, 0.4);
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08), 0 0 20px rgba(34, 211, 238, 0.06);
-}
-
-.clinical-muted {
-  color: var(--q-text-secondary);
-}
-
-/* ================================================================
-   STAT / METRIC CARD
-   ================================================================ */
-
-.stat-card {
-  @apply relative overflow-hidden rounded-xl border p-4;
-  background: var(--q-glass-2);
-  border-color: var(--q-border);
-  transition: all 0.25s ease;
-}
-
-.stat-card:hover {
-  border-color: var(--q-border-md);
-  transform: translateY(-1px);
-}
-
-/* ================================================================
-   PROGRESS BAR
-   ================================================================ */
-
-.progress-bar {
-  @apply h-1.5 overflow-hidden rounded-full;
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.progress-fill {
-  @apply h-full rounded-full;
-  background: linear-gradient(90deg, var(--q-cyan), var(--q-emerald));
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ================================================================
-   GLOW EFFECTS
-   ================================================================ */
-
-.glow-cyan {
-  box-shadow: 0 0 20px var(--q-cyan-glow), 0 0 60px rgba(34, 211, 238, 0.06);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 20px var(--q-emerald-glow), 0 0 60px rgba(16, 185, 129, 0.06);
-}
-
-.glow-amber {
-  box-shadow: 0 0 20px var(--q-amber-glow), 0 0 60px rgba(245, 158, 11, 0.06);
-}
-
-.glow-violet {
-  box-shadow: 0 0 20px var(--q-violet-glow), 0 0 60px rgba(139, 92, 246, 0.06);
-}
-
-/* ================================================================
-   ICON BADGE
-   ================================================================ */
-
-.icon-badge {
-  @apply flex shrink-0 items-center justify-center rounded-xl;
-}
-
-.icon-badge-cyan {
-  background: var(--q-cyan-soft);
-  border: 1px solid rgba(34, 211, 238, 0.18);
-  color: var(--q-cyan);
-}
-
-.icon-badge-emerald {
-  background: var(--q-emerald-soft);
-  border: 1px solid rgba(16, 185, 129, 0.18);
-  color: var(--q-emerald);
-}
-
-.icon-badge-amber {
-  background: var(--q-amber-soft);
-  border: 1px solid rgba(245, 158, 11, 0.18);
-  color: var(--q-amber);
-}
-
-.icon-badge-violet {
-  background: var(--q-violet-soft);
-  border: 1px solid rgba(139, 92, 246, 0.18);
-  color: var(--q-violet);
-}
-
-.icon-badge-rose {
-  background: var(--q-rose-soft);
-  border: 1px solid rgba(244, 63, 94, 0.18);
-  color: var(--q-rose);
-}
-
-/* ================================================================
-   ANIMATED GRADIENT BORDER (Premium Cards)
-   ================================================================ */
-
-.gradient-border {
-  position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(34, 211, 238, 0.4),
-    rgba(139, 92, 246, 0.3),
-    rgba(16, 185, 129, 0.3),
-    rgba(34, 211, 238, 0.4)
-  );
-  background-size: 300% 300%;
-  animation: gradient-border-flow 6s ease infinite;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-@keyframes gradient-border-flow {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* ================================================================
-   SCROLLBAR
-   ================================================================ */
-
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 99px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-/* ================================================================
-   SKELETON / LOADING
-   ================================================================ */
-
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.07) 50%,
-    rgba(255, 255, 255, 0.03) 100%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
-  border-radius: 8px;
-}
-
-@keyframes skeleton-shimmer {
+@keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
 /* ================================================================
-   AI CHAT STYLES (legacy)
+   SKELETON LOADING
    ================================================================ */
 
-.ai-chat-bubble {
-  @apply relative overflow-hidden rounded-xl border backdrop-blur-xl;
-  background: var(--q-glass-1);
-  border-color: var(--q-border);
+.skeleton {
+  @apply bg-white/5 rounded-lg relative overflow-hidden;
 }
 
-.ai-chat-bubble::before {
+.skeleton::after {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.25));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-.ai-gradient-border {
-  position: relative;
-  background: var(--q-glass-1);
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.ai-gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: linear-gradient(90deg,
-    rgba(139,92,246,0.6) 0%,
-    rgba(34,211,238,0.6) 33%,
-    rgba(16,185,129,0.6) 66%,
-    rgba(139,92,246,0.6) 100%
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 100%
   );
-  background-size: 300% 100%;
-  animation: ai-border-flow 4s linear infinite;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
-@keyframes ai-border-flow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 300% 50%; }
-}/* ── Premium Chat Bubble System ─────────────────────────────────── */
-.ai-message-wrapper {
-  display: flex;
-  width: 100%;
-  margin-bottom: 20px;
-  animation: ai-message-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* ================================================================
+   SCROLLBAR — dark & minimal
+   ================================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-@keyframes ai-message-fade {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.ai-message-user {
-  justify-content: flex-end;
-  gap: 12px;
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 3px;
 }
 
-.ai-message-assistant {
-  justify-content: flex-start;
-  gap: 12px;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.20);
 }
 
-.ai-bubble-user {
-  position: relative;
-  max-width: 80%;
-  padding: 14px 18px;
-  border-radius: 20px 20px 4px 20px;
-  background: rgba(139, 92, 246, 0.12);
-  border: 1px solid rgba(139, 92, 246, 0.25);
-  color: #ffffff;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  box-shadow: 0 4px 20px -5px rgba(139, 92, 246, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 0.25s ease;
-}
-.ai-bubble-user:hover {
-  border-color: rgba(139, 92, 246, 0.4);
-  background: rgba(139, 92, 246, 0.16);
-  box-shadow: 0 6px 24px -4px rgba(139, 92, 246, 0.25);
-}
+/* ================================================================
+   GLASS CARD — base styles
+   ================================================================ */
 
-[dir="rtl"] .ai-bubble-user {
-  border-radius: 20px 20px 20px 4px;
-}
-
-.ai-bubble-assistant {
-  position: relative;
-  max-width: 88%;
-  padding: 18px;
-  border-radius: 20px 20px 20px 4px;
-  background: rgba(10, 15, 24, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+.glass {
+  background: rgba(8, 14, 22, 0.82);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-hover {
   transition: all 0.3s ease;
 }
-.ai-bubble-assistant:hover {
-  border-color: rgba(139, 92, 246, 0.25);
-  box-shadow: 0 12px 36px -8px rgba(139, 92, 246, 0.15);
+
+.glass-hover:hover {
+  background: rgba(20, 30, 48, 0.88);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-[dir="rtl"] .ai-bubble-assistant {
-  border-radius: 20px 20px 4px 20px;
-}
+/* ================================================================
+   LIQUID BACKGROUND — keep background canvas behind everything
+   ================================================================ */
 
-.ai-chat-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.ai-avatar-user {
-  background: linear-gradient(135deg, var(--q-cyan) 0%, var(--q-emerald) 100%);
-  color: #050709;
-}
-
-.ai-avatar-assistant {
-  background: linear-gradient(135deg, var(--q-violet) 0%, #d946ef 100%);
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
-}
-
-/* ── Premium Input Bar ── */
-.ai-premium-input-container {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  background: rgba(8, 12, 18, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 24px;
-  padding: 8px 12px;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  transition: all 0.25s ease;
-  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.4);
-}
-.ai-premium-input-container:focus-within {
-  border-color: rgba(139, 92, 246, 0.45);
-  box-shadow: 0 8px 32px -4px rgba(139, 92, 246, 0.15), 0 0 0 3px rgba(139, 92, 246, 0.08);
-}
-
-/* Thinking Animation */
-.ai-thinking { display: inline-flex; align-items: center; gap: 4px; }
-.ai-thinking-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--q-violet), var(--q-cyan));
-  animation: ai-pulse 1.4s ease-in-out infinite;
-}
-.ai-thinking-dot:nth-child(1) { animation-delay: 0s; }
-.ai-thinking-dot:nth-child(2) { animation-delay: 0.2s; }
-.ai-thinking-dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes ai-pulse {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40% { transform: scale(1); opacity: 1; }
-}
-
-.ai-typing {
-  overflow: hidden;
-  animation: ai-typing-reveal 0.5s ease-out forwards;
-}
-
-@keyframes ai-typing-reveal {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ai-skeleton { @apply skeleton; }
-
-.ai-input {
-  @apply clinical-input;
-}
-
-.ai-input:focus {
-  border-color: rgba(139, 92, 246, 0.45);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-}
-
-.ai-voice-btn.listening {
-  animation: ai-voice-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes ai-voice-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-  50% { box-shadow: 0 0 0 12px rgba(244, 63, 94, 0); }
-}
-
-.ai-node-enter {
-  animation: ai-node-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes ai-node-slide-in {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.ai-chip {
-  @apply px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--q-border-md);
-  color: var(--q-text-secondary);
-  @apply px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200;
-  background: rgba(139, 92, 246, 0.06);
-  border: 1px solid rgba(139, 92, 246, 0.18);
-  color: rgba(255, 255, 255, 0.7);
-}
-.ai-chip:hover {
-  background: rgba(139, 92, 246, 0.12);
-  border-color: rgba(139, 92, 246, 0.35);
-  color: rgba(255, 255, 255, 0.95);
-  transform: translateY(-1px);
-}
-.ai-chip:active { transform: scale(0.97); }
-
-/* ── Follow-up question card ─────────────────────────────────────── */
-.ai-followup-card {
-  display: block;
+#liquid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  text-align: start;
-  padding: 12px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  background: rgba(139, 92, 246, 0.05);
-  color: rgba(255,255,255,0.85);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.ai-followup-card:hover {
-  background: rgba(139, 92, 246, 0.12);
-  border-color: rgba(139, 92, 246, 0.4);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px -6px rgba(139,92,246,0.2);
-}
-.ai-followup-card:active { transform: scale(0.98); }
-
-/* ── Copy flash ── */
-.ai-copy-flash { animation: ai-flash 0.3s ease-out; }
-
-@keyframes ai-flash {
-  0%   { background-color: rgba(16, 185, 129, 0.25); }
-  100% { background-color: transparent; }
-}
-
-/* ── Streamed text highlight ── */
-.ai-answer-text {
-  color: rgba(255,255,255,0.85);
-  font-size: 0.875rem;
-  line-height: 1.75;
-  white-space: pre-wrap;
-}
-
-/* ================================================================
-   LIQUID BACKGROUND BLOBS
-   ================================================================ */
-
-.liquid-shape {
-  @apply absolute rounded-full mix-blend-screen filter blur-3xl opacity-25 animate-blob;
-}
-
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
-
-@media (max-width: 640px) {
-  body {
-    background-attachment: scroll;
-  }
-}
-
-/* ================================================================
-   FLOATING ANIMATION
-   ================================================================ */
-
-@keyframes float-y {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ================================================================
-   RTL SPECIFIC OVERRIDES
-   ================================================================ */
-
-[dir="rtl"] .rtl-flip {
-  transform: scaleX(-1);
-}
-
-[dir="rtl"] .rtl-text-right {
-  text-align: right;
-}
-
-[dir="rtl"] .rtl-mr-auto {
-  margin-right: auto;
-  margin-left: 0;
-}
-
-[dir="rtl"] .rtl-flex-row-reverse {
-  flex-direction: row-reverse;
-}
-
-/* ================================================================
-   GRID SECTION HELPERS
-   ================================================================ */
-
-.grid-auto-fill-sm {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-}
-
-.grid-auto-fill-md {
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-}
-
-/* ================================================================
-   HOVER LIFT
-   ================================================================ */
-
-.hover-lift {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }

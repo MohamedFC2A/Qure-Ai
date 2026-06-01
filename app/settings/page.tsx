@@ -49,7 +49,7 @@ export default function SettingsPage() {
                                         : "text-slate-400 hover:text-white hover:bg-white/5"
                                 )}
                             >
-                                English
+                                {t("English", "الإنجليزية")}
                             </button>
                             <button
                                 onClick={() => setResultsLanguage("ar")}
@@ -60,7 +60,7 @@ export default function SettingsPage() {
                                         : "text-slate-400 hover:text-white hover:bg-white/5"
                                 )}
                             >
-                                العربية (Arabic)
+                                {t("العربية (Arabic)", "العربية")}
                             </button>
                         </div>
                     </div>

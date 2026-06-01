@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { TERMS_VERSION, safeNextPath } from "@/lib/legal/terms";
+import { useSettings } from "@/context/SettingsContext";
 
 const loginSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
@@ -52,6 +53,9 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const supabase = createClient();
     const schema = type === "signup" ? signupSchema : loginSchema;
     const isLocalDev = process.env.NODE_ENV === "development";
+    const { resultsLanguage } = useSettings();
+    const isArabic = resultsLanguage === "ar";
+    const t = (en: string, ar: string) => (isArabic ? ar : en);
 
     const getNextPath = () => {
         if (typeof window === "undefined") return "/scan";
@@ -62,7 +66,6 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const getCallbackUrl = () => {
         if (typeof window === "undefined") return "";
 
-        // Prioritize environment variable for production stability
         const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
         const url = new URL("/auth/callback", origin);
@@ -115,17 +118,16 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                 throw result.error;
             }
 
-            // Check if email confirmation is required (for signup)
             if (type === "signup" && result.data.user && !result.data.session) {
-                setError("Please check your email to confirm your account.");
+                setError(t("Please check your email to confirm your account.", "يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك."));
                 setIsLoading(false);
                 return;
             }
 
             router.push(getNextPath());
-            router.refresh(); // Refresh to update Navbar state
+            router.refresh();
         } catch (err: any) {
-            setError(err.message || "An error occurred during authentication");
+            setError(err.message || t("An error occurred during authentication", "حدث خطأ أثناء تسجيل الدخول"));
             console.error("Auth error:", err);
             setIsLoading(false);
         }
@@ -145,8 +147,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
             });
             if (error) throw error;
         } catch (err: any) {
-            setError(`Failed to sign in with ${provider}: ${err.message}`);
-            // Only reset loading if there was an immediate error, otherwise we're redirecting
+            setError(t(`Failed to sign in with ${provider}`, `فشل تسجيل الدخول عبر ${provider === 'google' ? 'جوجل' : 'جيت هاب'}`));
             setIsLoading(false);
             console.error("OAuth error:", err);
         }
@@ -182,7 +183,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
             window.location.href = getNextPath();
         } catch (err: any) {
-            setError(err.message || "Local dev login failed");
+            setError(err.message || t("Local dev login failed", "فشل تسجيل الدخول المحلي"));
             console.error("Local dev login error:", err);
             setIsLoading(false);
         }
@@ -190,18 +191,18 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
     return (
         <GlassCard className="w-full max-w-lg p-6 sm:p-8 relative overflow-hidden" hoverEffect={false}>
-            <div className="relative z-10">
+            <div className="relative z-10" dir={isArabic ? "rtl" : "ltr"}>
                 <div className="text-center mb-8">
                     <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-md border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
-                        {type === "login" ? "Secure access" : "Create workspace"}
+                        {type === "login" ? t("Secure access", "دخول آمن") : t("Create workspace", "إنشاء مساحة عمل")}
                     </div>
                     <h2 className="text-3xl font-bold text-white">
-                        {type === "login" ? "Welcome Back" : "Create Account"}
+                        {type === "login" ? t("Welcome Back", "مرحبًا بعودتك") : t("Create Account", "إنشاء حساب")}
                     </h2>
                     <p className="text-slate-400 mt-2">
                         {type === "login"
-                            ? "Enter your credentials to access your workspace"
-                            : "Set up your account for medication analysis and safety review"}
+                            ? t("Enter your credentials to access your workspace", "أدخل بيانات الدخول للوصول إلى مساحة عملك")
+                            : t("Set up your account for medication analysis and safety review", "أنشئ حسابك لتحليل الأدوية ومراجعة السلامة")}
                     </p>
                 </div>
 
@@ -214,14 +215,14 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-white/80 ml-1">Email</label>
+                        <label className="text-sm font-medium text-white/80 ml-1">{t("Email", "البريد الإلكتروني")}</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                             <input
                                 {...register("email")}
                                 type="email"
                                 className="clinical-input !pl-12"
-                                placeholder="doctor@medvision.ai"
+                                placeholder={t("doctor@medvision.ai", "doctor@medvision.ai")}
                             />
                         </div>
                         {errors.email && (
@@ -230,7 +231,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-white/80 ml-1">Password</label>
+                        <label className="text-sm font-medium text-white/80 ml-1">{t("Password", "كلمة المرور")}</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                             <input
@@ -248,13 +249,13 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     {type === "signup" && (
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-white/80 ml-1">Username</label>
+                                <label className="text-sm font-medium text-white/80 ml-1">{t("Username", "اسم المستخدم")}</label>
                                 <div className="relative">
                                     <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                     <input
                                         {...register("username")}
                                         className="clinical-input !pl-12"
-                                        placeholder="e.g. Alien_X"
+                                        placeholder={t("e.g. Alien_X", "مثال: Alien_X")}
                                         autoComplete="username"
                                     />
                                 </div>
@@ -265,7 +266,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-white/80 ml-1">Age</label>
+                                    <label className="text-sm font-medium text-white/80 ml-1">{t("Age", "العمر")}</label>
                                     <div className="relative">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                         <input
@@ -273,7 +274,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             type="number"
                                             inputMode="numeric"
                                             className="clinical-input !pl-12"
-                                            placeholder="25"
+                                            placeholder={t("25", "٢٥")}
                                             min={1}
                                             max={120}
                                         />
@@ -284,7 +285,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-white/80 ml-1">Gender</label>
+                                    <label className="text-sm font-medium text-white/80 ml-1">{t("Gender", "الجنس")}</label>
                                     <div className="relative">
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                         <select
@@ -293,11 +294,11 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             defaultValue=""
                                         >
                                             <option value="" disabled className="bg-slate-900 text-white/50">
-                                                Select...
+                                                {t("Select...", "اختر...")}
                                             </option>
-                                            <option value="male" className="bg-slate-900">Male</option>
-                                            <option value="female" className="bg-slate-900">Female</option>
-                                            <option value="other" className="bg-slate-900">Other</option>
+                                            <option value="male" className="bg-slate-900">{t("Male", "ذكر")}</option>
+                                            <option value="female" className="bg-slate-900">{t("Female", "أنثى")}</option>
+                                            <option value="other" className="bg-slate-900">{t("Other", "آخر")}</option>
                                         </select>
                                     </div>
                                     {errors.gender && (
@@ -308,7 +309,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-white/80 ml-1">Height (cm)</label>
+                                    <label className="text-sm font-medium text-white/80 ml-1">{t("Height (cm)", "الطول (سم)")}</label>
                                     <div className="relative">
                                         <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                         <input
@@ -327,7 +328,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-white/80 ml-1">Weight (kg)</label>
+                                    <label className="text-sm font-medium text-white/80 ml-1">{t("Weight (kg)", "الوزن (كجم)")}</label>
                                     <div className="relative">
                                         <Weight className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                         <input
@@ -335,7 +336,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             type="number"
                                             inputMode="decimal"
                                             className="clinical-input !pl-12"
-                                            placeholder="75"
+                                            placeholder={t("75", "٧٥")}
                                             min={10}
                                             max={500}
                                             step="0.1"
@@ -354,14 +355,13 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             <div className="flex items-start gap-3">
                                 <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
                                 <div className="min-w-0">
-                                    <p className="text-sm text-white font-semibold">Terms & Disclaimer</p>
+                                    <p className="text-sm text-white font-semibold">{t("Terms & Disclaimer", "الشروط وإخلاء المسؤولية")}</p>
                                     <p className="text-xs text-white/60 mt-1 leading-relaxed">
-                                        This app may produce incorrect or incomplete medication data. Always verify with a pharmacist/doctor and official labels (FDA when available).
+                                        {t(
+                                            "This app may produce incorrect or incomplete medication data. Always verify with a pharmacist/doctor and official labels (FDA when available).",
+                                            "قد ينتج التطبيق بيانات أدوية غير صحيحة أو غير كاملة. تأكد دائمًا من مراجعة الصيدلي/الطبيب والملصقات الرسمية (FDA إن وجدت)."
+                                        )}
                                     </p>
-                                    <p className="text-xs text-white/50 mt-2 leading-relaxed">
-                                        بالعربي: احتمال وجود خطأ في OCR/التحليل. لا تعتمد عليه كمرجع طبي بدون استشارة مختص.
-                                    </p>
-
                                     <div className="mt-3 flex items-start gap-3">
                                         <input
                                             id="agreeToTerms"
@@ -370,9 +370,9 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                                             {...register("agreeToTerms")}
                                         />
                                         <label htmlFor="agreeToTerms" className="text-xs text-white/70">
-                                            I agree to the{" "}
+                                            {t("I agree to the", "أوافق على")}{" "}
                                             <Link href="/terms" className="text-white hover:underline font-medium">
-                                                Terms & Disclaimer
+                                                {t("Terms & Disclaimer", "الشروط والإخلاء")}
                                             </Link>
                                             .
                                         </label>
@@ -386,7 +386,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                     )}
 
                     <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-                        {type === "login" ? "Sign In" : "Create Account"}
+                        {type === "login" ? t("Sign In", "تسجيل الدخول") : t("Create Account", "إنشاء حساب")}
                     </Button>
                 </form>
 
@@ -399,7 +399,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             disabled={isLoading}
                         >
                             <User className="w-5 h-5 mr-2" />
-                            Local Dev Login
+                            {t("Local Dev Login", "دخول المطور المحلي")}
                         </Button>
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -434,16 +434,16 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                 <div className="mt-6 text-center text-sm text-slate-400">
                     {type === "login" ? (
                         <>
-                            Don't have an account?{" "}
+                            {t("Don't have an account?", "ليس لديك حساب؟")}{" "}
                             <Link href="/signup" className="text-cyan-100 hover:underline font-medium">
-                                Sign up
+                                {t("Sign up", "اشتراك")}
                             </Link>
                         </>
                     ) : (
                         <>
-                            Already have an account?{" "}
+                            {t("Already have an account?", "لديك حساب بالفعل؟")}{" "}
                             <Link href="/login" className="text-cyan-100 hover:underline font-medium">
-                                Log in
+                                {t("Log in", "تسجيل الدخول")}
                             </Link>
                         </>
                     )}

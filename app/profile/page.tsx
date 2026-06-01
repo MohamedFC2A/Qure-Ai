@@ -14,6 +14,8 @@ import { useRouter } from "next/navigation";
 export default function ProfilePage() {
     const { user, profile, plan, credits, loading: userLoading, refreshUser } = useUser();
     const { resultsLanguage, setResultsLanguage, fdaDrugsEnabled, setFdaDrugsEnabled } = useSettings();
+    const isArabic = resultsLanguage === "ar";
+    const t = (en: string, ar: string) => (isArabic ? ar : en);
     const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'family' | 'private' | 'memories'>('account');
     const supabase = createClient();
     const router = useRouter();
@@ -431,13 +433,13 @@ export default function ProfilePage() {
 
 
     const tabs = [
-        { id: 'account', label: 'Account', icon: User },
-        { id: 'credits', label: 'Credits & Plans', icon: CreditCard },
-        { id: 'settings', label: 'App Settings', icon: Settings },
-        { id: 'fda', label: 'FDA Drugs', icon: Database, pro: true, beta: true },
-        { id: 'family', label: 'Family Care', icon: Users, pro: true },
-        { id: 'private', label: 'Private AI Profile', icon: Shield, pro: true },
-        { id: 'memories', label: 'Medication Memories', icon: Activity, pro: true },
+        { id: 'account', label: t('Account', 'الحساب'), icon: User },
+        { id: 'credits', label: t('Credits & Plans', 'الرصيد والخطط'), icon: CreditCard },
+        { id: 'settings', label: t('App Settings', 'إعدادات التطبيق'), icon: Settings },
+        { id: 'fda', label: t('FDA Drugs', 'أدوية FDA'), icon: Database, pro: true, beta: true },
+        { id: 'family', label: t('Family Care', 'رعاية الأسرة'), icon: Users, pro: true },
+        { id: 'private', label: t('Private AI Profile', 'الملف الصحي الخاص'), icon: Shield, pro: true },
+        { id: 'memories', label: t('Medication Memories', 'سجل الأدوية'), icon: Activity, pro: true },
     ];
 
     if (userLoading) return <div className="min-h-screen pt-28 flex justify-center"><div className="animate-spin w-8 h-8 border-2 border-cyan-300 rounded-full border-t-transparent" /></div>;
