@@ -148,7 +148,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
             {/* Message Bubble */}
             <div className={cn(
-                "group relative max-w-[85%] sm:max-w-[75%]",
+                "group relative max-w-[90%] xs:max-w-[85%] sm:max-w-[75%]",
                 isUser ? "ml-auto" : "mr-auto"
             )}>
                 <div className={cn(

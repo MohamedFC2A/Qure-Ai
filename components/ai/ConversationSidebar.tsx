@@ -80,7 +80,8 @@ export function ConversationSidebar({
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed top-0 bottom-0 z-50 w-72 flex flex-col transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0",
+                    "fixed top-0 bottom-0 z-50 w-[min(18rem,85vw)] flex flex-col transition-transform duration-300",
+                    "lg:static lg:z-auto lg:translate-x-0 lg:w-72",
                     "border-r border-white/[0.06]",
                     isArabic ? "right-0 lg:border-r-0 lg:border-l" : "left-0",
                     isOpen

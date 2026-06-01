@@ -378,7 +378,7 @@ export default function PricingPage() {
                             </p>
                         </div>
 
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto relative">
                             <table className="w-full min-w-[560px] text-sm">
                                 <thead>
                                     <tr className="border-b border-white/[0.06]">

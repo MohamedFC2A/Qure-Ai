@@ -199,6 +199,30 @@
   background: rgba(255, 255, 255, 0.20);
 }
 
+/* Wider scrollbar on touch devices */
+@media (pointer: coarse) {
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 5px;
+  }
+}
+
+/* ================================================================
+   SAFE AREA — iOS notch / home indicator support
+   ================================================================ */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 /* ================================================================
    NEXUS AI GOLD VIP THEME
    Premium gold glow for NEXUS AI page branding
