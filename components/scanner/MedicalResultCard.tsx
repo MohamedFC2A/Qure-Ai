@@ -2180,20 +2180,32 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             <p className="text-white/40 text-xs mt-0.5">{t("Interactive medical Q&A with context-awareness", "أسئلة وأجوبة طبية تفاعلية مدعومة بسياقك الصحي")}</p>
                         </div>
                     </div>
-                    {plan === "ultra" && aiNodes.length > 0 && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                                setAiNodes([]);
-                                setCustomQuestion('');
-                            }}
-                            className="border-white/15 text-white/70 hover:bg-white/10 gap-1.5 border-0"
-                        >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            {t("Reset Chat", "إعادة المحادثة")}
-                        </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        <Link href="/ai">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-purple-400/20 text-purple-300 hover:bg-purple-400/8 gap-1.5 border-0 text-xs"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                {t("Open full page", "فتح الصفحة كاملة")}
+                            </Button>
+                        </Link>
+                        {plan === "ultra" && aiNodes.length > 0 && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                    setAiNodes([]);
+                                    setCustomQuestion('');
+                                }}
+                                className="border-white/15 text-white/70 hover:bg-white/10 gap-1.5 border-0"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                {t("Reset Chat", "إعادة المحادثة")}
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 {(!user || plan !== "ultra") ? (

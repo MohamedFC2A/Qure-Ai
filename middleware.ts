@@ -77,7 +77,7 @@ export async function middleware(request: NextRequest) {
     const publicApiPrefixes = ['/api/status', '/api/credits/status', '/api/v1/analyze', '/api/dev/login'];
     const isPublicApi = isApi && publicApiPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-    const protectedPagePrefixes = ['/dashboard', '/profile', '/scan'];
+    const protectedPagePrefixes = ['/dashboard', '/profile', '/scan', '/ai'];
     const isProtectedPage = protectedPagePrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
     const isProtectedApi = isApi && !isPublicApi;

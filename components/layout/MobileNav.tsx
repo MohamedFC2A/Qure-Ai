@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Atom, ScanLine, User, Clock, Gem, LogIn, UserPlus } from "lucide-react";
+import { Atom, ScanLine, User, Clock, Gem, LogIn, UserPlus, Brain } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
 
@@ -19,9 +19,9 @@ export const MobileNav = () => {
         ? [
               { name: t("Home", "الرئيسية"),  href: "/",                  icon: Atom,    color: "cyan"    },
               { name: t("Scan", "الفحص"),      href: "/scan",              icon: ScanLine, color: "emerald" },
+              { name: "NEXUS AI",              href: "/ai",                icon: Brain,   color: "violet"  },
               { name: t("History", "السجل"),   href: "/dashboard/history", icon: Clock,   color: "violet"  },
               { name: t("Plans", "الباقات"),   href: "/pricing",           icon: Gem,     color: "amber"   },
-              { name: t("Profile", "الحساب"),  href: "/profile",           icon: User,    color: "cyan"    },
           ]
         : [
               { name: t("Home", "الرئيسية"),    href: "/",        icon: Atom,     color: "cyan"  },

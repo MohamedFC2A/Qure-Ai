@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
     Atom, ScanLine, LayoutDashboard, User, Clock,
-    Gem, Loader2, LogOut, ChevronDown,
+    Gem, Loader2, LogOut, ChevronDown, Brain,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -36,6 +36,7 @@ export const Navbar = () => {
         ? [
               { name: t("Home", "الرئيسية"),       href: "/",                   icon: Atom,           color: "cyan"    },
               { name: t("Scan", "فحص دواء"),        href: "/scan",               icon: ScanLine,       color: "emerald" },
+              { name: "NEXUS AI",                    href: "/ai",                 icon: Brain,          color: "violet"  },
               { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem,            color: "amber"   },
               { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock,          color: "violet"  },
               { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard, color: "cyan"   },
