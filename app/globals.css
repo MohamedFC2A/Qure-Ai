@@ -200,6 +200,111 @@
 }
 
 /* ================================================================
+   NEXUS AI GOLD VIP THEME
+   Premium gold glow for NEXUS AI page branding
+   ================================================================ */
+
+/* Gold gradient for the logo box */
+.nexus-gold-logo {
+  background: linear-gradient(135deg, #d4a853 0%, #f5d483 30%, #c49a3a 60%, #e8c96a 100%);
+  box-shadow: 0 4px 20px rgba(217, 170, 75, 0.25), 0 0 30px rgba(217, 170, 75, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Rotating shimmer on gold logo */
+.nexus-gold-rotate {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.3) 60deg,
+    transparent 120deg
+  );
+  animation: nexusGoldRotate 3s linear infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes nexusGoldRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Animated gold text */
+.nexus-gold-text {
+  background: linear-gradient(
+    90deg,
+    #d4a853 0%,
+    #f5d483 25%,
+    #fff4c8 50%,
+    #f5d483 75%,
+    #d4a853 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: nexusGoldTextShimmer 4s ease-in-out infinite;
+}
+
+@keyframes nexusGoldTextShimmer {
+  0% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Gold icon with subtle glow */
+.nexus-gold-icon {
+  background: linear-gradient(135deg, rgba(217, 170, 75, 0.2), rgba(245, 212, 131, 0.15));
+  border: 1px solid rgba(217, 170, 75, 0.25);
+  color: #f5d483;
+  animation: nexusGoldIconPulse 3s ease-in-out infinite;
+}
+
+@keyframes nexusGoldIconPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(217, 170, 75, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(217, 170, 75, 0.3); }
+}
+
+/* Gold badge */
+.nexus-gold-badge {
+  background: linear-gradient(135deg, #d4a853, #f5d483);
+  color: #1a1505;
+  box-shadow: 0 2px 10px rgba(217, 170, 75, 0.3);
+  animation: nexusGoldBadgeGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes nexusGoldBadgeGlow {
+  0%, 100% { box-shadow: 0 2px 10px rgba(217, 170, 75, 0.3); }
+  50% { box-shadow: 0 2px 20px rgba(217, 170, 75, 0.5); }
+}
+
+/* Gold border shimmer for navbar */
+.nexus-gold-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(217, 170, 75, 0.3) 0%,
+    rgba(245, 212, 131, 0.1) 50%,
+    rgba(217, 170, 75, 0.3) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: nexusGoldBorderShimmer 5s ease-in-out infinite;
+}
+
+@keyframes nexusGoldBorderShimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* ================================================================
    GLASS CARD — base styles
    ================================================================ */
 

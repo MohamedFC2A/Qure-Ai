@@ -65,22 +65,29 @@ export const Navbar = () => {
             <MobileNav />
             <OnboardingModal />
 
-            <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-16px)] max-w-6xl">
+            <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-16px)] max-w-6xl">
                 <div
                     className={cn(
                         "relative overflow-hidden rounded-2xl px-3 py-2.5 sm:px-4",
                         "flex items-center justify-between gap-2",
-                        "backdrop-blur-2xl border shadow-2xl shadow-black/50",
-                        "transition-all duration-300"
+                        "backdrop-blur-2xl border shadow-2xl",
+                        "transition-all duration-500",
                     )}
                     style={{
-                        background: "rgba(6, 9, 14, 0.88)",
-                        borderColor: "rgba(255,255,255,0.08)",
-                        boxShadow: "0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 24px 60px rgba(0,0,0,0.55)",
+                        background: (pathname === "/ai" || pathname.startsWith("/ai/")) ? "rgba(12,10,5,0.92)" : "rgba(6, 9, 14, 0.88)",
+                        borderColor: (pathname === "/ai" || pathname.startsWith("/ai/")) ? "rgba(217,170,75,0.25)" : "rgba(255,255,255,0.08)",
+                        boxShadow: (pathname === "/ai" || pathname.startsWith("/ai/"))
+                            ? "0 0 0 0.5px rgba(217,170,75,0.15) inset, 0 24px 60px rgba(0,0,0,0.55), 0 0 40px rgba(217,170,75,0.06)"
+                            : "0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 24px 60px rgba(0,0,0,0.55)",
                     }}
                 >
                     {/* Top shimmer */}
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent pointer-events-none" />
+                    <div className={cn(
+                        "absolute inset-x-0 top-0 h-px pointer-events-none",
+                        (pathname === "/ai" || pathname.startsWith("/ai/"))
+                            ? "bg-gradient-to-r from-transparent via-amber-400/30 to-transparent"
+                            : "bg-gradient-to-r from-transparent via-white/12 to-transparent"
+                    )} />
 
                     {/* ── Logo ── */}
                     <Link
@@ -91,13 +98,29 @@ export const Navbar = () => {
                             isArabic ? "flex-row-reverse" : ""
                         )}
                     >
-                        <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-950/40">
+                        <div className={cn(
+                            "relative w-9 h-9 rounded-xl flex items-center justify-center shadow-lg",
+                            (pathname === "/ai" || pathname.startsWith("/ai/"))
+                                ? "nexus-gold-logo shadow-amber-950/40"
+                                : "bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-cyan-950/40"
+                        )}>
                             <Atom className="w-5 h-5 text-white" />
                             <div className="absolute inset-0 rounded-xl bg-white/10" />
+                            {(pathname === "/ai" || pathname.startsWith("/ai/")) && (
+                                <div className="absolute inset-0 rounded-xl nexus-gold-rotate" />
+                            )}
                         </div>
                         <span className="text-white font-display tracking-tight">
-                            Qure <span className="text-cyan-400">Ai</span>
+                            Qure{" "}
+                            <span className={(pathname === "/ai" || pathname.startsWith("/ai/")) ? "nexus-gold-text" : "text-cyan-400"}>
+                                Ai
+                            </span>
                         </span>
+                        {(pathname === "/ai" || pathname.startsWith("/ai/")) && (
+                            <span className="nexus-gold-badge rounded-[6px] px-1.5 py-0.5 text-[9px] font-black tracking-widest">
+                                AI
+                            </span>
+                        )}
                     </Link>
 
                     {/* ── Desktop Navigation ── */}
