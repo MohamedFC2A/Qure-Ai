@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Clock, Trash2, Pill, HeartPulse, Brain, X, MessageSquare } from "lucide-react";
+import { Clock, Trash2, Pill, HeartPulse, Brain, X, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import type { AiChatMode } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────

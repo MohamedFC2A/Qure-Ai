@@ -367,17 +367,7 @@ export function AiChatPage() {
                         <Menu className="w-5 h-5" />
                     </button>
 
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-sm font-bold text-white flex items-center gap-2 truncate">
-                            <span className="nexus-gold-icon w-6 h-6 rounded-lg flex items-center justify-center">
-                                <Sparkles className="w-3.5 h-3.5" />
-                            </span>
-                            <span className="nexus-gold-text">NEXUS AI</span>
-                            <span className="nexus-gold-badge px-1.5 py-0.5 rounded-[6px] text-[9px] font-black tracking-wider">
-                                AI
-                            </span>
-                        </h1>
-                    </div>
+                    <div className="flex-1 min-w-0" />
 
                     {messages.length > 0 && (
                         <button
@@ -492,9 +482,10 @@ export function AiChatPage() {
 
                 {/* ══════════════════════════════════════════════
                  *  STICKY INPUT BAR (fixed at bottom)
+                 *  pb-20 on mobile = clears MobileNav overlap
                  * ══════════════════════════════════════════════ */}
                 <div
-                    className="shrink-0 border-t border-white/[0.06] px-3 sm:px-4 py-3"
+                    className="shrink-0 border-t border-white/[0.06] px-3 sm:px-4 pt-3 pb-20 sm:pb-3"
                     style={{ background: "rgba(3,7,18,0.97)", backdropFilter: "blur(20px)" }}
                 >
                     {/* Medication selector (medication mode only) */}
