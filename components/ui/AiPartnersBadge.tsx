@@ -36,6 +36,41 @@ export const DeepSeekLogo = ({ className = "w-4 h-4" }: { className?: string }) 
     </svg>
 );
 
+/* ── Matany AI in the iconic Netflix Arched Typography ────────── */
+export const MatanyAiLogo = ({ className = "h-4 sm:h-5 w-auto" }: { className?: string }) => (
+    <div className={cn("inline-flex items-center gap-1 font-black select-none tracking-wider", className)}>
+        {/* Netflix Arched SVG Text */}
+        <svg
+            viewBox="0 0 135 28"
+            className="h-4 sm:h-5 w-auto drop-shadow-[0_2px_10px_rgba(229,9,20,0.55)]"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <defs>
+                <linearGradient id="netflixRed" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#FF1923" />
+                    <stop offset="50%" stopColor="#E50914" />
+                    <stop offset="100%" stopColor="#B20710" />
+                </linearGradient>
+                <path id="netflixArc" d="M 5 24 Q 67.5 18 130 24" />
+            </defs>
+
+            {/* Arched Netflix style wordmark */}
+            <text
+                fill="url(#netflixRed)"
+                fontFamily="Impact, 'Bebas Neue', 'Arial Black', sans-serif"
+                fontSize="19"
+                fontWeight="900"
+                letterSpacing="1.8"
+            >
+                <textPath href="#netflixArc" startOffset="50%" textAnchor="middle">
+                    MATANY AI
+                </textPath>
+            </text>
+        </svg>
+    </div>
+);
+
 export const AiPartnersBadge: React.FC<AiPartnersBadgeProps> = ({
     className,
     showLabel = true,
@@ -48,7 +83,7 @@ export const AiPartnersBadge: React.FC<AiPartnersBadgeProps> = ({
     return (
         <div
             className={cn(
-                "inline-flex items-center gap-2.5 sm:gap-3 rounded-full border border-white/12 bg-slate-950/80 px-3.5 sm:px-4 py-1.5 backdrop-blur-2xl shadow-xl transition-all duration-300 hover:border-white/25 select-none",
+                "inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 rounded-full border border-white/12 bg-slate-950/85 px-3.5 sm:px-4.5 py-1.5 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:border-white/25 select-none",
                 className
             )}
         >
@@ -75,6 +110,14 @@ export const AiPartnersBadge: React.FC<AiPartnersBadgeProps> = ({
                 <span className="font-bold text-xs sm:text-sm text-[#5B7BFE] tracking-tight">
                     DeepSeek
                 </span>
+            </div>
+
+            {/* Separator Cross */}
+            <span className="text-xs font-semibold text-slate-500">×</span>
+
+            {/* Matany AI in Netflix Red Arched Typography */}
+            <div className="flex items-center">
+                <MatanyAiLogo />
             </div>
         </div>
     );
