@@ -304,8 +304,8 @@ export async function preflightMedicationEvidence(opts: {
     const enableFda = opts.enableFda !== false;
 
     let fda: OpenFdaLabelSnapshot | null = null;
+    let pickedBrand: string | null = null;
     if (enableFda) {
-        let pickedBrand: string | null = null;
         try {
             if (ndc) {
                 fda = await fetchOpenFdaLabelSnapshot({ productNdc: ndc, limit: 5 });

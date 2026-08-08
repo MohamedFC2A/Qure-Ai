@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
 
 // Initialize DeepSeek client (text-only)
@@ -178,17 +179,41 @@ export const analyzeMedicationText = async (
     END OF TEXT. ANALYZE NOW.
   `;
 
-        const response = await deepseek.chat.completions.create({
-            model: DEEPSEEK_MODEL,
-            messages: [
-                { role: "system", content: "You are a specialized medical analysis AI. Output valid JSON only." },
-                { role: "user", content: systemPrompt }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.2, // Very low temperature for high precision
-        });
+        let content: string | null = null;
+        try {
+            const deepseek = new OpenAI({
+                apiKey: getDeepSeekApiKey(),
+                baseURL: DEEPSEEK_BASE_URL,
+            });
+            const response = await deepseek.chat.completions.create({
+                model: DEEPSEEK_MODEL,
+                messages: [
+                    { role: "system", content: "You are a specialized medical analysis AI. Output valid JSON only." },
+                    { role: "user", content: systemPrompt }
+                ],
+                response_format: { type: "json_object" },
+                temperature: 0.2,
+            });
+            content = response.choices[0]?.message?.content || null;
+        } catch (dsErr: any) {
+            console.warn("[Vision API] DeepSeek failed, switching to Gemini Flash fallback:", dsErr?.message || dsErr);
+            const geminiKey = process.env.GEMINI_API_KEY;
+            if (geminiKey) {
+                try {
+                    const genAI = new GoogleGenerativeAI(geminiKey);
+                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
+                    const model = genAI.getGenerativeModel({
+                        model: modelName,
+                        generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+                    });
+                    const res = await model.generateContent(systemPrompt);
+                    content = res.response.text();
+                } catch (gErr) {
+                    console.error("[Vision API] Gemini fallback failed:", gErr);
+                }
+            }
+        }
 
-        const content = response.choices[0].message.content;
         console.log("AI Raw Response:", content);
 
         if (!content) throw new Error("No response from AI");

@@ -3,7 +3,7 @@
    National Institutes of Health (NIH) / National Library of Medicine
    ================================================================ */
 
-import { searchLocalRxNormDb, type RxNormConcept } from "./rxnormLocalDb";
+import { searchLocalRxNormDb, RXNORM_LOCAL_DATABASE, type RxNormConcept } from "./rxnormLocalDb";
 
 const RXNAV_BASE_URL = "https://rxnav.nlm.nih.gov/REST";
 
@@ -166,7 +166,7 @@ export async function getRxNormConceptDetails(rxcui: string): Promise<RxNormConc
             name: d.nameEn,
             tty: d.tty,
             synonyms: d.synonyms,
-            activeIngredients: d.activeIngredients.map((name) => ({ rxcui: d.rxcui, name })),
+            activeIngredients: d.activeIngredients.map((name: string) => ({ rxcui: d.rxcui, name })),
             doseForms: d.doseForm ? [d.doseForm] : [],
             source: "local_db",
         };

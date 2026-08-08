@@ -95,28 +95,36 @@ export const AiPartnersBadge: React.FC<AiPartnersBadgeProps> = ({
 
             {/* Gemini Brand */}
             <div className="flex items-center gap-1 shrink-0">
-                <GeminiLogo className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z" fill="#FFFFFF" />
+                </svg>
                 <span className="font-bold text-[11px] sm:text-xs text-white tracking-tight">
                     Gemini
                 </span>
             </div>
 
             {/* Separator Cross */}
-            <span className="text-[10px] font-semibold text-slate-500 shrink-0">×</span>
+            <span className="text-[10px] font-semibold text-slate-400 shrink-0">×</span>
 
             {/* DeepSeek Brand */}
             <div className="flex items-center gap-1 shrink-0">
-                <DeepSeekLogo className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="font-bold text-[11px] sm:text-xs text-[#5B7BFE] tracking-tight">
+                <svg viewBox="0 0 32 32" className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 3C8.82 3 3 8.82 3 16C3 23.18 8.82 29 16 29C18.42 29 20.68 28.34 22.62 27.19C22.07 26.35 21.75 25.35 21.75 24.28C21.75 21.38 24.1 19.03 27 19.03C27.39 19.03 27.76 19.08 28.12 19.16C28.69 18.17 29 17.12 29 16C29 8.82 23.18 3 16 3ZM14.04 10.88C15.28 10.88 16.29 11.89 16.29 13.13C16.29 14.37 15.28 15.38 14.04 15.38C12.8 15.38 11.79 14.37 11.79 13.13C11.79 11.89 12.8 10.88 14.04 10.88ZM11.16 22.42C8.14 21.24 6.83 17.96 8.01 14.94C8.53 13.63 9.58 12.58 10.89 12.06C10.5 13.11 10.5 14.29 10.89 15.34C11.55 17.05 12.99 18.23 14.83 18.62C13.39 20.59 11.16 21.64 8.54 21.64C9.42 22.03 10.3 22.29 11.16 22.42Z" fill="#FFFFFF" />
+                </svg>
+                <span className="font-bold text-[11px] sm:text-xs text-white tracking-tight">
                     DeepSeek
                 </span>
             </div>
 
             {/* Separator Cross */}
-            <span className="text-[10px] font-semibold text-slate-500 shrink-0">×</span>
+            <span className="text-[10px] font-semibold text-slate-400 shrink-0">×</span>
 
-            {/* Matany AI in Netflix Arched Curved Gold Typography */}
-            <MatanyAiLogo />
+            {/* Matany AI Brand */}
+            <div className="flex items-center gap-1 shrink-0">
+                <span className="font-black text-[11px] sm:text-xs text-white tracking-tight uppercase">
+                    Matany AI
+                </span>
+            </div>
         </div>
     );
 };

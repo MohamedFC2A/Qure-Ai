@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
@@ -307,17 +308,37 @@ USER_QUESTION:
 ${rootQuestion}
 `;
 
-        const response = await deepseek.chat.completions.create({
-            model: DEEPSEEK_MODEL,
-            messages: [
-                { role: "system", content: "You are a medical analysis assistant. Output valid JSON only." },
-                { role: "user", content: prompt },
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.15,
-        });
+        let content: string | null = null;
+        try {
+            const response = await deepseek.chat.completions.create({
+                model: DEEPSEEK_MODEL,
+                messages: [
+                    { role: "system", content: "You are a medical analysis assistant. Output valid JSON only." },
+                    { role: "user", content: prompt },
+                ],
+                response_format: { type: "json_object" },
+                temperature: 0.15,
+            });
+            content = response.choices[0]?.message?.content || null;
+        } catch (dsErr: any) {
+            console.warn("[AI Tree API] DeepSeek failed, switching to Gemini Flash fallback:", dsErr?.message || dsErr);
+            const geminiKey = process.env.GEMINI_API_KEY;
+            if (geminiKey) {
+                try {
+                    const genAI = new GoogleGenerativeAI(geminiKey);
+                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
+                    const model = genAI.getGenerativeModel({
+                        model: modelName,
+                        generationConfig: { responseMimeType: "application/json", temperature: 0.15 }
+                    });
+                    const res = await model.generateContent(prompt);
+                    content = res.response.text();
+                } catch (gErr) {
+                    console.error("[AI Tree API] Gemini fallback failed:", gErr);
+                }
+            }
+        }
 
-        const content = response.choices[0].message.content;
         if (!content) {
             return NextResponse.json({ error: "No AI response" }, { status: 502 });
         }

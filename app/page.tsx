@@ -1,7 +1,7 @@
 "use client";
 
 import { GlassCard } from "@/components/ui/GlassCard";
-import { AiPartnersBadge } from "@/components/ui/AiPartnersBadge";
+import { AiPartnersMarquee } from "@/components/ui/AiPartnersMarquee";
 import {
     ArrowRight,
     CheckCircle2,
@@ -270,10 +270,6 @@ export default function Home() {
             >
                 <motion.div variants={itemVariants} className="space-y-5">
 
-                    <div className="flex justify-center mb-3">
-                        <AiPartnersBadge />
-                    </div>
-
                     {/* Headline */}
                     <h1 className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.08] tracking-tight text-white max-w-5xl mx-auto">
                         {isArabic ? (
@@ -335,6 +331,11 @@ export default function Home() {
                             <Lock className="h-3.5 w-3.5 text-slate-400/70" />
                             <span>{t("Encrypted & Private", "حماية وخصوصية تامة")}</span>
                         </div>
+                    </div>
+
+                    {/* Partner Technologies Marquee Ticker */}
+                    <div className="pt-8 sm:pt-12">
+                        <AiPartnersMarquee />
                     </div>
                 </motion.div>
 

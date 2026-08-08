@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
@@ -157,19 +158,40 @@ export async function POST(req: NextRequest) {
         // Add current question
         deepseekMessages.push({ role: "user", content: question });
 
-        const deepseek = new OpenAI({
-            apiKey: apiKey,
-            baseURL: DEEPSEEK_BASE_URL,
-        });
+        let content: string | null = null;
+        try {
+            const deepseek = new OpenAI({
+                apiKey: apiKey,
+                baseURL: DEEPSEEK_BASE_URL,
+            });
 
-        const response = await deepseek.chat.completions.create({
-            model: DEEPSEEK_MODEL,
-            messages: deepseekMessages,
-            response_format: { type: "json_object" },
-            temperature: 0.15,
-        });
+            const response = await deepseek.chat.completions.create({
+                model: DEEPSEEK_MODEL,
+                messages: deepseekMessages,
+                response_format: { type: "json_object" },
+                temperature: 0.15,
+            });
+            content = response.choices[0]?.message?.content || null;
+        } catch (dsErr: any) {
+            console.warn("[AI Chat API] DeepSeek failed, switching to Gemini Flash fallback:", dsErr?.message || dsErr);
+            const geminiKey = process.env.GEMINI_API_KEY;
+            if (geminiKey) {
+                try {
+                    const genAI = new GoogleGenerativeAI(geminiKey);
+                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
+                    const model = genAI.getGenerativeModel({
+                        model: modelName,
+                        generationConfig: { responseMimeType: "application/json", temperature: 0.15 }
+                    });
+                    const prompt = `${systemPrompt}\n\nUser Question: ${question}\n\nReturn JSON in exact schema: {"answer": "...", "keyPoints": ["..."], "suggestedFollowUps": ["..."]}`;
+                    const res = await model.generateContent(prompt);
+                    content = res.response.text();
+                } catch (gErr: any) {
+                    console.error("[AI Chat API] Gemini fallback also failed:", gErr);
+                }
+            }
+        }
 
-        const content = response.choices[0].message.content;
         if (!content) {
             return NextResponse.json({ error: "No AI response" }, { status: 502 });
         }

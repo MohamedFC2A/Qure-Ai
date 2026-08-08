@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
@@ -108,35 +109,61 @@ export async function POST(req: NextRequest) {
                 : `Answer with clean, detailed Markdown formatting. When completely done with the answer, write exactly:\n\n---METADATA---\n\nThen JSON in this format (NO code fences):\n{"keyPoints":["point 1","point 2","point 3"],"suggestedFollowUps":["question 1?","question 2?","question 3?","question 4?"]}\n\nImportant: Do NOT use \`\`\`json. Just plain JSON after the separator.`,
         });
 
-        const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
-
-        /* ── Streaming call (text mode, not json_object) ── */
-        const stream = await deepseek.chat.completions.create({
-            model: DEEPSEEK_MODEL,
-            messages: deepseekMessages,
-            stream: true,
-            temperature: 0.2,
-            max_tokens: 2048,
-        });
-
         const encoder = new TextEncoder();
         let fullText = "";
+
+        let tokenStream: AsyncIterable<any> | null = null;
+        try {
+            const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
+            tokenStream = await deepseek.chat.completions.create({
+                model: DEEPSEEK_MODEL,
+                messages: deepseekMessages,
+                stream: true,
+                temperature: 0.2,
+                max_tokens: 2048,
+            });
+        } catch (dsErr: any) {
+            console.warn("[AI Stream Route] DeepSeek failed, attempting Gemini Flash streaming fallback:", dsErr?.message || dsErr);
+            const geminiKey = process.env.GEMINI_API_KEY;
+            if (geminiKey) {
+                try {
+                    const genAI = new GoogleGenerativeAI(geminiKey);
+                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
+                    const model = genAI.getGenerativeModel({ model: modelName });
+                    const fullPrompt = `${systemPrompt}\n\nUser Question: ${question}\n\nFormat instructions: Answer in Markdown. At the end, write:\n${META_SEPARATOR}\n{"keyPoints":["point 1","point 2"],"suggestedFollowUps":["q1","q2"]}`;
+                    const res = await model.generateContentStream(fullPrompt);
+                    
+                    // Adapt Gemini stream chunks to yield object with text
+                    async function* geminiAdapter() {
+                        for await (const chunk of res.stream) {
+                            yield { choices: [{ delta: { content: chunk.text() } }] };
+                        }
+                    }
+                    tokenStream = geminiAdapter();
+                } catch (gErr: any) {
+                    console.error("[AI Stream Route] Gemini streaming fallback also failed:", gErr);
+                    throw dsErr;
+                }
+            } else {
+                throw dsErr;
+            }
+        }
 
         const readable = new ReadableStream({
             async start(controller) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "start" })}\n\n`));
 
                 try {
-                    for await (const chunk of stream) {
-                        const token = chunk.choices?.[0]?.delta?.content || "";
-                        if (token) {
-                            fullText += token;
-                            const sepIdx = fullText.indexOf(META_SEPARATOR);
-                            if (sepIdx === -1) {
-                                // Still in answer section — stream token to client
-                                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "token", token })}\n\n`));
+                    if (tokenStream) {
+                        for await (const chunk of tokenStream) {
+                            const token = chunk.choices?.[0]?.delta?.content || "";
+                            if (token) {
+                                fullText += token;
+                                const sepIdx = fullText.indexOf(META_SEPARATOR);
+                                if (sepIdx === -1) {
+                                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "token", token })}\n\n`));
+                                }
                             }
-                            // Once separator found, tokens accumulate silently (metadata)
                         }
                     }
 
@@ -174,6 +201,7 @@ export async function POST(req: NextRequest) {
                     /* ── Fallback: quick metadata extraction if missing ── */
                     if (keyPoints.length === 0 || suggestedFollowUps.length === 0) {
                         try {
+                            const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
                             const metaRes = await deepseek.chat.completions.create({
                                 model: DEEPSEEK_MODEL,
                                 messages: [
