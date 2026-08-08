@@ -259,7 +259,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
 
-    // Enhanced Ask NEXUS AI state
+    // Enhanced Ask MATANY AI state
     const [customQuestion, setCustomQuestion] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [copiedNodeIdx, setCopiedNodeIdx] = useState<number | null>(null);
@@ -2419,7 +2419,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-white/40 text-xs ps-1">
                                     <MessageSquare className="w-3.5 h-3.5" />
-                                    <span>{t("Conversation with NEXUS AI", "محادثتك مع NEXUS AI")}</span>
+                                    <span>{t("Conversation with MATANY AI", "محادثتك مع MATANY AI")}</span>
                                     <span>•</span>
                                     <span>{aiNodes.length} {t("exchanges", "تبادلات")}</span>
                                 </div>

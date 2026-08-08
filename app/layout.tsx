@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
     title: "Qure Ai | تحليل الأدوية الذكي | Pharmaceutical Intelligence",
     description: "QURE AI — منصة ذكاء طبي متقدمة لتحليل الأدوية والتحقق من السلامة الدوائية. Advanced AI-powered medication analysis and pharmaceutical safety intelligence.",
-    keywords: ["medication analysis", "تحليل أدوية", "AI", "pharmaceutical", "safety", "openFDA", "NEXUS AI"],
+    keywords: ["medication analysis", "تحليل أدوية", "AI", "pharmaceutical", "safety", "openFDA", "MATANY AI"],
     openGraph: {
         title: "Qure Ai | تحليل الأدوية الذكي",
         description: "منصة ذكاء طبي متقدمة لتحليل الأدوية والتحقق من السلامة الدوائية",

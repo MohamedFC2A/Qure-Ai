@@ -1,2 +1,1 @@
-export const AI_DISPLAY_NAME = "NEXUS AI";
-
+export const AI_DISPLAY_NAME = "MATANY AI";

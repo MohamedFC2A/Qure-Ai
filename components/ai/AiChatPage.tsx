@@ -395,7 +395,7 @@ export function AiChatPage() {
                                     <Sparkles className="w-9 h-9" />
                                 </div>
                                 <h2 className="text-xl font-black mb-2">
-                                    <span className="nexus-gold-text">{t("Ask NEXUS AI", "اسأل NEXUS AI")}</span>
+                                    <span className="nexus-gold-text">{t("Ask MATANY AI", "اسأل MATANY AI")}</span>
                                 </h2>
                                 <p className="text-sm text-slate-500 max-w-md leading-relaxed">
                                     {mode === "health" && t(
@@ -462,7 +462,7 @@ export function AiChatPage() {
                             <div className="flex items-center gap-2 px-1">
                                 <span className="inline-block w-0.5 h-4 bg-white/60 animate-pulse rounded-full" />
                                 <span className="text-[10px] text-white/30">
-                                    {t("NEXUS AI is thinking...", "NEXUS AI يفكر...")}
+                                    {t("MATANY AI is thinking...", "MATANY AI يفكر...")}
                                 </span>
                             </div>
                         )}

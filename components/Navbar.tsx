@@ -46,7 +46,7 @@ export const Navbar = () => {
         ? [
               { name: t("Home", "الرئيسية"),       href: "/",                   icon: Atom },
               { name: t("Scan", "فحص الدواء"),     href: "/scan",               icon: ScanLine },
-              { name: "NEXUS AI",                    href: "/ai",                 icon: Brain },
+              { name: "MATANY AI",                   href: "/ai",                 icon: Brain },
               { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem },
               { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock },
               { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard },

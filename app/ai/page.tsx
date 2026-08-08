@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { AiChatPage } from "@/components/ai/AiChatPage";
 
 export const metadata = {
-    title: "NEXUS AI — Qure Ai",
-    description: "Your intelligent health & medication assistant powered by NEXUS AI.",
+    title: "MATANY AI — Qure Ai",
+    description: "Your intelligent health & medication assistant powered by MATANY AI.",
 };
 
 export default function AiPage() {
