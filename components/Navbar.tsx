@@ -44,31 +44,17 @@ export const Navbar = () => {
 
     const navItems = user
         ? [
-              { name: t("Home", "الرئيسية"),       href: "/",                   icon: Atom,            color: "cyan"    },
-              { name: t("Scan", "فحص دواء"),        href: "/scan",               icon: ScanLine,        color: "emerald" },
-              { name: "NEXUS AI",                    href: "/ai",                 icon: Brain,           color: "violet"  },
-              { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem,             color: "amber"   },
-              { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock,           color: "violet"  },
-              { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard, color: "cyan"   },
+              { name: t("Home", "الرئيسية"),       href: "/",                   icon: Atom },
+              { name: t("Scan", "فحص الدواء"),     href: "/scan",               icon: ScanLine },
+              { name: "NEXUS AI",                    href: "/ai",                 icon: Brain },
+              { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem },
+              { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock },
+              { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard },
           ]
         : [
-              { name: t("Home", "الرئيسية"),   href: "/",        icon: Atom, color: "cyan"  },
-              { name: t("Pricing", "الأسعار"),  href: "/pricing", icon: Gem,  color: "amber" },
+              { name: t("Home", "الرئيسية"),   href: "/",        icon: Atom },
+              { name: t("Pricing", "الأسعار"),  href: "/pricing", icon: Gem },
           ];
-
-    const activeColorMap: Record<string, string> = {
-        cyan:    "bg-cyan-400/15 text-cyan-300 ring-1 ring-cyan-400/30",
-        emerald: "bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/30",
-        amber:   "bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30",
-        violet:  "bg-violet-400/15 text-violet-300 ring-1 ring-violet-400/30",
-    };
-
-    const activeIconColorMap: Record<string, string> = {
-        cyan:    "text-cyan-400",
-        emerald: "text-emerald-400",
-        amber:   "text-amber-400",
-        violet:  "text-violet-400",
-    };
 
     return (
         <>
@@ -78,20 +64,15 @@ export const Navbar = () => {
             <header className="fixed top-2.5 sm:top-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-6xl">
                 <div
                     className={cn(
-                        "relative overflow-hidden rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5",
+                        "relative overflow-hidden rounded-2xl px-3.5 py-2 sm:px-5 sm:py-2.5",
                         "flex items-center justify-between gap-2 sm:gap-4",
-                        "backdrop-blur-2xl border shadow-2xl",
-                        "transition-all duration-300"
+                        "backdrop-blur-2xl border shadow-2xl transition-all duration-300",
+                        isAiRoute
+                            ? "bg-slate-950/95 border-amber-400/25 shadow-amber-950/30"
+                            : "bg-slate-950/90 border-white/10 shadow-black/60"
                     )}
-                    style={{
-                        background: isAiRoute ? "rgba(12, 10, 5, 0.94)" : "rgba(6, 9, 14, 0.90)",
-                        borderColor: isAiRoute ? "rgba(217, 170, 75, 0.30)" : "rgba(255, 255, 255, 0.10)",
-                        boxShadow: isAiRoute
-                            ? "0 0 0 0.5px rgba(217,170,75,0.18) inset, 0 24px 60px rgba(0,0,0,0.6), 0 0 40px rgba(217,170,75,0.08)"
-                            : "0 0 0 0.5px rgba(255,255,255,0.06) inset, 0 24px 60px rgba(0,0,0,0.6)",
-                    }}
                 >
-                    {/* Top shimmer accent line */}
+                    {/* Top subtle accent line */}
                     <div
                         className={cn(
                             "absolute inset-x-0 top-0 h-[1.5px] pointer-events-none",
@@ -104,7 +85,7 @@ export const Navbar = () => {
                     {/* ── Logo ── */}
                     <Link
                         href="/"
-                        className="flex items-center gap-2 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 rounded-xl"
+                        className="flex items-center gap-2.5 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 rounded-xl"
                     >
                         <div
                             className={cn(
@@ -139,19 +120,17 @@ export const Navbar = () => {
                                 <Link key={item.href} href={item.href}>
                                     <div
                                         className={cn(
-                                            "relative px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
-                                            "flex items-center gap-1.5 cursor-pointer select-none",
+                                            "relative px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
+                                            "flex items-center gap-2 cursor-pointer select-none",
                                             isActive
-                                                ? activeColorMap[item.color] || activeColorMap.cyan
+                                                ? "bg-cyan-400/15 text-cyan-300 border border-cyan-400/30"
                                                 : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
                                         )}
                                     >
                                         <item.icon
                                             className={cn(
                                                 "w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0",
-                                                isActive
-                                                    ? activeIconColorMap[item.color] || "text-cyan-400"
-                                                    : "opacity-75"
+                                                isActive ? "text-cyan-400" : "opacity-75"
                                             )}
                                         />
                                         <span>{item.name}</span>
@@ -168,7 +147,7 @@ export const Navbar = () => {
                                 {/* Scanning Indicator */}
                                 {isScanning && (
                                     <Link href="/scan">
-                                        <div className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-400/20">
+                                        <div className="flex items-center gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-400/20">
                                             <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
                                             <span className="hidden sm:inline">{t("Scanning", "فحص")}</span>
                                             <span className="font-mono tabular-nums">{totalDuration}s</span>
@@ -180,7 +159,7 @@ export const Navbar = () => {
                                 <Link href="/profile" aria-label="Open profile">
                                     <div
                                         className={cn(
-                                            "flex items-center gap-1 sm:gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold transition-all",
+                                            "flex items-center gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold transition-all",
                                             plan === "ultra"
                                                 ? "bg-amber-400/10 border-amber-400/30 text-amber-300 hover:bg-amber-400/20"
                                                 : "bg-cyan-400/10 border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/20"
