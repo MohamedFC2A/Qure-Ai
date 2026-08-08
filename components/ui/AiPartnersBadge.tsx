@@ -36,38 +36,44 @@ export const DeepSeekLogo = ({ className = "w-4 h-4" }: { className?: string }) 
     </svg>
 );
 
-/* ── Matany AI in the iconic Netflix Arched Typography ────────── */
-export const MatanyAiLogo = ({ className = "h-4 sm:h-5 w-auto" }: { className?: string }) => (
-    <div className={cn("inline-flex items-center gap-1 font-black select-none tracking-wider", className)}>
-        {/* Netflix Arched SVG Text */}
+/* ── Matany AI in Luxurious Shiny Metallic Gold Typography ────── */
+export const MatanyAiLogo = ({ className = "" }: { className?: string }) => (
+    <div className={cn("inline-flex items-center gap-1.5 select-none", className)}>
+        {/* Geometric Gold Emblem Icon */}
         <svg
-            viewBox="0 0 135 28"
-            className="h-4 sm:h-5 w-auto drop-shadow-[0_2px_10px_rgba(229,9,20,0.55)]"
+            viewBox="0 0 24 24"
+            className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 drop-shadow-[0_2px_8px_rgba(245,208,97,0.5)]"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
         >
             <defs>
-                <linearGradient id="netflixRed" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FF1923" />
-                    <stop offset="50%" stopColor="#E50914" />
-                    <stop offset="100%" stopColor="#B20710" />
+                <linearGradient id="goldIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFF2B2" />
+                    <stop offset="30%" stopColor="#F5D061" />
+                    <stop offset="70%" stopColor="#D4A232" />
+                    <stop offset="100%" stopColor="#9E7418" />
                 </linearGradient>
-                <path id="netflixArc" d="M 5 24 Q 67.5 18 130 24" />
             </defs>
-
-            {/* Arched Netflix style wordmark */}
-            <text
-                fill="url(#netflixRed)"
-                fontFamily="Impact, 'Bebas Neue', 'Arial Black', sans-serif"
-                fontSize="19"
-                fontWeight="900"
-                letterSpacing="1.8"
-            >
-                <textPath href="#netflixArc" startOffset="50%" textAnchor="middle">
-                    MATANY AI
-                </textPath>
-            </text>
+            {/* Elegant Monogram M / Diamond Star */}
+            <path
+                d="M4 19L4 5L8.5 13L12 7L15.5 13L20 5L20 19L16.5 19L16.5 10.5L13.5 16L10.5 16L7.5 10.5L7.5 19L4 19Z"
+                fill="url(#goldIconGrad)"
+            />
         </svg>
+
+        {/* Shiny Metallic Gold Wordmark */}
+        <span
+            className="font-black text-xs sm:text-sm tracking-[0.22em] uppercase transition-all duration-300"
+            style={{
+                background: "linear-gradient(135deg, #FFF6C8 0%, #F5D061 25%, #FFE79A 50%, #D4A232 75%, #FFF2B2 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0 2px 10px rgba(245, 208, 97, 0.45))",
+                fontFamily: "var(--font-inter), system-ui, -apple-system, sans-serif",
+            }}
+        >
+            MATANY<span className="text-[#FFE79A] ml-1">AI</span>
+        </span>
     </div>
 );
 
@@ -83,7 +89,7 @@ export const AiPartnersBadge: React.FC<AiPartnersBadgeProps> = ({
     return (
         <div
             className={cn(
-                "inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 rounded-full border border-white/12 bg-slate-950/85 px-3.5 sm:px-4.5 py-1.5 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:border-white/25 select-none",
+                "inline-flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 rounded-full border border-white/12 bg-slate-950/85 px-4 sm:px-5 py-2 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:border-white/25 select-none",
                 className
             )}
         >
@@ -115,7 +121,7 @@ export const AiPartnersBadge: React.FC<AiPartnersBadgeProps> = ({
             {/* Separator Cross */}
             <span className="text-xs font-semibold text-slate-500">×</span>
 
-            {/* Matany AI in Netflix Red Arched Typography */}
+            {/* Matany AI in Luxurious Shiny Metallic Gold */}
             <div className="flex items-center">
                 <MatanyAiLogo />
             </div>
