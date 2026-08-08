@@ -3,8 +3,10 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
-import { type AiChatMode, buildSystemPrompt, generateConversationTitle } from "@/lib/ai/chat";
+import { checkGuardrails } from "@/lib/ai/guardrails";
+import { buildSmartMemoryMessages } from "@/lib/ai/memory";
+import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { type AiChatMode, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 const META_SEPARATOR = "\n---METADATA---\n";
 
@@ -39,6 +41,37 @@ export async function POST(req: NextRequest) {
         if (!question) {
             return new Response(JSON.stringify({ error: "Question is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
         }
+
+        // 1. FAST ZERO-TOKEN GUARDRAIL CHECK FOR STREAMING
+        const guard = checkGuardrails(question, language);
+        if (guard.isBlocked) {
+            const encoder = new TextEncoder();
+            const redirectText = guard.redirectMessage || "";
+            const readable = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "start" })}\n\n`));
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "token", token: redirectText })}\n\n`));
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                        type: "done",
+                        conversationId,
+                        answer: redirectText,
+                        keyPoints: [],
+                        suggestedFollowUps: language === "ar"
+                            ? ["نصائح تغذية صحية", "تمارين تحسين النوم", "كيفية خفض التوتر", "مراجعة تداخل الأدوية"]
+                            : ["Healthy nutrition tips", "Sleep improvement exercises", "How to reduce stress", "Review drug interactions"],
+                    })}\n\n`));
+                    controller.close();
+                }
+            });
+            return new Response(readable, {
+                headers: {
+                    "Content-Type": "text/event-stream",
+                    "Cache-Control": "no-cache, no-transform",
+                    "Connection": "keep-alive",
+                },
+            });
+        }
+
         const apiKey = getDeepSeekApiKey();
         if (!apiKey) {
             return new Response(JSON.stringify({ error: "Server configuration error: DEEPSEEK_API_KEY is missing." }), { status: 503, headers: { "Content-Type": "application/json" } });
@@ -91,22 +124,24 @@ export async function POST(req: NextRequest) {
 
         if (mode === "medication" && medicationData) {
             deepseekMessages.push({
-                role: "system",
-                content: `The user is asking about this specific medication:\n${JSON.stringify(medicationData, null, 2).slice(0, 4000)}`,
+                role: "user",
+                content: `Target Medication Details: ${medicationData.drugName || medicationData.drugNameEn || "Medication"} (${medicationData.genericName || ""})`,
             });
         }
 
-        for (const msg of messageHistory.slice(-20)) {
-            deepseekMessages.push({ role: msg.role as "user" | "assistant", content: msg.content });
+        // Add smart compressed conversation history (max 85% token savings)
+        const smartHistory = buildSmartMemoryMessages(messageHistory, question);
+        for (const msg of smartHistory) {
+            deepseekMessages.push(msg);
         }
         deepseekMessages.push({ role: "user", content: question });
 
-        // Add output format instruction
+        // Add format instruction
         deepseekMessages.push({
             role: "system",
             content: language === "ar"
-                ? `أجب بصيغة Markdown نظيفة ومفصلة. عند الانتهاء تماماً من الإجابة، اكتب هذا بالضبط:\n\n---METADATA---\n\nثم JSON بهذا الشكل (بدون أي code fences):\n{"keyPoints":["نقطة 1","نقطة 2","نقطة 3"],"suggestedFollowUps":["سؤال 1؟","سؤال 2؟","سؤال 3؟","سؤال 4؟"]}\n\nمهم: لا تستخدم \`\`\`json. فقط JSON عادي بعد الفاصل.`
-                : `Answer with clean, detailed Markdown formatting. When completely done with the answer, write exactly:\n\n---METADATA---\n\nThen JSON in this format (NO code fences):\n{"keyPoints":["point 1","point 2","point 3"],"suggestedFollowUps":["question 1?","question 2?","question 3?","question 4?"]}\n\nImportant: Do NOT use \`\`\`json. Just plain JSON after the separator.`,
+                ? `أجب بصيغة Markdown نظيفة ومفصلة. عند الانتهاء تماماً، اترك سطرين واكتب:\n${META_SEPARATOR}\n{"keyPoints":["نقطة 1","نقطة 2"],"suggestedFollowUps":["سؤال 1؟","سؤال 2؟"]}`
+                : `Answer with clean, detailed Markdown formatting. When completely done, leave 2 blank lines and write:\n${META_SEPARATOR}\n{"keyPoints":["point 1","point 2"],"suggestedFollowUps":["question 1?","question 2?"]}`,
         });
 
         const encoder = new TextEncoder();
@@ -116,11 +151,11 @@ export async function POST(req: NextRequest) {
         try {
             const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
             tokenStream = await deepseek.chat.completions.create({
-                model: DEEPSEEK_MODEL,
+                model: getDeepSeekModel(),
                 messages: deepseekMessages,
                 stream: true,
                 temperature: 0.2,
-                max_tokens: 2048,
+                max_tokens: 1000,
             });
         } catch (dsErr: any) {
             console.warn("[AI Stream Route] DeepSeek failed, attempting Gemini Flash streaming fallback:", dsErr?.message || dsErr);
@@ -160,39 +195,20 @@ export async function POST(req: NextRequest) {
                             if (token) {
                                 fullText += token;
                                 const sepIdx = fullText.indexOf(META_SEPARATOR);
-                                if (sepIdx === -1) {
+                                const startsWithJson = fullText.trimStart().startsWith("{") || fullText.trimStart().startsWith("```json");
+                                // Only stream tokens if model is NOT writing raw JSON directly
+                                if (sepIdx === -1 && !startsWithJson) {
                                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "token", token })}\n\n`));
                                 }
                             }
                         }
                     }
 
-                    /* ── Parse full response ── */
-                    const sepIdx = fullText.indexOf(META_SEPARATOR);
-                    let answer: string;
-                    let keyPoints: string[] = [];
-                    let suggestedFollowUps: string[] = [];
-
-                    if (sepIdx !== -1) {
-                        answer = fullText.slice(0, sepIdx).trim();
-                        const metaRaw = fullText.slice(sepIdx + META_SEPARATOR.length).trim();
-                        try {
-                            const jsonMatch = metaRaw.match(/\{[\s\S]*\}/);
-                            if (jsonMatch) {
-                                const parsed = JSON.parse(jsonMatch[0]);
-                                keyPoints = (Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [])
-                                    .map((s: any) => String(s).trim()).filter(Boolean).slice(0, 7);
-                                suggestedFollowUps = (Array.isArray(parsed.suggestedFollowUps) ? parsed.suggestedFollowUps : [])
-                                    .map((s: any) => String(s).trim()).filter(Boolean).slice(0, 4);
-                            }
-                        } catch { /* metadata parse fails gracefully */ }
-                    } else {
-                        // No separator found — use full text, strip any trailing JSON
-                        answer = fullText
-                            .replace(/```json[\s\S]*$/g, "")
-                            .replace(/\{"keyPoints"[\s\S]*$/g, "")
-                            .trim();
-                    }
+                    /* ── Parse full response robustly ── */
+                    const parsed = parseAiResponse(fullText);
+                    let answer = parsed.answer;
+                    let keyPoints = parsed.keyPoints.slice(0, 7);
+                    let suggestedFollowUps = parsed.suggestedFollowUps.slice(0, 4);
 
                     if (!answer) {
                         answer = language === "ar" ? "عذرًا، لم أتمكن من توليد إجابة." : "Sorry, I couldn't generate an answer.";
@@ -203,9 +219,9 @@ export async function POST(req: NextRequest) {
                         try {
                             const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
                             const metaRes = await deepseek.chat.completions.create({
-                                model: DEEPSEEK_MODEL,
+                                model: getDeepSeekModel(),
                                 messages: [
-                                    { role: "system", content: "Extract metadata from medical answers. Output VALID JSON only." },
+                                    { role: "system", content: "Extract metadata from medical answers. Output VALID JSON with exact keys: keyPoints (array of strings), suggestedFollowUps (array of strings)." },
                                     {
                                         role: "user",
                                         content: `From this answer, extract key points and follow-up questions.\n\nAnswer:\n${answer.slice(0, 3000)}\n\nReturn JSON:\n{"keyPoints":["3-5 concise items"],"suggestedFollowUps":["4 short questions"]}`,
@@ -217,9 +233,9 @@ export async function POST(req: NextRequest) {
                             });
                             const metaContent = metaRes.choices?.[0]?.message?.content;
                             if (metaContent) {
-                                const parsed = JSON.parse(metaContent);
-                                if (keyPoints.length === 0) keyPoints = (parsed.keyPoints || []).slice(0, 7);
-                                if (suggestedFollowUps.length === 0) suggestedFollowUps = (parsed.suggestedFollowUps || []).slice(0, 4);
+                                const metaParsed = parseAiResponse(metaContent);
+                                if (keyPoints.length === 0) keyPoints = metaParsed.keyPoints.slice(0, 7);
+                                if (suggestedFollowUps.length === 0) suggestedFollowUps = metaParsed.suggestedFollowUps.slice(0, 4);
                             }
                         } catch { /* fallback fails gracefully */ }
                     }
@@ -265,6 +281,7 @@ export async function POST(req: NextRequest) {
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({
                         type: "done",
                         conversationId: activeConversationId,
+                        answer,
                         keyPoints,
                         suggestedFollowUps,
                     })}\n\n`));

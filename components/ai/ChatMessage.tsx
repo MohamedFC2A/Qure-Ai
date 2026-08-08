@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Copy, Check, Sparkles, User } from "lucide-react";
 import { useState } from "react";
+import { parseAiResponse } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────
  *  ChatMessage – Premium redesign with gradient bubbles
@@ -28,9 +29,15 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
     const [copied, setCopied] = useState(false);
     const isUser = message.role === "user";
 
+    // Fail-safe parsing for AI assistant messages to eliminate raw JSON artifacts
+    const parsed = !isUser && message.content ? parseAiResponse(message.content) : { answer: "", keyPoints: [], suggestedFollowUps: [] };
+    const displayContent = isUser ? message.content : (parsed.answer || message.content);
+    const displayKeyPoints = (message.keyPoints && message.keyPoints.length > 0) ? message.keyPoints : parsed.keyPoints;
+    const displayFollowUps = (message.suggestedFollowUps && message.suggestedFollowUps.length > 0) ? message.suggestedFollowUps : parsed.suggestedFollowUps;
+
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(message.content);
+            await navigator.clipboard.writeText(displayContent);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch { /* ignore */ }
@@ -174,8 +181,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         "ai-bubble px-4 py-3.5",
                         isArabic ? "rounded-tl-sm" : "rounded-tr-sm"
                     )}>
-                        {message.content ? (
-                            <div className="space-y-0.5">{renderMarkdown(message.content)}</div>
+                        {displayContent ? (
+                            <div className="space-y-0.5">{renderMarkdown(displayContent)}</div>
                         ) : (
                             /* Streaming: typing dots */
                             <div className="flex items-center gap-1.5 py-1">
@@ -188,7 +195,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 )}
 
                 {/* Copy button for AI messages */}
-                {!isUser && message.content && (
+                {!isUser && displayContent && (
                     <button
                         onClick={handleCopy}
                         className={cn(
@@ -207,7 +214,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 )}
 
                 {/* Key Points */}
-                {!isUser && message.keyPoints && message.keyPoints.length > 0 && (
+                {!isUser && displayKeyPoints && displayKeyPoints.length > 0 && (
                     <div className="mt-3 rounded-xl border border-amber-400/15 p-3.5 space-y-2"
                         style={{ background: "rgba(212, 168, 67, 0.04)" }}
                     >
@@ -216,7 +223,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                             {isArabic ? "نقاط رئيسية" : "Key Points"}
                             <span className="w-3 h-px bg-amber-400/40" />
                         </p>
-                        {message.keyPoints.map((kp, i) => (
+                        {displayKeyPoints.map((kp, i) => (
                             <div key={i} className="flex items-start gap-2.5 text-xs text-white/75">
                                 <span className="text-amber-400/80 shrink-0 mt-0.5 text-[10px]">◆</span>
                                 <span className="leading-relaxed">{kp}</span>
@@ -226,9 +233,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 )}
 
                 {/* Suggested Follow-ups */}
-                {!isUser && message.suggestedFollowUps && message.suggestedFollowUps.length > 0 && onSuggestionClick && (
+                {!isUser && displayFollowUps && displayFollowUps.length > 0 && onSuggestionClick && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                        {message.suggestedFollowUps.map((s, i) => (
+                        {displayFollowUps.map((s, i) => (
                             <button
                                 key={i}
                                 onClick={() => onSuggestionClick(s)}

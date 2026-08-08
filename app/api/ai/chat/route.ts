@@ -4,8 +4,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
-import { type AiChatMode, buildSystemPrompt, generateConversationTitle } from "@/lib/ai/chat";
+import { checkGuardrails } from "@/lib/ai/guardrails";
+import { buildSmartMemoryMessages } from "@/lib/ai/memory";
+import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { type AiChatMode, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────
  *  Helper: extract & fix JSON from AI response
@@ -75,6 +77,21 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Question too long (max 2000 characters)" }, { status: 400 });
         }
 
+        // 1. FAST ZERO-TOKEN GUARDRAIL CHECK
+        const guard = checkGuardrails(question, language);
+        if (guard.isBlocked) {
+            return NextResponse.json({
+                conversationId,
+                answer: guard.redirectMessage,
+                keyPoints: [],
+                suggestedFollowUps: language === "ar"
+                    ? ["نصائح تغذية صحية", "تمارين تحسين النوم", "كيفية خفض التوتر", "مراجعة تداخل الأدوية"]
+                    : ["Healthy nutrition tips", "Sleep improvement exercises", "How to reduce stress", "Review drug interactions"],
+                meta: { mode, guardrailBlocked: true },
+                serverDurationMs: Date.now() - startTime,
+            });
+        }
+
         // Check DeepSeek API key
         const apiKey = getDeepSeekApiKey();
         if (!apiKey) {
@@ -142,17 +159,15 @@ export async function POST(req: NextRequest) {
         // Add medication context if provided (for medication mode)
         if (mode === "medication" && medicationData) {
             deepseekMessages.push({
-                role: "system",
-                content: `The user is asking about this specific medication:\n${JSON.stringify(medicationData, null, 2).slice(0, 4000)}`,
+                role: "user",
+                content: `Target Medication Details: ${medicationData.drugName || medicationData.drugNameEn || "Medication"} (${medicationData.genericName || ""})`,
             });
         }
 
-        // Add conversation history
-        for (const msg of messageHistory.slice(-20)) { // limit to last 20 messages
-            deepseekMessages.push({
-                role: msg.role as "user" | "assistant",
-                content: msg.content,
-            });
+        // Add smart compressed conversation history (max 85% token savings)
+        const smartHistory = buildSmartMemoryMessages(messageHistory, question);
+        for (const msg of smartHistory) {
+            deepseekMessages.push(msg);
         }
 
         // Add current question
@@ -166,10 +181,11 @@ export async function POST(req: NextRequest) {
             });
 
             const response = await deepseek.chat.completions.create({
-                model: DEEPSEEK_MODEL,
+                model: getDeepSeekModel(),
                 messages: deepseekMessages,
                 response_format: { type: "json_object" },
                 temperature: 0.15,
+                max_tokens: 1000,
             });
             content = response.choices[0]?.message?.content || null;
         } catch (dsErr: any) {
@@ -196,26 +212,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No AI response" }, { status: 502 });
         }
 
-        const candidate = fixInvalidJsonEscapes(extractJsonCandidate(content));
-        let parsed: any;
-        try {
-            parsed = JSON.parse(candidate);
-        } catch {
-            console.error("AI Chat JSON parse failed:", candidate.slice(0, 500));
-            return NextResponse.json({ error: "AI returned invalid JSON" }, { status: 502 });
-        }
-
-        const answer = clampText(parsed?.answer, 4000) || (language === "ar" ? "عذرًا، لم أتمكن من توليد إجابة." : "Sorry, I couldn't generate an answer.");
-        const keyPoints = (Array.isArray(parsed?.keyPoints) ? parsed.keyPoints : [])
-            .map((s: any) => clampText(s, 200))
-            .filter(Boolean)
-            .slice(0, 7);
-
-        const rawFollowUps = Array.isArray(parsed?.suggestedFollowUps) ? parsed.suggestedFollowUps : [];
-        const suggestedFollowUps = rawFollowUps
-            .map((s: any) => clampText(s, 160))
-            .filter(Boolean)
-            .slice(0, 4);
+        // Robust parsing using parseAiResponse helper
+        const parsedRes = parseAiResponse(content);
+        const answer = clampText(parsedRes.answer, 4000) || (language === "ar" ? "عذرًا، لم أتمكن من توليد إجابة." : "Sorry, I couldn't generate an answer.");
+        const keyPoints = parsedRes.keyPoints.map((s) => clampText(s, 200)).filter(Boolean).slice(0, 7);
+        const suggestedFollowUps = parsedRes.suggestedFollowUps.map((s) => clampText(s, 160)).filter(Boolean).slice(0, 4);
 
         // Persist conversation and messages to DB
         let activeConversationId = conversationId;

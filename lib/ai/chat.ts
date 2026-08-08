@@ -37,12 +37,12 @@ CORE RULES:
 - For symptoms/conditions: explain clearly but ALWAYS recommend consulting a licensed clinician for diagnosis or treatment.
 - You may use Markdown formatting (bold with **, lists with -, headers with ##) to structure your answers beautifully.
 - Keep answers focused, practical, and actionable.
-- If a question is completely unrelated to health/wellness (e.g., coding, politics), politely redirect: "I specialize in health and wellness. Let me help you with that instead!"
+- STRICT DOMAIN POLICY: You are STRICTLY a health, medication, and wellness AI. Refuse to answer non-health queries (coding, politics, general trivia, math homework, entertainment). Politely redirect: "أنا متخصص حصرياً في مجال الصحة والعافية والأدوية من QureScan."
 - Never diagnose. Never prescribe. Always recommend professional consultation for medical decisions.
 - You know you are ${AI_DISPLAY_NAME} by QureScan (MatanyLabs). If asked who made you, say "${AI_DISPLAY_NAME} by MatanyLabs".
 
-MEDICAL DISCLAIMER:
-Always include a brief disclaimer at the end when discussing medical topics, symptoms, or treatments.
+CRITICAL JSON KEY RULE:
+Output JSON keys MUST ALWAYS be in English: "answer", "keyPoints", "suggestedFollowUps". Never translate key names.
 
 OUTPUT FORMAT:
 Return valid JSON with this schema:
@@ -287,3 +287,107 @@ export function generateConversationTitle(question: string, language: "en" | "ar
     if (clean.length <= maxLen) return clean;
     return clean.slice(0, maxLen).trimEnd() + "…";
 }
+
+/**
+ * Universal fail-safe parser for AI responses.
+ * Extracts clean answer markdown, key points, and suggested follow-ups regardless of LLM output format.
+ */
+export function parseAiResponse(rawText: string): {
+    answer: string;
+    keyPoints: string[];
+    suggestedFollowUps: string[];
+} {
+    const text = String(rawText || "").trim();
+    if (!text) {
+        return { answer: "", keyPoints: [], suggestedFollowUps: [] };
+    }
+
+    // Check 1: METADATA separator format
+    const sepIdx = text.indexOf("\n---METADATA---\n");
+    if (sepIdx !== -1) {
+        const answerPart = text.slice(0, sepIdx).trim();
+        const metaPart = text.slice(sepIdx + "\n---METADATA---\n".length).trim();
+        let keyPoints: string[] = [];
+        let suggestedFollowUps: string[] = [];
+        try {
+            const jsonMatch = metaPart.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                const rawKp = parsed.keyPoints || parsed["النقاط الرئيسية"] || parsed["key_points"] || [];
+                const rawFu = parsed.suggestedFollowUps || parsed["المتابعات المقترحة"] || parsed["suggested_follow_ups"] || [];
+                if (Array.isArray(rawKp)) keyPoints = rawKp.map((s: any) => String(s).trim()).filter(Boolean);
+                if (Array.isArray(rawFu)) suggestedFollowUps = rawFu.map((s: any) => String(s).trim()).filter(Boolean);
+            }
+        } catch { /* ignore */ }
+        return { answer: answerPart, keyPoints, suggestedFollowUps };
+    }
+
+    // Check 2: Raw JSON or Markdown Code Fence ```json ... ```
+    let candidate = text;
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (fenced?.[1]) {
+        candidate = fenced[1].trim();
+    }
+
+    const looksLikeJson =
+        (candidate.startsWith("{") && candidate.endsWith("}")) ||
+        candidate.includes('"answer"') ||
+        candidate.includes('"الإجابة"') ||
+        candidate.includes('"keyPoints"') ||
+        candidate.includes('"النقاط الرئيسية"');
+
+    if (looksLikeJson) {
+        const firstBrace = candidate.indexOf("{");
+        const lastBrace = candidate.lastIndexOf("}");
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            const jsonSub = candidate.slice(firstBrace, lastBrace + 1);
+            try {
+                const fixed = jsonSub.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, "\\\\");
+                const parsed = JSON.parse(fixed);
+
+                const answer = String(
+                    parsed.answer ||
+                    parsed["الإجابة"] ||
+                    parsed["إجابة"] ||
+                    parsed["الاستجابة"] ||
+                    parsed["الرد"] ||
+                    ""
+                ).trim();
+
+                const rawKp =
+                    parsed.keyPoints ||
+                    parsed["النقاط الرئيسية"] ||
+                    parsed["نقاط رئيسية"] ||
+                    parsed["key_points"] ||
+                    [];
+                const rawFu =
+                    parsed.suggestedFollowUps ||
+                    parsed["المتابعات المقترحة"] ||
+                    parsed["أسئلة المتابعة"] ||
+                    parsed["suggested_follow_ups"] ||
+                    [];
+
+                const keyPoints = Array.isArray(rawKp)
+                    ? rawKp.map((s: any) => String(s).trim()).filter(Boolean)
+                    : [];
+                const suggestedFollowUps = Array.isArray(rawFu)
+                    ? rawFu.map((s: any) => String(s).trim()).filter(Boolean)
+                    : [];
+
+                if (answer) {
+                    return { answer, keyPoints, suggestedFollowUps };
+                }
+            } catch { /* parse failed, fall through */ }
+        }
+    }
+
+    // Check 3: Pure Markdown text (strip trailing json code fences if any)
+    const cleaned = text
+        .replace(/```json[\s\S]*$/gi, "")
+        .replace(/\{"keyPoints"[\s\S]*$/gi, "")
+        .replace(/\{"النقاط الرئيسية"[\s\S]*$/gi, "")
+        .trim();
+
+    return { answer: cleaned, keyPoints: [], suggestedFollowUps: [] };
+}
+

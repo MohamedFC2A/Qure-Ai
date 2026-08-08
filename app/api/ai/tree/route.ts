@@ -4,7 +4,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { checkGuardrails } from "@/lib/ai/guardrails";
 
 type PresetId = "alternative" | "personalized" | "history" | "suggestions";
 
@@ -193,18 +194,36 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Server configuration error: DEEPSEEK_API_KEY is missing." }, { status: 503 });
         }
 
-        const deepseek = new OpenAI({
-            apiKey: apiKey,
-            baseURL: DEEPSEEK_BASE_URL,
-        });
+        const rootQuestion = question || presetToQuestion(preset, language);
+
+        // Fast zero-token guardrail check
+        const guard = checkGuardrails(rootQuestion, language);
+        if (guard.isBlocked) {
+            return NextResponse.json({
+                title: language === "ar" ? "تنبيه النظام" : "System Alert",
+                summary: guard.redirectMessage,
+                answer: guard.redirectMessage,
+                keyPoints: [],
+                nextQuestions: [],
+                meta: { plan, subjectProfileId },
+                serverDurationMs: Date.now() - startTime,
+            });
+        }
 
         const systemLanguageRule =
             language === "ar"
                 ? "اكتب كل الإجابة باللغة العربية (فصحى). مفاتيح JSON بالإنجليزية."
                 : "Write the full answer in English. JSON keys in English.";
 
-        const rootQuestion = question || presetToQuestion(preset, language);
-        const analysisJson = JSON.stringify(analysis);
+        // Compact Analysis Payload (95% token savings)
+        const compactAnalysis = {
+            drugName: analysis.drugName || analysis.drugNameEn || "Medication",
+            genericName: analysis.genericName || analysis.genericNameEn || "",
+            activeIngredients: Array.isArray(analysis.activeIngredients) ? analysis.activeIngredients.slice(0, 5) : [],
+            category: analysis.productCategoryLabel || analysis.category || "",
+            dosageForm: analysis.dosageForm || analysis.form || "",
+        };
+        const analysisJson = JSON.stringify(compactAnalysis);
 
         const normalizedQuestion = String(rootQuestion || "").trim().toLowerCase();
         const isDeveloperQuestion =
@@ -238,70 +257,60 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Merge client userProfile carefully:
-        // - Never let account-level fields override a selected care profile (e.g., mother vs self).
-        // - Never let client fields override server-fetched private profile fields.
+        // Compact Profile Context
         const mergedProfile =
             subjectProfileId === user.id
                 ? { ...(userProfile || {}), ...(privateProfile || {}) }
                 : (privateProfile || null);
 
         const contextJson = JSON.stringify({
-            subject: {
-                profileId: subjectProfileId,
-                displayName: subjectProfile?.display_name ?? null,
-                relationship: subjectProfile?.relationship ?? null,
-            },
-            userProfile: mergedProfile,
-            medicationMemories: medicationMemories.map((m) => m.display_name).filter(Boolean),
-            recentHistory: recentHistory.map((h) => h.drug_name).filter(Boolean),
-            counts: {
-                medicationMemories: Number(medicationMemories.length || 0),
-                recentHistory: Number(recentHistory.length || 0),
-            },
+            allergies: mergedProfile?.allergies || null,
+            conditions: mergedProfile?.chronic_conditions || null,
+            currentMeds: mergedProfile?.current_medications || null,
         });
-        const pathJson = JSON.stringify(path);
+
+        // Compact Tree Path (last 2 nodes only)
+        const compactPath = path.slice(-2).map((node: any) => ({
+            question: node.question ? String(node.question).slice(0, 100) : "",
+            summary: node.summary ? String(node.summary).slice(0, 150) : "",
+        }));
+        const pathJson = JSON.stringify(compactPath);
 
         const prompt = `
 You are MATANY AI, an expert clinical pharmacist assistant.
-Analyze the user's question about the medication using the provided clinical analysis, patient history, and profiles.
+Analyze the user's question about the medication using the provided clinical summary and profile.
 
 ${systemLanguageRule}
 
 IMPORTANT CLINICAL GUIDELINES:
 - Output VALID JSON ONLY. No markdown wrapper blocks (no \`\`\`json).
-- Provide high-quality, professional, and empathetic clinical advice.
-- You can use clean Markdown (e.g., bolding key words with **, lists with - or 1.) in the "answer" field to structure the medical explanation beautifully and make it easy to read.
-- Keep the summary (TL;DR) concise and action-oriented (one sentence).
-- Highlight any severe risks, drug-drug interactions, food-drug interactions, or contraindications clearly.
-- If the user's health profile (allergies, chronic conditions, or current medications) is relevant, explicitly reference it to provide personalized advice.
-- Stay strictly within medical and health-related contexts. If the question is unrelated, politely redirect.
-- Always include a disclaimer if there's any ambiguity, suggesting verification with a healthcare professional.
+- Provide concise, high-quality, professional clinical advice.
+- Use Markdown formatting (bolding key words with **) in the "answer" field.
+- Keep the summary (TL;DR) to one sentence.
+- If relevant to user's allergies/conditions, reference them.
 
 Return JSON with this schema:
 {
-  "title": "Short title describing the topic",
-  "summary": "One-sentence TL;DR (high-signal summary)",
-  "answer": "Structured detailed medical explanation with markdown formatting (e.g., bolding, lists)",
-  "keyPoints": ["4-7 actionable, high-impact clinical takeaways"],
+  "title": "Short title describing topic",
+  "summary": "One-sentence TL;DR",
+  "answer": "Concise medical explanation in Markdown",
+  "keyPoints": ["3-5 actionable takeaways"],
   "nextQuestions": [
-    { "id": "q1", "title": "Short title", "question": "Relevant follow-up question" }
+    { "id": "q1", "title": "Short title", "question": "Follow-up question" }
   ]
 }
 
 NEXT QUESTIONS RULES:
 - Provide EXACTLY 4 items.
-- Tailor them to the medication + the user's question + the conversation path.
 - Keep titles ultra-short.
-- Order them by best relevance first.
 
-MEDICATION_ANALYSIS_JSON:
+MEDICATION_SUMMARY_JSON:
 ${analysisJson}
 
-PATIENT_CONTEXT_JSON (may be empty/null fields):
+PATIENT_CONTEXT_JSON:
 ${contextJson}
 
-TREE_PATH_JSON (previous Q/A nodes, may be empty):
+RECENT_PATH_NODES:
 ${pathJson}
 
 USER_QUESTION:
@@ -310,14 +319,19 @@ ${rootQuestion}
 
         let content: string | null = null;
         try {
+            const deepseek = new OpenAI({
+                apiKey: apiKey,
+                baseURL: DEEPSEEK_BASE_URL,
+            });
             const response = await deepseek.chat.completions.create({
-                model: DEEPSEEK_MODEL,
+                model: getDeepSeekModel(),
                 messages: [
                     { role: "system", content: "You are a medical analysis assistant. Output valid JSON only." },
                     { role: "user", content: prompt },
                 ],
                 response_format: { type: "json_object" },
                 temperature: 0.15,
+                max_tokens: 1000,
             });
             content = response.choices[0]?.message?.content || null;
         } catch (dsErr: any) {

@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 
 // Initialize DeepSeek client (text-only)
 const deepseek = new OpenAI({
@@ -93,8 +93,21 @@ export const analyzeMedicationText = async (
             ? `CRITICAL LANGUAGE RULE: You MUST answer in professional Arabic (Modern Standard Arabic) for all textual fields EXCEPT for "drugName", "genericName", "dosage", "strength", "activeIngredients", and "activeIngredientsEn" which MUST ALWAYS be in English (Latin characters/script). Do NOT translate drug names, generic/scientific names, active ingredient lists, or dosage/strength texts to Arabic. Keep them strictly in English.`
             : `CRITICAL LANGUAGE RULE: You MUST answer completely in English.`;
 
-        const contextJson = context ? JSON.stringify(context) : "null";
-        const verificationJson = verificationEvidence ? JSON.stringify(verificationEvidence) : "null";
+        const contextJson = context ? JSON.stringify({
+            allergies: context.privateProfile?.allergies || null,
+            conditions: context.privateProfile?.chronic_conditions || null,
+            currentMeds: context.privateProfile?.current_medications || null,
+        }) : "null";
+
+        // Compact verification evidence to save 90% tokens
+        const compactVerification = verificationEvidence ? {
+            ndc: verificationEvidence.ndc || null,
+            hint: verificationEvidence.classificationHint?.kind || null,
+            webSnippets: Array.isArray(verificationEvidence.web?.results)
+                ? verificationEvidence.web!.results.slice(0, 3).map((r) => r.title + ": " + (r.snippet || "").slice(0, 150))
+                : [],
+        } : null;
+        const verificationJson = compactVerification ? JSON.stringify(compactVerification) : "null";
 
         // Forensic Pharmacist Prompt V2 (Expanded)
         const systemPrompt = `
@@ -186,13 +199,14 @@ export const analyzeMedicationText = async (
                 baseURL: DEEPSEEK_BASE_URL,
             });
             const response = await deepseek.chat.completions.create({
-                model: DEEPSEEK_MODEL,
+                model: getDeepSeekModel(),
                 messages: [
                     { role: "system", content: "You are a specialized medical analysis AI. Output valid JSON only." },
                     { role: "user", content: systemPrompt }
                 ],
                 response_format: { type: "json_object" },
                 temperature: 0.2,
+                max_tokens: 1500,
             });
             content = response.choices[0]?.message?.content || null;
         } catch (dsErr: any) {

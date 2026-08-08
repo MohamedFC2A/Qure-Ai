@@ -1,4 +1,4 @@
-export const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+export const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
 export const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
 // Active working DeepSeek key tested & verified 200 OK
@@ -12,3 +12,8 @@ export function getDeepSeekApiKey(): string {
     }
     return envKey;
 }
+
+export function getDeepSeekModel(): string {
+    return process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+}
+

@@ -232,7 +232,7 @@ export function AiChatPage() {
                                         m.id === assistantId
                                             ? {
                                                 ...m,
-                                                content: streamedContent || m.content,
+                                                content: event.answer || streamedContent || m.content,
                                                 keyPoints: event.keyPoints || [],
                                                 suggestedFollowUps: event.suggestedFollowUps || [],
                                             }

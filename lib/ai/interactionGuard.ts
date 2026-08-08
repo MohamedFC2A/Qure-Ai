@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 
 export type InteractionSeverity = "safe" | "caution" | "danger";
 
@@ -201,13 +201,14 @@ ${otherJson}
         });
 
         const response = await deepseek.chat.completions.create({
-            model: DEEPSEEK_MODEL,
+            model: getDeepSeekModel(),
             messages: [
                 { role: "system", content: "You are a medical safety assistant. Output valid JSON only." },
                 { role: "user", content: prompt },
             ],
             response_format: { type: "json_object" },
             temperature: 0.2,
+            max_tokens: 1000,
         });
 
         content = response.choices[0]?.message?.content || null;
@@ -272,7 +273,7 @@ ${otherJson}
         overallRisk: typeof parsed?.overallRisk === "string" ? parsed.overallRisk : undefined,
         items,
         disclaimer: typeof parsed?.disclaimer === "string" ? parsed.disclaimer : undefined,
-        model: DEEPSEEK_MODEL,
+        model: getDeepSeekModel(),
         generatedAt: new Date().toISOString(),
         serverDurationMs: Date.now() - startedAt,
     };
