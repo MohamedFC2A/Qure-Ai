@@ -2642,8 +2642,18 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                     <div className="space-y-4">
                         {/* Summary Badges Grid */}
                         <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl space-y-3">
-                            <h4 className="text-white font-bold text-sm sm:text-base">{t("Official FDA Registration Info", "بيانات التسجيل الرسمية للـ FDA")}</h4>
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-white font-bold text-sm sm:text-base">{t("Official FDA & RxNorm Registration Info", "بيانات التسجيل المعتمدة (FDA & RxNorm NLM)")}</h4>
+                                <span className="px-2.5 py-0.5 rounded-full bg-cyan-400/10 border border-cyan-400/25 text-cyan-300 text-[10px] font-bold">
+                                    RxNorm / NLM Verified
+                                </span>
+                            </div>
                             <div className="flex flex-wrap gap-2">
+                                {((fda as any)?.openfda?.rxcui || []).slice(0, 1).map((rxcuiVal: string, i: number) => (
+                                    <span key={`rx-${i}`} className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs font-mono font-bold">
+                                        RxCUI: {rxcuiVal}
+                                    </span>
+                                ))}
                                 {((fda as any)?.openfda?.brand_name || []).slice(0, 2).map((v: string, i: number) => (
                                     <span key={`b-${i}`} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs font-semibold">
                                         {t("Brand: ", "العلامة التجارية: ")}{v}

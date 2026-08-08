@@ -1,5 +1,6 @@
 import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot, type OpenFdaLabelSnapshot } from "@/lib/openfda";
 import { serperSearch, type SerperSearchSnapshot } from "@/lib/serper";
+import { searchRxNorm, type RxNormSearchResult } from "@/lib/rxnorm";
 
 export type ProductKind =
     | "human_drug"
@@ -18,6 +19,7 @@ export type MedicationPreflight = {
     ndc: string | null;
     web: SerperSearchSnapshot | null;
     fda: OpenFdaLabelSnapshot | null;
+    rxnorm?: RxNormSearchResult | null;
     classification: ProductClassification;
     evidenceForAi: {
         ndc: string | null;
@@ -32,6 +34,14 @@ export type MedicationPreflight = {
             label?: OpenFdaLabelSnapshot["label"];
             match?: OpenFdaLabelSnapshot["match"];
             source?: OpenFdaLabelSnapshot["source"];
+        };
+        rxnorm?: null | {
+            rxcui: string;
+            name: string;
+            synonym?: string;
+            source: string;
+            activeIngredients?: string[];
+            atcCode?: string;
         };
     };
 };
@@ -347,6 +357,17 @@ export async function preflightMedicationEvidence(opts: {
         }
     }
 
+    // ── RxNorm / RxNav Standardized Nomenclature Lookup ────────
+    let rxnormMatch: RxNormSearchResult | null = null;
+    try {
+        const searchTerm = pickedBrand || (fda as any)?.query?.brand || (fda as any)?.query?.generic || opts.ocrText?.slice(0, 50) || "";
+        if (searchTerm) {
+            rxnormMatch = await searchRxNorm(searchTerm);
+        }
+    } catch {
+        // best-effort fallback
+    }
+
     const classification =
         classifyFromFda(fda) ||
         classifyFromTextSignals(
@@ -378,12 +399,23 @@ export async function preflightMedicationEvidence(opts: {
                 source: fda.source,
             }
             : null,
+        rxnorm: rxnormMatch
+            ? {
+                rxcui: rxnormMatch.rxcui,
+                name: rxnormMatch.name,
+                synonym: rxnormMatch.synonym,
+                source: rxnormMatch.source,
+                activeIngredients: rxnormMatch.activeIngredients,
+                atcCode: rxnormMatch.atcCode,
+            }
+            : null,
     };
 
     return {
         ndc: ndc || null,
         web,
         fda,
+        rxnorm: rxnormMatch,
         classification,
         evidenceForAi,
     };
