@@ -578,22 +578,22 @@ export const ScannerInterface = () => {
                                 </p>
 
                                 {/* Accepted Medical Formats Guidance */}
-                                <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full max-w-lg">
-                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white tracking-tight">{t("Boxes", "علب الأدوية")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Clear Name", "الاسم والتركيز")}</p>
+                                <div className="mt-5 grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full max-w-xl">
+                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
+                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Boxes", "علب الأدوية")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clear Name", "الاسم والتركيز")}</p>
                                     </div>
-                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white tracking-tight">{t("Prescriptions", "الروشتات")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Legible Text", "خط واضح")}</p>
+                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
+                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Prescriptions", "الروشتات")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Legible Text", "خط مقروء")}</p>
                                     </div>
-                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white tracking-tight">{t("Bottles", "العبوات والقطرات")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Label Visible", "الملصق الرئيسي")}</p>
+                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
+                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Bottles", "العبوات والقطرات")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Label Visible", "الملصق الرئيسي")}</p>
                                     </div>
-                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white tracking-tight">{t("Blisters", "شرائط الأقراص")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Printed Side", "الجانب المطبوع")}</p>
+                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
+                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Blisters", "شرائط الأقراص")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Printed Side", "الجانب المطبوع")}</p>
                                     </div>
                                 </div>
                             </div>
