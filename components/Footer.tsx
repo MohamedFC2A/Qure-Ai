@@ -16,7 +16,7 @@ export const Footer = () => {
             items: [
                 { name: t("Scan Medication", "فحص الدواء"),  href: "/scan"    },
                 { name: t("Pricing",          "الأسعار"),     href: "/pricing" },
-                { name: t("Dashboard",        "لوحة التحكم"), href: "/dashboard" },
+                // { name: t("Dashboard",        "لوحة التحكم"), href: "/dashboard" }, // TODO: unhide
             ],
         },
         company: {

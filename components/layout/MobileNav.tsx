@@ -23,7 +23,7 @@ export const MobileNav = () => {
               { name: t("Scan", "الفحص"),            href: "/scan",              icon: ScanLine,        color: "emerald" },
               { name: "MATANY AI",                   href: "/ai",                icon: Brain,           color: "violet"  },
               { name: t("History", "السجل"),         href: "/dashboard/history", icon: Clock,           color: "violet"  },
-              { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",         icon: LayoutDashboard, color: "cyan"    },
+              // { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",         icon: LayoutDashboard, color: "cyan"    }, // TODO: unhide
           ]
         : [
               { name: t("Home", "الرئيسية"),    href: "/",        icon: Atom,     color: "cyan"  },

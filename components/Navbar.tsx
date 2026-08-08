@@ -49,7 +49,7 @@ export const Navbar = () => {
               { name: "MATANY AI",                   href: "/ai",                 icon: Brain },
               { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem },
               { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock },
-              { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard },
+              // { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard }, // TODO: unhide
           ]
         : [
               { name: t("Home", "الرئيسية"),   href: "/",        icon: Atom },
