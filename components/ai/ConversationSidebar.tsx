@@ -1,11 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Clock, Trash2, Pill, HeartPulse, Brain, X, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, Pill, HeartPulse, Brain, X, MessageSquare, Plus, Sparkles } from "lucide-react";
 import type { AiChatMode } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────
- *  ConversationSidebar – list of past AI conversations
+ *  ConversationSidebar – Premium redesign
  * ────────────────────────────────────────────────────────── */
 
 export interface ConversationSummary {
@@ -22,6 +22,7 @@ interface ConversationSidebarProps {
     activeConversationId: string | null;
     onSelect: (conv: ConversationSummary) => void;
     onDelete: (id: string) => void;
+    onNewChat: () => void;
     isArabic: boolean;
     isOpen: boolean;
     onClose: () => void;
@@ -31,6 +32,12 @@ const modeIcons: Record<AiChatMode, React.ElementType> = {
     health: HeartPulse,
     medication: Pill,
     context: Brain,
+};
+
+const modeColors: Record<AiChatMode, { icon: string; bg: string; activeBg: string; activeBorder: string }> = {
+    health:     { icon: "text-cyan-400",    bg: "bg-cyan-400/10",    activeBg: "bg-cyan-400/12",    activeBorder: "border-cyan-400/25" },
+    medication: { icon: "text-emerald-400", bg: "bg-emerald-400/10", activeBg: "bg-emerald-400/12", activeBorder: "border-emerald-400/25" },
+    context:    { icon: "text-violet-400",  bg: "bg-violet-400/10",  activeBg: "bg-violet-400/12",  activeBorder: "border-violet-400/25" },
 };
 
 function groupByDate(items: ConversationSummary[], isArabic: boolean): Array<{ label: string; items: ConversationSummary[] }> {
@@ -61,6 +68,7 @@ export function ConversationSidebar({
     activeConversationId,
     onSelect,
     onDelete,
+    onNewChat,
     isArabic,
     isOpen,
     onClose,
@@ -72,7 +80,7 @@ export function ConversationSidebar({
             {/* Mobile overlay */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
                     onClick={onClose}
                 />
             )}
@@ -80,8 +88,8 @@ export function ConversationSidebar({
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed top-0 bottom-0 z-50 w-[min(18rem,85vw)] flex flex-col transition-transform duration-300",
-                    "lg:static lg:z-auto lg:translate-x-0 lg:w-72",
+                    "fixed top-0 bottom-0 z-50 w-[min(17rem,85vw)] flex flex-col transition-all duration-300",
+                    "lg:static lg:z-auto lg:translate-x-0 lg:w-64",
                     "border-r border-white/[0.06]",
                     isArabic ? "right-0 lg:border-r-0 lg:border-l" : "left-0",
                     isOpen
@@ -90,76 +98,85 @@ export function ConversationSidebar({
                             ? "translate-x-full lg:translate-x-0"
                             : "-translate-x-full lg:translate-x-0"
                 )}
-                style={{ background: "rgba(6,9,14,0.95)" }}
+                style={{ background: "rgba(5, 8, 15, 0.97)" }}
             >
+                {/* Top accent line */}
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-4 border-b border-white/[0.06]">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-slate-500" />
-                        {isArabic ? "المحادثات" : "Conversations"}
-                    </h3>
+                <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/[0.05]">
+                    <div className="nexus-gold-logo w-8 h-8 rounded-xl flex items-center justify-center shrink-0">
+                        <Sparkles className="w-4 h-4 text-amber-950" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-white leading-none">MATANY AI</p>
+                        <p className="text-[10px] text-slate-600 mt-0.5">{isArabic ? "محادثاتي" : "My Chats"}</p>
+                    </div>
                     <button
                         onClick={onClose}
-                        className="lg:hidden p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-500"
+                        className="lg:hidden p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-600 transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
+                {/* New Chat Button */}
+                <div className="px-3 pt-3 pb-2">
+                    <button
+                        onClick={() => { onNewChat(); onClose(); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.14] text-slate-400 hover:text-white text-xs font-semibold transition-all group"
+                    >
+                        <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90 duration-200" />
+                        <span>{isArabic ? "محادثة جديدة" : "New Chat"}</span>
+                    </button>
+                </div>
+
                 {/* Conversation list */}
-                <div className="flex-1 overflow-y-auto py-2 no-scrollbar">
+                <div className="flex-1 overflow-y-auto py-1 no-scrollbar">
                     {conversations.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-                            <MessageSquare className="w-8 h-8 text-slate-700 mb-3" />
-                            <p className="text-xs text-slate-600">
-                                {isArabic ? "لا توجد محادثات بعد" : "No conversations yet"}
+                        <div className="flex flex-col items-center justify-center py-14 text-center px-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-3">
+                                <MessageSquare className="w-5 h-5 text-slate-700" />
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                                {isArabic ? "لا توجد محادثات بعد.\nابدأ بسؤال جديد!" : "No conversations yet.\nAsk your first question!"}
                             </p>
                         </div>
                     ) : (
                         grouped.map((group) => (
                             <div key={group.label}>
-                                <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-700">
+                                <p className="px-4 pt-3 pb-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-700">
                                     {group.label}
                                 </p>
                                 {group.items.map((conv) => {
                                     const isActive = conv.id === activeConversationId;
                                     const Icon = modeIcons[conv.mode];
-
-                                    // Static class maps per mode for Tailwind
-                                    const activeClasses: Record<AiChatMode, string> = {
-                                        health: "bg-cyan-400/8 border-cyan-400/15",
-                                        medication: "bg-emerald-400/8 border-emerald-400/15",
-                                        context: "bg-violet-400/8 border-violet-400/15",
-                                    };
-                                    const activeIconClasses: Record<AiChatMode, string> = {
-                                        health: "bg-cyan-400/15 text-cyan-300",
-                                        medication: "bg-emerald-400/15 text-emerald-300",
-                                        context: "bg-violet-400/15 text-violet-300",
-                                    };
+                                    const colors = modeColors[conv.mode];
 
                                     return (
                                         <div
                                             key={conv.id}
                                             className={cn(
-                                                "group flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-all mx-1.5 rounded-xl",
+                                                "group flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-all mx-2 rounded-xl border mb-0.5",
                                                 isActive
-                                                    ? activeClasses[conv.mode]
-                                                    : "hover:bg-white/[0.03] border border-transparent"
+                                                    ? cn(colors.activeBg, colors.activeBorder)
+                                                    : "hover:bg-white/[0.04] border-transparent hover:border-white/[0.06]"
                                             )}
                                             onClick={() => onSelect(conv)}
                                         >
                                             <div className={cn(
-                                                "w-7 h-7 rounded-lg shrink-0 flex items-center justify-center",
-                                                isActive
-                                                    ? activeIconClasses[conv.mode]
-                                                    : "bg-white/[0.04] text-slate-600"
+                                                "w-7 h-7 rounded-lg shrink-0 flex items-center justify-center transition-all",
+                                                isActive ? colors.bg : "bg-white/[0.04]"
                                             )}>
-                                                <Icon className="w-3.5 h-3.5" />
+                                                <Icon className={cn(
+                                                    "w-3.5 h-3.5 transition-colors",
+                                                    isActive ? colors.icon : "text-slate-700"
+                                                )} />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={cn(
-                                                    "text-xs font-medium truncate",
-                                                    isActive ? "text-white" : "text-slate-400"
+                                                    "text-xs font-medium truncate leading-snug",
+                                                    isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"
                                                 )}>
                                                     {conv.title}
                                                 </p>
@@ -175,7 +192,7 @@ export function ConversationSidebar({
                                                     e.stopPropagation();
                                                     onDelete(conv.id);
                                                 }}
-                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-400/10 text-slate-700 hover:text-red-400 transition-all"
+                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-500/15 text-slate-700 hover:text-red-400 transition-all shrink-0"
                                                 title={isArabic ? "حذف" : "Delete"}
                                             >
                                                 <Trash2 className="w-3 h-3" />
@@ -186,6 +203,13 @@ export function ConversationSidebar({
                             </div>
                         ))
                     )}
+                </div>
+
+                {/* Bottom footer */}
+                <div className="px-4 py-3 border-t border-white/[0.04]">
+                    <p className="text-[9px] text-slate-800 text-center font-medium tracking-wide uppercase">
+                        Powered by QURE AI
+                    </p>
                 </div>
             </aside>
         </>

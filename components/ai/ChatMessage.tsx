@@ -1,11 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Copy, Check, Lightbulb } from "lucide-react";
+import { Copy, Check, Sparkles, User } from "lucide-react";
 import { useState } from "react";
 
 /* ──────────────────────────────────────────────────────────
- *  ChatMessage – single chat bubble
+ *  ChatMessage – Premium redesign with gradient bubbles
  * ────────────────────────────────────────────────────────── */
 
 export interface ChatMessageData {
@@ -46,9 +46,12 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         const flushList = () => {
             if (listItems.length > 0) {
                 elements.push(
-                    <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 my-2 text-sm">
+                    <ul key={`ul-${elements.length}`} className="list-none space-y-1.5 my-2.5">
                         {listItems.map((item, i) => (
-                            <li key={i} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
+                            <li key={i} className="flex items-start gap-2">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-400/70 shrink-0" />
+                                <span className="text-sm leading-relaxed text-white/85" dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
+                            </li>
                         ))}
                     </ul>
                 );
@@ -60,8 +63,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         const formatInline = (s: string): string => {
             return s
                 .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded bg-white/10 text-cyan-300 text-xs font-mono">$1</code>');
+                .replace(/\*(.+?)\*/g, '<em class="italic text-white/90">$1</em>')
+                .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-white/8 text-amber-300/90 text-xs font-mono border border-white/10">$1</code>');
         };
 
         for (let i = 0; i < lines.length; i++) {
@@ -76,7 +79,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             if (line.startsWith("## ")) {
                 flushList();
                 elements.push(
-                    <h4 key={`h-${i}`} className="font-bold text-white text-sm mt-3 mb-1">
+                    <h4 key={`h-${i}`} className="font-bold text-white text-sm mt-4 mb-1.5 flex items-center gap-2">
+                        <span className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-amber-600 shrink-0" />
                         {line.replace(/^##\s+/, "")}
                     </h4>
                 );
@@ -85,7 +89,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             if (line.startsWith("### ")) {
                 flushList();
                 elements.push(
-                    <h5 key={`h-${i}`} className="font-semibold text-white/90 text-xs mt-2 mb-1">
+                    <h5 key={`h-${i}`} className="font-semibold text-white/90 text-xs mt-3 mb-1">
                         {line.replace(/^###\s+/, "")}
                     </h5>
                 );
@@ -108,7 +112,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
             flushList();
             elements.push(
-                <p key={`p-${i}`} className="text-sm leading-relaxed my-1"
+                <p key={`p-${i}`} className="text-sm leading-relaxed my-1 text-white/85"
                     dangerouslySetInnerHTML={{ __html: formatInline(line) }}
                 />
             );
@@ -118,82 +122,105 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         return elements;
     };
 
-    // Static class maps for Tailwind (avoids dynamic class purging)
-    const avatarClasses: Record<string, string> = {
-        cyan: "bg-cyan-400/15 text-cyan-300 border-cyan-400/20",
-        emerald: "bg-emerald-400/15 text-emerald-300 border-emerald-400/20",
-        violet: "bg-violet-400/15 text-violet-300 border-violet-400/20",
+    // User bubble gradient by accent
+    const userBg: Record<string, string> = {
+        cyan:    "bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border-cyan-400/25",
+        emerald: "bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-400/25",
+        violet:  "bg-gradient-to-br from-violet-500/20 to-violet-600/10 border-violet-400/25",
     };
-    const userBubbleClasses: Record<string, string> = {
-        cyan: "bg-cyan-500/15 border-cyan-400/20 text-white",
-        emerald: "bg-emerald-500/15 border-emerald-400/20 text-white",
-        violet: "bg-violet-500/15 border-violet-400/20 text-white",
+
+    const suggestionBorder: Record<string, string> = {
+        cyan:    "hover:border-cyan-400/30 hover:text-cyan-300",
+        emerald: "hover:border-emerald-400/30 hover:text-emerald-300",
+        violet:  "hover:border-violet-400/30 hover:text-violet-300",
     };
 
     return (
-        <div className={cn("flex gap-3", isUser ? "flex-row-reverse" : "flex-row")}>
+        <div className={cn(
+            "flex gap-3",
+            isUser ? "flex-row-reverse" : "flex-row",
+            isUser ? "animate-chat-in-right" : "animate-chat-in-left"
+        )}>
             {/* Avatar */}
-            {!isUser && (
-                <div className={cn(
-                    "w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-xs font-black mt-0.5 border",
-                    avatarClasses[accentColor] || avatarClasses.cyan
-                )}
-                    style={{
-                        background: `var(--q-glass-2)`,
-                    }}
-                >
-                    <Lightbulb className="w-4 h-4" />
+            {isUser ? (
+                <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 bg-white/[0.07] border border-white/10">
+                    <User className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+            ) : (
+                <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 nexus-gold-logo">
+                    <Sparkles className="w-3.5 h-3.5" style={{ color: "#1a0e00" }} />
                 </div>
             )}
 
             {/* Message Bubble */}
             <div className={cn(
-                "group relative max-w-[90%] xs:max-w-[85%] sm:max-w-[75%]",
+                "group relative",
+                isUser
+                    ? "max-w-[80%] xs:max-w-[75%] sm:max-w-[65%]"
+                    : "max-w-[88%] xs:max-w-[85%] sm:max-w-[78%]",
                 isUser ? "ml-auto" : "mr-auto"
             )}>
-                <div className={cn(
-                    "rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                    isUser
-                        ? userBubbleClasses[accentColor] || userBubbleClasses.cyan
-                        : "border border-white/[0.07] text-white/85",
-                    isUser ? (isArabic ? "rounded-tr-md" : "rounded-tl-md") : (isArabic ? "rounded-tl-md" : "rounded-tr-md")
+                {isUser ? (
+                    /* User bubble */
+                    <div className={cn(
+                        "rounded-2xl px-4 py-3 border",
+                        isArabic ? "rounded-tr-sm" : "rounded-tl-sm",
+                        userBg[accentColor] || userBg.cyan
+                    )}>
+                        <p className="text-sm leading-relaxed text-white whitespace-pre-wrap">{message.content}</p>
+                    </div>
+                ) : (
+                    /* AI bubble */
+                    <div className={cn(
+                        "ai-bubble px-4 py-3.5",
+                        isArabic ? "rounded-tl-sm" : "rounded-tr-sm"
+                    )}>
+                        {message.content ? (
+                            <div className="space-y-0.5">{renderMarkdown(message.content)}</div>
+                        ) : (
+                            /* Streaming: typing dots */
+                            <div className="flex items-center gap-1.5 py-1">
+                                <span className="typing-dot" />
+                                <span className="typing-dot" />
+                                <span className="typing-dot" />
+                            </div>
+                        )}
+                    </div>
                 )}
-                    style={!isUser ? { background: "var(--q-glass-2)" } : undefined}
-                >
-                    {isUser ? (
-                        <p className="whitespace-pre-wrap">{message.content}</p>
-                    ) : (
-                        <div className="space-y-0.5">{renderMarkdown(message.content)}</div>
-                    )}
-                </div>
 
                 {/* Copy button for AI messages */}
-                {!isUser && (
+                {!isUser && message.content && (
                     <button
                         onClick={handleCopy}
                         className={cn(
-                            "absolute -bottom-3 opacity-0 group-hover:opacity-100 transition-opacity",
+                            "absolute -bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-200",
                             isArabic ? "left-2" : "right-2",
-                            "p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08]"
+                            "p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08]",
+                            "backdrop-blur-sm"
                         )}
                         title="Copy"
                     >
-                        {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-500" />}
+                        {copied
+                            ? <Check className="w-3 h-3 text-emerald-400" />
+                            : <Copy className="w-3 h-3 text-slate-500" />
+                        }
                     </button>
                 )}
 
-                {/* Key Points (only for assistant messages with keyPoints) */}
+                {/* Key Points */}
                 {!isUser && message.keyPoints && message.keyPoints.length > 0 && (
-                    <div className="mt-3 rounded-xl border border-white/[0.06] p-3 space-y-1.5"
-                        style={{ background: "rgba(255,255,255,0.02)" }}
+                    <div className="mt-3 rounded-xl border border-amber-400/15 p-3.5 space-y-2"
+                        style={{ background: "rgba(212, 168, 67, 0.04)" }}
                     >
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-500/70 mb-2 flex items-center gap-1.5">
+                            <span className="w-3 h-px bg-amber-400/40" />
                             {isArabic ? "نقاط رئيسية" : "Key Points"}
+                            <span className="w-3 h-px bg-amber-400/40" />
                         </p>
                         {message.keyPoints.map((kp, i) => (
-                            <div key={i} className="flex items-start gap-2 text-xs text-white/70">
-                                <span className="text-amber-400 shrink-0 mt-0.5">•</span>
-                                <span>{kp}</span>
+                            <div key={i} className="flex items-start gap-2.5 text-xs text-white/75">
+                                <span className="text-amber-400/80 shrink-0 mt-0.5 text-[10px]">◆</span>
+                                <span className="leading-relaxed">{kp}</span>
                             </div>
                         ))}
                     </div>
@@ -208,10 +235,10 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                 onClick={() => onSuggestionClick(s)}
                                 className={cn(
                                     "px-3 py-1.5 rounded-xl text-xs font-medium transition-all",
-                                    "border border-white/[0.08] hover:border-white/20",
-                                    "text-white/60 hover:text-white hover:bg-white/[0.06]"
+                                    "border border-white/[0.07] bg-white/[0.03]",
+                                    "text-white/50 hover:text-white hover:bg-white/[0.06]",
+                                    suggestionBorder[accentColor] || suggestionBorder.cyan
                                 )}
-                                style={{ background: "var(--q-glass-1)" }}
                             >
                                 {s}
                             </button>
