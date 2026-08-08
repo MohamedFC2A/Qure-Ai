@@ -83,12 +83,12 @@ function FeatureCard({
             transition={{ duration: 0.18 }}
         >
             {locked && (
-                <div className="absolute top-4 right-4">
-                    <Lock className="w-3.5 h-3.5 text-slate-600" />
+                <div className="absolute top-4 end-4">
+                    <Lock className="w-3.5 h-3.5 text-slate-500" />
                 </div>
             )}
             {badge && !locked && (
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 end-4">
                     <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black text-black">
                         {badge}
                     </span>
@@ -98,7 +98,7 @@ function FeatureCard({
                 <Icon className="h-5 w-5" />
             </div>
             <p className="font-bold text-white text-sm leading-snug">{title}</p>
-            <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">{description}</p>
+            <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">{description}</p>
         </motion.div>
     );
 }
@@ -115,7 +115,7 @@ function StatMetric({ value, label, sub, color }: { value: string | number; labe
         <div className="stat-card text-center group hover-lift">
             <p className={cn("text-2xl font-black tracking-tight", colors[color] || "text-white")}>{value}</p>
             <p className="mt-1 text-xs font-semibold text-slate-400">{label}</p>
-            {sub && <p className="mt-0.5 text-[10px] text-slate-600">{sub}</p>}
+            {sub && <p className="mt-0.5 text-[10px] text-slate-500">{sub}</p>}
         </div>
     );
 }
@@ -176,7 +176,7 @@ export default function DashboardPage() {
     /* ── Loading skeleton ── */
     if (loading) {
         return (
-            <main className="min-h-screen pt-28 px-4">
+            <main className="min-h-screen pt-24 px-4">
                 <div className="mx-auto max-w-7xl space-y-5">
                     <div className="h-28 skeleton rounded-2xl" />
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{[1,2,3,4].map(i=><div key={i} className="h-20 skeleton rounded-2xl"/>)}</div>
@@ -267,34 +267,32 @@ export default function DashboardPage() {
     ];
 
     return (
-        <main
-            className={cn("min-h-screen pt-28 pb-28 md:pb-14", isArabic ? "font-arabic" : "")}
-            dir={isArabic ? "rtl" : "ltr"}
-        >
+        <main className="min-h-screen pt-24 sm:pt-28 pb-24 md:pb-14">
             <div className="clinical-page space-y-6">
 
                 {/* ── HERO HEADER ──────────────────────────────── */}
-                <section className="relative overflow-hidden rounded-2xl border border-white/[0.07] p-6 sm:p-8"
-                    style={{ background: "linear-gradient(135deg, rgba(34,211,238,0.05) 0%, rgba(8,14,22,0.9) 40%, rgba(139,92,246,0.04) 100%)" }}
+                <section
+                    className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-6 sm:p-8 backdrop-blur-2xl"
+                    style={{ background: "linear-gradient(135deg, rgba(34,211,238,0.06) 0%, rgba(8,14,22,0.92) 40%, rgba(139,92,246,0.05) 100%)" }}
                 >
                     {/* Ambient glow */}
-                    <div className="absolute top-0 left-0 w-64 h-32 bg-cyan-400/8 blur-3xl rounded-full pointer-events-none" />
-                    <div className="absolute bottom-0 right-0 w-48 h-24 bg-violet-400/6 blur-3xl rounded-full pointer-events-none" />
+                    <div className="absolute top-0 left-0 w-64 h-32 bg-cyan-400/10 blur-3xl rounded-full pointer-events-none" />
+                    <div className="absolute bottom-0 right-0 w-48 h-24 bg-violet-400/8 blur-3xl rounded-full pointer-events-none" />
 
-                    <div className={cn("relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center", isArabic ? "lg:grid-cols-[auto_1fr]" : "")}>
-                        <div className={isArabic ? "text-right" : ""}>
+                    <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                        <div>
                             <div className="clinical-eyebrow mb-3">
                                 <Activity className="h-3.5 w-3.5" />
-                                {t("Your Workspace", "مساحة عملك")}
+                                <span>{t("Your Workspace", "مساحة عملك")}</span>
                             </div>
-                            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
                                 {isArabic ? (
-                                    <>أهلاً بك<span className="text-cyan-400">.</span></>
+                                    <>أهلاً بك مجددًا<span className="text-cyan-400">.</span></>
                                 ) : (
                                     <>Welcome back<span className="text-cyan-400">.</span></>
                                 )}
                             </h1>
-                            <p className="mt-2 text-slate-500 text-sm">
+                            <p className="mt-2 text-slate-400 text-xs sm:text-sm max-w-xl leading-relaxed">
                                 {t(
                                     "Everything you need to scan, verify, and review medications — in one place.",
                                     "كل ما تحتاجه لفحص الأدوية والتحقق منها ومراجعتها — في مكان واحد."
@@ -303,16 +301,16 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Quick scan CTA */}
-                        <Link href="/scan">
-                            <div className="relative group shrink-0">
-                                <div className="absolute -inset-2 rounded-2xl bg-cyan-400/15 blur-xl animate-glow-pulse pointer-events-none" />
-                                <div className="relative inline-flex items-center gap-2.5 rounded-xl px-7 py-3.5 font-black text-slate-950 text-sm
+                        <Link href="/scan" className="w-full sm:w-auto">
+                            <div className="relative group shrink-0 w-full sm:w-auto">
+                                <div className="absolute -inset-2 rounded-2xl bg-cyan-400/20 blur-xl animate-glow-pulse pointer-events-none" />
+                                <div className="relative inline-flex w-full sm:w-auto justify-center items-center gap-2.5 rounded-xl px-7 py-3.5 font-black text-slate-950 text-sm
                                     bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400
                                     border border-cyan-300/60 shadow-xl shadow-cyan-500/30
                                     transition-all duration-200 hover:shadow-cyan-400/50 active:scale-95">
                                     <ScanLine className="w-5 h-5 shrink-0" />
-                                    {t("Start New Scan", "ابدأ فحصًا جديدًا")}
-                                    <ArrowRight className={cn("w-4 h-4", isArabic ? "rotate-180" : "")} />
+                                    <span>{t("Start New Scan", "ابدأ فحصًا جديدًا")}</span>
+                                    <ArrowRight className={cn("w-4 h-4 shrink-0", isArabic ? "rotate-180" : "")} />
                                 </div>
                             </div>
                         </Link>
@@ -332,9 +330,9 @@ export default function DashboardPage() {
 
                     {/* Left: Site features showcase */}
                     <div className="space-y-4">
-                        <div className={cn("flex items-center justify-between", isArabic ? "flex-row-reverse" : "")}>
-                            <div className={isArabic ? "text-right" : ""}>
-                                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
                                     {t("Platform Features", "مميزات المنصة")}
                                 </p>
                                 <h2 className="mt-1 text-lg font-bold text-white">
@@ -345,7 +343,7 @@ export default function DashboardPage() {
                                 <Link href="/pricing">
                                     <Button variant="amber" size="xs" className="gap-1.5 shrink-0">
                                         <Zap className="w-3 h-3" />
-                                        {t("Upgrade", "ترقية")}
+                                        <span>{t("Upgrade", "ترقية")}</span>
                                     </Button>
                                 </Link>
                             )}
@@ -371,19 +369,19 @@ export default function DashboardPage() {
 
                         {/* Recent Analyses */}
                         <GlassCard className="overflow-hidden" hoverEffect={false} accent="cyan">
-                            <div className={cn("flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-4", isArabic ? "flex-row-reverse" : "")}>
-                                <div className={isArabic ? "text-right" : ""}>
+                            <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-4">
+                                <div>
                                     <h2 className="font-bold text-white text-sm">
                                         {t("Recent Scans", "الفحوصات الأخيرة")}
                                     </h2>
-                                    <p className="text-[11px] text-slate-600 mt-0.5">
+                                    <p className="text-[11px] text-slate-500 mt-0.5">
                                         {t("Your last analyzed medications", "آخر الأدوية التي حللتها")}
                                     </p>
                                 </div>
                                 <Link href="/dashboard/history">
                                     <Button variant="outline" size="xs" className="gap-1 shrink-0">
-                                        {t("All", "الكل")}
-                                        <ArrowRight className={cn("w-3 h-3", isArabic ? "rotate-180" : "")} />
+                                        <span>{t("All", "الكل")}</span>
+                                        <ArrowRight className={cn("w-3 h-3 shrink-0", isArabic ? "rotate-180" : "")} />
                                     </Button>
                                 </Link>
                             </div>
@@ -401,13 +399,13 @@ export default function DashboardPage() {
                                         <p className="font-semibold text-white text-sm">
                                             {t("No scans yet", "لا توجد فحوصات")}
                                         </p>
-                                        <p className="mt-1 text-xs text-slate-600">
+                                        <p className="mt-1 text-xs text-slate-500">
                                             {t("Upload a medication to get started.", "ارفع صورة دواء للبدء.")}
                                         </p>
                                         <Link href="/scan" className="mt-4">
                                             <Button size="sm" glow>
                                                 <ScanLine className="w-4 h-4 mr-2" />
-                                                {t("Scan now", "افحص الآن")}
+                                                <span>{t("Scan now", "افحص الآن")}</span>
                                             </Button>
                                         </Link>
                                     </div>
@@ -417,19 +415,15 @@ export default function DashboardPage() {
                                             const warnCount = (item.analysis_json?.warnings?.length ?? 0) as number;
                                             return (
                                                 <Link key={item.id} href="/dashboard/history">
-                                                    <div className={cn(
-                                                        "flex items-center gap-3 rounded-xl border border-white/[0.06] p-3",
-                                                        "hover:border-cyan-400/20 hover:bg-white/[0.03] transition-all cursor-pointer group",
-                                                        isArabic ? "flex-row-reverse" : ""
-                                                    )}>
+                                                    <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] p-3 hover:border-cyan-400/20 hover:bg-white/[0.03] transition-all cursor-pointer group">
                                                         <div className="icon-badge icon-badge-cyan w-9 h-9 rounded-xl shrink-0">
                                                             <Pill className="h-4 w-4" />
                                                         </div>
-                                                        <div className={cn("flex-1 min-w-0", isArabic ? "text-right" : "")}>
+                                                        <div className="flex-1 min-w-0">
                                                             <p className="font-semibold text-white text-xs truncate">
                                                                 {item.drug_name || t("Unknown", "غير محدد")}
                                                             </p>
-                                                            <p className="text-[10px] text-slate-600 mt-0.5 truncate">
+                                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">
                                                                 {item.created_at
                                                                     ? new Date(item.created_at).toLocaleDateString(isArabic ? "ar-SA" : "en-US", { month: "short", day: "numeric" })
                                                                     : "—"}
@@ -440,7 +434,7 @@ export default function DashboardPage() {
                                                                 {warnCount}⚠
                                                             </span>
                                                         )}
-                                                        <FileText className={cn("w-3.5 h-3.5 shrink-0 text-slate-700 group-hover:text-cyan-400 transition-colors", isArabic ? "order-first" : "")} />
+                                                        <FileText className="w-3.5 h-3.5 shrink-0 text-slate-600 group-hover:text-cyan-400 transition-colors" />
                                                     </div>
                                                 </Link>
                                             );
@@ -453,27 +447,27 @@ export default function DashboardPage() {
                         {/* Ultra upsell / plan status */}
                         {!isUltra ? (
                             <GlassCard accent="amber" hoverEffect={false} className="p-5" style={{ background: "rgba(245,158,11,0.04)" }}>
-                                <div className={cn("flex items-start gap-3", isArabic ? "flex-row-reverse text-right" : "")}>
+                                <div className="flex items-start gap-3">
                                     <div className="icon-badge icon-badge-amber w-10 h-10 rounded-xl shrink-0">
                                         <Star className="h-5 w-5" />
                                     </div>
                                     <div className="flex-1">
-                                        <div className={cn("flex items-center gap-2 mb-1.5", isArabic ? "flex-row-reverse" : "")}>
+                                        <div className="flex items-center gap-2 mb-1.5">
                                             <p className="font-bold text-white text-sm">
                                                 {t("Unlock Ultra", "افتح Ultra")}
                                             </p>
                                             <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-black">PRO</span>
                                         </div>
-                                        <p className="text-xs text-slate-500 leading-relaxed">
+                                        <p className="text-xs text-slate-400 leading-relaxed">
                                             {t(
                                                 "Get AI interaction guard, family profiles, PDF exports, and 2000 monthly credits.",
                                                 "احصل على حارس التداخل الذكي، ملفات الأسرة، تصدير PDF، و٢٠٠٠ رصيد شهري."
                                             )}
                                         </p>
                                         <Link href="/pricing" className="mt-3 inline-flex">
-                                            <Button variant="amber" size="xs" className="gap-1.5">
+                                            <Button variant="amber" size="xs" className="gap-1.5 font-bold">
                                                 <Zap className="w-3 h-3" />
-                                                {t("Upgrade for $9/mo", "ترقية بـ $9/شهر")}
+                                                <span>{t("Upgrade for $9/mo", "ترقية بـ $9/شهر")}</span>
                                             </Button>
                                         </Link>
                                     </div>
@@ -481,15 +475,15 @@ export default function DashboardPage() {
                             </GlassCard>
                         ) : (
                             <GlassCard accent="amber" hoverEffect={false} className="p-5" style={{ background: "rgba(245,158,11,0.04)" }}>
-                                <div className={cn("flex items-center gap-3", isArabic ? "flex-row-reverse" : "")}>
+                                <div className="flex items-center gap-3">
                                     <div className="icon-badge icon-badge-amber w-10 h-10 rounded-xl shrink-0">
                                         <BadgeCheck className="h-5 w-5" />
                                     </div>
-                                    <div className={isArabic ? "text-right" : ""}>
+                                    <div>
                                         <p className="font-bold text-amber-300 text-sm">
                                             {t("Ultra Active", "Ultra مفعّل")}
                                         </p>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-xs text-slate-400">
                                             {t("All premium features unlocked.", "جميع الميزات المميزة مفعّلة.")}
                                         </p>
                                     </div>
@@ -499,15 +493,15 @@ export default function DashboardPage() {
 
                         {/* Safety Context progress */}
                         <GlassCard accent="emerald" hoverEffect={false} className="p-5">
-                            <div className={cn("flex items-start gap-3", isArabic ? "flex-row-reverse" : "")}>
+                            <div className="flex items-start gap-3">
                                 <div className="icon-badge icon-badge-emerald w-10 h-10 rounded-xl shrink-0">
                                     <HeartPulse className="h-5 w-5" />
                                 </div>
-                                <div className={cn("flex-1", isArabic ? "text-right" : "")}>
+                                <div className="flex-1">
                                     <p className="font-bold text-white text-sm">
                                         {t("Health Profile", "الملف الصحي")}
                                     </p>
-                                    <p className="mt-1 text-xs text-slate-500">
+                                    <p className="mt-1 text-xs text-slate-400">
                                         {profilePercent < 100
                                             ? t(
                                                 `${profilePercent}% complete — more data = better personalization.`,
@@ -520,9 +514,11 @@ export default function DashboardPage() {
                                     </div>
                                     <Link href="/profile" className="mt-3 inline-flex">
                                         <Button variant="outline" size="xs" className="gap-1.5 border-emerald-400/20 text-emerald-300 hover:bg-emerald-400/8">
-                                            {profilePercent < 100
-                                                ? t("Complete profile →", "أكمل الملف ←")
-                                                : t("View profile →", "عرض الملف ←")}
+                                            <span>
+                                                {profilePercent < 100
+                                                    ? t("Complete profile →", "أكمل الملف ←")
+                                                    : t("View profile →", "عرض الملف ←")}
+                                            </span>
                                         </Button>
                                     </Link>
                                 </div>
@@ -530,12 +526,9 @@ export default function DashboardPage() {
                         </GlassCard>
 
                         {/* Medical disclaimer */}
-                        <div className={cn(
-                            "flex items-start gap-3 rounded-2xl border border-white/[0.05] p-4",
-                            isArabic ? "flex-row-reverse text-right" : ""
-                        )}>
-                            <ShieldCheck className="h-4 w-4 text-slate-600 shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-slate-600 leading-relaxed">
+                        <div className="flex items-start gap-3 rounded-2xl border border-white/[0.05] p-4">
+                            <ShieldCheck className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
                                 {t(
                                     "QURE AI is a review and verification tool. Always confirm important medical decisions with a licensed clinician or pharmacist.",
                                     "QURE AI أداة مراجعة وتحقق. أكّد دائمًا القرارات الطبية المهمة مع طبيب أو صيدلاني مرخص."
@@ -548,75 +541,27 @@ export default function DashboardPage() {
                 {/* ── HOW IT WORKS STRIP ────────────────────────── */}
                 <section>
                     <GlassCard hoverEffect={false} className="p-6 sm:p-8">
-                        <div className={cn("mb-6", isArabic ? "text-right" : "")}>
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">
-                                {t("The workflow", "آلية العمل")}
+                        <div className="text-center mb-6">
+                            <p className="eyebrow-emerald mx-auto mb-2">
+                                <Activity className="w-3.5 h-3.5" />
+                                <span>{t("Workflow", "سير العمل")}</span>
                             </p>
-                            <h2 className="mt-1 text-lg font-bold text-white">
-                                {t("3 steps from label to report", "٣ خطوات من الملصق إلى التقرير")}
+                            <h2 className="text-xl sm:text-2xl font-bold text-white">
+                                {t("How QURE AI processes medications", "كيف يعالج QURE AI الأدوية")}
                             </h2>
                         </div>
-
-                        <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-3")}>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             {[
-                                {
-                                    step: "01", color: "cyan",
-                                    icon: ScanLine,
-                                    titleEn: "Upload",     titleAr: "رفع الصورة",
-                                    descEn:  "Take a photo of any medication label — pill bottles, blister packs, prescriptions.",
-                                    descAr:  "التقط صورة لأي ملصق دواء — زجاجات الحبوب، العبوات، أو الوصفات الطبية.",
-                                },
-                                {
-                                    step: "02", color: "emerald",
-                                    icon: Globe,
-                                    titleEn: "Verify",     titleAr: "التحقق",
-                                    descEn:  "AI extracts the text and cross-checks with FDA databases and web signals.",
-                                    descAr:  "يستخرج الذكاء الاصطناعي النص ويتحقق من قواعد بيانات FDA وإشارات الويب.",
-                                },
-                                {
-                                    step: "03", color: "violet",
-                                    icon: FileText,
-                                    titleEn: "Review",     titleAr: "المراجعة",
-                                    descEn:  "Get a clear safety report with warnings, interactions, dosage, and next steps.",
-                                    descAr:  "احصل على تقرير أمان واضح بالتحذيرات والتداخلات والجرعة والخطوات القادمة.",
-                                },
-                            ].map((item, i) => {
-                                const badgeColors: Record<string, string> = {
-                                    cyan:    "text-cyan-400",
-                                    emerald: "text-emerald-400",
-                                    violet:  "text-violet-400",
-                                };
-                                const iconBadges: Record<string, string> = {
-                                    cyan:    "icon-badge-cyan",
-                                    emerald: "icon-badge-emerald",
-                                    violet:  "icon-badge-violet",
-                                };
-                                return (
-                                    <div key={item.step} className={cn("flex gap-4", isArabic ? "flex-row-reverse text-right" : "")}>
-                                        <div className="shrink-0">
-                                            <div className={cn("icon-badge w-10 h-10 rounded-xl", iconBadges[item.color])}>
-                                                <item.icon className="h-5 w-5" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className={cn("flex items-center gap-2 mb-1.5", isArabic ? "flex-row-reverse" : "")}>
-                                                <span className={cn("text-xs font-black", badgeColors[item.color])}>{item.step}</span>
-                                                <p className="font-bold text-white text-sm">{isArabic ? item.titleAr : item.titleEn}</p>
-                                            </div>
-                                            <p className="text-xs text-slate-500 leading-relaxed">{isArabic ? item.descAr : item.descEn}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="mt-6 flex justify-center">
-                            <Link href="/scan">
-                                <Button variant="primary" className="gap-2 px-8" glow>
-                                    <ScanLine className="w-4 h-4" />
-                                    {t("Try it now — it's free", "جرّبه الآن — مجاناً")}
-                                </Button>
-                            </Link>
+                                { step: "01", title: t("Scan & Extract", "فحص واستخراج"), text: t("Label text is read with OCR and structure is mapped.", "يُقرأ نص الملصق بالذكاء الاصطناعي مع تنظيم الحقول."), color: "cyan" },
+                                { step: "02", title: t("Verify & Check", "تحقق وتدقيق"), text: t("Cross-checks openFDA label data and known warnings.", "مطابقة بيانات ملصقات openFDA والتحذيرات المعروفة."), color: "emerald" },
+                                { step: "03", title: t("Review & Guard", "مراجعة وحماية"), text: t("Contextual warnings, side effects, and interaction checks.", "تحذيرات سياقية، آثار جانبية، وفحص التداخلات."), color: "violet" },
+                            ].map((s) => (
+                                <div key={s.step} className="rounded-xl border border-white/[0.06] p-4 bg-white/[0.02]">
+                                    <span className="text-xs font-black text-slate-500">{s.step}</span>
+                                    <h3 className="mt-1 font-bold text-white text-sm">{s.title}</h3>
+                                    <p className="mt-1 text-xs text-slate-400 leading-relaxed">{s.text}</p>
+                                </div>
+                            ))}
                         </div>
                     </GlassCard>
                 </section>

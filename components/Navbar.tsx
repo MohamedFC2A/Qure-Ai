@@ -1,11 +1,19 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
-    Atom, ScanLine, LayoutDashboard, User, Clock,
-    Gem, Loader2, LogOut, ChevronDown, Brain,
+    Atom,
+    ScanLine,
+    LayoutDashboard,
+    User,
+    Clock,
+    Gem,
+    Loader2,
+    LogOut,
+    Brain,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -24,6 +32,8 @@ export const Navbar = () => {
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
+    const isAiRoute = pathname === "/ai" || pathname.startsWith("/ai/");
+
     const handleSignOut = async () => {
         if (process.env.NODE_ENV === "development") {
             document.cookie = "qure_dev_auth=; path=/; max-age=0; samesite=lax";
@@ -34,23 +44,23 @@ export const Navbar = () => {
 
     const navItems = user
         ? [
-              { name: t("Home", "الرئيسية"),       href: "/",                   icon: Atom,           color: "cyan"    },
-              { name: t("Scan", "فحص دواء"),        href: "/scan",               icon: ScanLine,       color: "emerald" },
-              { name: "NEXUS AI",                    href: "/ai",                 icon: Brain,          color: "violet"  },
-              { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem,            color: "amber"   },
-              { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock,          color: "violet"  },
+              { name: t("Home", "الرئيسية"),       href: "/",                   icon: Atom,            color: "cyan"    },
+              { name: t("Scan", "فحص دواء"),        href: "/scan",               icon: ScanLine,        color: "emerald" },
+              { name: "NEXUS AI",                    href: "/ai",                 icon: Brain,           color: "violet"  },
+              { name: t("Pricing", "الأسعار"),      href: "/pricing",            icon: Gem,             color: "amber"   },
+              { name: t("History", "السجل"),         href: "/dashboard/history",  icon: Clock,           color: "violet"  },
               { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard",          icon: LayoutDashboard, color: "cyan"   },
           ]
         : [
-              { name: t("Home", "الرئيسية"),  href: "/",        icon: Atom,  color: "cyan"  },
-              { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem,  color: "amber" },
+              { name: t("Home", "الرئيسية"),   href: "/",        icon: Atom, color: "cyan"  },
+              { name: t("Pricing", "الأسعار"),  href: "/pricing", icon: Gem,  color: "amber" },
           ];
 
     const activeColorMap: Record<string, string> = {
-        cyan:    "bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/25",
-        emerald: "bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-400/25",
-        amber:   "bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/25",
-        violet:  "bg-violet-400/10 text-violet-300 ring-1 ring-violet-400/25",
+        cyan:    "bg-cyan-400/15 text-cyan-300 ring-1 ring-cyan-400/30",
+        emerald: "bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/30",
+        amber:   "bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30",
+        violet:  "bg-violet-400/15 text-violet-300 ring-1 ring-violet-400/30",
     };
 
     const activeIconColorMap: Record<string, string> = {
@@ -65,135 +75,135 @@ export const Navbar = () => {
             <MobileNav />
             <OnboardingModal />
 
-            <header className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-16px)] max-w-6xl">
+            <header className="fixed top-2.5 sm:top-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-6xl">
                 <div
                     className={cn(
-                        "relative overflow-hidden rounded-2xl px-3 py-2.5 sm:px-4",
-                        "flex items-center justify-between gap-2",
+                        "relative overflow-hidden rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5",
+                        "flex items-center justify-between gap-2 sm:gap-4",
                         "backdrop-blur-2xl border shadow-2xl",
-                        "transition-all duration-500",
+                        "transition-all duration-300"
                     )}
                     style={{
-                        background: (pathname === "/ai" || pathname.startsWith("/ai/")) ? "rgba(12,10,5,0.92)" : "rgba(6, 9, 14, 0.88)",
-                        borderColor: (pathname === "/ai" || pathname.startsWith("/ai/")) ? "rgba(217,170,75,0.25)" : "rgba(255,255,255,0.08)",
-                        boxShadow: (pathname === "/ai" || pathname.startsWith("/ai/"))
-                            ? "0 0 0 0.5px rgba(217,170,75,0.15) inset, 0 24px 60px rgba(0,0,0,0.55), 0 0 40px rgba(217,170,75,0.06)"
-                            : "0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 24px 60px rgba(0,0,0,0.55)",
+                        background: isAiRoute ? "rgba(12, 10, 5, 0.94)" : "rgba(6, 9, 14, 0.90)",
+                        borderColor: isAiRoute ? "rgba(217, 170, 75, 0.30)" : "rgba(255, 255, 255, 0.10)",
+                        boxShadow: isAiRoute
+                            ? "0 0 0 0.5px rgba(217,170,75,0.18) inset, 0 24px 60px rgba(0,0,0,0.6), 0 0 40px rgba(217,170,75,0.08)"
+                            : "0 0 0 0.5px rgba(255,255,255,0.06) inset, 0 24px 60px rgba(0,0,0,0.6)",
                     }}
                 >
-                    {/* Top shimmer */}
-                    <div className={cn(
-                        "absolute inset-x-0 top-0 h-px pointer-events-none",
-                        (pathname === "/ai" || pathname.startsWith("/ai/"))
-                            ? "bg-gradient-to-r from-transparent via-amber-400/30 to-transparent"
-                            : "bg-gradient-to-r from-transparent via-white/12 to-transparent"
-                    )} />
+                    {/* Top shimmer accent line */}
+                    <div
+                        className={cn(
+                            "absolute inset-x-0 top-0 h-[1.5px] pointer-events-none",
+                            isAiRoute
+                                ? "bg-gradient-to-r from-transparent via-amber-400/40 to-transparent"
+                                : "bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
+                        )}
+                    />
 
                     {/* ── Logo ── */}
                     <Link
                         href="/"
-                        className={cn(
-                            "flex items-center gap-2.5 font-bold text-base tracking-tight shrink-0",
-                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 rounded-xl",
-                            isArabic ? "flex-row-reverse" : ""
-                        )}
+                        className="flex items-center gap-2 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 rounded-xl"
                     >
-                        <div className={cn(
-                            "relative w-9 h-9 rounded-xl flex items-center justify-center shadow-lg",
-                            (pathname === "/ai" || pathname.startsWith("/ai/"))
-                                ? "nexus-gold-logo shadow-amber-950/40"
-                                : "bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-cyan-950/40"
-                        )}>
-                            <Atom className="w-5 h-5 text-white" />
-                            <div className="absolute inset-0 rounded-xl bg-white/10" />
-                            {(pathname === "/ai" || pathname.startsWith("/ai/")) && (
-                                <div className="absolute inset-0 rounded-xl nexus-gold-rotate" />
+                        <div
+                            className={cn(
+                                "relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-lg transition-transform active:scale-95",
+                                isAiRoute
+                                    ? "nexus-gold-logo shadow-amber-950/40"
+                                    : "bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-cyan-950/50"
                             )}
+                        >
+                            <Atom className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                            <div className="absolute inset-0 rounded-xl bg-white/10" />
+                            {isAiRoute && <div className="absolute inset-0 rounded-xl nexus-gold-rotate" />}
                         </div>
-                        <span className="text-white font-display tracking-tight">
-                            Qure{" "}
-                            <span className={(pathname === "/ai" || pathname.startsWith("/ai/")) ? "nexus-gold-text" : "text-cyan-400"}>
-                                Ai
-                            </span>
+                        <span className="text-white font-display tracking-tight flex items-center gap-1">
+                            <span>Qure</span>
+                            <span className={isAiRoute ? "nexus-gold-text" : "text-cyan-400"}>Ai</span>
                         </span>
-                        {(pathname === "/ai" || pathname.startsWith("/ai/")) && (
-                            <span className="nexus-gold-badge rounded-[6px] px-1.5 py-0.5 text-[9px] font-black tracking-widest">
+                        {isAiRoute && (
+                            <span className="nexus-gold-badge rounded-[6px] px-1.5 py-0.5 text-[8px] sm:text-[9px] font-black tracking-widest hidden xs:inline-block">
                                 AI
                             </span>
                         )}
                     </Link>
 
-                    {/* ── Desktop Navigation ── */}
-                    <nav className={cn(
-                        "hidden md:flex flex-1 items-center justify-center gap-0.5",
-                        isArabic ? "flex-row-reverse" : ""
-                    )}>
+                    {/* ── Desktop Navigation Links ── */}
+                    <nav className="hidden md:flex flex-1 items-center justify-center gap-1">
                         {navItems.map((item) => {
-                            const isActive = pathname === item.href ||
+                            const isActive =
+                                pathname === item.href ||
                                 (item.href !== "/" && pathname.startsWith(`${item.href}`));
                             return (
                                 <Link key={item.href} href={item.href}>
-                                    <div className={cn(
-                                        "relative px-3.5 py-2 rounded-xl text-sm transition-all duration-200",
-                                        "flex items-center gap-2 cursor-pointer select-none",
-                                        isActive
-                                            ? activeColorMap[item.color] || activeColorMap["cyan"]
-                                            : "text-slate-400 hover:text-white hover:bg-white/[0.05]"
-                                    )}>
-                                        <item.icon className={cn(
-                                            "w-4 h-4 shrink-0",
+                                    <div
+                                        className={cn(
+                                            "relative px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
+                                            "flex items-center gap-1.5 cursor-pointer select-none",
                                             isActive
-                                                ? activeIconColorMap[item.color] || "text-cyan-400"
-                                                : "opacity-70"
-                                        )} />
-                                        <span className="font-medium">{item.name}</span>
+                                                ? activeColorMap[item.color] || activeColorMap.cyan
+                                                : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                                        )}
+                                    >
+                                        <item.icon
+                                            className={cn(
+                                                "w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0",
+                                                isActive
+                                                    ? activeIconColorMap[item.color] || "text-cyan-400"
+                                                    : "opacity-75"
+                                            )}
+                                        />
+                                        <span>{item.name}</span>
                                     </div>
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    {/* ── Auth Area ── */}
-                    <div className={cn(
-                        "flex items-center gap-2 shrink-0",
-                        isArabic ? "flex-row-reverse" : ""
-                    )}>
+                    {/* ── Auth / User Action Area ── */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         {!loading && user ? (
-                            <div className={cn(
-                                "flex items-center gap-2",
-                                isArabic ? "flex-row-reverse" : ""
-                            )}>
-                                {/* Scanning indicator */}
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                {/* Scanning Indicator */}
                                 {isScanning && (
                                     <Link href="/scan">
-                                        <div className="flex items-center gap-1.5 rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-400/15">
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                            <span className="hidden xs:inline">{t("Scanning", "جاري الفحص")}</span>
+                                        <div className="flex items-center gap-1 sm:gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-400/20">
+                                            <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                                            <span className="hidden sm:inline">{t("Scanning", "فحص")}</span>
                                             <span className="font-mono tabular-nums">{totalDuration}s</span>
                                         </div>
                                     </Link>
                                 )}
 
-                                {/* Credits chip */}
+                                {/* Credits Badge */}
                                 <Link href="/profile" aria-label="Open profile">
-                                    <div className={cn(
-                                        "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all",
-                                        plan === "ultra"
-                                            ? "bg-amber-400/10 border-amber-400/25 text-amber-300 hover:bg-amber-400/15"
-                                            : "bg-cyan-400/10 border-cyan-400/25 text-cyan-300 hover:bg-cyan-400/15"
-                                    )}>
-                                        <span className={cn(
-                                            "w-1.5 h-1.5 rounded-full animate-glow-pulse",
-                                            plan === "ultra" ? "bg-amber-400" : "bg-cyan-400"
-                                        )} />
-                                        {credits > 10000 ? "∞" : credits}
-                                        <span className="hidden sm:inline">{t(" Credits", " رصيد")}</span>
+                                    <div
+                                        className={cn(
+                                            "flex items-center gap-1 sm:gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold transition-all",
+                                            plan === "ultra"
+                                                ? "bg-amber-400/10 border-amber-400/30 text-amber-300 hover:bg-amber-400/20"
+                                                : "bg-cyan-400/10 border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/20"
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                "w-1.5 h-1.5 rounded-full animate-glow-pulse",
+                                                plan === "ultra" ? "bg-amber-400" : "bg-cyan-400"
+                                            )}
+                                        />
+                                        <span className="font-mono tabular-nums font-bold">
+                                            {credits > 10000 ? "∞" : credits}
+                                        </span>
+                                        <span className="hidden sm:inline text-[10px] text-slate-400">
+                                            {t("cr", "رصيد")}
+                                        </span>
                                     </div>
                                 </Link>
 
-                                {/* Avatar */}
-                                <Link href="/profile">
-                                    <button className="hidden sm:flex h-9 w-9 rounded-xl items-center justify-center border border-white/10 bg-white/[0.05] overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
+                                {/* Profile Avatar */}
+                                <Link href="/profile" aria-label="Profile">
+                                    <div className="flex h-8 w-8 sm:h-9 sm:w-9 rounded-xl items-center justify-center border border-white/10 bg-white/[0.05] overflow-hidden transition-all hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50">
                                         {user?.user_metadata?.avatar_url ? (
                                             <img
                                                 src={user.user_metadata.avatar_url}
@@ -201,38 +211,36 @@ export const Navbar = () => {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <User className="w-4 h-4 text-slate-300" />
+                                            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300" />
                                         )}
-                                    </button>
+                                    </div>
                                 </Link>
 
-                                {/* Sign out */}
+                                {/* Sign Out Button */}
                                 <button
                                     onClick={handleSignOut}
-                                    className="hidden sm:flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-400/70 hover:text-rose-300 hover:bg-rose-500/10 transition-all"
+                                    title={t("Log Out", "تسجيل الخروج")}
+                                    className="hidden sm:flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-medium text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10 transition-all"
                                 >
                                     <LogOut className="h-3.5 w-3.5" />
-                                    <span className="hidden sm:inline">{t("Exit", "خروج")}</span>
+                                    <span>{t("Exit", "خروج")}</span>
                                 </button>
                             </div>
                         ) : !loading ? (
-                            <div className={cn(
-                                "hidden sm:flex items-center gap-2",
-                                isArabic ? "flex-row-reverse" : ""
-                            )}>
+                            <div className="flex items-center gap-1.5 sm:gap-2">
                                 <Link href="/login">
-                                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                                        {t("Login", "الدخول")}
+                                    <Button variant="ghost" size="xs" className="text-slate-400 hover:text-white px-2.5 sm:px-3 text-xs">
+                                        {t("Login", "دخول")}
                                     </Button>
                                 </Link>
                                 <Link href="/signup">
-                                    <Button variant="primary" size="sm" className="px-5" glow>
+                                    <Button variant="primary" size="xs" className="px-3 sm:px-4 text-xs font-bold" glow>
                                         {t("Get Started", "ابدأ الآن")}
                                     </Button>
                                 </Link>
                             </div>
                         ) : (
-                            <div className="w-20 h-8 skeleton rounded-xl" />
+                            <div className="w-16 sm:w-20 h-7 sm:h-8 skeleton rounded-xl" />
                         )}
                     </div>
                 </div>

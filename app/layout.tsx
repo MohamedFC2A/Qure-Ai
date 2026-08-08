@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import clsx from "clsx";
@@ -12,10 +12,17 @@ import { Footer } from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter" });
 
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    themeColor: "#050709",
+};
+
 export const metadata: Metadata = {
-    title: "Qure Ai | تحليل الأدوية الذكي | Pharmaceutical Analysis",
-    description: "QURE AI — منصة ذكاء طبي لتحليل الأدوية والتحقق من السلامة الدوائية. Advanced AI-powered medication analysis and pharmaceutical intelligence.",
-    keywords: ["medication analysis", "تحليل أدوية", "AI", "pharmaceutical", "safety"],
+    title: "Qure Ai | تحليل الأدوية الذكي | Pharmaceutical Intelligence",
+    description: "QURE AI — منصة ذكاء طبي متقدمة لتحليل الأدوية والتحقق من السلامة الدوائية. Advanced AI-powered medication analysis and pharmaceutical safety intelligence.",
+    keywords: ["medication analysis", "تحليل أدوية", "AI", "pharmaceutical", "safety", "openFDA", "NEXUS AI"],
     openGraph: {
         title: "Qure Ai | تحليل الأدوية الذكي",
         description: "منصة ذكاء طبي متقدمة لتحليل الأدوية والتحقق من السلامة الدوائية",
@@ -46,7 +53,7 @@ export default function RootLayout({
                 />
             </head>
             <body
-                className={clsx(inter.className, inter.variable, "min-h-screen relative")}
+                className={clsx(inter.className, inter.variable, "min-h-screen relative flex flex-col justify-between overflow-x-hidden")}
                 suppressHydrationWarning
             >
                 <GoogleAdsense pId="8970399272088568" />
@@ -55,7 +62,7 @@ export default function RootLayout({
                     <UserProvider>
                         <ScanProvider>
                             <Navbar />
-                            <div className="pb-28 sm:pb-0 min-h-[calc(100vh-80px)]">
+                            <div className="flex-1 w-full pb-20 md:pb-0">
                                 {children}
                             </div>
                             <Footer />

@@ -30,34 +30,24 @@ export const Footer = () => {
     };
 
     return (
-        <footer className={cn(
-            "relative z-10 mt-16 border-t mb-24 md:mb-0",
-            "border-white/[0.06]"
-        )}>
+        <footer className="relative z-10 mt-16 border-t mb-24 md:mb-0 border-white/[0.06] bg-slate-950/40 backdrop-blur-xl">
             {/* Top gradient line */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className={cn(
-                    "grid gap-8 py-12",
-                    "grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr]",
-                    isArabic ? "text-right" : "text-left"
-                )}>
+                <div className="grid gap-8 py-10 sm:py-12 grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr]">
                     {/* Brand Column */}
                     <div>
-                        <Link href="/" className={cn(
-                            "inline-flex items-center gap-2.5 font-bold text-base",
-                            isArabic ? "flex-row-reverse" : ""
-                        )}>
+                        <Link href="/" className="inline-flex items-center gap-2.5 font-bold text-base">
                             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-950/40">
                                 <Atom className="w-4 h-4 text-white" />
                             </div>
-                            <span className="text-white">
+                            <span className="text-white font-display">
                                 Qure <span className="text-cyan-400">Ai</span>
                             </span>
                         </Link>
 
-                        <p className="mt-4 text-sm leading-relaxed text-slate-500 max-w-xs">
+                        <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-400 max-w-xs">
                             {t(
                                 "AI-powered medication analysis and pharmaceutical intelligence for safer healthcare decisions.",
                                 "تحليل الأدوية بالذكاء الاصطناعي للقرارات الصحية الأكثر أمانًا."
@@ -65,29 +55,23 @@ export const Footer = () => {
                         </p>
 
                         {/* Disclaimer badge */}
-                        <div className={cn(
-                            "mt-5 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs",
-                            "border-amber-400/15 bg-amber-400/[0.05] text-amber-400/70"
-                        )}>
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[11px] border-amber-400/20 bg-amber-400/[0.06] text-amber-300">
                             <Shield className="h-3.5 w-3.5 shrink-0" />
-                            {t(
-                                "Review tool, not a diagnosis service",
-                                "أداة مراجعة، وليست خدمة تشخيص طبي"
-                            )}
+                            <span>{t("Review tool, not a diagnosis service", "أداة مراجعة، وليست خدمة تشخيص طبي")}</span>
                         </div>
                     </div>
 
                     {/* Product Links */}
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 mb-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400 mb-3 sm:mb-4">
                             {footerLinks.product.title}
                         </p>
-                        <ul className="space-y-3">
+                        <ul className="space-y-2.5 sm:space-y-3">
                             {footerLinks.product.items.map((item) => (
                                 <li key={item.href}>
                                     <Link
                                         href={item.href}
-                                        className="text-sm text-slate-500 hover:text-slate-200 transition-colors duration-150"
+                                        className="text-xs sm:text-sm text-slate-400 hover:text-white transition-colors duration-150"
                                     >
                                         {item.name}
                                     </Link>
@@ -98,15 +82,15 @@ export const Footer = () => {
 
                     {/* Company Links */}
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 mb-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400 mb-3 sm:mb-4">
                             {footerLinks.company.title}
                         </p>
-                        <ul className="space-y-3">
+                        <ul className="space-y-2.5 sm:space-y-3">
                             {footerLinks.company.items.map((item) => (
                                 <li key={item.href}>
                                     <Link
                                         href={item.href}
-                                        className="text-sm text-slate-500 hover:text-slate-200 transition-colors duration-150"
+                                        className="text-xs sm:text-sm text-slate-400 hover:text-white transition-colors duration-150"
                                     >
                                         {item.name}
                                     </Link>
@@ -117,23 +101,16 @@ export const Footer = () => {
                 </div>
 
                 {/* Bottom bar */}
-                <div className={cn(
-                    "border-t border-white/[0.05] py-6",
-                    "flex flex-col sm:flex-row items-center justify-between gap-3",
-                    isArabic ? "sm:flex-row-reverse" : ""
-                )}>
-                    <p className="text-xs text-slate-600">
+                <div className="border-t border-white/[0.06] py-5 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                    <p>
                         {t("Built by ", "تم التطوير بواسطة ")}
-                        <span className="text-slate-400 font-medium">Matany Labs</span>
+                        <span className="text-slate-300 font-medium">Matany Labs</span>
                         {" · "}
-                        <span className="text-slate-600">© 2026</span>
+                        <span>© 2026</span>
                     </p>
 
-                    <div className={cn(
-                        "flex items-center gap-3",
-                        isArabic ? "flex-row-reverse" : ""
-                    )}>
-                        <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-cyan-400/50">
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold tracking-[0.20em] uppercase text-cyan-400/60">
                             {t("Powered by NEXUS AI", "مشغّل بواسطة NEXUS AI")}
                         </span>
 
@@ -141,7 +118,7 @@ export const Footer = () => {
                             href="https://github.com/MohamedFC2A"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-slate-600 hover:text-slate-300 transition-colors"
+                            className="text-slate-400 hover:text-white transition-colors"
                             aria-label="GitHub"
                         >
                             <Github className="w-4 h-4" />

@@ -456,30 +456,34 @@ export default function ProfilePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Sidebar Navigation */}
-                <GlassCard className="p-3 md:col-span-1 h-fit flex flex-col gap-1" hoverEffect={false}>
+                {/* Responsive Navigation Tabs (Horizontal on mobile, vertical sidebar on desktop) */}
+                <GlassCard className="p-2 sm:p-3 md:col-span-1 h-fit flex flex-row md:flex-col overflow-x-auto no-scrollbar gap-1.5 shrink-0" hoverEffect={false}>
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left",
+                                "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 md:w-full text-start",
                                 activeTab === tab.id
-                                    ? "bg-cyan-300/10 text-cyan-100 border border-cyan-300/20"
+                                    ? "bg-cyan-400/15 text-cyan-300 border border-cyan-400/30 shadow-sm"
                                     : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
                             )}
                         >
-                            <tab.icon className={cn("w-4 h-4", tab.pro && plan !== 'ultra' ? "text-slate-600" : "text-cyan-300")} />
-                            <span className="flex-1">{tab.label}</span>
-                            {(tab as any).beta && <span className="text-[10px] bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded text-amber-300">BETA</span>}
-                            {tab.pro && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">ULTRA</span>}
+                            <tab.icon className={cn("w-4 h-4 shrink-0", tab.pro && plan !== 'ultra' ? "text-slate-600" : "text-cyan-400")} />
+                            <span className="flex-1 truncate">{tab.label}</span>
+                            {(tab as any).beta && <span className="text-[9px] font-bold bg-amber-400/20 border border-amber-400/30 px-1.5 py-0.5 rounded text-amber-300 hidden xs:inline">BETA</span>}
+                            {tab.pro && <span className="text-[9px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-slate-400 hidden xs:inline">ULTRA</span>}
                         </button>
                     ))}
 
-                    <div className="h-px bg-white/10 my-2" />
+                    <div className="hidden md:block h-px bg-white/10 my-2" />
 
-                    <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-300 hover:bg-red-500/10 transition-colors">
-                        <LogOut className="w-4 h-4" /> Sign Out
+                    <button
+                        onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}
+                        className="hidden md:flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors w-full text-start"
+                    >
+                        <LogOut className="w-4 h-4 shrink-0" />
+                        <span>{t("Sign Out", "تسجيل الخروج")}</span>
                     </button>
                 </GlassCard>
 

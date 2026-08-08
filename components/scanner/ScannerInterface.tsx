@@ -615,48 +615,56 @@ export const ScannerInterface = () => {
                 {!previewSrc && (
                     <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
                         <div {...getRootProps()} className={cn(
-                            "relative min-h-[320px] border-2 border-dashed rounded-xl p-7 sm:p-9 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group",
-                            isDragActive ? "border-cyan-300 bg-cyan-300/10" : "border-white/15 hover:border-cyan-300/40 hover:bg-white/[0.04]"
+                            "relative min-h-[300px] sm:min-h-[340px] border-2 border-dashed rounded-2xl p-6 sm:p-9 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group",
+                            isDragActive ? "border-cyan-300 bg-cyan-300/10" : "border-white/15 hover:border-cyan-400/40 hover:bg-white/[0.04]"
                         )}>
                             <input {...getInputProps()} />
-                            <div className="w-16 h-16 rounded-lg bg-cyan-300/10 border border-cyan-300/20 flex items-center justify-center mb-6 group-hover:border-cyan-300/40 transition-colors duration-300">
-                                <ScanLine className="w-8 h-8 text-cyan-200" />
+                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/25 flex items-center justify-center mb-5 group-hover:border-cyan-400/50 group-hover:scale-105 transition-all duration-300">
+                                <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Upload medication image</h3>
-                            <p className="text-slate-400 text-sm max-w-xs mx-auto">
-                                Drag & drop or click to upload. Supports JPEG, PNG (Max 10MB)
+                            <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                                {t("Upload medication image", "ارفع صورة ملصق الدواء")}
+                            </h3>
+                            <p className="text-slate-400 text-xs sm:text-sm max-w-xs mx-auto leading-relaxed">
+                                {t("Drag & drop or click to upload. Supports JPEG, PNG, WEBP (Max 10MB)", "اسحب وأفلت أو انقر للرفع. يدعم JPEG و PNG و WEBP (حتى 10MB)")}
                             </p>
-                            <div className="mt-7 flex flex-wrap justify-center gap-2">
-                                <span className="px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-xs text-slate-400">Pills</span>
-                                <span className="px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-xs text-slate-400">Bottles</span>
-                                <span className="px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-xs text-slate-400">Prescriptions</span>
+                            <div className="mt-6 flex flex-wrap justify-center gap-2">
+                                <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-slate-300">
+                                    {t("Pills", "حبوب وأقراص")}
+                                </span>
+                                <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-slate-300">
+                                    {t("Bottles", "عبوات وعلب")}
+                                </span>
+                                <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-slate-300">
+                                    {t("Prescriptions", "روشتات ووصفات")}
+                                </span>
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                                    <History className="w-4 h-4" />
-                                    Recent History
+                        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 sm:p-5 backdrop-blur-xl">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                                    <History className="w-4 h-4 text-cyan-400" />
+                                    <span>{t("Recent Scans", "الفحوصات الأخيرة")}</span>
                                 </div>
-                                <Link href="/dashboard/history" className="text-xs text-cyan-100 hover:underline">
-                                    Open
+                                <Link href="/dashboard/history" className="text-xs text-cyan-300 hover:text-cyan-200 font-semibold hover:underline">
+                                    {t("View all", "عرض الكل")}
                                 </Link>
                             </div>
 
                             {user && activeCareProfile && careProfiles.length > 1 && (
-                                <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3">
-                                    <div className="flex items-center gap-2 text-xs text-slate-400 min-w-0">
+                                <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5">
+                                    <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
                                         <Users className="w-4 h-4 text-cyan-300 shrink-0" />
-                                        <span className="shrink-0">{t("Active:", "الحالي:")}</span>
-                                        <span className="text-white/80 font-semibold truncate">{activeCareProfile.display_name}</span>
+                                        <span className="shrink-0 text-slate-500">{t("Active:", "الملف:")}</span>
+                                        <span className="text-white font-semibold truncate">{activeCareProfile.display_name}</span>
                                     </div>
                                     <button
                                         onClick={() => {
                                             setCareTempId(activeCareProfile.id);
                                             setCarePickerOpen(true);
                                         }}
-                                        className="text-xs text-cyan-200 hover:underline"
+                                        className="text-xs text-cyan-300 hover:underline font-semibold shrink-0"
                                     >
                                         {t("Change", "تغيير")}
                                     </button>
@@ -664,32 +672,32 @@ export const ScannerInterface = () => {
                             )}
 
                             {!user ? (
-                                <div className="p-4 rounded-lg bg-white/[0.04] border border-white/10 text-slate-400 text-sm">
-                                    <p className="mb-3">Log in to use your History and build Medication Memories.</p>
+                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
+                                    <p className="mb-3">{t("Log in to use your History and build Medication Memories.", "سجّل الدخول للوصول إلى سجلك وبناء ذاكرة الأدوية الخاصة بك.")}</p>
                                     <Link href="/login">
-                                        <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/10">
-                                            Log in
+                                        <Button size="xs" variant="outline" className="text-white border-white/15">
+                                            {t("Log In", "تسجيل الدخول")}
                                         </Button>
                                     </Link>
                                 </div>
                             ) : historyLoading ? (
-                                <div className="p-4 rounded-lg bg-white/[0.04] border border-white/10 text-slate-500 text-sm">
-                                    Loading your history...
+                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-slate-500 text-xs">
+                                    {t("Loading history...", "جارٍ تحميل السجل...")}
                                 </div>
                             ) : recentHistory.length === 0 ? (
-                                <div className="p-4 rounded-lg bg-white/[0.04] border border-white/10 text-slate-400 text-sm">
-                                    No scans yet. Run your first scan to start your personal database.
+                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
+                                    {t("No scans yet. Run your first scan to start your personal database.", "لا توجد فحوصات بعد. أجرِ أول فحص لبدء بناء سجلك الشخصي.")}
                                 </div>
                             ) : (
                                 <div className="space-y-2">
                                     {recentHistory.map((item) => (
                                         <Link key={item.id} href="/dashboard/history">
-                                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] transition-colors">
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:bg-white/[0.07] hover:border-cyan-400/25 transition-all">
                                                 <div className="min-w-0">
-                                                    <p className="text-white font-medium truncate">{item.drug_name}</p>
-                                                    <p className="text-white/40 text-xs truncate">{item.manufacturer || "Generic"} • {new Date(item.created_at).toLocaleDateString()}</p>
+                                                    <p className="text-white font-semibold text-xs truncate">{item.drug_name}</p>
+                                                    <p className="text-slate-500 text-[10px] truncate mt-0.5">{item.manufacturer || t("Generic", "عام")} • {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-SA" : "en-US")}</p>
                                                 </div>
-                                                <ChevronRight className="w-4 h-4 text-white/30" />
+                                                <ChevronRight className={cn("w-4 h-4 text-slate-500 shrink-0", isArabic ? "rotate-180" : "")} />
                                             </div>
                                         </Link>
                                     ))}

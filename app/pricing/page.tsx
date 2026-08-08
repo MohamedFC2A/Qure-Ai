@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const freeFeatures = [
-    { en: "100 credits that do not expire",            ar: "١٠٠ رصيد لا تنتهي صلاحيته"              },
+    { en: "100 credits that do not expire",            ar: "١٠٠ رصيد دائم لا تنتهي صلاحيته"           },
     { en: "Medication OCR and core analysis",          ar: "OCR الأدوية والتحليل الأساسي"            },
     { en: "Basic openFDA and web verification",        ar: "التحقق الأساسي من FDA والويب"            },
     { en: "Saved scan history",                        ar: "حفظ سجل الفحص"                          },
@@ -96,7 +96,7 @@ function FeatureList({ items, accent, isArabic }: { items: { en: string; ar: str
     return (
         <ul className="space-y-3">
             {items.map((item, i) => (
-                <li key={i} className={cn("flex items-start gap-3 text-sm text-slate-400", isArabic ? "flex-row-reverse text-right" : "")}>
+                <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
                     <span className={cn(
                         "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
                         accent === "amber"
@@ -105,7 +105,7 @@ function FeatureList({ items, accent, isArabic }: { items: { en: string; ar: str
                     )}>
                         <Check className="h-3 w-3" />
                     </span>
-                    <span>{isArabic ? item.ar : item.en}</span>
+                    <span className="leading-relaxed">{isArabic ? item.ar : item.en}</span>
                 </li>
             ))}
         </ul>
@@ -121,7 +121,7 @@ function ComparisonValue({ value, highlighted = false }: { value: boolean | stri
             <Lock className="h-4 w-4 text-white/20" />
         );
     }
-    return <span className={cn("text-sm font-semibold", highlighted ? "text-amber-300" : "text-slate-400")}>{value}</span>;
+    return <span className={cn("text-xs sm:text-sm font-semibold", highlighted ? "text-amber-300 font-bold" : "text-slate-400")}>{value}</span>;
 }
 
 /* ── FAQ Item ──────────────────────────────────────────────────── */
@@ -130,20 +130,17 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
     return (
         <div className={cn(
             "rounded-2xl border border-white/[0.07] overflow-hidden transition-colors",
-            open ? "border-white/12" : "hover:border-white/10"
+            open ? "border-white/15" : "hover:border-white/10"
         )}
             style={{ background: "var(--q-glass-2)" }}>
             <button
-                className={cn(
-                    "w-full flex items-center justify-between gap-4 p-5 text-left",
-                    isArabic ? "flex-row-reverse text-right" : ""
-                )}
+                className="w-full flex items-center justify-between gap-4 p-4 sm:p-5 text-start"
                 onClick={() => setOpen(!open)}
             >
-                <span className="font-semibold text-white text-sm">{isArabic ? q.ar : q.en}</span>
+                <span className="font-semibold text-white text-xs sm:text-sm">{isArabic ? q.ar : q.en}</span>
                 {open
-                    ? <ChevronUp className="h-4 w-4 text-slate-500 shrink-0" />
-                    : <ChevronDown className="h-4 w-4 text-slate-500 shrink-0" />
+                    ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
+                    : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
                 }
             </button>
             <AnimatePresence>
@@ -154,7 +151,7 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.25, ease: "easeInOut" }}
                     >
-                        <div className={cn("px-5 pb-5 text-sm text-slate-500 leading-relaxed", isArabic ? "text-right" : "")}>
+                        <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-xs sm:text-sm text-slate-400 leading-relaxed">
                             {isArabic ? a.ar : a.en}
                         </div>
                     </motion.div>
@@ -182,37 +179,34 @@ export default function PricingPage() {
     };
 
     return (
-        <main
-            className={cn("min-h-screen px-4 pb-28 pt-24 sm:px-6 md:pb-16 md:pt-28", isArabic ? "font-arabic" : "")}
-            dir={isArabic ? "rtl" : "ltr"}
-        >
-            <div className="mx-auto w-full max-w-6xl space-y-8">
+        <main className="min-h-screen px-3 sm:px-6 pb-24 sm:pb-28 pt-24 sm:pt-28 md:pb-16 md:pt-28">
+            <div className="clinical-page space-y-8 sm:space-y-10">
 
                 {/* ── HERO ─────────────────────────────────────── */}
-                <section className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr] lg:items-end">
-                    <div className={isArabic ? "text-right" : ""}>
+                <section className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+                    <div>
                         <div className="clinical-eyebrow">
                             <Sparkles className="h-3.5 w-3.5" />
-                            {t("Pricing", "الأسعار")}
+                            <span>{t("Pricing", "الأسعار")}</span>
                         </div>
-                        <h1 className="mt-5 text-4xl font-bold leading-tight text-white sm:text-5xl">
+                        <h1 className="mt-4 text-3xl xs:text-4xl sm:text-5xl font-black leading-tight text-white tracking-tight">
                             {isArabic ? (
                                 <>
                                     اختر الخطة التي{" "}
-                                    <span className="bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                                    <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
                                         تناسب احتياجاتك.
                                     </span>
                                 </>
                             ) : (
                                 <>
                                     Choose the plan that{" "}
-                                    <span className="bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                                    <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
                                         fits your scan needs.
                                     </span>
                                 </>
                             )}
                         </h1>
-                        <p className="mt-4 text-base leading-relaxed text-slate-500">
+                        <p className="mt-3 sm:mt-4 text-xs sm:text-sm lg:text-base leading-relaxed text-slate-300 max-w-xl">
                             {t(
                                 "Start with core medication analysis for free. Upgrade when you need personal safety context, family profiles, medication memory, and export-ready reports.",
                                 "ابدأ بتحليل الأدوية الأساسي مجانًا. قم بالترقية عندما تحتاج إلى سياق أمان شخصي وملفات عائلية وذاكرة أدوية وتقارير جاهزة للتصدير."
@@ -220,7 +214,7 @@ export default function PricingPage() {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                         {[
                             { icon: Clock,   labelEn: "Fast setup",       labelAr: "إعداد سريع",          valueEn: "No card for Free",     valueAr: "بدون بطاقة للمجاني", color: "cyan"    },
                             { icon: Shield,  labelEn: "Medical safety",   labelAr: "أمان طبي",           valueEn: "Review-focused",       valueAr: "مُركّز على المراجعة",  color: "emerald" },
@@ -228,14 +222,13 @@ export default function PricingPage() {
                         ].map((item) => (
                             <div
                                 key={item.labelEn}
-                                className="rounded-2xl border border-white/[0.07] p-4"
-                                style={{ background: "var(--q-glass-2)" }}
+                                className="stat-card"
                             >
-                                <div className={cn("icon-badge w-9 h-9 rounded-xl mb-3", `icon-badge-${item.color}`)}>
+                                <div className={cn("icon-badge w-8 h-8 sm:w-9 sm:h-9 rounded-xl mb-2 sm:mb-3", `icon-badge-${item.color}`)}>
                                     <item.icon className="h-4 w-4" />
                                 </div>
-                                <p className="text-sm font-bold text-white">{isArabic ? item.labelAr : item.labelEn}</p>
-                                <p className="mt-1 text-[11px] text-slate-600">{isArabic ? item.valueAr : item.valueEn}</p>
+                                <p className="text-xs sm:text-sm font-bold text-white truncate">{isArabic ? item.labelAr : item.labelEn}</p>
+                                <p className="mt-0.5 text-[10px] sm:text-[11px] text-slate-400 truncate">{isArabic ? item.valueAr : item.valueEn}</p>
                             </div>
                         ))}
                     </div>
@@ -244,33 +237,33 @@ export default function PricingPage() {
                 {/* ── PLAN CARDS ───────────────────────────────── */}
                 <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     {/* Free plan */}
-                    <GlassCard accent="cyan" className="flex h-full flex-col p-7" hoverEffect={false}>
-                        <div className={cn("flex items-start justify-between gap-4", isArabic ? "flex-row-reverse" : "")}>
-                            <div className={isArabic ? "text-right" : ""}>
-                                <p className="text-xs font-bold uppercase tracking-widest text-cyan-400/70">
-                                    {t("Free", "مجاني")}
+                    <GlassCard accent="cyan" className="flex h-full flex-col p-6 sm:p-8" hoverEffect={false}>
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">
+                                    {t("Free Plan", "الخطة المجانية")}
                                 </p>
-                                <h2 className="mt-2 text-4xl font-black text-white">$0</h2>
-                                <p className="mt-2 text-sm text-slate-500">
+                                <h2 className="mt-2 text-3xl sm:text-4xl font-black text-white">$0</h2>
+                                <p className="mt-1.5 text-xs sm:text-sm text-slate-400">
                                     {t(
                                         "For trying QURE AI and occasional scans.",
                                         "لتجربة QURE AI والفحوصات العرضية."
                                     )}
                                 </p>
                             </div>
-                            <div className="icon-badge icon-badge-cyan w-12 h-12 rounded-xl shrink-0">
+                            <div className="icon-badge icon-badge-cyan w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0">
                                 <Sparkles className="h-6 w-6" />
                             </div>
                         </div>
 
-                        <div className="my-6 h-px bg-white/[0.06]" />
+                        <div className="my-5 sm:my-6 h-px bg-white/[0.08]" />
                         <FeatureList items={freeFeatures} accent="cyan" isArabic={isArabic} />
 
-                        <div className="mt-auto pt-8">
+                        <div className="mt-auto pt-6 sm:pt-8">
                             <Button
                                 disabled={plan === "free" || loading}
                                 variant="outline"
-                                className="w-full border-white/10 text-slate-500"
+                                className="w-full border-white/15 text-slate-300 font-semibold"
                             >
                                 {loading
                                     ? t("Checking plan...", "جاري التحقق...")
@@ -284,43 +277,43 @@ export default function PricingPage() {
                     {/* Ultra plan */}
                     <GlassCard
                         accent="amber"
-                        className="relative flex h-full flex-col p-7"
+                        className="relative flex h-full flex-col p-6 sm:p-8"
                         hoverEffect={false}
-                        style={{ background: "rgba(245,158,11,0.04)", borderColor: "rgba(245,158,11,0.25)" }}
+                        style={{ background: "rgba(245,158,11,0.05)", borderColor: "rgba(245,158,11,0.30)" }}
                     >
                         {/* Best value badge */}
-                        <div className="absolute right-5 top-5 flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-black">
+                        <div className="absolute end-5 top-5 flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-black shadow-md">
                             <Star className="h-3 w-3 fill-current" />
-                            {t("Best value", "أفضل قيمة")}
+                            <span>{t("Best value", "أفضل قيمة")}</span>
                         </div>
 
-                        <div className={cn("flex items-start justify-between gap-4 pr-24", isArabic ? "flex-row-reverse pl-24 pr-0" : "")}>
-                            <div className={isArabic ? "text-right" : ""}>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-400/70">
-                                    {t("Ultra", "ألترا")}
+                        <div className="flex items-start justify-between gap-4 pe-24">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-amber-400">
+                                    {t("Ultra Plan", "خطة ألترا")}
                                 </p>
                                 <div className="mt-2 flex items-end gap-2">
-                                    <h2 className="text-4xl font-black text-white">$9</h2>
-                                    <span className="pb-1.5 text-sm text-slate-500">
+                                    <h2 className="text-3xl sm:text-4xl font-black text-white">$9</h2>
+                                    <span className="pb-1 text-xs sm:text-sm text-slate-400">
                                         {t("/ month", "/ شهر")}
                                     </span>
                                 </div>
-                                <p className="mt-2 text-sm text-amber-300/60">
+                                <p className="mt-1.5 text-xs sm:text-sm text-amber-200/75">
                                     {t(
                                         "For regular scanning, family care, and personal safety checks.",
                                         "للفحص المنتظم، ورعاية الأسرة، والفحوصات الصحية الشخصية."
                                     )}
                                 </p>
                             </div>
-                            <div className="icon-badge icon-badge-amber w-12 h-12 rounded-xl shrink-0">
+                            <div className="icon-badge icon-badge-amber w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0">
                                 <Zap className="h-6 w-6" />
                             </div>
                         </div>
 
-                        <div className="my-6 h-px bg-amber-400/10" />
+                        <div className="my-5 sm:my-6 h-px bg-amber-400/20" />
                         <FeatureList items={ultraFeatures} accent="amber" isArabic={isArabic} />
 
-                        <div className="mt-auto pt-8">
+                        <div className="mt-auto pt-6 sm:pt-8">
                             {loading ? (
                                 <div className="h-11 w-full skeleton rounded-xl" />
                             ) : (
@@ -331,11 +324,13 @@ export default function PricingPage() {
                                     className="w-full gap-2 text-sm font-bold"
                                     glow
                                 >
-                                    {plan === "ultra"
-                                        ? t("Ultra is active", "ألترا مفعّل")
-                                        : t("Upgrade to Ultra", "الترقية إلى ألترا")}
+                                    <span>
+                                        {plan === "ultra"
+                                            ? t("Ultra is active", "ألترا مفعّل")
+                                            : t("Upgrade to Ultra", "الترقية إلى ألترا")}
+                                    </span>
                                     {plan !== "ultra" && (
-                                        <ArrowRight className={cn("h-4 w-4", isArabic ? "rotate-180" : "")} />
+                                        <ArrowRight className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
                                     )}
                                 </Button>
                             )}
@@ -348,18 +343,15 @@ export default function PricingPage() {
                     {valueCards.map((item) => (
                         <div
                             key={item.en.title}
-                            className={cn(
-                                "relative overflow-hidden rounded-2xl border border-white/[0.07] p-6 hover-lift",
-                            )}
-                            style={{ background: "var(--q-glass-2)" }}
+                            className="stat-card p-5 sm:p-6"
                         >
-                            <div className={cn(`icon-badge w-10 h-10 rounded-xl mb-5`, iconBadgeMap[item.color] || "icon-badge-cyan")}>
+                            <div className={cn("icon-badge w-10 h-10 rounded-xl mb-4", iconBadgeMap[item.color] || "icon-badge-cyan")}>
                                 <item.icon className="h-5 w-5" />
                             </div>
-                            <h3 className={cn("font-bold text-white", isArabic ? "text-right" : "")}>
+                            <h3 className="font-bold text-white text-base">
                                 {isArabic ? item.ar.title : item.en.title}
                             </h3>
-                            <p className={cn("mt-2 text-sm leading-relaxed text-slate-500", isArabic ? "text-right" : "")}>
+                            <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
                                 {isArabic ? item.ar.text : item.en.text}
                             </p>
                         </div>
@@ -369,40 +361,40 @@ export default function PricingPage() {
                 {/* ── COMPARISON TABLE ─────────────────────────── */}
                 <section>
                     <GlassCard className="overflow-hidden" hoverEffect={false}>
-                        <div className={cn("border-b border-white/[0.06] p-6", isArabic ? "text-right" : "")}>
-                            <h2 className="text-2xl font-bold text-white">
+                        <div className="border-b border-white/[0.08] p-5 sm:p-6">
+                            <h2 className="text-xl sm:text-2xl font-bold text-white">
                                 {t("Plan comparison", "مقارنة الخطط")}
                             </h2>
-                            <p className="mt-1 text-sm text-slate-600">
+                            <p className="mt-1 text-xs sm:text-sm text-slate-400">
                                 {t("A clear view of what changes when you upgrade.", "رؤية واضحة لما يتغير عند الترقية.")}
                             </p>
                         </div>
 
-                        <div className="overflow-x-auto relative">
-                            <table className="w-full min-w-[560px] text-sm">
+                        <div className="overflow-x-auto relative no-scrollbar">
+                            <table className="w-full min-w-[520px] text-xs sm:text-sm">
                                 <thead>
-                                    <tr className="border-b border-white/[0.06]">
-                                        <th className={cn("p-4 font-semibold text-slate-600", isArabic ? "text-right" : "text-left")}>
+                                    <tr className="border-b border-white/[0.08] bg-white/[0.02]">
+                                        <th className="p-3.5 sm:p-4 font-bold text-slate-400 text-start">
                                             {t("Feature", "الميزة")}
                                         </th>
-                                        <th className={cn("p-4 font-semibold text-cyan-400/70", isArabic ? "text-right" : "text-left")}>
+                                        <th className="p-3.5 sm:p-4 font-bold text-cyan-400 text-start">
                                             {t("Free", "مجاني")}
                                         </th>
-                                        <th className={cn("bg-amber-400/[0.05] p-4 font-semibold text-amber-300", isArabic ? "text-right" : "text-left")}>
+                                        <th className="bg-amber-400/[0.08] p-3.5 sm:p-4 font-bold text-amber-300 text-start">
                                             {t("Ultra", "ألترا")}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {comparisonRows.map((row) => (
-                                        <tr key={row.en} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
-                                            <td className={cn("p-4 text-slate-400 font-medium text-sm", isArabic ? "text-right" : "text-left")}>
+                                        <tr key={row.en} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition-colors">
+                                            <td className="p-3.5 sm:p-4 text-slate-300 font-medium text-start">
                                                 {isArabic ? row.ar : row.en}
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-3.5 sm:p-4 text-start">
                                                 <ComparisonValue value={row.free} />
                                             </td>
-                                            <td className="bg-amber-400/[0.03] p-4">
+                                            <td className="bg-amber-400/[0.03] p-3.5 sm:p-4 text-start">
                                                 <ComparisonValue value={row.ultra} highlighted />
                                             </td>
                                         </tr>
@@ -414,33 +406,35 @@ export default function PricingPage() {
                 </section>
 
                 {/* ── VOUCHER + FAQ ─────────────────────────────── */}
-                <section className="grid grid-cols-1 gap-5 lg:grid-cols-[0.75fr_1.25fr]">
+                <section className="grid grid-cols-1 gap-5 lg:grid-cols-[0.8fr_1.2fr]">
                     {/* Voucher */}
-                    <GlassCard accent="cyan" hoverEffect={false} className="p-6">
-                        <div className="icon-badge icon-badge-cyan w-11 h-11 rounded-xl mb-4">
-                            <Gift className="h-5 w-5" />
+                    <GlassCard accent="cyan" hoverEffect={false} className="p-6 sm:p-7 flex flex-col justify-between">
+                        <div>
+                            <div className="icon-badge icon-badge-cyan w-11 h-11 rounded-xl mb-4">
+                                <Gift className="h-5 w-5" />
+                            </div>
+                            <h2 className="text-lg sm:text-xl font-bold text-white">
+                                {t("Have a voucher?", "لديك قسيمة؟")}
+                            </h2>
+                            <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
+                                {t(
+                                    "Redeem a code from your profile to add credits or unlock plan benefits tied to your account.",
+                                    "استبدل رمزًا من ملفك الشخصي لإضافة رصيد أو فتح مزايا الخطة المرتبطة بحسابك."
+                                )}
+                            </p>
                         </div>
-                        <h2 className={cn("text-xl font-bold text-white", isArabic ? "text-right" : "")}>
-                            {t("Have a voucher?", "لديك قسيمة؟")}
-                        </h2>
-                        <p className={cn("mt-2 text-sm leading-relaxed text-slate-500", isArabic ? "text-right" : "")}>
-                            {t(
-                                "Redeem a code from your profile to add credits or unlock plan benefits tied to your account.",
-                                "استبدل رمزًا من ملفك الشخصي لإضافة رصيد أو فتح مزايا الخطة المرتبطة بحسابك."
-                            )}
-                        </p>
-                        <Link href="/profile" className="mt-5 inline-flex">
-                            <Button variant="outline" className={cn("gap-2 border-cyan-400/20 text-cyan-300 hover:bg-cyan-400/8", isArabic ? "flex-row-reverse" : "")}>
-                                {t("Redeem code", "استبدال الكود")}
-                                <ArrowRight className={cn("h-4 w-4", isArabic ? "rotate-180" : "")} />
+                        <Link href="/profile" className="mt-6 inline-flex">
+                            <Button variant="outline" className="gap-2 border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10 font-semibold text-xs sm:text-sm">
+                                <span>{t("Redeem code", "استبدال الكود")}</span>
+                                <ArrowRight className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
                             </Button>
                         </Link>
                     </GlassCard>
 
                     {/* FAQ accordion */}
                     <div className="space-y-3">
-                        <p className={cn("text-xs font-bold uppercase tracking-[0.14em] text-slate-600 mb-4", isArabic ? "text-right" : "")}>
-                            {t("FAQ", "الأسئلة الشائعة")}
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400 mb-3">
+                            {t("Frequently Asked Questions", "الأسئلة الشائعة")}
                         </p>
                         {faqs.map((item) => (
                             <FaqItem key={item.q.en} q={item.q} a={item.a} isArabic={isArabic} />

@@ -94,25 +94,25 @@ export function ModeSelector({ activeMode, onModeChange, isArabic }: ModeSelecto
             <button
                 onClick={() => setOpen(!open)}
                 className={cn(
-                    "flex items-center gap-2 pl-3 pr-2 py-2 rounded-2xl text-sm font-semibold transition-all",
-                    "border backdrop-blur-xl",
+                    "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold transition-all",
+                    "border backdrop-blur-xl shrink-0",
                     borderActive[activeMode],
                     "text-white hover:brightness-110",
                 )}
                 style={{ background: "rgba(15,20,30,0.9)" }}
             >
-                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", iconBg[activeMode])}>
-                    <ActiveIcon className={cn("w-4 h-4", iconText[activeMode])} />
+                <div className={cn("w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0", iconBg[activeMode])}>
+                    <ActiveIcon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", iconText[activeMode])} />
                 </div>
-                <span className="hidden sm:inline">{isArabic ? active.labelAr : active.labelEn}</span>
-                <ChevronDown className={cn("w-3.5 h-3.5 text-white/40 transition-transform duration-200", open && "rotate-180")} />
+                <span className="hidden xs:inline sm:inline text-xs sm:text-sm truncate">{isArabic ? active.labelAr : active.labelEn}</span>
+                <ChevronDown className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/40 transition-transform duration-200 shrink-0", open && "rotate-180")} />
             </button>
 
             {/* ── Dropdown (opens upward from bottom bar) ── */}
             {open && (
                 <div
                     className={cn(
-                        "absolute bottom-full mb-2 z-50 w-72 rounded-2xl border border-white/[0.08] p-1.5",
+                        "absolute bottom-full mb-2 z-50 w-72 max-w-[calc(100vw-32px)] rounded-2xl border border-white/[0.08] p-1.5",
                         "shadow-2xl shadow-black/60 backdrop-blur-2xl animate-fade-in",
                         isArabic ? "right-0" : "left-0",
                     )}
