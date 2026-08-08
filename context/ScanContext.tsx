@@ -342,7 +342,12 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                     if ((ocrData as any)?.retryAfterSeconds) {
                         throw new Error(`System cooling down. Please retry in ${(ocrData as any).retryAfterSeconds}s.`);
                     }
-                    throw new Error((ocrData as any).error);
+                    const localizedError = isArabic
+                        ? ((ocrData as any).error || "الصورة المرفوعة غير واضحة أو لا تحتوي على ملصق دواء مقروء. يرجى التقاط صورة واضحة ومباشرة لعلبة الدواء أو الروشتة في إضاءة جيدة.")
+                        : ((ocrData as any).errorEn || (ocrData as any).error || "The uploaded image is blurry or does not appear to contain a readable medication label. Please upload a clear photo.");
+                    const err: any = new Error(localizedError);
+                    err.isUnclearOrNonMedication = (ocrData as any)?.isUnclearOrNonMedication;
+                    throw err;
                 } else {
                     ocrText = String((ocrData as any)?.extractedText || "").trim();
                 }

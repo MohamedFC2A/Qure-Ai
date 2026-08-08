@@ -3,7 +3,27 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, ScanLine, FileText, Brain, CheckCircle, Loader2, ListTodo, History, Sparkles, Zap, Timer, AlertCircle, AlertTriangle, ChevronRight, Users } from 'lucide-react';
+import {
+    Upload,
+    X,
+    ScanLine,
+    FileText,
+    Brain,
+    CheckCircle,
+    Loader2,
+    History,
+    Sparkles,
+    Zap,
+    Timer,
+    AlertCircle,
+    AlertTriangle,
+    ChevronRight,
+    Users,
+    Camera,
+    Image as ImageIcon,
+    ShieldAlert,
+    RefreshCw,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
@@ -14,6 +34,15 @@ import Link from 'next/link';
 import { useUser } from '@/context/UserContext';
 import { AI_DISPLAY_NAME } from '@/lib/ai/branding';
 import { useScan } from '@/context/ScanContext';
+
+interface ImageQualityInfo {
+    width: number;
+    height: number;
+    sizeMB: number;
+    isHighClarity: boolean;
+    isAcceptable: boolean;
+    isTooSmall: boolean;
+}
 
 export const ScannerInterface = () => {
     const { user, plan, loading } = useUser();
@@ -43,6 +72,7 @@ export const ScannerInterface = () => {
 
     const [recentHistory, setRecentHistory] = useState<any[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
+    const [qualityInfo, setQualityInfo] = useState<ImageQualityInfo | null>(null);
 
     const [careProfiles, setCareProfiles] = useState<Array<{ id: string; display_name: string; relationship?: string | null }>>([]);
     const [careLoading, setCareLoading] = useState(false);
@@ -50,8 +80,38 @@ export const ScannerInterface = () => {
     const [careTempId, setCareTempId] = useState<string | null>(null);
     const isLocalDevUser = process.env.NODE_ENV === "development" && user?.id === "local-dev-user";
 
+    // Analyze image resolution upon selection
+    const analyzeImageQuality = (imgFile: File) => {
+        const sizeMB = Number((imgFile.size / (1024 * 1024)).toFixed(2));
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(imgFile);
+        img.onload = () => {
+            const width = img.naturalWidth || img.width;
+            const height = img.naturalHeight || img.height;
+            const isHighClarity = width >= 800 && height >= 600;
+            const isAcceptable = (width >= 350 && height >= 350) && !isHighClarity;
+            const isTooSmall = width < 350 || height < 350;
+
+            setQualityInfo({
+                width,
+                height,
+                sizeMB,
+                isHighClarity,
+                isAcceptable,
+                isTooSmall,
+            });
+            URL.revokeObjectURL(objectUrl);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            setQualityInfo(null);
+        };
+        img.src = objectUrl;
+    };
+
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles[0]) {
+            analyzeImageQuality(acceptedFiles[0]);
             setFile(acceptedFiles[0]);
         }
     }, [setFile]);
@@ -74,7 +134,6 @@ export const ScannerInterface = () => {
                 .limit(5);
 
             if (res.error && String(res.error.message || "").toLowerCase().includes("profile_id")) {
-                // Legacy fallback (before profile_id existed)
                 res = await supabase
                     .from("medication_history")
                     .select("id, drug_name, manufacturer, created_at")
@@ -119,7 +178,6 @@ export const ScannerInterface = () => {
                 .order("created_at", { ascending: true });
 
             if (res.error) {
-                // If the table isn't available yet, fall back to "self".
                 setCareProfiles([{ id: user.id, display_name: String(user.email || "Me"), relationship: "self" }]);
                 return;
             }
@@ -130,7 +188,6 @@ export const ScannerInterface = () => {
                 relationship: r.relationship ?? null,
             }));
 
-            // Keep self first if present.
             rows.sort((a, b) => {
                 const aSelf = a.id === user.id || a.relationship === "self";
                 const bSelf = b.id === user.id || b.relationship === "self";
@@ -149,10 +206,11 @@ export const ScannerInterface = () => {
         fetchCareProfiles();
     }, [fetchCareProfiles]);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({
         onDrop,
         accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
         maxFiles: 1,
+        noClick: false,
     });
 
     useEffect(() => {
@@ -195,141 +253,86 @@ export const ScannerInterface = () => {
         void startScan(chosen);
     };
 
-    // calculate current duration for running step?
-    // Not strictly needed if steps are fast, but nice to have.
-    // For simplicity, we just show "..." or a spinner when running, and final time when done.
-
-    // Progress List Component
+    // Progress Timeline Component
     const Timeline = () => {
         const totalStepsCount = steps.length || 1;
         const doneCount = steps.filter((s) => s.status === "done").length;
         const runningIndex = steps.findIndex((s) => s.status === "running");
         const hasError = steps.some((s) => s.status === "error") || Boolean(errorMsg);
 
-        const progress =
-            (doneCount + (runningIndex !== -1 && isScanning ? 0.5 : 0)) / totalStepsCount;
+        const progress = (doneCount + (runningIndex !== -1 && isScanning ? 0.5 : 0)) / totalStepsCount;
         const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
 
         const statusLabel = hasError
-            ? t("Error", "خطأ")
+            ? t("Quality Check", "تحقق من الجودة")
             : isScanning
-                ? t("Running", "جارٍ")
+                ? t("Analyzing", "جارٍ الفحص")
                 : t("Ready", "جاهز");
 
         return (
             <div className="w-full lg:mr-12 relative group">
-                {/* Premium Glassmorphism Card */}
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-xl" />
 
-                <div className="relative bg-black/50 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-white/10 shadow-2xl hover:shadow-cyan-500/10 transition-all duration-500">
-                    {/* Header - Compact on mobile */}
+                <div className="relative bg-black/50 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-white/10 shadow-2xl">
+                    {/* Header */}
                     <div className="relative">
-                        <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl blur-sm opacity-60" />
-                        <div className="relative flex items-start justify-between gap-3 sm:gap-4 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 border border-white/10">
+                        <div className="relative flex items-start justify-between gap-3 sm:gap-4 bg-white/[0.03] backdrop-blur-sm rounded-2xl p-4 border border-white/10">
                             <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-                                    <div className="relative">
-                                        {/* Remove pulsing blur on mobile for performance */}
-                                        <div className="hidden sm:block absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg sm:rounded-xl blur-sm sm:blur-md opacity-50 animate-pulse" />
-                                        <div className="relative p-2 sm:p-2.5 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg sm:rounded-xl border border-cyan-400/30">
-                                            <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />
-                                        </div>
+                                <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
+                                    <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl border border-cyan-400/30">
+                                        <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />
                                     </div>
-                                    <h3 className="text-white font-bold text-base sm:text-lg lg:text-xl bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent">
-                                        {AI_DISPLAY_NAME} Processor
+                                    <h3 className="text-white font-bold text-base sm:text-lg">
+                                        {AI_DISPLAY_NAME} Engine
                                     </h3>
                                 </div>
-                                <p className="text-[11px] sm:text-xs lg:text-sm text-white/60 leading-relaxed ml-10 sm:ml-[52px]">
+                                <p className="text-xs text-white/60 leading-relaxed">
                                     {t(
-                                        "Browse freely — your scan continues in the background.",
-                                        "تقدر تتصفح بحرّية — الفحص مستمر في الخلفية."
+                                        "Extracting active substances and verifying safety profile.",
+                                        "قراءة المواد الفعالة والتحقق من التداخلات والسلامة الدوائية."
                                     )}
                                 </p>
                             </div>
 
-                            <div className="shrink-0 flex flex-col items-end gap-1.5 sm:gap-2">
-                                {/* Animated Status Badge */}
+                            <div className="shrink-0 flex flex-col items-end gap-1.5">
                                 <div className={cn(
-                                    "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold border backdrop-blur-sm transition-all duration-300",
+                                    "px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-sm",
                                     hasError
-                                        ? "bg-red-500/20 text-red-200 border-red-400/40 shadow-lg shadow-red-500/20"
+                                        ? "bg-amber-500/20 text-amber-200 border-amber-400/40"
                                         : isScanning
-                                            ? "bg-cyan-500/20 text-cyan-100 border-cyan-400/40 shadow-lg shadow-cyan-500/20 animate-pulse"
-                                            : "bg-emerald-500/20 text-emerald-100 border-emerald-400/40 shadow-lg shadow-emerald-500/10"
+                                            ? "bg-cyan-500/20 text-cyan-100 border-cyan-400/40 animate-pulse"
+                                            : "bg-emerald-500/20 text-emerald-100 border-emerald-400/40"
                                 )}>
-                                    <span className="flex items-center gap-1 sm:gap-1.5">
-                                        <span className={cn(
-                                            "w-1.5 h-1.5 rounded-full",
-                                            hasError ? "bg-red-400" : isScanning ? "bg-cyan-400 animate-pulse" : "bg-emerald-400"
-                                        )} />
-                                        {statusLabel}
-                                    </span>
+                                    <span>{statusLabel}</span>
                                 </div>
 
-                                {/* Timer */}
-                                <div className="relative group/timer">
-                                    <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full opacity-0 group-hover/timer:opacity-100 transition-opacity duration-300" />
-                                    <div className="relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-full border border-white/20">
-                                        <Timer className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
-                                        <span className="text-white font-mono text-xs sm:text-sm font-semibold tabular-nums">
-                                            {`${totalDuration}s`}
-                                        </span>
-                                    </div>
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-full border border-white/10">
+                                    <Timer className="w-3.5 h-3.5 text-cyan-300" />
+                                    <span className="text-white font-mono text-xs font-semibold tabular-nums">
+                                        {`${totalDuration}s`}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Enhanced Progress Section */}
-                    <div className="mt-4 sm:mt-6">
-                        <div className="flex items-center justify-between text-[10px] sm:text-xs text-white/60 mb-2 sm:mb-3">
-                            <span className="font-semibold">{t("Progress", "التقدم")}</span>
-                            <span className="font-mono font-bold tabular-nums text-cyan-300">{doneCount}/{totalStepsCount}</span>
+                    {/* Progress Bar */}
+                    <div className="mt-5">
+                        <div className="flex items-center justify-between text-xs text-white/60 mb-2">
+                            <span className="font-semibold">{t("Progress", "نسبة الإنجاز")}</span>
+                            <span className="font-mono font-bold tabular-nums text-cyan-300">{percent}%</span>
                         </div>
 
-                        {/* Optimized Progress Bar - No shimmer on mobile */}
-                        <div className="relative">
-                            <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-sm" />
+                        <div className="relative h-2.5 rounded-full bg-white/10 overflow-hidden border border-white/10">
                             <div
-                                className="relative h-2.5 sm:h-3 rounded-full bg-gradient-to-r from-white/5 to-white/10 overflow-hidden border border-white/20 shadow-inner"
-                                role="progressbar"
-                                aria-valuenow={percent}
-                                aria-valuemin={0}
-                                aria-valuemax={100}
-                                aria-label={t("Scan progress", "تقدم الفحص")}
-                                style={{ willChange: 'auto' }}
-                            >
-                                {/* Simplified gradient fill - no shimmer on mobile */}
-                                <div
-                                    className={cn(
-                                        "absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out shadow-lg shadow-cyan-500/50",
-                                        isArabic && "left-auto right-0 bg-gradient-to-l from-cyan-400 via-blue-500 to-purple-500"
-                                    )}
-                                    style={{ width: `${percent}%`, willChange: 'width' }}
-                                >
-                                    {/* Shimmer effect - desktop only */}
-                                    <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]"
-                                        style={{
-                                            backgroundSize: '200% 100%',
-                                            animation: 'shimmer 2s infinite'
-                                        }} />
-                                </div>
-
-                                {/* Percentage text */}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-[9px] sm:text-[10px] font-bold text-white/90 drop-shadow-lg">
-                                        {percent}%
-                                    </span>
-                                </div>
-                            </div>
+                                className="absolute inset-y-0 start-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 rounded-full transition-all duration-500"
+                                style={{ width: `${percent}%` }}
+                            />
                         </div>
                     </div>
 
-                    {/* Enhanced Steps Timeline - Optimized for mobile */}
-                    <div className="relative space-y-3 sm:space-y-4 pl-1 mt-5 sm:mt-7">
-                        {/* Animated Vertical Line */}
-                        <div className="absolute left-[18px] sm:left-[22px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-cyan-500/30 via-blue-500/20 to-purple-500/10 rounded-full" />
-
+                    {/* Steps Timeline */}
+                    <div className="relative space-y-3 pl-1 mt-6">
                         {steps.map((step, index) => {
                             const isDone = step.status === 'done';
                             const isRunning = step.status === 'running';
@@ -341,133 +344,64 @@ export const ScannerInterface = () => {
                                     ? `${((Date.now() - step.startTime) / 1000).toFixed(1)}s`
                                     : "—";
 
-                            const stepStatusLabel = isDone
-                                ? t("Done", "تم")
-                                : isRunning
-                                    ? t("Running", "جارٍ")
-                                    : isError
-                                        ? t("Failed", "فشل")
-                                        : t("Queued", "قيد الانتظار");
-
                             return (
-                                <div key={step.id} className="relative z-10">
-                                    <div className="flex items-start justify-between gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
-                                        <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
-                                            {/* Optimized Step Indicator - No jitter */}
-                                            <div className="relative shrink-0" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
-                                                {/* Glow effect - simplified on mobile, no scale animation */}
-                                                {(isDone || isRunning) && (
-                                                    <div className={cn(
-                                                        "absolute inset-0 rounded-full blur-sm sm:blur-md transition-all duration-500",
-                                                        isDone ? "bg-emerald-400/30 sm:bg-emerald-400/40" : "bg-cyan-400/30 sm:bg-cyan-400/40 animate-pulse"
-                                                    )} />
-                                                )}
-
-                                                <div className={cn(
-                                                    "relative w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center border-2 transition-all duration-500 shadow-lg bg-gradient-to-br backdrop-blur-sm",
-                                                    isDone
-                                                        ? "border-emerald-400/60 from-emerald-500/20 to-emerald-600/10 shadow-emerald-500/30"
-                                                        : isRunning
-                                                            ? "border-cyan-400/60 from-cyan-500/20 to-blue-600/10 shadow-cyan-500/30"
-                                                            : isError
-                                                                ? "border-red-400/60 from-red-500/20 to-red-600/10 shadow-red-500/30"
-                                                                : "border-white/20 from-white/5 to-white/[0.02]"
-                                                )}>
-                                                    {isDone ? (
-                                                        <CheckCircle className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-emerald-300" />
-                                                    ) : isRunning ? (
-                                                        <Loader2 className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-cyan-300 animate-spin" />
-                                                    ) : isError ? (
-                                                        <AlertCircle className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-300" />
-                                                    ) : (
-                                                        <span className="text-xs sm:text-sm font-bold tabular-nums text-white/40">{index + 1}</span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="min-w-0 flex-1 pt-0.5 sm:pt-1">
-                                                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-wrap mb-1 sm:mb-1.5">
-                                                    <span className={cn(
-                                                        "text-xs sm:text-sm lg:text-base font-bold transition-all duration-300 truncate",
-                                                        isDone
-                                                            ? "text-white"
-                                                            : isRunning
-                                                                ? "text-cyan-100"
-                                                                : "text-white/50"
-                                                    )}>
-                                                        {step.label}
-                                                    </span>
-
-                                                    {/* Status Badge */}
-                                                    <span className={cn(
-                                                        "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold border backdrop-blur-sm transition-all duration-300",
-                                                        isDone
-                                                            ? "bg-emerald-500/15 text-emerald-200 border-emerald-400/30 shadow-sm shadow-emerald-500/20"
-                                                            : isRunning
-                                                                ? "bg-cyan-500/15 text-cyan-200 border-cyan-400/30 shadow-sm shadow-cyan-500/20 animate-pulse"
-                                                                : isError
-                                                                    ? "bg-red-500/15 text-red-200 border-red-400/30 shadow-sm shadow-red-500/20"
-                                                                    : "bg-white/5 text-white/50 border-white/10"
-                                                    )}>
-                                                        {stepStatusLabel}
-                                                    </span>
-                                                </div>
-                                                <div className="text-[10px] sm:text-[11px] text-white/40 font-medium">
-                                                    {t("Step", "خطوة")} <span className="font-mono tabular-nums text-white/50">{index + 1}/{totalStepsCount}</span>
-                                                </div>
-                                            </div>
+                                <div key={step.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-full flex items-center justify-center border text-xs font-bold shrink-0",
+                                            isDone ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" :
+                                            isRunning ? "border-cyan-400 bg-cyan-500/20 text-cyan-300 animate-pulse" :
+                                            isError ? "border-amber-400 bg-amber-500/20 text-amber-300" :
+                                            "border-white/20 text-white/40"
+                                        )}>
+                                            {isDone ? <CheckCircle className="w-4 h-4" /> :
+                                             isRunning ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                                             isError ? <AlertTriangle className="w-4 h-4" /> :
+                                             index + 1}
                                         </div>
-
-                                        {/* Duration Badge */}
-                                        <div className="shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-400/20 backdrop-blur-sm">
-                                            <span className="text-[10px] sm:text-xs lg:text-sm text-cyan-300 font-mono font-bold tabular-nums">
-                                                {seconds}
-                                            </span>
-                                        </div>
+                                        <span className={cn("text-xs sm:text-sm font-semibold truncate", isDone ? "text-white" : isRunning ? "text-cyan-200" : "text-white/50")}>
+                                            {step.label}
+                                        </span>
                                     </div>
+                                    <span className="text-xs font-mono font-bold text-cyan-300">{seconds}</span>
                                 </div>
                             );
                         })}
 
+                        {/* Blurry / Non-Medical Quality Feedback Alert */}
                         {errorMsg && (
-                            <div className="mt-4 sm:mt-5 relative animate-in fade-in slide-in-from-top-4 duration-500">
-                                <div className="absolute -inset-[1px] bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-xl blur-sm" />
-                                <div className="relative p-3 sm:p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 backdrop-blur-sm border border-red-400/30 rounded-xl shadow-lg shadow-red-500/10">
-                                    <div className="flex items-start gap-2.5 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 bg-red-500/20 rounded-lg border border-red-400/30 shrink-0">
-                                            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-300" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-red-200 text-xs sm:text-sm font-semibold leading-relaxed">{errorMsg}</p>
+                            <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-amber-200 shadow-xl">
+                                <div className="flex items-start gap-3">
+                                    <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                                    <div className="space-y-2 flex-1">
+                                        <p className="text-xs sm:text-sm font-bold text-white">
+                                            {t("Image Quality Notice", "تنبيه جودة ووضوح الصورة")}
+                                        </p>
+                                        <p className="text-xs text-amber-200/90 leading-relaxed">
+                                            {errorMsg}
+                                        </p>
 
-                                            {errorAction === 'login' && (
-                                                <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
-                                                    <Link href={`/login?next=${encodeURIComponent('/scan')}`}>
-                                                        <Button size="sm" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0 shadow-lg shadow-cyan-500/20 text-xs sm:text-sm">
-                                                            {t("Log in", "تسجيل الدخول")}
-                                                        </Button>
-                                                    </Link>
-                                                    <Link href={`/signup?next=${encodeURIComponent('/scan')}`}>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="border-white/20 text-white/90 hover:bg-white/10 backdrop-blur-sm text-xs sm:text-sm"
-                                                        >
-                                                            {t("Create account", "إنشاء حساب")}
-                                                        </Button>
-                                                    </Link>
-                                                </div>
-                                            )}
+                                        {/* Action Buttons to Retry with Clearer Photo */}
+                                        <div className="pt-2 flex flex-wrap gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    resetScan();
+                                                    setTimeout(() => openFileDialog(), 100);
+                                                }}
+                                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors shadow-md"
+                                            >
+                                                <Camera className="w-3.5 h-3.5" />
+                                                <span>{t("Upload Clearer Photo", "رفع صورة أوضح للدواء")}</span>
+                                            </button>
 
-                                            {errorAction === 'terms' && (
-                                                <div className="mt-3 sm:mt-4">
-                                                    <Link href={`/terms?next=${encodeURIComponent('/scan')}`}>
-                                                        <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0 shadow-lg shadow-amber-500/30 text-xs sm:text-sm">
-                                                            {t("Review & accept terms", "مراجعة والموافقة على الشروط")}
-                                                        </Button>
-                                                    </Link>
-                                                </div>
-                                            )}
+                                            <Button
+                                                onClick={resetScan}
+                                                size="sm"
+                                                variant="outline"
+                                                className="border-white/20 text-white hover:bg-white/10 text-xs"
+                                            >
+                                                {t("Cancel", "إلغاء")}
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
@@ -484,34 +418,39 @@ export const ScannerInterface = () => {
             <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
                 <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-full bg-green-500/20 border border-green-500/30">
-                            <CheckCircle className="w-6 h-6 text-green-400" />
+                        <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                            <CheckCircle className="w-6 h-6 text-emerald-400" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-white">Analysis Complete</h2>
-                            <p className="text-white/50 text-sm">Processed in {totalDuration}s</p>
+                            <h2 className="text-2xl font-bold text-white">
+                                {t("Analysis Complete", "اكتمل الفحص والتحليل الطبي")}
+                            </h2>
+                            <p className="text-white/50 text-sm">
+                                {t("Processed in", "استغرق الفحص")} {totalDuration}s
+                            </p>
                         </div>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
                         <Link href="/dashboard/history">
                             <Button variant="outline" size="sm" className="gap-2 border-white/20 text-white hover:bg-white/10">
-                                <History className="w-4 h-4" /> History
+                                <History className="w-4 h-4" /> {t("History", "السجل")}
                             </Button>
                         </Link>
                         <Button onClick={resetScan} variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-                            Analyze another
+                            {t("Analyze Another", "فحص دواء آخر")}
                         </Button>
                     </div>
                 </div>
                 <MedicalResultCard data={finalResult} />
             </div>
-        )
+        );
     }
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-6 relative p-2 sm:p-3 lg:p-4 overflow-y-auto">
 
+            {/* Profile Selection Modal */}
             <AnimatePresence>
                 {carePickerOpen && (
                     <motion.div
@@ -613,36 +552,67 @@ export const ScannerInterface = () => {
 
             <AnimatePresence mode="wait">
                 {!previewSrc && (
-                    <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-                        <div {...getRootProps()} className={cn(
-                            "relative min-h-[300px] sm:min-h-[340px] border-2 border-dashed rounded-2xl p-6 sm:p-9 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group",
-                            isDragActive ? "border-cyan-300 bg-cyan-300/10" : "border-white/15 hover:border-cyan-400/40 hover:bg-white/[0.04]"
-                        )}>
-                            <input {...getInputProps()} />
-                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/25 flex items-center justify-center mb-5 group-hover:border-cyan-400/50 group-hover:scale-105 transition-all duration-300">
-                                <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
+                    <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+                        
+                        {/* ── Main Dropzone Area ── */}
+                        <div className="flex flex-col gap-4">
+                            <div {...getRootProps()} className={cn(
+                                "relative min-h-[340px] sm:min-h-[380px] border-2 border-dashed rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group overflow-hidden",
+                                isDragActive ? "border-cyan-300 bg-cyan-300/10 scale-[0.99]" : "border-white/15 hover:border-cyan-400/50 hover:bg-white/[0.04] bg-slate-950/40 backdrop-blur-2xl"
+                            )}>
+                                <input {...getInputProps()} />
+
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-cyan-400/20 via-cyan-500/10 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:border-cyan-400/60 transition-all duration-300 shadow-xl shadow-cyan-950/40">
+                                    <ScanLine className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-300" />
+                                </div>
+
+                                <h3 className="text-xl sm:text-2xl font-black text-white mb-2 tracking-tight">
+                                    {t("Upload medication or prescription photo", "ارفع صورة ملصق الدواء أو الروشتة")}
+                                </h3>
+
+                                <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                                    {t(
+                                        "Drag & drop or tap to select a clear, well-lit photo of the box, bottle, or prescription. (JPEG, PNG, WEBP)",
+                                        "اسحب وأفلت أو انقر لالتقاط/اختيار صورة واضحة لعلبة الدواء أو الروشتة في إضاءة جيدة. (JPEG, PNG, WEBP)"
+                                    )}
+                                </p>
+
+                                {/* Accepted Medical Formats Guidance */}
+                                <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full max-w-md">
+                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white">{t("Boxes", "علب الأدوية")}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Clear Name", "الاسم والتركيز")}</p>
+                                    </div>
+                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white">{t("Prescriptions", "الروشتات")}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Legible Text", "خط واضح")}</p>
+                                    </div>
+                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white">{t("Bottles", "العبوات والقطرات")}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Label Visible", "الملصق الرئيسي")}</p>
+                                    </div>
+                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white">{t("Blisters", "شرائط الأقراص")}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Printed Side", "الجانب المطبوع")}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
-                                {t("Upload medication image", "ارفع صورة ملصق الدواء")}
-                            </h3>
-                            <p className="text-slate-400 text-xs sm:text-sm max-w-xs mx-auto leading-relaxed">
-                                {t("Drag & drop or click to upload. Supports JPEG, PNG, WEBP (Max 10MB)", "اسحب وأفلت أو انقر للرفع. يدعم JPEG و PNG و WEBP (حتى 10MB)")}
-                            </p>
-                            <div className="mt-6 flex flex-wrap justify-center gap-2">
-                                <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-slate-300">
-                                    {t("Pills", "حبوب وأقراص")}
-                                </span>
-                                <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-slate-300">
-                                    {t("Bottles", "عبوات وعلب")}
-                                </span>
-                                <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-slate-300">
-                                    {t("Prescriptions", "روشتات ووصفات")}
-                                </span>
+
+                            {/* Helpful Photography Guidance Banner */}
+                            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-3.5 flex items-center gap-3">
+                                <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                                <p className="text-xs text-slate-300 leading-relaxed">
+                                    {t(
+                                        "For high accuracy: Ensure good lighting, avoid glare, and keep the drug name and strength centered.",
+                                        "لضمان دقة القراءة: صوّر الدواء في إضاءة كافية بدون انعكاسات قوية وتأكد من وضوح اسم الدواء وتركيزه."
+                                    )}
+                                </p>
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 sm:p-5 backdrop-blur-xl">
-                            <div className="flex items-center justify-between mb-3">
+                        {/* ── Right Column: Recent Scans ── */}
+                        <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-5 sm:p-6 backdrop-blur-xl shadow-2xl">
+                            <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
                                     <History className="w-4 h-4 text-cyan-400" />
                                     <span>{t("Recent Scans", "الفحوصات الأخيرة")}</span>
@@ -653,7 +623,7 @@ export const ScannerInterface = () => {
                             </div>
 
                             {user && activeCareProfile && careProfiles.length > 1 && (
-                                <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5">
+                                <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
                                     <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
                                         <Users className="w-4 h-4 text-cyan-300 shrink-0" />
                                         <span className="shrink-0 text-slate-500">{t("Active:", "الملف:")}</span>
@@ -672,7 +642,7 @@ export const ScannerInterface = () => {
                             )}
 
                             {!user ? (
-                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
+                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
                                     <p className="mb-3">{t("Log in to use your History and build Medication Memories.", "سجّل الدخول للوصول إلى سجلك وبناء ذاكرة الأدوية الخاصة بك.")}</p>
                                     <Link href="/login">
                                         <Button size="xs" variant="outline" className="text-white border-white/15">
@@ -681,18 +651,18 @@ export const ScannerInterface = () => {
                                     </Link>
                                 </div>
                             ) : historyLoading ? (
-                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-slate-500 text-xs">
+                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-500 text-xs">
                                     {t("Loading history...", "جارٍ تحميل السجل...")}
                                 </div>
                             ) : recentHistory.length === 0 ? (
-                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
+                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
                                     {t("No scans yet. Run your first scan to start your personal database.", "لا توجد فحوصات بعد. أجرِ أول فحص لبدء بناء سجلك الشخصي.")}
                                 </div>
                             ) : (
                                 <div className="space-y-2">
                                     {recentHistory.map((item) => (
                                         <Link key={item.id} href="/dashboard/history">
-                                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:bg-white/[0.07] hover:border-cyan-400/25 transition-all">
+                                            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.07] hover:bg-white/[0.07] hover:border-cyan-400/30 transition-all">
                                                 <div className="min-w-0">
                                                     <p className="text-white font-semibold text-xs truncate">{item.drug_name}</p>
                                                     <p className="text-slate-500 text-[10px] truncate mt-0.5">{item.manufacturer || t("Generic", "عام")} • {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-SA" : "en-US")}</p>
@@ -710,62 +680,82 @@ export const ScannerInterface = () => {
                 {previewSrc && (
                     <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full flex flex-col lg:flex-row gap-6 max-w-6xl items-start">
 
-                        {/* Left: Image Preview */}
-                        <div className="w-full lg:w-1/2 relative rounded-xl overflow-hidden border border-white/10 bg-slate-950/65 shadow-2xl group">
-                            <img src={previewSrc!} alt="Preview" className={cn("w-full h-[420px] object-contain transition-all duration-500", (isScanning) && "opacity-50 scale-95 blur-sm")} />
+                        {/* Left: Image Preview & Pre-Flight Quality Guard */}
+                        <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl group flex flex-col">
+                            
+                            {/* Pre-Flight Quality Bar */}
+                            {qualityInfo && (
+                                <div className="p-3.5 border-b border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-3 text-xs">
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn(
+                                            "w-2 h-2 rounded-full",
+                                            qualityInfo.isHighClarity ? "bg-emerald-400 animate-pulse" :
+                                            qualityInfo.isAcceptable ? "bg-cyan-400" :
+                                            "bg-amber-400"
+                                        )} />
+                                        <span className="font-bold text-white">
+                                            {qualityInfo.isHighClarity ? t("High Clarity Resolution", "دقة ممتازة للقراءة") :
+                                             qualityInfo.isAcceptable ? t("Acceptable Clarity", "دقة مقبولة") :
+                                             t("Low Resolution Image", "صورة منخفضة الدقة")}
+                                        </span>
+                                    </div>
+                                    <span className="font-mono text-slate-400 text-[11px]">
+                                        {qualityInfo.width}×{qualityInfo.height} px • {qualityInfo.sizeMB} MB
+                                    </span>
+                                </div>
+                            )}
 
-                            {!isScanning && !finalResult && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/65 backdrop-blur-sm">
-                                    <div className="flex flex-col gap-4 items-center">
-                                        {/* Glowing Ultra-Shiny Start Analysis Button */}
-                                        <div className="relative">
+                            {/* Image Container */}
+                            <div className="relative w-full h-[400px] flex items-center justify-center p-4 bg-black/40">
+                                <img
+                                    src={previewSrc!}
+                                    alt="Medication Preview"
+                                    className={cn(
+                                        "max-w-full max-h-full object-contain rounded-2xl transition-all duration-500",
+                                        isScanning && "opacity-50 scale-95 blur-sm"
+                                    )}
+                                />
+
+                                {!isScanning && !finalResult && (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+                                        <div className="flex flex-col gap-3.5 items-center max-w-sm text-center">
+                                            
+                                            {/* Glowing Ultra-Shiny Start Analysis Button */}
                                             <button
                                                 onClick={openCarePickerAndStart}
-                                                className="shiny-cta-btn gap-3.5 px-12 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide"
+                                                className="shiny-cta-btn w-full gap-3.5 px-10 sm:px-14 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide"
                                             >
                                                 <ScanLine className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
-                                                <span>{t("Start Analysis Now", "ابدأ الفحص الآن")}</span>
+                                                <span>{t("Start Medication Scan Now", "ابدأ فحص الدواء الآن")}</span>
+                                            </button>
+
+                                            <button
+                                                onClick={() => {
+                                                    resetScan();
+                                                    setTimeout(() => openFileDialog(), 100);
+                                                }}
+                                                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-white/20 bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs sm:text-sm font-semibold transition-all"
+                                            >
+                                                <Camera className="w-4 h-4" />
+                                                <span>{t("Choose Clearer Photo", "اختيار صورة أوضح")}</span>
                                             </button>
                                         </div>
 
-                                        <Button
+                                        <button
                                             onClick={resetScan}
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-slate-500 hover:text-white gap-2"
+                                            className="absolute top-4 end-4 p-2.5 bg-black/60 hover:bg-rose-500/80 rounded-2xl text-white/70 hover:text-white transition-all duration-200 backdrop-blur-md border border-white/10"
+                                            title={t("Cancel", "إلغاء")}
                                         >
-                                            <X className="w-3.5 h-3.5" />
-                                            {t("Change Image", "تغيير الصورة")}
-                                        </Button>
+                                            <X className="w-4 h-4" />
+                                        </button>
                                     </div>
-
-                                    <button
-                                        onClick={resetScan}
-                                        className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-rose-500/80 rounded-xl text-white/60 hover:text-white transition-all duration-200 backdrop-blur-md border border-white/10"
-                                        title={t("Cancel", "إلغاء")}
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            )}
-
+                                )}
+                            </div>
                         </div>
 
-                        {/* Right: Timeline */}
+                        {/* Right: Timeline & Analysis Progress */}
                         <div className="w-full lg:w-1/2">
                             <Timeline />
-
-                            {!isScanning && !finalResult && (
-                                <div className="mt-6 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex gap-3">
-                                    <Sparkles className="w-5 h-5 text-blue-400 shrink-0" />
-                                    <div>
-                                        <h4 className="text-white text-sm font-bold mb-1">Pro Tip</h4>
-                                        <p className="text-white/60 text-xs leading-relaxed">
-                                            For best results, ensure the medication name and dosage are clearly visible and well-lit.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </motion.div>
                 )}

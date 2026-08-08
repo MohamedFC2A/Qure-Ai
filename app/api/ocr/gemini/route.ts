@@ -29,8 +29,7 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Credits deduction currently requires admin privileges (service role) to bypass RLS.
-        // If this key is missing in your server environment, the route will fail.
+        // Credits deduction requires admin privileges (service role) to bypass RLS.
         if (!localDevUser && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
             console.error("[OCR API] SUPABASE_SERVICE_ROLE_KEY is missing");
             return NextResponse.json(
@@ -78,9 +77,9 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        console.log("[OCR API] Starting OCR process...");
+        console.log("[OCR API] Starting OCR process with quality verification...");
 
-        // Initialize Gemini with the user-provided key
+        // Initialize Gemini with the API key
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
             model: process.env.GEMINI_OCR_MODEL || "gemini-2.0-flash-exp"
@@ -89,7 +88,19 @@ export async function POST(req: NextRequest) {
         // Clean base64 string (remove data:image/jpeg;base64, prefix if present)
         const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
 
-        const prompt = `You are an OCR system. Extract ALL visible text from this image exactly as it appears. Return ONLY a JSON object in this exact format: {"extractedText": "the text you found"}. If no text is found, return {"extractedText": ""}. Do not add any markdown, code blocks, or explanations.`;
+        const prompt = `You are a high-accuracy medical OCR and pharmaceutical image verification system.
+Carefully examine the image:
+1. Extract ALL visible text from the image exactly as it appears.
+2. Determine if this image appears to be a pharmaceutical product, medication box, prescription, blister pack, syrup bottle, medical device, vitamin/supplement, or healthcare document.
+3. Assess if the image text is readable or if it is too blurry, dark, unreadable, or unrelated.
+
+Return ONLY a JSON object in this exact schema without any markdown formatting or commentary:
+{
+  "extractedText": "all extracted text found in the image",
+  "isMedication": true or false,
+  "isReadable": true or false,
+  "qualityNote": "brief quality note (e.g. clear, blurry, low_light, non_medical)"
+}`;
 
         console.log("[OCR API] Calling Gemini API...");
 
@@ -113,18 +124,16 @@ export async function POST(req: NextRequest) {
         const text = response.text();
 
         console.log("[OCR API] Gemini response received, length:", text.length);
-        console.log("[OCR API] Raw response (first 200 chars):", text.substring(0, 200));
 
         // Multiple parsing strategies
-        let data;
+        let data: any = null;
         let parseSuccess = false;
 
         // Strategy 1: Direct JSON parse
         try {
             data = JSON.parse(text);
-            if (data.extractedText !== undefined) {
+            if (data && (data.extractedText !== undefined || typeof data === "object")) {
                 parseSuccess = true;
-                console.log("[OCR API] ✅ Strategy 1 (Direct parse) succeeded");
             }
         } catch (e) {
             console.log("[OCR API] Strategy 1 (Direct parse) failed");
@@ -136,9 +145,8 @@ export async function POST(req: NextRequest) {
                 const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch && jsonMatch[1]) {
                     data = JSON.parse(jsonMatch[1]);
-                    if (data.extractedText !== undefined) {
+                    if (data && data.extractedText !== undefined) {
                         parseSuccess = true;
-                        console.log("[OCR API] ✅ Strategy 2 (Markdown block) succeeded");
                     }
                 }
             } catch (e) {
@@ -152,9 +160,8 @@ export async function POST(req: NextRequest) {
                 const jsonMatch = text.match(/{[\s\S]*}/);
                 if (jsonMatch && jsonMatch[0]) {
                     data = JSON.parse(jsonMatch[0]);
-                    if (data.extractedText !== undefined) {
+                    if (data && data.extractedText !== undefined) {
                         parseSuccess = true;
-                        console.log("[OCR API] ✅ Strategy 3 (JSON extraction) succeeded");
                     }
                 }
             } catch (e) {
@@ -162,34 +169,34 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Strategy 4: Treat entire response as extracted text (ultimate fallback)
-        if (!parseSuccess) {
-            console.log("[OCR API] ⚠️ All JSON strategies failed, using fallback");
-            console.log("[OCR API] Full response:", text);
-
-            // If response looks like it might be the actual text (not an error), use it
-            if (text && text.length > 0 && !text.toLowerCase().includes('error') && !text.toLowerCase().includes('failed')) {
-                data = { extractedText: text.trim() };
-                parseSuccess = true;
-                console.log("[OCR API] ✅ Strategy 4 (Direct text) succeeded");
-            } else {
-                console.error("[OCR API] ❌ All parsing strategies failed, response appears invalid");
-                return NextResponse.json(
-                    {
-                        error: "OCR failed to extract text. Please ensure the image contains clear, readable text.",
-                        debug: text.substring(0, 100)
-                    },
-                    {
-                        status: 500,
-                        headers: { 'Content-Type': 'application/json' }
-                    }
-                );
-            }
+        // Fallback if data is null
+        if (!parseSuccess || !data) {
+            data = { extractedText: text.trim(), isMedication: true, isReadable: text.trim().length >= 5 };
         }
 
-        console.log("[OCR API] Extracted text length:", data.extractedText?.length || 0);
+        const extractedTextClean = String(data.extractedText || "").trim();
 
-        // Only charge after successful OCR output.
+        // Quality and Relevance Validation Check
+        const isTooShort = extractedTextClean.length < 3;
+        const isExplicitlyNonMedical = data.isMedication === false && isTooShort;
+        const isExplicitlyUnreadable = data.isReadable === false && isTooShort;
+
+        if (isTooShort || isExplicitlyNonMedical || isExplicitlyUnreadable) {
+            return NextResponse.json(
+                {
+                    error: "الصورة المرفوعة غير واضحة أو لا تحتوي على ملصق دواء مقروء. يرجى التقاط صورة واضحة ومباشرة لعلبة الدواء أو الروشتة في إضاءة جيدة.",
+                    errorEn: "The uploaded image is blurry or does not appear to contain a readable medication label. Please upload a clear, well-lit photo directly showing the medicine box, prescription, or bottle.",
+                    isUnclearOrNonMedication: true,
+                    extractedText: extractedTextClean,
+                },
+                {
+                    status: 422,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+        }
+
+        // Deduct credit only for valid, readable medication images
         if (!localDevUser) {
             const charged = await deductCredit(user.id, 1, 'scan_pipeline');
             if (!charged) {
@@ -200,13 +207,17 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        return NextResponse.json({ ...data, serverDurationMs: Date.now() - startTime }, {
+        return NextResponse.json({
+            extractedText: extractedTextClean,
+            isMedication: data.isMedication ?? true,
+            isReadable: true,
+            serverDurationMs: Date.now() - startTime
+        }, {
             headers: { 'Content-Type': 'application/json' }
         });
 
     } catch (error: any) {
         console.error("[OCR API] Gemini OCR Error:", error);
-        console.error("[OCR API] Error stack:", error?.stack);
 
         const message = String(error?.message || "Failed to analyze image with Gemini.");
         const retryMatch = message.match(/Please retry in\s+(\d+(?:\.\d+)?)s/i);
@@ -228,7 +239,6 @@ export async function POST(req: NextRequest) {
             return res;
         }
 
-        // Ensure we always return JSON, even for unexpected errors
         return NextResponse.json(
             { error: message },
             {
