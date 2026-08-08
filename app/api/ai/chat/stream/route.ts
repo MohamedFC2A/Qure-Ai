@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
 import { type AiChatMode, buildSystemPrompt, generateConversationTitle } from "@/lib/ai/chat";
 
 const META_SEPARATOR = "\n---METADATA---\n";
@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
         if (!question) {
             return new Response(JSON.stringify({ error: "Question is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
         }
-        if (!process.env.DEEPSEEK_API_KEY) {
-            return new Response(JSON.stringify({ error: "Server configuration error" }), { status: 503, headers: { "Content-Type": "application/json" } });
+        const apiKey = getDeepSeekApiKey();
+        if (!apiKey) {
+            return new Response(JSON.stringify({ error: "Server configuration error: DEEPSEEK_API_KEY is missing." }), { status: 503, headers: { "Content-Type": "application/json" } });
         }
 
         /* ── Fetch context data for context mode ── */
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
                 : `Answer with clean, detailed Markdown formatting. When completely done with the answer, write exactly:\n\n---METADATA---\n\nThen JSON in this format (NO code fences):\n{"keyPoints":["point 1","point 2","point 3"],"suggestedFollowUps":["question 1?","question 2?","question 3?","question 4?"]}\n\nImportant: Do NOT use \`\`\`json. Just plain JSON after the separator.`,
         });
 
-        const deepseek = new OpenAI({ apiKey: process.env.DEEPSEEK_API_KEY, baseURL: DEEPSEEK_BASE_URL });
+        const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
 
         /* ── Streaming call (text mode, not json_object) ── */
         const stream = await deepseek.chat.completions.create({

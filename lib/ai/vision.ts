@@ -1,9 +1,9 @@
 import OpenAI from "openai";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
 
 // Initialize DeepSeek client (text-only)
 const deepseek = new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY || "placeholder-key",
+    apiKey: getDeepSeekApiKey(),
     baseURL: DEEPSEEK_BASE_URL,
 });
 

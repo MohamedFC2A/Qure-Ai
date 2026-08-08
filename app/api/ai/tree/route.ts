@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
 
 type PresetId = "alternative" | "personalized" | "history" | "suggestions";
 
@@ -187,12 +187,13 @@ export async function POST(req: NextRequest) {
             recentHistory = historyRes.data || [];
         }
 
-        if (!process.env.DEEPSEEK_API_KEY) {
+        const apiKey = getDeepSeekApiKey();
+        if (!apiKey) {
             return NextResponse.json({ error: "Server configuration error: DEEPSEEK_API_KEY is missing." }, { status: 503 });
         }
 
         const deepseek = new OpenAI({
-            apiKey: process.env.DEEPSEEK_API_KEY,
+            apiKey: apiKey,
             baseURL: DEEPSEEK_BASE_URL,
         });
 

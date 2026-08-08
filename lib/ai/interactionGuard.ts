@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, getDeepSeekApiKey } from "@/lib/ai/deepseek";
 
 export type InteractionSeverity = "safe" | "caution" | "danger";
 
@@ -93,7 +93,8 @@ export async function generateInteractionGuard(params: {
     otherMedications: string[];
 }): Promise<InteractionGuardResult> {
     const startedAt = Date.now();
-    if (!process.env.DEEPSEEK_API_KEY) {
+    const apiKey = getDeepSeekApiKey();
+    if (!apiKey) {
         return {
             items: [],
             disclaimer: "Server configuration error: DEEPSEEK_API_KEY is missing.",
@@ -192,7 +193,7 @@ ${otherJson}
 `;
 
     const deepseek = new OpenAI({
-        apiKey: process.env.DEEPSEEK_API_KEY,
+        apiKey: apiKey,
         baseURL: DEEPSEEK_BASE_URL,
     });
 
