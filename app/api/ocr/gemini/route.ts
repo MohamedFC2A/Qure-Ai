@@ -79,10 +79,11 @@ export async function POST(req: NextRequest) {
 
         console.log("[OCR API] Starting OCR process with quality verification...");
 
-        // Initialize Gemini with the API key
+        // Initialize Gemini with the active API key and reliable model
         const genAI = new GoogleGenerativeAI(apiKey);
+        const primaryModelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
         const model = genAI.getGenerativeModel({
-            model: process.env.GEMINI_OCR_MODEL || "gemini-2.0-flash-exp"
+            model: primaryModelName
         });
 
         // Clean base64 string (remove data:image/jpeg;base64, prefix if present)
