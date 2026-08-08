@@ -20,8 +20,8 @@ const CreditsUpsellBanner = () => {
 
     if (credits < 5 || plan === "free") {
         return (
-            <div className="w-full max-w-5xl mb-4 sm:mb-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-2xl border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3.5 backdrop-blur-xl">
+            <div className="w-full max-w-5xl mb-4 sm:mb-5">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-2xl border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3 backdrop-blur-xl">
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                         <div className="icon-badge icon-badge-amber w-9 h-9 rounded-xl shrink-0">
                             {credits < 5 ? <Zap className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
@@ -67,7 +67,7 @@ export default function ScanPage() {
     };
 
     return (
-        <main className="min-h-screen pt-20 sm:pt-24 pb-24 md:pb-14 px-3 sm:px-6 flex flex-col items-center relative">
+        <main className="pt-20 sm:pt-24 pb-12 sm:pb-16 px-3 sm:px-6 flex flex-col items-center relative">
             <div className="z-10 w-full max-w-6xl flex flex-col items-center">
                 {/* ── Back button ── */}
                 <div className="w-full mb-3 sm:mb-4 flex items-center justify-start">
@@ -84,7 +84,7 @@ export default function ScanPage() {
                 <CreditsUpsellBanner />
 
                 {/* ── Scanner Interface Container ── */}
-                <section className="w-full rounded-2xl border border-white/[0.08] bg-slate-950/50 p-2 sm:p-4 md:p-6 shadow-2xl shadow-black/40 backdrop-blur-2xl">
+                <section className="w-full rounded-3xl border border-white/[0.08] bg-slate-950/60 p-3 sm:p-5 md:p-6 shadow-2xl shadow-black/50 backdrop-blur-2xl">
                     <ScannerInterface />
                 </section>
             </div>

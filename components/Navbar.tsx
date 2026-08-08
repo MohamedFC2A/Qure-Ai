@@ -61,11 +61,11 @@ export const Navbar = () => {
             <MobileNav />
             <OnboardingModal />
 
-            <header className="fixed top-2.5 sm:top-4 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-6xl">
+            <header className="fixed top-2 sm:top-3.5 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-6xl">
                 <div
                     className={cn(
-                        "relative overflow-hidden rounded-2xl px-3.5 py-2 sm:px-5 sm:py-2.5",
-                        "flex items-center justify-between gap-2 sm:gap-4",
+                        "relative overflow-hidden rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5",
+                        "flex items-center justify-between gap-2 sm:gap-3",
                         "backdrop-blur-2xl border shadow-2xl transition-all duration-300",
                         isAiRoute
                             ? "bg-slate-950/95 border-amber-400/25 shadow-amber-950/30"
@@ -85,17 +85,17 @@ export const Navbar = () => {
                     {/* ── Logo ── */}
                     <Link
                         href="/"
-                        className="flex items-center gap-2.5 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 rounded-xl"
+                        className="flex items-center gap-2 sm:gap-2.5 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 rounded-xl"
                     >
                         <div
                             className={cn(
-                                "relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-lg transition-transform active:scale-95",
+                                "relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shadow-lg transition-transform active:scale-95",
                                 isAiRoute
                                     ? "nexus-gold-logo shadow-amber-950/40"
                                     : "bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-cyan-950/50"
                             )}
                         >
-                            <Atom className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                            <Atom className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                             <div className="absolute inset-0 rounded-xl bg-white/10" />
                             {isAiRoute && <div className="absolute inset-0 rounded-xl nexus-gold-rotate" />}
                         </div>
@@ -111,25 +111,25 @@ export const Navbar = () => {
                     </Link>
 
                     {/* ── Desktop Navigation Links ── */}
-                    <nav className="hidden md:flex flex-1 items-center justify-center gap-1">
+                    <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 sm:gap-1.5 px-2">
                         {navItems.map((item) => {
                             const isActive =
                                 pathname === item.href ||
                                 (item.href !== "/" && pathname.startsWith(`${item.href}`));
                             return (
-                                <Link key={item.href} href={item.href}>
+                                <Link key={item.href} href={item.href} className="shrink-0">
                                     <div
                                         className={cn(
-                                            "relative px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200",
-                                            "flex items-center gap-2 cursor-pointer select-none",
+                                            "relative px-2.5 lg:px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap",
+                                            "flex items-center gap-1.5 cursor-pointer select-none",
                                             isActive
-                                                ? "bg-cyan-400/15 text-cyan-300 border border-cyan-400/30"
+                                                ? "bg-cyan-400/15 text-cyan-300 border border-cyan-400/30 font-semibold"
                                                 : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
                                         )}
                                     >
                                         <item.icon
                                             className={cn(
-                                                "w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0",
+                                                "w-3.5 h-3.5 shrink-0",
                                                 isActive ? "text-cyan-400" : "opacity-75"
                                             )}
                                         />
@@ -147,8 +147,8 @@ export const Navbar = () => {
                                 {/* Scanning Indicator */}
                                 {isScanning && (
                                     <Link href="/scan">
-                                        <div className="flex items-center gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-400/20">
-                                            <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                                        <div className="flex items-center gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300 transition-all hover:bg-emerald-400/20 whitespace-nowrap">
+                                            <Loader2 className="w-3 h-3 animate-spin" />
                                             <span className="hidden sm:inline">{t("Scanning", "فحص")}</span>
                                             <span className="font-mono tabular-nums">{totalDuration}s</span>
                                         </div>
@@ -159,7 +159,7 @@ export const Navbar = () => {
                                 <Link href="/profile" aria-label="Open profile">
                                     <div
                                         className={cn(
-                                            "flex items-center gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold transition-all",
+                                            "flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[11px] sm:text-xs font-semibold transition-all whitespace-nowrap",
                                             plan === "ultra"
                                                 ? "bg-amber-400/10 border-amber-400/30 text-amber-300 hover:bg-amber-400/20"
                                                 : "bg-cyan-400/10 border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/20"
@@ -182,7 +182,7 @@ export const Navbar = () => {
 
                                 {/* Profile Avatar */}
                                 <Link href="/profile" aria-label="Profile">
-                                    <div className="flex h-8 w-8 sm:h-9 sm:w-9 rounded-xl items-center justify-center border border-white/10 bg-white/[0.05] overflow-hidden transition-all hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50">
+                                    <div className="flex h-7 w-7 sm:h-8 sm:w-8 rounded-xl items-center justify-center border border-white/10 bg-white/[0.05] overflow-hidden transition-all hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 shrink-0">
                                         {user?.user_metadata?.avatar_url ? (
                                             <img
                                                 src={user.user_metadata.avatar_url}
@@ -190,7 +190,7 @@ export const Navbar = () => {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300" />
+                                            <User className="w-3.5 h-3.5 text-slate-300" />
                                         )}
                                     </div>
                                 </Link>
@@ -199,7 +199,7 @@ export const Navbar = () => {
                                 <button
                                     onClick={handleSignOut}
                                     title={t("Log Out", "تسجيل الخروج")}
-                                    className="hidden sm:flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-medium text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10 transition-all"
+                                    className="hidden sm:flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-medium text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10 transition-all shrink-0"
                                 >
                                     <LogOut className="h-3.5 w-3.5" />
                                     <span>{t("Exit", "خروج")}</span>

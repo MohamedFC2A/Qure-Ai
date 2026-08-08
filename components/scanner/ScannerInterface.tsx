@@ -552,21 +552,21 @@ export const ScannerInterface = () => {
 
             <AnimatePresence mode="wait">
                 {!previewSrc && (
-                    <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+                    <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
                         
                         {/* ── Main Dropzone Area ── */}
                         <div className="flex flex-col gap-4">
                             <div {...getRootProps()} className={cn(
-                                "relative min-h-[340px] sm:min-h-[380px] border-2 border-dashed rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group overflow-hidden",
+                                "relative min-h-[320px] sm:min-h-[350px] border-2 border-dashed rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group overflow-hidden flex-1",
                                 isDragActive ? "border-cyan-300 bg-cyan-300/10 scale-[0.99]" : "border-white/15 hover:border-cyan-400/50 hover:bg-white/[0.04] bg-slate-950/40 backdrop-blur-2xl"
                             )}>
                                 <input {...getInputProps()} />
 
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-cyan-400/20 via-cyan-500/10 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:border-cyan-400/60 transition-all duration-300 shadow-xl shadow-cyan-950/40">
-                                    <ScanLine className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-300" />
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-cyan-400/20 via-cyan-500/10 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center mb-4 group-hover:scale-105 group-hover:border-cyan-400/60 transition-all duration-300 shadow-xl shadow-cyan-950/40">
+                                    <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
                                 </div>
 
-                                <h3 className="text-xl sm:text-2xl font-black text-white mb-2 tracking-tight">
+                                <h3 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight">
                                     {t("Upload medication or prescription photo", "ارفع صورة ملصق الدواء أو الروشتة")}
                                 </h3>
 
@@ -578,22 +578,22 @@ export const ScannerInterface = () => {
                                 </p>
 
                                 {/* Accepted Medical Formats Guidance */}
-                                <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full max-w-md">
-                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white">{t("Boxes", "علب الأدوية")}</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Clear Name", "الاسم والتركيز")}</p>
+                                <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full max-w-lg">
+                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white tracking-tight">{t("Boxes", "علب الأدوية")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Clear Name", "الاسم والتركيز")}</p>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white">{t("Prescriptions", "الروشتات")}</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Legible Text", "خط واضح")}</p>
+                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white tracking-tight">{t("Prescriptions", "الروشتات")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Legible Text", "خط واضح")}</p>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white">{t("Bottles", "العبوات والقطرات")}</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Label Visible", "الملصق الرئيسي")}</p>
+                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white tracking-tight">{t("Bottles", "العبوات والقطرات")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Label Visible", "الملصق الرئيسي")}</p>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-center">
-                                        <p className="text-xs font-bold text-white">{t("Blisters", "شرائط الأقراص")}</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("Printed Side", "الجانب المطبوع")}</p>
+                                    <div className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+                                        <p className="text-xs font-bold text-white tracking-tight">{t("Blisters", "شرائط الأقراص")}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">{t("Printed Side", "الجانب المطبوع")}</p>
                                     </div>
                                 </div>
                             </div>
