@@ -3,23 +3,23 @@
 @tailwind utilities;
 
 /* ================================================================
-   ROOT DESIGN TOKENS — Clean Professional Dark Theme
+   ROOT DESIGN TOKENS — Ultra-Premium Clinical Dark Theme
    ================================================================ */
 
 :root {
-  --q-base: #040810;
-  --q-surface: #080d18;
-  --q-surface-2: #0d1424;
-  --q-card: rgba(10, 16, 28, 0.92);
-  --q-card-border: rgba(255, 255, 255, 0.07);
-  --q-glass-1: rgba(10, 16, 26, 0.80);
-  --q-glass-2: rgba(12, 20, 34, 0.92);
-  --q-glass-hover: rgba(14, 22, 38, 0.96);
-  --q-cyan: #22d3ee;
+  --q-base: #030712;
+  --q-surface: #080d1a;
+  --q-surface-2: #0f172a;
+  --q-card: rgba(15, 23, 42, 0.75);
+  --q-card-border: rgba(255, 255, 255, 0.06);
+  --q-glass-1: rgba(15, 23, 42, 0.65);
+  --q-glass-2: rgba(15, 23, 42, 0.85);
+  --q-glass-hover: rgba(30, 41, 59, 0.80);
+  --q-cyan: #06b6d4;
+  --q-cyan-light: #22d3ee;
   --q-emerald: #10b981;
   --q-amber: #f59e0b;
-  --q-gold: #c9973a;
-  --q-gold-muted: #a07828;
+  --q-rose: #f43f5e;
 }
 
 * {
@@ -30,7 +30,7 @@
 
 html {
   background-color: var(--q-base);
-  color: #f1f5f9;
+  color: #f8fafc;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -39,7 +39,7 @@ html {
 
 body {
   background-color: var(--q-base);
-  color: #f1f5f9;
+  color: #f8fafc;
   min-height: 100vh;
   overflow-x: hidden;
   font-family: var(--font-cairo), var(--font-inter), system-ui, -apple-system, sans-serif;
@@ -64,18 +64,17 @@ body {
 }
 
 /* ================================================================
-   NEXUS GOLD — Refined, No Glow
+   CLINICAL ACCENT BADGES & TOKENS — Clean, No Glow
    ================================================================ */
 
-.nexus-gold-logo {
-  background: linear-gradient(145deg, #a07828 0%, #c9973a 35%, #e8b84b 60%, #c9973a 100%);
-  color: #1c1000;
-  /* No glow — clean border highlight only */
-  box-shadow: inset 0 1px 0 rgba(255, 236, 160, 0.35);
+.nexus-gold-logo, .nexus-cyan-logo {
+  background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+  color: #030712;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .nexus-gold-text {
-  background: linear-gradient(135deg, #c9973a 0%, #e8b84b 45%, #c9973a 75%, #9a7224 100%);
+  background: linear-gradient(135deg, #38bdf8 0%, #22d3ee 50%, #818cf8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -83,23 +82,29 @@ body {
 }
 
 .nexus-gold-badge {
-  background: linear-gradient(135deg, #a07828, #c9973a, #e8b84b);
-  color: #1c1000;
-  font-weight: 900;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  color: #38bdf8;
+  font-weight: 700;
 }
 
 .nexus-gold-border {
-  border-color: rgba(201, 151, 58, 0.30);
+  border-color: rgba(34, 211, 238, 0.20);
 }
 
 .nexus-gold-rotate {
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(201, 151, 58, 0.4) 60deg,
+    rgba(34, 211, 238, 0.3) 60deg,
     transparent 120deg
   );
-  animation: goldRotate 4s linear infinite;
+  animation: cyanRotate 4s linear infinite;
+}
+
+@keyframes cyanRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ================================================================

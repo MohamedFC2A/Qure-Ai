@@ -564,12 +564,12 @@ export function AiChatPage() {
                                         className={cn(
                                             "p-2.5 rounded-xl transition-all",
                                             input.trim() && !isSending
-                                                ? "gold-send-btn"
+                                                ? "bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow-lg shadow-cyan-950/40"
                                                 : "bg-white/[0.05] text-white/15 cursor-not-allowed"
                                         )}
                                     >
                                         {isSending
-                                            ? <div className="w-4 h-4 border-2 border-amber-800/50 border-t-amber-400 rounded-full animate-spin" />
+                                            ? <div className="w-4 h-4 border-2 border-cyan-800/50 border-t-cyan-400 rounded-full animate-spin" />
                                             : <ArrowUp className={cn("w-4 h-4", isArabic && "rotate-180")} />
                                         }
                                     </button>

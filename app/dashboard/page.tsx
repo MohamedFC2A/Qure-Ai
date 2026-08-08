@@ -219,14 +219,14 @@ export default function DashboardPage() {
             titleEn: "Safety Report",             titleAr: "تقرير الأمان",
             descEn:  "Organized warnings, dosage notes, side effects, and care recommendations.",
             descAr:  "تحذيرات منظمة، ملاحظات الجرعة، آثار جانبية، وتوصيات الرعاية.",
-            color:   "amber",
+            color:   "emerald",
         },
         {
             icon: Brain,
             titleEn: "AI Interaction Guard",   titleAr: "حارس التداخل الذكي",
             descEn:  "Detects dangerous drug interactions based on your personal medication history.",
             descAr:  "يكتشف التداخلات الدوائية الخطيرة بناءً على سجلك الدوائي الشخصي.",
-            color:   "violet",
+            color:   "cyan",
             badge:   "ULTRA",
             locked:  !isUltra,
         },
@@ -244,7 +244,7 @@ export default function DashboardPage() {
             titleEn: "Family & Caregiver Mode",  titleAr: "وضع الأسرة والرعاية",
             descEn:  "Manage separate profiles for each family member with isolated histories.",
             descAr:  "أدر ملفات منفصلة لكل فرد في الأسرة بسجلات معزولة.",
-            color:   "emerald",
+            color:   "cyan",
             badge:   "ULTRA",
             locked:  !isUltra,
         },
@@ -253,7 +253,7 @@ export default function DashboardPage() {
             titleEn: "PDF & PNG Export",    titleAr: "تصدير PDF و PNG",
             descEn:  "Export clean safety reports to share with pharmacists or doctors.",
             descAr:  "صدّر تقارير أمان نظيفة لمشاركتها مع الصيدلاني أو الطبيب.",
-            color:   "violet",
+            color:   "cyan",
             badge:   "ULTRA",
             locked:  !isUltra,
         },
@@ -262,7 +262,7 @@ export default function DashboardPage() {
             titleEn: "Scan History",        titleAr: "سجل الفحوصات",
             descEn:  "Full history of every medication you've analyzed, searchable and sorted.",
             descAr:  "سجل كامل لكل الأدوية التي حللتها، قابل للبحث والفرز.",
-            color:   "rose",
+            color:   "cyan",
         },
     ];
 
@@ -272,20 +272,16 @@ export default function DashboardPage() {
 
                 {/* ── HERO HEADER ──────────────────────────────── */}
                 <section
-                    className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-6 sm:p-8 backdrop-blur-2xl"
-                    style={{ background: "linear-gradient(135deg, rgba(34,211,238,0.06) 0%, rgba(8,14,22,0.92) 40%, rgba(139,92,246,0.05) 100%)" }}
+                    className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6 sm:p-8 backdrop-blur-xl"
+                    style={{ background: "rgba(15, 23, 42, 0.70)" }}
                 >
-                    {/* Ambient glow */}
-                    <div className="absolute top-0 left-0 w-64 h-32 bg-cyan-400/10 blur-3xl rounded-full pointer-events-none" />
-                    <div className="absolute bottom-0 right-0 w-48 h-24 bg-violet-400/8 blur-3xl rounded-full pointer-events-none" />
-
                     <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                         <div>
                             <div className="clinical-eyebrow mb-3">
                                 <Activity className="h-3.5 w-3.5" />
                                 <span>{t("Your Workspace", "مساحة عملك")}</span>
                             </div>
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
                                 {isArabic ? (
                                     <>أهلاً بك مجددًا<span className="text-cyan-400">.</span></>
                                 ) : (
@@ -302,17 +298,10 @@ export default function DashboardPage() {
 
                         {/* Quick scan CTA */}
                         <Link href="/scan" className="w-full sm:w-auto">
-                            <div className="relative group shrink-0 w-full sm:w-auto">
-                                <div className="absolute -inset-2 rounded-2xl bg-cyan-400/20 blur-xl animate-glow-pulse pointer-events-none" />
-                                <div className="relative inline-flex w-full sm:w-auto justify-center items-center gap-2.5 rounded-xl px-7 py-3.5 font-black text-slate-950 text-sm
-                                    bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400
-                                    border border-cyan-300/60 shadow-xl shadow-cyan-500/30
-                                    transition-all duration-200 hover:shadow-cyan-400/50 active:scale-95">
-                                    <ScanLine className="w-5 h-5 shrink-0" />
-                                    <span>{t("Start New Scan", "ابدأ فحصًا جديدًا")}</span>
-                                    <ArrowRight className={cn("w-4 h-4 shrink-0", isArabic ? "rotate-180" : "")} />
-                                </div>
-                            </div>
+                            <Button size="lg" glow className="w-full sm:w-auto font-bold px-7">
+                                <ScanLine className="w-4 h-4 mr-2" />
+                                <span>{t("Scan Medication", "افحص دواءك الآن")}</span>
+                            </Button>
                         </Link>
                     </div>
                 </section>

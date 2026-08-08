@@ -218,7 +218,7 @@ export default function PricingPage() {
                         {[
                             { icon: Clock,   labelEn: "Fast setup",       labelAr: "إعداد سريع",          valueEn: "No card for Free",     valueAr: "بدون بطاقة للمجاني", color: "cyan"    },
                             { icon: Shield,  labelEn: "Medical safety",   labelAr: "أمان طبي",           valueEn: "Review-focused",       valueAr: "مُركّز على المراجعة",  color: "emerald" },
-                            { icon: Globe,   labelEn: "Verification",     labelAr: "التحقق",             valueEn: "FDA + web signals",    valueAr: "FDA + إشارات الويب", color: "violet"  },
+                            { icon: Globe,   labelEn: "Verification",     labelAr: "التحقق",             valueEn: "FDA + web signals",    valueAr: "FDA + إشارات الويب", color: "cyan"     },
                         ].map((item) => (
                             <div
                                 key={item.labelEn}
@@ -276,10 +276,10 @@ export default function PricingPage() {
 
                     {/* Ultra plan */}
                     <GlassCard
-                        accent="amber"
+                        accent="cyan"
                         className="relative flex h-full flex-col p-6 sm:p-8"
                         hoverEffect={false}
-                        style={{ background: "rgba(245,158,11,0.05)", borderColor: "rgba(245,158,11,0.30)" }}
+                        style={{ background: "rgba(15, 23, 42, 0.85)", borderColor: "rgba(34, 211, 238, 0.25)" }}
                     >
                         {/* Best value badge */}
                         <div className="absolute end-5 top-5 flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-black shadow-md">
