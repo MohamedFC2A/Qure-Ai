@@ -18,7 +18,12 @@ interface MedicalData {
     genericName?: string;
     genericNameEn?: string;
     manufacturer: string;
+    productCategory?: string;
+    productCategoryLabel?: string;
     form?: string;
+    dosageForm?: string;
+    routeOfAdministration?: string;
+    targetAudience?: string;
     strength?: string;
     activeIngredients?: string[];
     activeIngredientsEn?: string[];
@@ -2789,38 +2794,51 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </div>
                             </div>
 
-                            {/* Badges/Category */}
-                            <div className="flex flex-wrap items-center gap-2 text-white/60 text-xs mt-2">
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 border border-white/5 max-w-full">
-                                    <Box className="w-3.5 h-3.5" />
-                                    <span className="truncate">{data.manufacturer}</span>
-                                </div>
-                                {productKindLabel && (
-                                    <div className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs font-semibold",
-                                        productKind === "human_drug" && "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
-                                        productKind === "human_supplement" && "bg-purple-500/10 border-purple-500/20 text-purple-300",
-                                        productKind === "veterinary_drug" && "bg-orange-500/10 border-orange-500/20 text-orange-300",
-                                        productKind === "veterinary_supplement" && "bg-amber-500/10 border-amber-500/20 text-amber-300",
-                                        "bg-white/5 border-white/10 text-white/60"
-                                    )}>
-                                        <Sparkles className="w-3.5 h-3.5" />
-                                        <span>{productKindLabel}</span>
+                            {/* Badges / Comprehensive Pharmaceutical & Product Classification Hub */}
+                            <div className="flex flex-wrap items-center gap-2 text-white/80 text-xs mt-3">
+                                {/* Manufacturer */}
+                                {data.manufacturer && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-slate-300">
+                                        <Box className="w-3.5 h-3.5 text-cyan-400" />
+                                        <span className="truncate">{data.manufacturer}</span>
                                     </div>
                                 )}
-                                {data.category && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5">
-                                        <Pill className="w-3.5 h-3.5" />
-                                        <span>{data.category}</span>
+
+                                {/* High-Level Category Label */}
+                                {(data.productCategoryLabel || productKindLabel || data.category) && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-200 font-bold shadow-sm">
+                                        <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                                        <span>{data.productCategoryLabel || productKindLabel || data.category}</span>
                                     </div>
                                 )}
+
+                                {/* Specific Dosage / Product Form (e.g. Tablets, Syrup, Deodorant Roll-on, Cream) */}
                                 {data.form && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 text-white/80">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 font-semibold shadow-sm">
+                                        <Pill className="w-3.5 h-3.5 text-cyan-300" />
                                         <span>{data.form}</span>
                                     </div>
                                 )}
+
+                                {/* Route of Administration (e.g. Topical External Only, Oral, Inhalation) */}
+                                {data.routeOfAdministration && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 font-semibold">
+                                        <Activity className="w-3.5 h-3.5 text-emerald-300" />
+                                        <span>{data.routeOfAdministration}</span>
+                                    </div>
+                                )}
+
+                                {/* Target Guidance */}
+                                {data.targetAudience && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 font-semibold">
+                                        <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
+                                        <span>{data.targetAudience}</span>
+                                    </div>
+                                )}
+
+                                {/* Strength */}
                                 {data.strength && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 text-white/80">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 font-mono text-slate-200 font-bold">
                                         <span>{data.strength}</span>
                                     </div>
                                 )}

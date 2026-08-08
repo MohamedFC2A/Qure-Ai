@@ -115,35 +115,40 @@ export const analyzeMedicationText = async (
     
     RETURN FORMAT (JSON):
     {
-        "drugName": "Inferred Name (e.g. Panadol Extra) - ALWAYS IN ENGLISH",
-        "drugNameEn": "The same drug name in English (for FDA lookup). If already English, repeat it.",
-        "genericName": "Scientific Name (e.g. Paracetamol 500mg + Caffeine) - ALWAYS IN ENGLISH",
-        "genericNameEn": "Generic/active ingredient name in English (for FDA lookup). If already English, repeat it.",
+        "drugName": "Inferred Name (e.g. Panadol Extra, Nivea Pearl & Beauty Deodorant) - ALWAYS IN ENGLISH",
+        "drugNameEn": "The same product/drug name in English (for lookup). If already English, repeat it.",
+        "genericName": "Scientific Name / Active Formulation (e.g. Paracetamol 500mg + Caffeine 65mg, or Aluminum Chlorohydrate + Avocado Oil) - ALWAYS IN ENGLISH",
+        "genericNameEn": "Generic/active ingredient name in English. If already English, repeat it.",
         "manufacturer": "Inferred Manufacturer (or 'Generic')",
-        "form": "Dosage form (tablet/capsule/syrup/cream/etc) - In ${language === 'ar' ? 'Arabic' : 'English'}",
-        "strength": "Strength if inferable (e.g. 500mg) - ALWAYS IN ENGLISH",
-        "activeIngredients": ["List of active ingredients (max 5) - ALWAYS IN ENGLISH"],
-        "activeIngredientsEn": ["List of active ingredients in English (for FDA lookup/reference). If already English, repeat it."],
-        "description": "Professional medical description of the drug, suitable for a patient to understand. (In ${language === 'ar' ? 'Arabic' : 'English'})",
-        "category": "Therapeutic Category (e.g. Analgesic) (In ${language === 'ar' ? 'Arabic' : 'English'})",
-        "uses": ["List of 3-5 primary medical uses (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "dosage": "Standard adult dosage (e.g. '500-1000mg q4-6h') - ALWAYS IN ENGLISH",
-        "missedDose": "What to do if a dose is missed (In ${language === 'ar' ? 'Arabic' : 'English'})",
+        "productCategory": "High-level classification: 'pharmaceutical_drug' | 'dietary_supplement' | 'topical_cosmetic_care' | 'deodorant_antiperspirant' | 'herbal_natural' | 'antiseptic_sanitizer' | 'medical_device_supply' | 'oral_care_mouthwash' | 'veterinary_product' | 'other'",
+        "productCategoryLabel": "Clear, beautiful category label in ${language === 'ar' ? 'Arabic (e.g. دواء علاجي صيدلاني / مستحضر عناية ومزيل عرق / مكمل غذائي وفيتامينات / مرهم وكريم جلدي علاجى)' : 'English (e.g. Pharmaceutical Prescription Drug / Personal Care & Deodorant / Dietary Supplement & Vitamins / Topical Ointment)'}",
+        "form": "Dosage/Product form (e.g. 'أقراص فموية (Tablets)', 'شراب سائل (Oral Syrup)', 'مرهم جلدي (Topical Ointment)', 'كريم موضعي (Topical Cream)', 'جل (Gel)', 'قطرة عين/أذن (Drops)', 'مزيل عرق رول أون (Roll-on Deodorant)', 'بخاخ رذاذي (Spray)', 'أمبولات وحقن (Injections)', 'تحاميل/لبوس (Suppositories)', 'لصقة جلدية (Patch)') - In ${language === 'ar' ? 'Arabic' : 'English'}",
+        "dosageForm": "Specific form: 'tablet' | 'capsule' | 'syrup' | 'ointment' | 'cream' | 'gel' | 'drops' | 'deodorant' | 'spray' | 'injection' | 'suppository' | 'patch' | 'sachet' | 'lotion' | 'liquid' | 'other'",
+        "routeOfAdministration": "Route of administration (e.g. 'استخدام فموي (Oral)', 'استخدام موضعي على الجلد فقط (Topical/External Only)', 'قطرة عينية (Ophthalmic)', 'قطرة أنفية (Nasal)', 'استنشاقي (Inhalation)', 'حقن عضلي/وريدي (Injectable)') - In ${language === 'ar' ? 'Arabic' : 'English'}",
+        "targetAudience": "Target usage advice (e.g. 'للاستخدام الخارجي فقط' or 'للبالغين والأطفال فوق 12 سنة') - In ${language === 'ar' ? 'Arabic' : 'English'}",
+        "strength": "Strength/Volume if inferable (e.g. 500mg, 50ml, 1%, 200mg/5ml) - ALWAYS IN ENGLISH",
+        "activeIngredients": ["List of active ingredients and key compounds (max 5) - ALWAYS IN ENGLISH"],
+        "activeIngredientsEn": ["List of active ingredients in English. If already English, repeat it."],
+        "description": "Professional description of the product and its primary purpose, suitable for a user/patient to understand. (In ${language === 'ar' ? 'Arabic' : 'English'})",
+        "category": "Therapeutic/Product Category (e.g. مسكن وخافض للحرارة, مزيل لرائحة العرق ومضاد للتعرق, مضاد حيوي واسع المجال, مضاد للالتهاب) (In ${language === 'ar' ? 'Arabic' : 'English'})",
+        "uses": ["List of 3-5 primary medical/product uses (In ${language === 'ar' ? 'Arabic' : 'English'})"],
+        "dosage": "Standard instructions or usage method (e.g. 'قرص واحد كل 6-8 ساعات' or 'يوضع على بشرة نظيفة وجافة مرة يومياً') - In ${language === 'ar' ? 'Arabic' : 'English'}",
+        "missedDose": "What to do if a dose/application is missed (In ${language === 'ar' ? 'Arabic' : 'English'})",
         "overdose": {
-            "symptoms": ["Max 5 overdose symptoms (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-            "whatToDo": ["Max 4 actions (In ${language === 'ar' ? 'Arabic' : 'English'})"]
+            "symptoms": ["Overdose or excessive application symptoms (In ${language === 'ar' ? 'Arabic' : 'English'})"],
+            "whatToDo": ["Actions if overused/ingested accidentally (In ${language === 'ar' ? 'Arabic' : 'English'})"]
         },
-        "sideEffects": ["List of 3-7 common side effects (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "storage": "Storage instructions (e.g. 'Store below 25°C, away from light') (In ${language === 'ar' ? 'Arabic' : 'English'})",
-        "warnings": ["Critical safety warnings (In ${language === 'ar' ? 'Arabic' : 'English'})", "Pregnancy/Breastfeeding safety"],
-        "contraindications": ["Max 6 contraindications (In ${language === 'ar' ? 'Arabic' : 'English'})"],
+        "sideEffects": ["List of 3-7 common side effects or skin sensitivities (In ${language === 'ar' ? 'Arabic' : 'English'})"],
+        "storage": "Storage instructions (e.g. 'يحفظ في درجة حرارة أقل من 25 مئوية بعيداً عن الرطوبة وأشعة الشمس') (In ${language === 'ar' ? 'Arabic' : 'English'})",
+        "warnings": ["Critical safety warnings (In ${language === 'ar' ? 'Arabic' : 'English'})", "Special precautions"],
+        "contraindications": ["Max 6 contraindications or when not to use (In ${language === 'ar' ? 'Arabic' : 'English'})"],
         "precautions": ["Max 6 precautions (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "interactions": ["Major drug interactions (e.g. Warfarin, Alcohol) (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "whenToSeekHelp": ["Max 6 red-flag symptoms requiring medical help (In ${language === 'ar' ? 'Arabic' : 'English'})"],
+        "interactions": ["Major interactions (In ${language === 'ar' ? 'Arabic' : 'English'})"],
+        "whenToSeekHelp": ["Red-flag symptoms requiring medical attention (In ${language === 'ar' ? 'Arabic' : 'English'})"],
         "personalized": {
             "contextUsed": true,
             "riskLevel": "low|medium|high",
-            "riskSummary": "Short patient-specific risk summary (In ${language === 'ar' ? 'Arabic' : 'English'})",
+            "riskSummary": "Short user-specific risk summary (In ${language === 'ar' ? 'Arabic' : 'English'})",
             "alerts": [
                 {
                     "severity": "low|medium|high",
@@ -158,7 +163,7 @@ export const analyzeMedicationText = async (
                 "medicationMemories": true
             }
         },
-        "confidenceScore": 0-100 (Your confidence in this identification)
+        "confidenceScore": 0-100 (Confidence in this identification)
     }
 
     PATIENT_CONTEXT_JSON (Ultra only):
