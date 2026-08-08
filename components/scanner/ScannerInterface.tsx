@@ -602,7 +602,7 @@ export const ScannerInterface = () => {
                                     </button>
                                     <Button onClick={confirmCarePicker} disabled={!careTempId || isScanning} variant="primary" className="gap-2 px-6 font-bold" glow>
                                         <ScanLine className="w-4 h-4" />
-                                        {t("Start Analysis", "بدء التحليل")}
+                                        <span>{t("Start Analysis Now", "ابدأ الفحص الآن")}</span>
                                     </Button>
                                 </div>
                             </GlassCard>
@@ -717,28 +717,14 @@ export const ScannerInterface = () => {
                             {!isScanning && !finalResult && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/65 backdrop-blur-sm">
                                     <div className="flex flex-col gap-4 items-center">
-                                        {/* Glowing Start Analysis Button */}
-                                        <div className="relative group/start">
-                                            {/* Outer glow ring */}
-                                            <div className="absolute -inset-3 rounded-2xl bg-cyan-400/20 blur-xl animate-glow-pulse pointer-events-none" />
-                                            {/* Mid glow */}
-                                            <div className="absolute -inset-1.5 rounded-xl bg-gradient-to-r from-cyan-400/30 via-emerald-400/20 to-cyan-400/30 blur-md pointer-events-none" />
+                                        {/* Glowing Ultra-Shiny Start Analysis Button */}
+                                        <div className="relative">
                                             <button
                                                 onClick={openCarePickerAndStart}
-                                                className={cn(
-                                                    "relative inline-flex items-center justify-center gap-3",
-                                                    "rounded-xl px-10 py-4 text-lg font-black text-slate-950",
-                                                    "bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400",
-                                                    "shadow-2xl shadow-cyan-500/40",
-                                                    "border border-cyan-300/60",
-                                                    "transition-all duration-200 active:scale-95",
-                                                    "hover:from-cyan-300 hover:via-cyan-200 hover:to-emerald-300",
-                                                    "hover:shadow-cyan-400/60",
-                                                    isArabic ? "flex-row-reverse" : ""
-                                                )}
+                                                className="shiny-cta-btn gap-3.5 px-12 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide"
                                             >
-                                                <ScanLine className="w-6 h-6 shrink-0" />
-                                                {t("Start Analysis", "بدء التحليل")}
+                                                <ScanLine className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                <span>{t("Start Analysis Now", "ابدأ الفحص الآن")}</span>
                                             </button>
                                         </div>
 

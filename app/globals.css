@@ -3,84 +3,87 @@
 @tailwind utilities;
 
 /* ================================================================
-   QURE AI — Premium Design System & UI Engine
-   Deep Dark Glassmorphism + Fluid Multi-Device Responsiveness + Arabic RTL
+   ROOT DESIGN TOKENS (Deep Luxury Medical Dark Theme)
    ================================================================ */
 
-@layer base {
-  :root {
-    /* ── Base Colors ── */
-    --q-base:        #050709;
-    --q-surface:     #080C12;
-    --q-surface-2:   #0D1420;
-    --q-surface-3:   #111828;
-
-    /* ── Glassmorphism Layers ── */
-    --q-glass-1:     rgba(8, 14, 22, 0.85);
-    --q-glass-2:     rgba(12, 19, 30, 0.75);
-    --q-glass-3:     rgba(16, 24, 38, 0.65);
-    --q-glass-hover: rgba(20, 30, 48, 0.90);
-
-    /* ── Borders ── */
-    --q-border:      rgba(255, 255, 255, 0.08);
-    --q-border-md:   rgba(255, 255, 255, 0.14);
-    --q-border-lg:   rgba(255, 255, 255, 0.22);
-
-    /* ── Vibrant Accents ── */
-    --q-cyan:        #22D3EE;
-    --q-emerald:     #34D399;
-    --q-amber:       #FBBF24;
-    --q-violet:      #A78BFA;
-    --q-rose:        #FB7185;
-
-    /* ── Text Hierarchy ── */
-    --q-text:        #F1F7FA;
-    --q-text-muted:  rgba(241, 247, 250, 0.65);
-    --q-text-dim:    rgba(241, 247, 250, 0.40);
-  }
+:root {
+  --q-base: #050709;
+  --q-base-soft: #080c14;
+  --q-card: rgba(8, 14, 22, 0.88);
+  --q-card-border: rgba(255, 255, 255, 0.08);
+  --q-glass-1: rgba(10, 16, 26, 0.75);
+  --q-glass-2: rgba(12, 20, 32, 0.85);
+  --q-glass-hover: rgba(16, 26, 42, 0.92);
+  --q-cyan: #22d3ee;
+  --q-cyan-glow: rgba(34, 211, 238, 0.35);
+  --q-emerald: #10b981;
+  --q-emerald-glow: rgba(16, 185, 129, 0.35);
 }
 
-@layer base {
-  * {
-    @apply border-[var(--q-border)];
-    box-sizing: border-box;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  html {
-    scroll-behavior: smooth;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+html {
+  background-color: var(--q-base);
+  color: #f8fafc;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
 
-  body {
-    @apply bg-[var(--q-base)] text-[var(--q-text)] antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ── Arabic Typography & Direction ── */
-  html[dir="rtl"] body,
-  html[dir="rtl"] * {
-    font-family: 'Cairo', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  }
-
-  html[dir="rtl"] .font-inter,
-  html[dir="rtl"] .font-display {
-    font-family: 'Cairo', 'Inter', sans-serif !important;
-  }
+body {
+  background-color: var(--q-base);
+  color: #f8fafc;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: var(--font-cairo), var(--font-inter), system-ui, -apple-system, sans-serif;
+  position: relative;
 }
 
 /* ================================================================
-   CORE DESIGN SYSTEM & UI COMPONENTS
+   NATURAL BIDIRECTIONAL TYPOGRAPHY (ARABIC & ENGLISH)
+   ================================================================ */
+
+[dir="rtl"] body,
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4,
+[dir="rtl"] p,
+[dir="rtl"] span,
+[dir="rtl"] button,
+[dir="rtl"] input,
+[dir="rtl"] textarea {
+  font-family: var(--font-cairo), system-ui, sans-serif;
+  letter-spacing: normal;
+}
+
+[dir="ltr"] body,
+[dir="ltr"] h1,
+[dir="ltr"] h2,
+[dir="ltr"] h3,
+[dir="ltr"] h4,
+[dir="ltr"] p,
+[dir="ltr"] span,
+[dir="ltr"] button,
+[dir="ltr"] input,
+[dir="ltr"] textarea {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* ================================================================
+   CLINICAL DESIGN SYSTEM COMPONENTS
    ================================================================ */
 
 @layer components {
-  /* ── Page Layout Container ── */
+  /* ── Layout Containers ── */
   .clinical-page {
     width: 100%;
-    max-width: 80rem; /* 1280px */
+    max-width: 80rem;
     margin-left: auto;
     margin-right: auto;
     padding-left: 1rem;
@@ -198,105 +201,79 @@
     background: var(--q-glass-1);
     backdrop-filter: blur(24px) saturate(140%);
     -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--q-card-border);
+    border-radius: 1.25rem;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.16);
   }
 
   .glass-elevated {
     background: var(--q-glass-2);
-    backdrop-filter: blur(32px) saturate(160%);
-    -webkit-backdrop-filter: blur(32px) saturate(160%);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    border-radius: 1.25rem;
+    box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.75), 0 0 1px 1px rgba(255, 255, 255, 0.05);
   }
 
   .glass-inset {
-    background: rgba(0, 0, 0, 0.40);
+    background: rgba(0, 0, 0, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  /* ── Card Accent Borders ── */
-  .accent-top-cyan {
-    border-top: 2px solid #22d3ee;
-  }
-
-  .accent-top-emerald {
-    border-top: 2px solid #10b981;
-  }
-
-  .accent-top-amber {
-    border-top: 2px solid #f59e0b;
-  }
-
-  .accent-top-violet {
-    border-top: 2px solid #8b5cf6;
-  }
-
-  .accent-top-rose {
-    border-top: 2px solid #f43f5e;
+    border-radius: 1rem;
   }
 
   /* ── Icon Badges ── */
   .icon-badge {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 0.875rem;
-    transition: all 0.25s ease;
+    border-width: 1px;
+    flex-shrink: 0;
   }
 
   .icon-badge-cyan {
     background: rgba(34, 211, 238, 0.12);
-    border: 1px solid rgba(34, 211, 238, 0.25);
+    border-color: rgba(34, 211, 238, 0.30);
     color: #22d3ee;
-    box-shadow: 0 4px 16px rgba(34, 211, 238, 0.15);
   }
 
   .icon-badge-emerald {
     background: rgba(16, 185, 129, 0.12);
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    color: #34d399;
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.30);
+    color: #10b981;
   }
 
   .icon-badge-amber {
     background: rgba(245, 158, 11, 0.12);
-    border: 1px solid rgba(245, 158, 11, 0.25);
-    color: #fbbf24;
-    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.30);
+    color: #f59e0b;
   }
 
   .icon-badge-violet {
     background: rgba(139, 92, 246, 0.12);
-    border: 1px solid rgba(139, 92, 246, 0.25);
-    color: #a78bfa;
-    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.30);
+    color: #8b5cf6;
   }
 
   .icon-badge-rose {
     background: rgba(244, 63, 94, 0.12);
-    border: 1px solid rgba(244, 63, 94, 0.25);
-    color: #fb7185;
-    box-shadow: 0 4px 16px rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.30);
+    color: #f43f5e;
   }
 
-  /* ── Stat Metric Cards ── */
+  /* ── Stat Cards ── */
   .stat-card {
-    background: var(--q-glass-2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--q-glass-1);
     padding: 1rem;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     transition: all 0.25s ease;
-  }
-
-  @media (min-width: 640px) {
-    .stat-card {
-      padding: 1.25rem;
-    }
   }
 
   .stat-card:hover {
@@ -329,6 +306,59 @@
     border-radius: 9999px;
     background: linear-gradient(90deg, #22d3ee 0%, #34d399 100%);
     transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ── Ultra-Glossy Shiny CTA Button ── */
+  .shiny-cta-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    border-radius: 1rem;
+    color: #020617;
+    background: linear-gradient(135deg, #38bdf8 0%, #22d3ee 30%, #34d399 75%, #10b981 100%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 
+      0 0 0 1px rgba(34, 211, 238, 0.3),
+      0 12px 36px -4px rgba(6, 182, 212, 0.65),
+      0 0 60px rgba(16, 185, 129, 0.40),
+      inset 0 1.5px 1.5px rgba(255, 255, 255, 0.9);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .shiny-cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.65) 50%,
+      transparent 100%
+    );
+    transform: skewX(-25deg);
+    animation: btnShimmerSweep 3.2s infinite ease-in-out;
+    pointer-events: none;
+  }
+
+  .shiny-cta-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+      0 0 0 2px rgba(34, 211, 238, 0.5),
+      0 18px 48px -4px rgba(6, 182, 212, 0.85),
+      0 0 80px rgba(16, 185, 129, 0.55),
+      inset 0 2px 2px rgba(255, 255, 255, 1);
+  }
+
+  .shiny-cta-btn:active {
+    transform: translateY(1px) scale(0.98);
   }
 }
 
@@ -379,38 +409,13 @@
 }
 
 @keyframes glowPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.03); }
 }
 
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* ================================================================
-   SKELETON LOADERS
-   ================================================================ */
-
-.skeleton {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.75rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.skeleton::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+@keyframes btnShimmerSweep {
+  0% { left: -150%; }
+  35%, 100% { left: 150%; }
 }
 
 /* ================================================================
@@ -453,73 +458,4 @@
   .pt-safe {
     padding-top: env(safe-area-inset-top);
   }
-}
-
-/* ================================================================
-   NEXUS AI GOLD THEME
-   ================================================================ */
-
-.nexus-gold-logo {
-  background: linear-gradient(135deg, #d4a853 0%, #f5d483 30%, #c49a3a 60%, #e8c96a 100%);
-  box-shadow: 0 4px 20px rgba(217, 170, 75, 0.28), 0 0 30px rgba(217, 170, 75, 0.12);
-  position: relative;
-  overflow: hidden;
-}
-
-.nexus-gold-rotate {
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(255, 255, 255, 0.35) 60deg,
-    transparent 120deg
-  );
-  animation: nexusGoldRotate 3.5s linear infinite;
-  mix-blend-mode: overlay;
-}
-
-@keyframes nexusGoldRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.nexus-gold-text {
-  background: linear-gradient(
-    90deg,
-    #d4a853 0%,
-    #f5d483 25%,
-    #fff4c8 50%,
-    #f5d483 75%,
-    #d4a853 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: nexusGoldTextShimmer 4s ease-in-out infinite;
-}
-
-@keyframes nexusGoldTextShimmer {
-  0% { background-position: 200% 0; }
-  50% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.nexus-gold-badge {
-  background: linear-gradient(135deg, #d4a853, #f5d483);
-  color: #1a1505;
-  box-shadow: 0 2px 10px rgba(217, 170, 75, 0.35);
-}
-
-/* ================================================================
-   LIQUID BACKGROUND BEHIND CANVAS
-   ================================================================ */
-
-#liquid-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
 }
