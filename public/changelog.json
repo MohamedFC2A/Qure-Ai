@@ -1,0 +1,85 @@
+[
+  {
+    "version": "v1.2.0",
+    "titleEn": "DeepSeek Flash Integration & UI Marquee Ticker",
+    "titleAr": "دمج ديب سيك فلاش المزدوج وتحديث شريط الشركاء المتحرك",
+    "date": "2026-08-09",
+    "badge": "Major Update",
+    "changes": [
+      {
+        "type": "fix",
+        "categoryEn": "AI Engine & Reliability",
+        "categoryAr": "محرك الذكاء الاصطناعي والاستقرار",
+        "itemsEn": [
+          "Updated DeepSeek model to official deepseek-chat (DeepSeek-V3 Flash).",
+          "Implemented zero-downtime dual AI engine fallback to Gemini 2.5 Flash Lite if DeepSeek encounters quota/balance issues."
+        ],
+        "itemsAr": [
+          "تحديث نموذج DeepSeek إلى المعرف الرسمي deepseek-chat (DeepSeek-V3 Flash).",
+          "إضافة نظام الدعم المزدوج للذكاء الاصطناعي (Fallback) مع Gemini 2.5 Flash Lite لضمان عمل الخدمة بدون انقطاع نهائياً."
+        ]
+      },
+      {
+        "type": "feat",
+        "categoryEn": "Design & UI/UX",
+        "categoryAr": "التصميم وواجهة المستخدم",
+        "itemsEn": [
+          "Redesigned partner badges into a continuous slow marquee ticker (AiPartnersMarquee) featuring pure white vector logos.",
+          "Fixed RTL chat bubble alignments and direction-aware layouts in Matany AI.",
+          "Corrected input focus glow color to cyan and updated main container padding."
+        ],
+        "itemsAr": [
+          "إعادة تصميم شارة الشركاء بالكامل إلى شريط متصل بطيء الحركة (AiPartnersMarquee) يدعم شعارات SVG باللون الأبيض الناصع.",
+          "تصحيح محاذاة فقاعات الدردشة واتجاهات العرض في Matany AI باللغة العربية والإنجليزية.",
+          "تعديل لون إضاءة التركيز في صندوق الإدخال إلى اللون السماوي وإصلاح حواف الصفحات."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "v1.1.0",
+    "titleEn": "RxNorm Nomenclature & OpenFDA Enrichment",
+    "titleAr": "ربط المصطلحات الدوائية RxNorm وإثراء بيانات openFDA",
+    "date": "2026-08-05",
+    "badge": "Feature",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "Clinical Intelligence",
+        "categoryAr": "الذكاء الطبي والسريري",
+        "itemsEn": [
+          "Integrated NLM RxNorm database for standardized active ingredient mapping.",
+          "Enhanced openFDA label fetcher with product NDC snapshot extraction."
+        ],
+        "itemsAr": [
+          "ربط قاعدة بيانات المكتبة الوطنية الأمريكية للطب RxNorm للتعرف على المكونات الفعالة.",
+          "تحسين جلب ملصقات الأدوية من openFDA مع لقطات تفصيلية لرموز NDC."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "v1.0.0",
+    "titleEn": "QureScan Platform Launch",
+    "titleAr": "الإطلاق الرسمي لمنصة QureScan",
+    "date": "2026-08-01",
+    "badge": "Initial Release",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "Core Platform",
+        "categoryAr": "المنصة الأساسية",
+        "itemsEn": [
+          "High-accuracy pharmaceutical label OCR powered by Gemini Vision.",
+          "Matany AI medical assistant with multi-mode consultation.",
+          "Supabase Cloud authentication and secure medication history."
+        ],
+        "itemsAr": [
+          "قراءة فورية لملصقات الأدوية بالذكاء الاصطناعي المدعوم بـ Gemini Vision.",
+          "مساعد مطاني الطبي Matany AI مع استشارات متعددة الأوضاع الصحية.",
+          "نظام الحماية والسجل الطبي السحابي عبر Supabase Enterprise."
+        ]
+      }
+    ]
+  }
+]

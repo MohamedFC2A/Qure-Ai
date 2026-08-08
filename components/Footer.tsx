@@ -24,6 +24,7 @@ export const Footer = () => {
             items: [
                 { name: t("Terms of Service", "شروط الخدمة"), href: "/terms" },
                 { name: t("Privacy Policy",   "سياسة الخصوصية"), href: "/terms" },
+                { name: t("Changelog & Updates", "التحديثات والسجل"), href: "/changelog" },
                 { name: t("Documentation",    "الوثائق"),     href: "/docs"  },
             ],
         },

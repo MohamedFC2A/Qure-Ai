@@ -50,12 +50,13 @@ export const Navbar = () => {
               { name: t("Scan", "فحص الدواء"), href: "/scan",              icon: ScanLine },
               { name: "MATANY AI",              href: "/ai",                icon: Brain },
               { name: t("Pricing", "الأسعار"), href: "/pricing",           icon: Gem },
+              { name: t("Updates", "التحديثات"), href: "/changelog",       icon: Zap },
               { name: t("History", "السجل"),    href: "/dashboard/history", icon: Clock },
-              // { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard", icon: LayoutDashboard }, // TODO: unhide
           ]
         : [
               { name: t("Home", "الرئيسية"),   href: "/",        icon: Atom },
               { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem },
+              { name: t("Updates", "التحديثات"), href: "/changelog", icon: Zap },
           ];
 
     const creditsDisplay = credits > 10000 ? "∞" : credits ?? 0;
