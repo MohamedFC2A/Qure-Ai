@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useSettings } from "@/context/SettingsContext";
-import { Atom, Github, Shield, FileText, Gem } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Atom, Github, Shield } from "lucide-react";
+import { AiPartnersBadge } from "@/components/ui/AiPartnersBadge";
 
 export const Footer = () => {
     const { resultsLanguage } = useSettings();
@@ -101,7 +101,7 @@ export const Footer = () => {
                 </div>
 
                 {/* Bottom bar */}
-                <div className="border-t border-white/[0.06] py-5 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                <div className="border-t border-white/[0.06] py-5 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
                     <p>
                         {t("Built by ", "تم التطوير بواسطة ")}
                         <span className="text-slate-300 font-medium">Matany Labs</span>
@@ -109,16 +109,14 @@ export const Footer = () => {
                         <span>© 2026</span>
                     </p>
 
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold tracking-[0.20em] uppercase text-cyan-400/60">
-                            {t("Powered by NEXUS AI", "مشغّل بواسطة NEXUS AI")}
-                        </span>
+                    <div className="flex items-center gap-4">
+                        <AiPartnersBadge showLabel={false} />
 
                         <a
                             href="https://github.com/MohamedFC2A"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-slate-400 hover:text-white transition-colors"
+                            className="text-slate-400 hover:text-white transition-colors p-1"
                             aria-label="GitHub"
                         >
                             <Github className="w-4 h-4" />

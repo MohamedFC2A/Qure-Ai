@@ -1,6 +1,7 @@
 "use client";
 
 import { GlassCard } from "@/components/ui/GlassCard";
+import { AiPartnersBadge } from "@/components/ui/AiPartnersBadge";
 import {
     ArrowRight,
     CheckCircle2,
@@ -10,7 +11,6 @@ import {
     ShieldCheck,
     Lock,
     ShieldAlert,
-    Sparkles,
 } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import Link from "next/link";
@@ -89,6 +89,11 @@ export default function Home() {
                 animate="visible"
             >
                 <motion.div variants={itemVariants} className="space-y-6">
+
+                    {/* Gemini x DeepSeek AI Engine Badge */}
+                    <div className="flex justify-center mb-1">
+                        <AiPartnersBadge />
+                    </div>
 
                     {/* Headline */}
                     <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.12] tracking-tight text-white max-w-4xl mx-auto">
