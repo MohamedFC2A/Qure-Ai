@@ -357,7 +357,7 @@ export function AiChatPage() {
 
     return (
         <main
-            className="fixed inset-0 pt-16 z-40 flex"
+            className="fixed inset-0 pt-16 sm:pt-20 md:pt-20 z-40 flex"
             dir={isArabic ? "rtl" : "ltr"}
             style={{ background: "var(--q-base, #040810)" }}
         >
@@ -570,7 +570,7 @@ export function AiChatPage() {
                                     >
                                         {isSending
                                             ? <div className="w-4 h-4 border-2 border-cyan-800/50 border-t-cyan-400 rounded-full animate-spin" />
-                                            : <ArrowUp className={cn("w-4 h-4", isArabic && "rotate-180")} />
+                                            : <ArrowUp className="w-4 h-4" />
                                         }
                                     </button>
                                 </div>

@@ -137,7 +137,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
     return (
         <div className={cn(
-            "flex gap-3",
+            "flex gap-3 items-start w-full",
             isUser ? "flex-row-reverse" : "flex-row",
             isUser ? "animate-chat-in-right" : "animate-chat-in-left"
         )}>
@@ -156,9 +156,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             <div className={cn(
                     "group relative",
                     isUser
-                        ? "max-w-[80%] xs:max-w-[75%] sm:max-w-[65%]"
-                        : "max-w-[88%] xs:max-w-[85%] sm:max-w-[78%]",
-                    isUser ? "ml-auto" : "mr-auto"
+                        ? "max-w-[85%] sm:max-w-[72%]"
+                        : "max-w-[90%] sm:max-w-[82%]"
                 )}>
                 {isUser ? (
                     /* User bubble — flat, bordered */

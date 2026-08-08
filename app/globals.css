@@ -400,8 +400,7 @@ body {
     background: rgba(11, 17, 30, 0.96);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.125rem;
-    border-top-left-radius: 0.25rem;
-    /* Only depth */
+    /* Depth only */
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.30);
   }
 
