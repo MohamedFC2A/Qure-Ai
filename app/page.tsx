@@ -1,18 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import {
     ArrowRight,
     CheckCircle2,
     Database,
-    FileText,
     HeartPulse,
     ScanLine,
     ShieldCheck,
     Lock,
-    Activity,
-    Search,
     ShieldAlert,
     Sparkles,
 } from "lucide-react";
@@ -121,20 +117,20 @@ export default function Home() {
                         )}
                     </p>
 
-                    {/* Prominent Glowing Shiny CTA Button */}
-                    <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="/scan" className="w-full sm:w-auto">
-                            <button className="shiny-cta-btn w-full sm:w-auto gap-3.5 px-10 sm:px-14 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide">
-                                <ScanLine className="h-6 w-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                    {/* Action Buttons with Equal Proportions & High-End Styling */}
+                    <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto">
+                        <Link href="/scan" className="w-full sm:w-auto flex-1">
+                            <button className="shiny-cta-btn w-full gap-3.5 px-8 sm:px-12 py-4 sm:py-5 text-sm sm:text-base font-black tracking-wide">
+                                <ScanLine className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 text-slate-950 stroke-[2.5]" />
                                 <span>{t("Start Medication Scan Now", "ابدأ فحص الدواء الآن")}</span>
                             </button>
                         </Link>
 
                         <Link href="/pricing" className="w-full sm:w-auto">
-                            <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2 px-8 font-bold text-xs sm:text-sm">
+                            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 sm:py-5 rounded-2xl border border-white/20 bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/40 text-white font-bold text-sm sm:text-base backdrop-blur-xl shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0">
                                 <span>{t("View Plans", "عرض الباقات")}</span>
                                 <ArrowRight className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
-                            </Button>
+                            </button>
                         </Link>
                     </div>
 
@@ -220,9 +216,9 @@ export default function Home() {
                         </span>
                     </div>
                     <Link href="/scan" className="shrink-0 w-full sm:w-auto">
-                        <Button size="xs" variant="amber" className="w-full sm:w-auto font-bold text-xs px-5 py-2">
+                        <button className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors shadow-md shadow-amber-950/30">
                             {t("Scan Medication", "فحص الدواء")}
-                        </Button>
+                        </button>
                     </Link>
                 </div>
             </section>
