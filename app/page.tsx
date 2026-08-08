@@ -468,8 +468,8 @@ export default function Home() {
                         <HeartPulse className="w-4 h-4 text-slate-500 shrink-0 hidden sm:block" />
                         <span>
                             {t(
-                                "QURE AI is an informational safety review tool. Always verify critical medical decisions with a qualified doctor or pharmacist.",
-                                "QURE AI هو أداة مراجعة وتحقق إرشادية. استشر طبيبك أو الصيدلي دائمًا قبل اتخاذ أي قرار علاجي."
+                                "QureScan is an informational safety review tool. Always verify critical medical decisions with a qualified doctor or pharmacist.",
+                                "QureScan هو أداة مراجعة وتحقق إرشادية. استشر طبيبك أو الصيدلي دائمًا قبل اتخاذ أي قرار علاجي."
                             )}
                         </span>
                     </div>

@@ -1,5 +1,5 @@
 -- ============================================================
--- QURE AI – Nexus AI Chat System
+-- QureScan – Nexus AI Chat System
 -- Run this migration in Supabase SQL Editor
 -- ============================================================
 

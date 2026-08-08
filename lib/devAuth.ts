@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
 
 export const LOCAL_DEV_USER_ID = "local-dev-user";
-export const LOCAL_DEV_EMAIL = "local.dev@qure-ai.local";
-export const LOCAL_DEV_COOKIE = "qure_dev_auth";
+export const LOCAL_DEV_EMAIL = "local.dev@qurescan.local";
+export const LOCAL_DEV_COOKIE = "qurescan_dev_auth";
 
 export function getLocalDevUser(request: NextRequest) {
     const host = request.headers.get("host") || "";

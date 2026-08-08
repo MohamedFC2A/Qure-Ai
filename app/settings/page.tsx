@@ -22,7 +22,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{t("Settings", "الإعدادات")}</h1>
-                        <p className="text-slate-400 text-xs sm:text-sm mt-0.5">{t("Customize your Qure Ai experience.", "قم بتخصيص تجربتك مع Qure Ai.")}</p>
+                        <p className="text-slate-400 text-xs sm:text-sm mt-0.5">{t("Customize your QureScan experience.", "قم بتخصيص تجربتك مع QureScan.")}</p>
                     </div>
                 </div>
 

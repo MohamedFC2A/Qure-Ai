@@ -135,7 +135,7 @@ export default function DashboardPage() {
 
     const hasLocalDevCookie =
         typeof document !== "undefined" &&
-        document.cookie.split("; ").some((cookie) => cookie === "qure_dev_auth=1");
+        document.cookie.split("; ").some((cookie) => cookie === "qurescan_dev_auth=1");
     const isLocalDevUser =
         process.env.NODE_ENV === "development" &&
         (user?.id === "local-dev-user" || hasLocalDevCookie);
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                                     {t("Platform Features", "مميزات المنصة")}
                                 </p>
                                 <h2 className="mt-1 text-lg font-bold text-white">
-                                    {t("Everything QURE AI can do", "كل ما يمكن لـ QURE AI فعله")}
+                                    {t("Everything QureScan can do", "كل ما يمكن لـ QureScan فعله")}
                                 </h2>
                             </div>
                             {!isUltra && (
@@ -530,8 +530,8 @@ export default function DashboardPage() {
                             <ShieldCheck className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
                             <p className="text-[11px] text-slate-500 leading-relaxed">
                                 {t(
-                                    "QURE AI is a review and verification tool. Always confirm important medical decisions with a licensed clinician or pharmacist.",
-                                    "QURE AI أداة مراجعة وتحقق. أكّد دائمًا القرارات الطبية المهمة مع طبيب أو صيدلاني مرخص."
+                                    "QureScan is a review and verification tool. Always confirm important medical decisions with a licensed clinician or pharmacist.",
+                                    "QureScan أداة مراجعة وتحقق. أكّد دائمًا القرارات الطبية المهمة مع طبيب أو صيدلاني مرخص."
                                 )}
                             </p>
                         </div>
@@ -547,7 +547,7 @@ export default function DashboardPage() {
                                 <span>{t("Workflow", "سير العمل")}</span>
                             </p>
                             <h2 className="text-xl sm:text-2xl font-bold text-white">
-                                {t("How QURE AI processes medications", "كيف يعالج QURE AI الأدوية")}
+                                {t("How QureScan processes medications", "كيف يعالج QureScan الأدوية")}
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

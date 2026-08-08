@@ -1,10 +1,10 @@
-# Product Requirements Document (PRD) - Qure-Ai
+# Product Requirements Document (PRD) - QureScan
 
 **Date:** 2026-01-15  
 **Prepared By:** Software Development Manager  
 
 ## 1. Product Overview
-Qure-Ai is a web application that leverages AI and OCR technologies to enhance content management and text extraction capabilities for users. It provides secure authentication, an intuitive dashboard, OCR scanning, and AI-powered services within an integrated interface.
+QureScan is a web application that leverages AI and OCR technologies to enhance content management and text extraction capabilities for users. It provides secure authentication, an intuitive dashboard, OCR scanning, and AI-powered services within an integrated interface.
 
 ## 2. Core Goals
 - **Enable seamless user authentication** for personalized experiences.

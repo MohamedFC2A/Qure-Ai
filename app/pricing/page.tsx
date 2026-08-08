@@ -246,8 +246,8 @@ export default function PricingPage() {
                                 <h2 className="mt-2 text-3xl sm:text-4xl font-black text-white">$0</h2>
                                 <p className="mt-1.5 text-xs sm:text-sm text-slate-400">
                                     {t(
-                                        "For trying QURE AI and occasional scans.",
-                                        "لتجربة QURE AI والفحوصات العرضية."
+                                        "For trying QureScan and occasional scans.",
+                                        "لتجربة QureScan والفحوصات العرضية."
                                     )}
                                 </p>
                             </div>

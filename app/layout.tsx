@@ -20,11 +20,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-    title: "Qure Ai | تحليل الأدوية الذكي | Pharmaceutical Intelligence",
-    description: "QURE AI — منصة ذكاء طبي متقدمة لتحليل الأدوية والتحقق من السلامة الدوائية. Advanced AI-powered medication analysis and pharmaceutical safety intelligence.",
+    title: "QureScan | تحليل الأدوية الذكي | Pharmaceutical Intelligence",
+    description: "QureScan — منصة ذكاء طبي متقدمة لتحليل الأدوية والتحقق من السلامة الدوائية. Advanced AI-powered medication analysis and pharmaceutical safety intelligence.",
     keywords: ["medication analysis", "تحليل أدوية", "AI", "pharmaceutical", "safety", "openFDA", "MATANY AI"],
     openGraph: {
-        title: "Qure Ai | تحليل الأدوية الذكي",
+        title: "QureScan | تحليل الأدوية الذكي",
         description: "منصة ذكاء طبي متقدمة لتحليل الأدوية والتحقق من السلامة الدوائية",
         locale: "ar_SA",
         alternateLocale: ["en_US"],
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "Qure Ai — Medication Intelligence",
+        title: "QureScan — Medication Intelligence",
     },
 };
 

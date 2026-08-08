@@ -1,1 +1,1 @@
-# Qure-Ai
+# QureScan

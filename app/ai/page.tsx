@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AiChatPage } from "@/components/ai/AiChatPage";
 
 export const metadata = {
-    title: "MATANY AI — Qure Ai",
+    title: "MATANY AI — QureScan",
     description: "Your intelligent health & medication assistant powered by MATANY AI.",
 };
 

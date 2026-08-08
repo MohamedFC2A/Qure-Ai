@@ -20,12 +20,12 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
 
     useEffect(() => {
         setMounted(true);
-        const savedLang = localStorage.getItem("qure_results_language") as ResultsLanguage;
+        const savedLang = localStorage.getItem("qurescan_results_language") as ResultsLanguage;
         if (savedLang && (savedLang === "en" || savedLang === "ar")) {
             setResultsLanguage(savedLang);
         }
 
-        const savedFda = localStorage.getItem("qure_fda_drugs_enabled");
+        const savedFda = localStorage.getItem("qurescan_fda_drugs_enabled");
         if (savedFda === "0" || savedFda === "false") {
             setFdaDrugsEnabled(false);
         } else if (savedFda === "1" || savedFda === "true") {
@@ -36,7 +36,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
     const updateLanguage = (lang: ResultsLanguage) => {
         setResultsLanguage(lang);
         if (typeof window !== "undefined") {
-            localStorage.setItem("qure_results_language", lang);
+            localStorage.setItem("qurescan_results_language", lang);
         }
     };
 
@@ -50,7 +50,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
     const updateFdaDrugsEnabled = (enabled: boolean) => {
         setFdaDrugsEnabled(Boolean(enabled));
         if (typeof window !== "undefined") {
-            localStorage.setItem("qure_fda_drugs_enabled", enabled ? "1" : "0");
+            localStorage.setItem("qurescan_fda_drugs_enabled", enabled ? "1" : "0");
         }
     };
 

@@ -75,23 +75,23 @@ async def run_test():
         await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
 
-        # -> Attempt to access the AI backend API endpoint https://qure-ai-nexus.vercel.app/api/v1/analyze without authentication or with invalid credentials to verify unauthorized access rejection.
-        await page.goto('https://qure-ai-nexus.vercel.app/api/v1/analyze', timeout=10000)
+        # -> Attempt to access the AI backend API endpoint https://qurescan-nexus.vercel.app/api/v1/analyze without authentication or with invalid credentials to verify unauthorized access rejection.
+        await page.goto('https://qurescan-nexus.vercel.app/api/v1/analyze', timeout=10000)
         await asyncio.sleep(3)
         
 
-        # -> Perform an API request to https://qure-ai-nexus.vercel.app/api/v1/analyze without authentication or with invalid credentials and verify the response status code and message for unauthorized access.
-        await page.goto('https://qure-ai-nexus.vercel.app/api/v1/analyze', timeout=10000)
+        # -> Perform an API request to https://qurescan-nexus.vercel.app/api/v1/analyze without authentication or with invalid credentials and verify the response status code and message for unauthorized access.
+        await page.goto('https://qurescan-nexus.vercel.app/api/v1/analyze', timeout=10000)
         await asyncio.sleep(3)
         
 
-        # -> Perform an API POST request to https://qure-ai-nexus.vercel.app/api/v1/analyze without authentication headers and verify the response status code and message for unauthorized access.
-        await page.goto('https://qure-ai-nexus.vercel.app/api/v1/analyze', timeout=10000)
+        # -> Perform an API POST request to https://qurescan-nexus.vercel.app/api/v1/analyze without authentication headers and verify the response status code and message for unauthorized access.
+        await page.goto('https://qurescan-nexus.vercel.app/api/v1/analyze', timeout=10000)
         await asyncio.sleep(3)
         
 
-        # -> Perform an API POST request to https://qure-ai-nexus.vercel.app/api/v1/analyze without authentication headers and verify the response status code and message for unauthorized access.
-        await page.goto('https://qure-ai-nexus.vercel.app/api/v1/analyze', timeout=10000)
+        # -> Perform an API POST request to https://qurescan-nexus.vercel.app/api/v1/analyze without authentication headers and verify the response status code and message for unauthorized access.
+        await page.goto('https://qurescan-nexus.vercel.app/api/v1/analyze', timeout=10000)
         await asyncio.sleep(3)
         
 

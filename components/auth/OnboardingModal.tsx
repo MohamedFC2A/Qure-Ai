@@ -78,7 +78,7 @@ export const OnboardingModal = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
             <GlassCard className="w-full max-w-md p-6 sm:p-8" hoverEffect={false}>
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-white mb-2">Welcome to Qure Ai</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">Welcome to QureScan</h2>
                     <p className="text-white/60 text-sm">
                         To provide personalized AI medical insights, we need to know a bit about you.
                         <br />

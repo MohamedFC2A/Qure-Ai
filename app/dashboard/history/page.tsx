@@ -28,7 +28,7 @@ export default function HistoryPage() {
     const { user } = useUser();
     const hasLocalDevCookie =
         typeof document !== "undefined" &&
-        document.cookie.split("; ").some((cookie) => cookie === "qure_dev_auth=1");
+        document.cookie.split("; ").some((cookie) => cookie === "qurescan_dev_auth=1");
     const isLocalDevUser = process.env.NODE_ENV === "development" && (user?.id === "local-dev-user" || hasLocalDevCookie);
 
     useEffect(() => {
@@ -78,7 +78,7 @@ export default function HistoryPage() {
                 rows.sort((a, b) => (a.id === authUser.id ? -1 : b.id === authUser.id ? 1 : a.display_name.localeCompare(b.display_name)));
                 setCareProfiles(rows.length ? rows : [{ id: authUser.id, display_name: isArabic ? "أنا" : "Me" }]);
 
-                const saved = typeof window !== "undefined" ? localStorage.getItem("qure_active_care_profile") : null;
+                const saved = typeof window !== "undefined" ? localStorage.getItem("qurescan_active_care_profile") : null;
                 const preferred = saved && rows.some((p) => p.id === saved) ? saved : null;
                 setProfileFilter(preferred || "all");
             } catch (err) {

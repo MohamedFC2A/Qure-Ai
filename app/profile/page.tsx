@@ -219,7 +219,7 @@ export default function ProfilePage() {
 
             setCareProfiles(rows.length ? rows : [{ id: user.id, display_name: String(user.email || "Me"), relationship: "self" }]);
 
-            const saved = typeof window !== "undefined" ? localStorage.getItem("qure_active_care_profile") : null;
+            const saved = typeof window !== "undefined" ? localStorage.getItem("qurescan_active_care_profile") : null;
             const preferred = saved && rows.some((p) => p.id === saved) ? saved : null;
             const next = preferred || activeCareProfileId || user.id;
             const valid = rows.some((p) => p.id === next) ? next : (rows[0]?.id || user.id);
@@ -232,7 +232,7 @@ export default function ProfilePage() {
     useEffect(() => {
         if (!activeCareProfileId) return;
         try {
-            localStorage.setItem("qure_active_care_profile", activeCareProfileId);
+            localStorage.setItem("qurescan_active_care_profile", activeCareProfileId);
         } catch {
             // ignore
         }
@@ -760,7 +760,7 @@ export default function ProfilePage() {
                                     <Database className="w-5 h-5 text-emerald-300" /> FDA Drugs Verification
                                 </h2>
                                 <p className="text-white/50 text-sm">
-                                    When enabled, QURE cross-checks your scan with FDA datasets (openFDA) to improve drug naming, manufacturer matching, and active-ingredient dosages.
+                                    When enabled, QureScan cross-checks your scan with FDA datasets (openFDA) to improve drug naming, manufacturer matching, and active-ingredient dosages.
                                 </p>
 
                                 <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
@@ -1042,7 +1042,7 @@ export default function ProfilePage() {
                                         <Activity className="w-6 h-6 text-amber-500" />
                                     </div>
                                     <h3 className="text-xl font-bold text-white mb-2">Medication Memories</h3>
-                                    <p className="text-white/60 mb-6 max-w-sm">Qure Ai learns your medication history to warn you about potential interactions in future scans.</p>
+                                    <p className="text-white/60 mb-6 max-w-sm">QureScan learns your medication history to warn you about potential interactions in future scans.</p>
                                     <Link href="/pricing"><Button variant="primary" className="bg-amber-600 hover:bg-amber-500">Upgrade to Ultra</Button></Link>
                                 </div>
                             )}

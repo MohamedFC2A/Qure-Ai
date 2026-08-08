@@ -43,7 +43,7 @@ export const Footer = () => {
                                 <Atom className="w-4 h-4 text-white" />
                             </div>
                             <span className="text-white font-display">
-                                Qure <span className="text-cyan-400">Ai</span>
+                                Qure<span className="text-cyan-400">Scan</span>
                             </span>
                         </Link>
 

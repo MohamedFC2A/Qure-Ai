@@ -17,7 +17,7 @@
 - **Test Error:** User registration test failed due to invalid email validation error on the signup page. Valid emails are rejected, preventing successful registration. Issue reported for developer investigation.
 Browser Console Logs:
 [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) (at http://localhost:3000/demo?_rsc=1r34m:0:0)
-[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqure-ai-nexus.vercel.app%2Fauth%2Fcallback:0:0)
+[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqurescan-nexus.vercel.app%2Fauth%2Fcallback:0:0)
 [ERROR] Auth error: AuthApiError: Email address "newuser@example.com" is invalid
     at tM (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:46241)
     at async tK (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:47185)
@@ -25,7 +25,7 @@ Browser Console Logs:
     at async rm.signUp (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:71984)
     at async N (http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:40623)
     at async http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:32803 (at http://localhost:3000/_next/static/chunks/7951220b16116775.js:36:41059)
-[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqure-ai-nexus.vercel.app%2Fauth%2Fcallback:0:0)
+[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqurescan-nexus.vercel.app%2Fauth%2Fcallback:0:0)
 [ERROR] Auth error: AuthApiError: Email address "doctor@medvision.ai" is invalid
     at tM (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:46241)
     at async tK (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:47185)
@@ -91,9 +91,9 @@ Browser Console Logs:
     at async rm.signInWithPassword (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:73281)
     at async N (http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:40755)
     at async http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:32803 (at http://localhost:3000/_next/static/chunks/7951220b16116775.js:36:41059)
-[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/authorize?provider=github&redirect_to=https%3A%2F%2Fqure-ai-nexus.vercel.app%2Fauth%2Fcallback&code_challenge=eZMUeI_C0l3BYJb6PHxb4IM7J8Q7mDq5CvQEpJs7z2Y&code_challenge_method=s256:0:0)
+[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/authorize?provider=github&redirect_to=https%3A%2F%2Fqurescan-nexus.vercel.app%2Fauth%2Fcallback&code_challenge=eZMUeI_C0l3BYJb6PHxb4IM7J8Q7mDq5CvQEpJs7z2Y&code_challenge_method=s256:0:0)
 [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. (at https://accounts.youtube.com/accounts/CheckConnection?pmpo=https%3A%2F%2Faccounts.google.com&v=-1121429499&timestamp=1768866568787:0:0)
-[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A00445003C340000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. (at https://accounts.google.com/v3/signin/identifier?opparams=%253Fredirect_to%253Dhttps%25253A%25252F%25252Fqure-ai-nexus.vercel.app%25252Fauth%25252Fcallback&dsh=S1577985428%3A1768866561190340&client_id=451402074037-mnjk8tgn24544a1ean0lq6or986so1rs.apps.googleusercontent.com&o2v=2&redirect_uri=https%3A%2F%2Fqrqqyetewxiuogypogzo.supabase.co%2Fauth%2Fv1%2Fcallback&response_type=code&scope=email+profile&service=lso&state=eyJhbGciOiJFUzI1NiIsImtpZCI6IjQ4NmE1NTBmLWM4NzAtNGFjZi1iYTcwLTIxZjIxMWI2OWVhYSIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njg4NjY4NTksInNpdGVfdXJsIjoiaHR0cDovL2xvY2FsaG9zdDozMDAwIiwiaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJmdW5jdGlvbl9ob29rcyI6bnVsbCwicHJvdmlkZXIiOiJnb29nbGUiLCJyZWZlcnJlciI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMC8iLCJmbG93X3N0YXRlX2lkIjoiN2E3MWM2NTMtYzkwZi00NjlhLTkwMDItMDYxYmViZWNmMTZiIn0.nAMxSlbXb8cn3TBjI3Hk3spZ918RIMmHC7B0iK6wtaoWgWrVaIjnPrYXInza7fR4UaA2De51-zMd3bC4_BcUwg&flowName=GeneralOAuthFlow&continue=https%3A%2F%2Faccounts.google.com%2Fsignin%2Foauth%2Fconsent%3Fauthuser%3Dunknown%26part%3DAJi8hAOlZos3bLdsturg0Qa5QBQncKK9IcdXjoPDtQ7RbUSyPYbGGKJKH7mv9K4a-2zCWuuq0IE0MzkFjJhwKRTijmUhWKWRoSXHerpvXG_Dqk33d0lMYvFP06vjsO8RKFP8dQkSGGF4c_7kG0a5cgHgIC-gWKpQN5Ft22z02nCE9ko_mczi1m6M82UF3tqkOm8Et9bD_yKVNk99CZ8XqjNqhZItg25LtxUFMO9OSUzv7BWWdRxtqfnNDORwtGK-jRirldbk4EFccp3gK16c2xvPhW9jq_l2Q-M1qa8J_nWhL7m1gV9IzSTOHQMioYDmbGevEe_xfa0RQafYLZXvT9P33HKWH7OWM7iqMAfr46RN1HB7zN0n53RYc3v_FmZEvLCRDuyFy9GxaG7ngsBlGbPVNAKxTriSybMWN1EGBzxnpHBgC2fcOVOR6u41SAWwjChhvsmj8gxrY0UIocSWcyMs5Xo0kVAe3GUSauPO2hbKWnEXlVruVdY%26flowName%3DGeneralOAuthFlow%26as%3DS1577985428%253A1768866561190340%26client_id%3D451402074037-mnjk8tgn24544a1ean0lq6or986so1rs.apps.googleusercontent.com%26requestPath%3D%252Fsignin%252Foauth%252Fconsent%23&app_domain=https%3A%2F%2Fqrqqyetewxiuogypogzo.supabase.co&rart=ANgoxcfFrq9w8OVurycI1YjuC95Uaza_wSGJ5KnJ55Hke8R5FXyr56kwAdZNUCyRnLSVU2t5WwaHLC8qSStYI9f-JLBL1E6vL0KusjNoAKpwLaJo56w01Zw:0:0)
+[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A00445003C340000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. (at https://accounts.google.com/v3/signin/identifier?opparams=%253Fredirect_to%253Dhttps%25253A%25252F%25252Fqurescan-nexus.vercel.app%25252Fauth%25252Fcallback&dsh=S1577985428%3A1768866561190340&client_id=451402074037-mnjk8tgn24544a1ean0lq6or986so1rs.apps.googleusercontent.com&o2v=2&redirect_uri=https%3A%2F%2Fqrqqyetewxiuogypogzo.supabase.co%2Fauth%2Fv1%2Fcallback&response_type=code&scope=email+profile&service=lso&state=eyJhbGciOiJFUzI1NiIsImtpZCI6IjQ4NmE1NTBmLWM4NzAtNGFjZi1iYTcwLTIxZjIxMWI2OWVhYSIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njg4NjY4NTksInNpdGVfdXJsIjoiaHR0cDovL2xvY2FsaG9zdDozMDAwIiwiaWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJmdW5jdGlvbl9ob29rcyI6bnVsbCwicHJvdmlkZXIiOiJnb29nbGUiLCJyZWZlcnJlciI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMC8iLCJmbG93X3N0YXRlX2lkIjoiN2E3MWM2NTMtYzkwZi00NjlhLTkwMDItMDYxYmViZWNmMTZiIn0.nAMxSlbXb8cn3TBjI3Hk3spZ918RIMmHC7B0iK6wtaoWgWrVaIjnPrYXInza7fR4UaA2De51-zMd3bC4_BcUwg&flowName=GeneralOAuthFlow&continue=https%3A%2F%2Faccounts.google.com%2Fsignin%2Foauth%2Fconsent%3Fauthuser%3Dunknown%26part%3DAJi8hAOlZos3bLdsturg0Qa5QBQncKK9IcdXjoPDtQ7RbUSyPYbGGKJKH7mv9K4a-2zCWuuq0IE0MzkFjJhwKRTijmUhWKWRoSXHerpvXG_Dqk33d0lMYvFP06vjsO8RKFP8dQkSGGF4c_7kG0a5cgHgIC-gWKpQN5Ft22z02nCE9ko_mczi1m6M82UF3tqkOm8Et9bD_yKVNk99CZ8XqjNqhZItg25LtxUFMO9OSUzv7BWWdRxtqfnNDORwtGK-jRirldbk4EFccp3gK16c2xvPhW9jq_l2Q-M1qa8J_nWhL7m1gV9IzSTOHQMioYDmbGevEe_xfa0RQafYLZXvT9P33HKWH7OWM7iqMAfr46RN1HB7zN0n53RYc3v_FmZEvLCRDuyFy9GxaG7ngsBlGbPVNAKxTriSybMWN1EGBzxnpHBgC2fcOVOR6u41SAWwjChhvsmj8gxrY0UIocSWcyMs5Xo0kVAe3GUSauPO2hbKWnEXlVruVdY%26flowName%3DGeneralOAuthFlow%26as%3DS1577985428%253A1768866561190340%26client_id%3D451402074037-mnjk8tgn24544a1ean0lq6or986so1rs.apps.googleusercontent.com%26requestPath%3D%252Fsignin%252Foauth%252Fconsent%23&app_domain=https%3A%2F%2Fqrqqyetewxiuogypogzo.supabase.co&rart=ANgoxcfFrq9w8OVurycI1YjuC95Uaza_wSGJ5KnJ55Hke8R5FXyr56kwAdZNUCyRnLSVU2t5WwaHLC8qSStYI9f-JLBL1E6vL0KusjNoAKpwLaJo56w01Zw:0:0)
 [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. (at https://accounts.youtube.com/accounts/CheckConnection?pmpo=https%3A%2F%2Faccounts.google.com&v=-1121429499&timestamp=1768866618518:0:0)
 - **Test Visualization and Result:** https://www.testsprite.com/dashboard/mcp/tests/81971c61-c84a-41c4-b932-23dfee5e7722/4824ac0a-1be7-4ba1-8309-a0d2d252742b
 - **Status:** ❌ Failed
@@ -218,7 +218,7 @@ Browser Console Logs:
     at async rm.signInWithPassword (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:73281)
     at async N (http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:40755)
     at async http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:32803 (at http://localhost:3000/_next/static/chunks/7951220b16116775.js:36:41059)
-[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/authorize?provider=github&redirect_to=https%3A%2F%2Fqure-ai-nexus.vercel.app%2Fauth%2Fcallback&code_challenge=4za1FdYHRy5KFIGXZ1xUy-Ld4ylW5C3z6usmPIow8lY&code_challenge_method=s256:0:0)
+[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/authorize?provider=github&redirect_to=https%3A%2F%2Fqurescan-nexus.vercel.app%2Fauth%2Fcallback&code_challenge=4za1FdYHRy5KFIGXZ1xUy-Ld4ylW5C3z6usmPIow8lY&code_challenge_method=s256:0:0)
 - **Test Visualization and Result:** https://www.testsprite.com/dashboard/mcp/tests/81971c61-c84a-41c4-b932-23dfee5e7722/2ba05207-1c90-4169-bba7-7a20a326a7a8
 - **Status:** ❌ Failed
 - **Analysis / Findings:** {{TODO:AI_ANALYSIS}}.
@@ -234,7 +234,7 @@ Browser Console Logs:
        or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
        height and width. (at http://localhost:3000/_next/static/chunks/4dd6ebec0e7181d8.js:0:87877)
 [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) (at http://localhost:3000/api/keys:0:0)
-[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqure-ai-nexus.vercel.app%2Fauth%2Fcallback:0:0)
+[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqurescan-nexus.vercel.app%2Fauth%2Fcallback:0:0)
 [ERROR] Auth error: AuthApiError: Email address "testuser@example.com" is invalid
     at tM (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:46241)
     at async tK (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:47185)
@@ -242,7 +242,7 @@ Browser Console Logs:
     at async rm.signUp (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:71984)
     at async N (http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:40623)
     at async http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:32803 (at http://localhost:3000/_next/static/chunks/7951220b16116775.js:36:41059)
-[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqure-ai-nexus.vercel.app%2Fauth%2Fcallback:0:0)
+[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqurescan-nexus.vercel.app%2Fauth%2Fcallback:0:0)
 [ERROR] Auth error: AuthApiError: Email address "doctor@medvision.ai" is invalid
     at tM (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:46241)
     at async tK (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:47185)
@@ -250,7 +250,7 @@ Browser Console Logs:
     at async rm.signUp (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:71984)
     at async N (http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:40623)
     at async http://localhost:3000/_next/static/chunks/7951220b16116775.js:37:32803 (at http://localhost:3000/_next/static/chunks/7951220b16116775.js:36:41059)
-[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqure-ai-nexus.vercel.app%2Fauth%2Fcallback:0:0)
+[ERROR] Failed to load resource: the server responded with a status of 400 () (at https://qrqqyetewxiuogypogzo.supabase.co/auth/v1/signup?redirect_to=https%3A%2F%2Fqurescan-nexus.vercel.app%2Fauth%2Fcallback:0:0)
 [ERROR] Auth error: AuthApiError: Email address "doctor.medvision@example.com" is invalid
     at tM (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:46241)
     at async tK (http://localhost:3000/_next/static/chunks/8046172804c0c690.js:24:47185)

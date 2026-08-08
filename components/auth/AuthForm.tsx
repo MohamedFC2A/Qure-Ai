@@ -165,7 +165,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                 throw new Error(payload.error || "Failed to prepare local dev login");
             }
 
-            document.cookie = "qure_dev_auth=1; path=/; max-age=2592000; samesite=lax";
+            document.cookie = "qurescan_dev_auth=1; path=/; max-age=2592000; samesite=lax";
 
             if (payload.mode === "offline") {
                 window.location.href = getNextPath();

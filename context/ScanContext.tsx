@@ -42,7 +42,7 @@ type PersistedScanSession = {
     errorAction: ErrorAction;
 };
 
-const STORAGE_KEY = "qure_scan_session_v1";
+const STORAGE_KEY = "qurescan_scan_session_v1";
 const STORAGE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
 
 function safeJsonParse<T>(raw: string | null): T | null {

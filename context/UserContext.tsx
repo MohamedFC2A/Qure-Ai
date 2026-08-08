@@ -26,11 +26,11 @@ const UserContext = createContext<UserState | undefined>(undefined);
 
 const getLocalDevUser = () => {
     if (process.env.NODE_ENV !== "development" || typeof document === "undefined") return null;
-    if (!document.cookie.split("; ").some((cookie) => cookie === "qure_dev_auth=1")) return null;
+    if (!document.cookie.split("; ").some((cookie) => cookie === "qurescan_dev_auth=1")) return null;
 
     return {
         id: "local-dev-user",
-        email: "local.dev@qure-ai.local",
+        email: "local.dev@qurescan.local",
         created_at: new Date("2026-01-01T00:00:00.000Z").toISOString(),
         user_metadata: {
             username: "local_dev",

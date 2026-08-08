@@ -396,7 +396,7 @@ export function AiChatPage() {
                                 ? t("Health AI", "الصحة")
                                 : mode === "medication"
                                     ? t("Medication", "الدواء")
-                                    : t("QURE Integrated", "المدمج")
+                                    : t("QureScan Integrated", "المدمج")
                             }
                         </span>
                     </div>

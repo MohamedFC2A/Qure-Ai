@@ -208,7 +208,7 @@ export function ConversationSidebar({
                 {/* Bottom footer */}
                 <div className="px-4 py-3 border-t border-white/[0.04]">
                     <p className="text-[9px] text-slate-800 text-center font-medium tracking-wide uppercase">
-                        Powered by QURE AI
+                        Powered by QureScan
                     </p>
                 </div>
             </aside>

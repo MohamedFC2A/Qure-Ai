@@ -3,7 +3,7 @@
 ---
 
 ## 1️⃣ Document Metadata
-- **Project Name:** QURE AI
+- **Project Name:** QureScan
 - **Date:** 2026-01-20
 - **Phase:** Feature Implementation & Verification
 - **Prepared by:** TestSprite AI Team (via Antigravity)

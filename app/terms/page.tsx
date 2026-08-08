@@ -90,8 +90,8 @@ export default function TermsPage() {
                             <AlertTriangle className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
                             <p className="text-rose-200">
                                 {t(
-                                    "QURE AI provides supporting medication information only. OCR and AI analysis can be incorrect, incomplete, or outdated.",
-                                    "يوفر QURE AI معلومات مساندة للأدوية فقط. قد تكون قراءات الذكاء الاصطناعي وOCR غير دقيقة أو غير كاملة أو غير محدثة."
+                                    "QureScan provides supporting medication information only. OCR and AI analysis can be incorrect, incomplete, or outdated.",
+                                    "يوفر QureScan معلومات مساندة للأدوية فقط. قد تكون قراءات الذكاء الاصطناعي وOCR غير دقيقة أو غير كاملة أو غير محدثة."
                                 )}
                             </p>
                         </div>

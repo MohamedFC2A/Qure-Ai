@@ -38,7 +38,7 @@ export const Navbar = () => {
 
     const handleSignOut = async () => {
         if (process.env.NODE_ENV === "development") {
-            document.cookie = "qure_dev_auth=; path=/; max-age=0; samesite=lax";
+            document.cookie = "qurescan_dev_auth=; path=/; max-age=0; samesite=lax";
         }
         await supabase.auth.signOut();
         window.location.href = "/login";
@@ -87,7 +87,7 @@ export const Navbar = () => {
                         </div>
                         <span className="text-white font-display tracking-tight flex items-center gap-1">
                             <span>Qure</span>
-                            <span className="text-slate-400">Ai</span>
+                            <span className="text-slate-400">Scan</span>
                         </span>
                     </Link>
 

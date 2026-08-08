@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
     const requiresTerms = requiresAuth && !isAuthFlow && pathname !== '/terms';
     const isLocalDevSession =
         process.env.NODE_ENV === 'development' &&
-        request.cookies.get('qure_dev_auth')?.value === '1' &&
+        request.cookies.get('qurescan_dev_auth')?.value === '1' &&
         (request.nextUrl.hostname === 'localhost' || request.nextUrl.hostname === '127.0.0.1' || request.nextUrl.hostname === '::1');
 
     const nextPath = `${pathname}${request.nextUrl.search || ''}`;

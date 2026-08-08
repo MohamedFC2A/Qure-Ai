@@ -59,12 +59,12 @@ async def run_test():
         
 
         # -> Send API requests with invalid parameters, missing required fields, or wrong data types to the /api/v1/analyze endpoint and check responses.
-        await page.goto('https://qure-ai-nexus.vercel.app/api/v1/analyze', timeout=10000)
+        await page.goto('https://qurescan-nexus.vercel.app/api/v1/analyze', timeout=10000)
         await asyncio.sleep(3)
         
 
         # -> Send HTTP POST requests with invalid parameters, missing required fields, and wrong data types to the /api/v1/analyze endpoint and capture responses.
-        await page.goto('https://qure-ai-nexus.vercel.app/api/v1/analyze', timeout=10000)
+        await page.goto('https://qurescan-nexus.vercel.app/api/v1/analyze', timeout=10000)
         await asyncio.sleep(3)
         
 

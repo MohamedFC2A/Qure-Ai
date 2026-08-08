@@ -1,10 +1,10 @@
 {
   "meta": {
-    "project": "Qure-Ai",
+    "project": "QureScan",
     "date": "2026-01-15",
     "prepared_by": "Software Development Manager"
   },
-  "product_overview": "Qure-Ai is a web application that leverages AI and OCR technologies to enhance content management and text extraction capabilities for users. It provides secure authentication, an intuitive dashboard, OCR scanning, and AI-powered services within an integrated interface.",
+  "product_overview": "QureScan is a web application that leverages AI and OCR technologies to enhance content management and text extraction capabilities for users. It provides secure authentication, an intuitive dashboard, OCR scanning, and AI-powered services within an integrated interface.",
   "core_goals": [
     "Enable seamless user authentication for personalized experiences.",
     "Provide a user-friendly dashboard to manage and organize content effectively.",

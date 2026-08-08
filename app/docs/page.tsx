@@ -32,7 +32,7 @@ async function processImage(imageFile) {
     const { data: { text } } = await worker.recognize(imageFile);
     console.log("Raw Text Extracted:", text);
 
-    // 3. Send to QURE AI API
+    // 3. Send to QureScan API
     const response = await fetch('${baseUrl}/api/analyze', {
         method: 'POST',
         headers: {
@@ -86,7 +86,7 @@ testDrug("Panadol Extra");`;
                         Developer Hub
                     </h1>
                     <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                        Complete integration guide for the QURE AI Pharmaceutical Analysis Engine.
+                        Complete integration guide for the QureScan Pharmaceutical Analysis Engine.
                         Connect your applications with OCR and drug analysis workflows.
                     </p>
                 </div>

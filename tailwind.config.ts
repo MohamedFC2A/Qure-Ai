@@ -8,7 +8,7 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // ── QURE Design System ──
+                // ── QureScan Design System ──
                 q: {
                     base:    "#050709",
                     surface: "#080C12",
