@@ -359,11 +359,8 @@ export function AiChatPage() {
         <main
             className="fixed inset-0 pt-16 z-40 flex"
             dir={isArabic ? "rtl" : "ltr"}
-            style={{ background: "var(--q-base, #030712)" }}
+            style={{ background: "var(--q-base, #040810)" }}
         >
-            {/* ── Ambient mesh background ── */}
-            <div className="ai-mesh-bg" />
-
             {/* ── Sidebar ── */}
             <ConversationSidebar
                 conversations={conversations}
@@ -382,28 +379,24 @@ export function AiChatPage() {
                 {/* ── Top Header ── */}
                 <div
                     className="flex items-center gap-3 px-4 py-2 border-b border-white/[0.05] shrink-0"
-                    style={{ background: "rgba(3,7,18,0.92)", backdropFilter: "blur(20px)" }}
+                    style={{ background: "rgba(4,8,16,0.95)", backdropFilter: "blur(16px)" }}
                 >
                     {/* Mobile sidebar toggle */}
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden p-2 rounded-xl hover:bg-white/[0.06] text-slate-600 hover:text-slate-300 transition-all"
+                        className="lg:hidden p-2 rounded-lg hover:bg-white/[0.05] text-slate-600 hover:text-slate-400 transition-all"
                     >
                         <Menu className="w-5 h-5" />
                     </button>
 
                     {/* Center: mode indicator */}
                     <div className="flex-1 flex items-center justify-center">
-                        <span className={cn(
-                            "text-xs font-semibold",
-                            accentColor === "cyan" ? "text-cyan-400/60" :
-                            accentColor === "emerald" ? "text-emerald-400/60" : "text-violet-400/60"
-                        )}>
+                        <span className="text-xs font-medium text-slate-600">
                             {mode === "health"
-                                ? t("Health AI Mode", "وضع الصحة")
+                                ? t("Health AI", "الصحة")
                                 : mode === "medication"
-                                    ? t("Medication Mode", "وضع الدواء")
-                                    : t("QURE Integrated Mode", "الوضع المدمج")
+                                    ? t("Medication", "الدواء")
+                                    : t("QURE Integrated", "المدمج")
                             }
                         </span>
                     </div>
@@ -430,14 +423,14 @@ export function AiChatPage() {
                         {/* Welcome (only when empty) */}
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center text-center pt-16 pb-8 animate-fade-in">
-                                {/* Orb */}
-                                <div className="relative mb-6">
+                                {/* Clean icon — no glow */}
+                                <div className="mb-5">
                                     <div className="ai-orb">
-                                        <Sparkles className="w-7 h-7 relative z-10" style={{ color: "#1a0e00" }} />
+                                        <Sparkles className="w-6 h-6 relative z-10" style={{ color: "#1c1000" }} />
                                     </div>
                                 </div>
 
-                                <h2 className="text-2xl font-black mb-2 tracking-tight">
+                                <h2 className="text-xl font-black mb-2 tracking-tight">
                                     <span className="nexus-gold-text">MATANY AI</span>
                                 </h2>
                                 <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-8">

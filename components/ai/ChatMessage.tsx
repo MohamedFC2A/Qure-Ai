@@ -154,23 +154,23 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
             {/* Message Bubble */}
             <div className={cn(
-                "group relative",
-                isUser
-                    ? "max-w-[80%] xs:max-w-[75%] sm:max-w-[65%]"
-                    : "max-w-[88%] xs:max-w-[85%] sm:max-w-[78%]",
-                isUser ? "ml-auto" : "mr-auto"
-            )}>
+                    "group relative",
+                    isUser
+                        ? "max-w-[80%] xs:max-w-[75%] sm:max-w-[65%]"
+                        : "max-w-[88%] xs:max-w-[85%] sm:max-w-[78%]",
+                    isUser ? "ml-auto" : "mr-auto"
+                )}>
                 {isUser ? (
-                    /* User bubble */
+                    /* User bubble — flat, bordered */
                     <div className={cn(
                         "rounded-2xl px-4 py-3 border",
                         isArabic ? "rounded-tr-sm" : "rounded-tl-sm",
-                        userBg[accentColor] || userBg.cyan
+                        "bg-white/[0.07] border-white/[0.10] text-white"
                     )}>
-                        <p className="text-sm leading-relaxed text-white whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                     </div>
                 ) : (
-                    /* AI bubble */
+                    /* AI bubble — clean, no pseudo-element */
                     <div className={cn(
                         "ai-bubble px-4 py-3.5",
                         isArabic ? "rounded-tl-sm" : "rounded-tr-sm"
