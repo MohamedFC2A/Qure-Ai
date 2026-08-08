@@ -457,23 +457,20 @@ body {
     border-color: rgba(255, 255, 255, 0.10);
   }
 
-  /* Active chips — flat tinted, no glow */
-  .mode-chip-active-health {
-    background: rgba(34, 211, 238, 0.10) !important;
-    border-color: rgba(34, 211, 238, 0.22) !important;
-    color: #67e8f9 !important;
+  /* Active chip — single neutral white accent */
+  .mode-chip-active {
+    background: rgba(255, 255, 255, 0.10) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    color: rgba(255, 255, 255, 0.90) !important;
   }
 
-  .mode-chip-active-medication {
-    background: rgba(16, 185, 129, 0.10) !important;
-    border-color: rgba(16, 185, 129, 0.22) !important;
-    color: #6ee7b7 !important;
-  }
-
+  /* Legacy aliases kept for backward compat */
+  .mode-chip-active-health,
+  .mode-chip-active-medication,
   .mode-chip-active-context {
-    background: rgba(139, 92, 246, 0.10) !important;
-    border-color: rgba(139, 92, 246, 0.22) !important;
-    color: #c4b5fd !important;
+    background: rgba(255, 255, 255, 0.10) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    color: rgba(255, 255, 255, 0.90) !important;
   }
 
   /* ── AI Icon (welcome screen) — refined, no pulse glow ── */

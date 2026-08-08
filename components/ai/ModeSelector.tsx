@@ -19,29 +19,10 @@ const modes: Array<{
     icon: React.ElementType;
     labelEn: string;
     labelAr: string;
-    activeClass: string;
 }> = [
-    {
-        id: "health",
-        icon: HeartPulse,
-        labelEn: "Health",
-        labelAr: "صحي",
-        activeClass: "mode-chip-active-health",
-    },
-    {
-        id: "medication",
-        icon: Pill,
-        labelEn: "Meds",
-        labelAr: "الدواء",
-        activeClass: "mode-chip-active-medication",
-    },
-    {
-        id: "context",
-        icon: Brain,
-        labelEn: "My Profile",
-        labelAr: "ملفي",
-        activeClass: "mode-chip-active-context",
-    },
+    { id: "health",     icon: HeartPulse, labelEn: "Health",     labelAr: "صحي" },
+    { id: "medication", icon: Pill,       labelEn: "Meds",       labelAr: "الدواء" },
+    { id: "context",   icon: Brain,      labelEn: "My Profile", labelAr: "ملفي" },
 ];
 
 export function ModeSelector({ activeMode, onModeChange, isArabic }: ModeSelectorProps) {
@@ -56,7 +37,7 @@ export function ModeSelector({ activeMode, onModeChange, isArabic }: ModeSelecto
                         onClick={() => onModeChange(mode.id)}
                         className={cn(
                             "mode-chip",
-                            isActive && mode.activeClass
+                            isActive && "mode-chip-active"
                         )}
                     >
                         <Icon className="w-3.5 h-3.5 shrink-0" />
