@@ -2,16 +2,61 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { hasAcceptedTerms, safeNextPath } from '@/lib/legal/terms'
 
-// Middleware to handle Supabase session persistence
+// In-memory sliding window rate limiter for API endpoints
+const rateLimitMap = new Map<string, { count: number; expiresAt: number }>();
+
+function applyRateLimit(ip: string, limit: number = 60, windowMs: number = 60000): boolean {
+    const now = Date.now();
+    const entry = rateLimitMap.get(ip);
+
+    if (!entry || entry.expiresAt < now) {
+        rateLimitMap.set(ip, { count: 1, expiresAt: now + windowMs });
+        return true;
+    }
+
+    if (entry.count >= limit) {
+        return false;
+    }
+
+    entry.count += 1;
+    return true;
+}
+
 export async function middleware(request: NextRequest) {
-    // Log incoming request
-    console.log(`[Middleware] ${request.method} ${request.nextUrl.pathname}`);
+    const pathname = request.nextUrl.pathname;
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+
+    // 1. Rate limiting check for API routes
+    if (pathname.startsWith('/api/')) {
+        const isStrictEndpoint = pathname.startsWith('/api/analyze') || pathname.startsWith('/api/ai');
+        const limit = isStrictEndpoint ? 20 : 60; // 20 requests/min for AI analysis, 60/min for general APIs
+        const allowed = applyRateLimit(`${ip}:${pathname}`, limit, 60000);
+
+        if (!allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Rate limit exceeded.', code: 'RATE_LIMIT_EXCEEDED' },
+                { status: 429, headers: { 'Retry-After': '60' } }
+            );
+        }
+    }
 
     let response = NextResponse.next({
         request: {
             headers: request.headers,
         },
-    })
+    });
+
+    // 2. Attach security headers & static caching
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.delete('x-powered-by');
+    response.headers.delete('server');
+
+    if (pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2)$/)) {
+        response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    }
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,54 +67,24 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.get(name)?.value
                 },
                 set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
+                    request.cookies.set({ name, value, ...options });
+                    response = NextResponse.next({ request: { headers: request.headers } });
+                    response.cookies.set({ name, value, ...options });
                 },
                 remove(name: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
+                    request.cookies.set({ name, value: '', ...options });
+                    response = NextResponse.next({ request: { headers: request.headers } });
+                    response.cookies.set({ name, value: '', ...options });
                 },
             },
         }
-    )
+    );
 
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error) {
         console.log(`[Middleware] Auth Error: ${error.message}`);
-    } else if (user) {
-        console.log(`[Middleware] Authenticated User: ${user.id}`);
-    } else {
-        console.log(`[Middleware] No User Session`);
     }
-
-    const pathname = request.nextUrl.pathname;
 
     const isApi = pathname.startsWith('/api');
     const isAuthFlow = pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup';
@@ -81,7 +96,6 @@ export async function middleware(request: NextRequest) {
     const isProtectedPage = protectedPagePrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
     const isProtectedApi = isApi && !isPublicApi;
-
     const requiresAuth = isProtectedPage || isProtectedApi;
     const requiresTerms = requiresAuth && !isAuthFlow && pathname !== '/terms';
     const isLocalDevSession =
@@ -131,7 +145,6 @@ export async function middleware(request: NextRequest) {
         return redirect;
     }
 
-    // If logged in and already accepted terms, keep auth pages clean.
     if ((isLocalDevSession || (user && hasAcceptedTerms(user))) && (pathname === '/login' || pathname === '/signup')) {
         const target = request.nextUrl.clone();
         const requestedNext = safeNextPath(target.searchParams.get('next'), '/scan');
@@ -143,18 +156,11 @@ export async function middleware(request: NextRequest) {
         return redirect;
     }
 
-    return response
+    return response;
 }
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * Feel free to modify this pattern to include more paths.
-         */
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
-}
+};

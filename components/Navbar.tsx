@@ -7,7 +7,6 @@ import { Button } from "./ui/Button";
 import {
     Atom,
     ScanLine,
-    LayoutDashboard,
     User,
     Clock,
     Gem,
@@ -32,8 +31,6 @@ export const Navbar = () => {
 
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
-
-    const isAiRoute = pathname === "/ai" || pathname.startsWith("/ai/");
     const isUltra = plan === "ultra";
 
     const handleSignOut = async () => {
@@ -69,7 +66,7 @@ export const Navbar = () => {
             <MobileNav />
             <OnboardingModal />
 
-            <header className="fixed top-2 sm:top-3.5 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-7xl">
+            <header role="banner" aria-label="Main Navigation Header" className="fixed top-2 sm:top-3.5 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-7xl">
                 <div
                     className={cn(
                         "relative overflow-hidden rounded-2xl px-3.5 py-2 sm:px-5 sm:py-2.5",
@@ -78,13 +75,13 @@ export const Navbar = () => {
                         "bg-slate-950/92 border-white/[0.08] shadow-black/60"
                     )}
                 >
-                    {/* Top accent line — single consistent color */}
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
 
-                    {/* ── Logo ── */}
+                    {/* Logo */}
                     <Link
                         href="/"
-                        className="flex items-center gap-2 sm:gap-2.5 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-xl"
+                        aria-label="QureScan Home"
+                        className="flex items-center gap-2 sm:gap-2.5 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded-xl"
                     >
                         <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center bg-white/[0.08] border border-white/[0.10] transition-transform active:scale-95">
                             <Atom className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/80" />
@@ -95,8 +92,8 @@ export const Navbar = () => {
                         </span>
                     </Link>
 
-                    {/* ── Desktop Navigation ── */}
-                    <nav className="hidden md:flex items-center gap-0.5 lg:gap-1">
+                    {/* Navigation */}
+                    <nav className="hidden md:flex items-center gap-0.5 lg:gap-1" role="navigation" aria-label="Main Menu">
                         {navItems.map((item) => {
                             const isActive =
                                 pathname === item.href ||
@@ -104,19 +101,19 @@ export const Navbar = () => {
                             return (
                                 <Link key={item.href} href={item.href} className="shrink-0">
                                     <div
+                                        aria-current={isActive ? "page" : undefined}
                                         className={cn(
                                             "relative px-2.5 lg:px-3 py-1.5 rounded-xl text-xs lg:text-sm font-medium transition-all duration-200 whitespace-nowrap",
                                             "flex items-center gap-1.5 cursor-pointer select-none",
                                             isActive
                                                 ? "bg-white/[0.08] text-white border border-white/[0.10] font-semibold"
-                                                : "text-slate-500 hover:text-slate-200 hover:bg-white/[0.05]"
+                                                : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.05]"
                                         )}
                                     >
                                         <item.icon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-white" : "opacity-60")} />
                                         <span>{item.name}</span>
-                                        {/* Active indicator dot */}
                                         {isActive && (
-                                            <span className="w-1 h-1 rounded-full bg-white/60 shrink-0" />
+                                            <span className="w-1 h-1 rounded-full bg-cyan-400 shrink-0" />
                                         )}
                                     </div>
                                 </Link>
@@ -124,68 +121,60 @@ export const Navbar = () => {
                         })}
                     </nav>
 
-                    {/* ── Right: Auth / User ── */}
+                    {/* Auth / User section */}
                     <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                         {!loading && user ? (
                             <div className="flex items-center gap-2">
 
-                                {/* Scanning indicator */}
                                 {isScanning && (
-                                    <Link href="/scan" className="shrink-0">
-                                        <div className="flex items-center gap-1.5 rounded-xl border border-white/[0.10] bg-white/[0.05] px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-all hover:bg-white/[0.08] whitespace-nowrap">
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0 text-slate-400" />
+                                    <Link href="/scan" aria-label="Current Scan Progress" className="shrink-0">
+                                        <div className="flex items-center gap-1.5 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-medium text-cyan-300 transition-all hover:bg-cyan-500/20 whitespace-nowrap">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0 text-cyan-400" />
                                             <span className="hidden sm:inline">{t("Scanning", "جارٍ الفحص")}</span>
                                             <span className="font-mono tabular-nums">{totalDuration}s</span>
                                         </div>
                                     </Link>
                                 )}
 
-                                {/* ── Credits Badge — redesigned ── */}
-                                <Link href="/profile" aria-label="Credits" className="shrink-0">
+                                <Link href="/profile" aria-label={t("Account Credits", "رصيد الحساب")} className="shrink-0">
                                     <div className={cn(
                                         "flex items-center gap-2 rounded-xl border px-3 py-1.5 transition-all whitespace-nowrap",
                                         isUltra
-                                            ? "border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.07]"
+                                            ? "border-amber-500/25 bg-amber-500/10 hover:bg-amber-500/15"
                                             : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
                                     )}>
-                                        {/* Icon */}
                                         <Zap className={cn(
                                             "w-3.5 h-3.5 shrink-0",
-                                            isUltra ? "text-amber-400/80" : "text-slate-400"
+                                            isUltra ? "text-amber-400" : "text-slate-400"
                                         )} />
-
-                                        {/* Credits number */}
                                         <span className="font-mono tabular-nums font-bold text-sm text-white leading-none">
                                             {creditsDisplay}
                                         </span>
-
-                                        {/* Label */}
-                                        <span className="text-[10px] font-medium text-slate-600 leading-none border-l rtl:border-r rtl:border-l-0 border-white/[0.07] pl-2 rtl:pr-2 rtl:pl-0">
+                                        <span className="text-[10px] font-medium text-slate-400 leading-none border-l rtl:border-r rtl:border-l-0 border-white/[0.10] pl-2 rtl:pr-2 rtl:pl-0">
                                             {isUltra ? "ULTRA" : t("credits", "رصيد")}
                                         </span>
                                     </div>
                                 </Link>
 
-                                {/* Profile Avatar */}
-                                <Link href="/profile" aria-label="Profile" className="shrink-0">
-                                    <div className="flex h-8 w-8 rounded-xl items-center justify-center border border-white/[0.08] bg-white/[0.05] overflow-hidden transition-all hover:border-white/[0.18] hover:bg-white/[0.09]">
+                                <Link href="/profile" aria-label={t("User Profile", "الملف الشخصي")} className="shrink-0">
+                                    <div className="flex h-8 w-8 rounded-xl items-center justify-center border border-white/[0.10] bg-white/[0.05] overflow-hidden transition-all hover:border-white/[0.20] hover:bg-white/[0.10]">
                                         {user?.user_metadata?.avatar_url ? (
                                             <img
                                                 src={user.user_metadata.avatar_url}
-                                                alt={user.email || "User"}
+                                                alt={user.email || "User Avatar"}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <User className="w-4 h-4 text-slate-400" />
+                                            <User className="w-4 h-4 text-slate-300" />
                                         )}
                                     </div>
                                 </Link>
 
-                                {/* Sign Out */}
                                 <button
                                     onClick={handleSignOut}
+                                    aria-label={t("Log Out", "تسجيل الخروج")}
                                     title={t("Log Out", "تسجيل الخروج")}
-                                    className="hidden sm:flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-300 hover:bg-white/[0.05] transition-all shrink-0"
+                                    className="hidden sm:flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-all shrink-0"
                                 >
                                     <LogOut className="h-3.5 w-3.5 shrink-0" />
                                     <span>{t("Exit", "خروج")}</span>
@@ -194,7 +183,7 @@ export const Navbar = () => {
                         ) : !loading ? (
                             <div className="flex items-center gap-2">
                                 <Link href="/login" className="shrink-0">
-                                    <Button variant="ghost" size="xs" className="text-slate-500 hover:text-white px-3 text-xs">
+                                    <Button variant="ghost" size="xs" className="text-slate-300 hover:text-white px-3 text-xs">
                                         {t("Login", "دخول")}
                                     </Button>
                                 </Link>
