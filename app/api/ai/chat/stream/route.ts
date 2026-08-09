@@ -72,9 +72,11 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        const apiKey = getDeepSeekApiKey();
-        if (!apiKey) {
-            return new Response(JSON.stringify({ error: "Server configuration error: DEEPSEEK_API_KEY is missing." }), { status: 503, headers: { "Content-Type": "application/json" } });
+        let apiKey: string;
+        try {
+            apiKey = getDeepSeekApiKey();
+        } catch (e: any) {
+            return new Response(JSON.stringify({ error: "Server configuration error: DEEPSEEK_API_KEY is not configured." }), { status: 503, headers: { "Content-Type": "application/json" } });
         }
 
         /* ── Fetch context data for context mode ── */

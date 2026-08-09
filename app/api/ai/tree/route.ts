@@ -189,9 +189,11 @@ export async function POST(req: NextRequest) {
             recentHistory = historyRes.data || [];
         }
 
-        const apiKey = getDeepSeekApiKey();
-        if (!apiKey) {
-            return NextResponse.json({ error: "Server configuration error: DEEPSEEK_API_KEY is missing." }, { status: 503 });
+        let apiKey: string;
+        try {
+            apiKey = getDeepSeekApiKey();
+        } catch (e: any) {
+            return NextResponse.json({ error: "Server configuration error: DEEPSEEK_API_KEY is not configured." }, { status: 503 });
         }
 
         const rootQuestion = question || presetToQuestion(preset, language);

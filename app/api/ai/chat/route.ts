@@ -29,7 +29,7 @@ function extractJsonCandidate(raw: string): string {
 }
 
 function fixInvalidJsonEscapes(jsonText: string): string {
-    return jsonText.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, "\\\\");
+    return jsonText.replace(/\\(?!["\\\/bfnrtu]|u[0-9a-fA-F]{4})/g, "\\\\");
 }
 
 function clampText(value: unknown, maxLen: number): string {
@@ -40,6 +40,14 @@ function clampText(value: unknown, maxLen: number): string {
     const lastStop = Math.max(cut.lastIndexOf("."), cut.lastIndexOf("؟"), cut.lastIndexOf("?"), cut.lastIndexOf("!"));
     return (lastStop > maxLen * 0.7 ? cut.slice(0, lastStop + 1) : cut).trim() + "…";
 }
+
+/* ──────────────────────────────────────────────────────────
+ *  Simple in-memory rate limiter (per user, per process)
+ *  Prevents abusive callers from running up AI API costs.
+ * ────────────────────────────────────────────────────────── */
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+const RATE_LIMIT_MAX = 20;      // max requests
+const RATE_LIMIT_WINDOW = 60_000; // per 60 seconds
 
 /* ──────────────────────────────────────────────────────────
  *  POST /api/ai/chat
@@ -56,6 +64,21 @@ export async function POST(req: NextRequest) {
 
         if (!hasAcceptedTerms(user)) {
             return NextResponse.json({ error: "Terms acceptance required", code: "TERMS_REQUIRED" }, { status: 403 });
+        }
+
+        // Rate limiting: max 20 requests per 60s per user
+        const now = Date.now();
+        if (!rateLimitMap.has(user.id)) {
+            rateLimitMap.set(user.id, { count: 0, windowStart: now });
+        }
+        const userLimit = rateLimitMap.get(user.id)!;
+        if (now - userLimit.windowStart > RATE_LIMIT_WINDOW) {
+            userLimit.count = 0;
+            userLimit.windowStart = now;
+        }
+        userLimit.count++;
+        if (userLimit.count > RATE_LIMIT_MAX) {
+            return NextResponse.json({ error: "Rate limit exceeded. Please wait before sending more messages." }, { status: 429 });
         }
 
         const body = await req.json();
@@ -92,10 +115,13 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Check DeepSeek API key
-        const apiKey = getDeepSeekApiKey();
-        if (!apiKey) {
-            return NextResponse.json({ error: "Server configuration error: DEEPSEEK_API_KEY is missing." }, { status: 503 });
+        // Check DeepSeek API key (throws if not configured — no fallback hardcoded keys)
+        let apiKey: string;
+        try {
+            apiKey = getDeepSeekApiKey();
+        } catch (e: any) {
+            console.error("[AI Chat API] DeepSeek key missing:", e.message);
+            return NextResponse.json({ error: "Server configuration error: DEEPSEEK_API_KEY is not configured." }, { status: 503 });
         }
 
         // For context mode, fetch user's health data

@@ -2,11 +2,7 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 
-// Initialize DeepSeek client (text-only)
-const deepseek = new OpenAI({
-    apiKey: getDeepSeekApiKey(),
-    baseURL: DEEPSEEK_BASE_URL,
-});
+
 
 export interface AnalyzeContext {
     privateProfile?: {
