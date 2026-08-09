@@ -152,10 +152,6 @@ export default function HistoryPage() {
                 <div className="flex flex-col mb-6 sm:mb-8 gap-5 sm:gap-6">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <p className="clinical-eyebrow mb-2.5">
-                                <Activity className="h-3.5 w-3.5" />
-                                <span>{t("Saved analyses", "الفحوصات المحفوظة")}</span>
-                            </p>
                             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
                                 {t("Analysis History", "سجل التحليلات")}
                             </h1>

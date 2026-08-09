@@ -447,11 +447,7 @@ export default function ProfilePage() {
     return (
         <main className="min-h-screen pt-28 pb-28 md:pb-14 px-4 sm:px-6 max-w-6xl mx-auto">
             <div className="mb-8">
-                <div className="clinical-eyebrow">
-                    <User className="h-4 w-4" />
-                    Account center
-                </div>
-                <h1 className="mt-4 text-4xl font-bold text-white tracking-tight">My Profile</h1>
+                <h1 className="text-4xl font-bold text-white tracking-tight">My Profile</h1>
                 <p className="mt-2 text-slate-400">Manage account details, credits, safety context, and family profiles.</p>
             </div>
 

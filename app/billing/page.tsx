@@ -98,10 +98,6 @@ function BillingContent() {
         <main className="min-h-screen pt-24 sm:pt-28 pb-24 md:pb-14 px-3 sm:px-6 flex items-center justify-center">
             <GlassCard className="max-w-2xl w-full p-6 sm:p-10" hoverEffect={false}>
                 <div className="mb-6 sm:mb-8 border-b border-white/10 pb-6 sm:pb-8">
-                    <div className="clinical-eyebrow mb-3">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        <span>{t("Secure checkout", "دفع آمن ومشفّر")}</span>
-                    </div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                         {t("Upgrade Workspace", "ترقية مساحة العمل")}
                     </h1>

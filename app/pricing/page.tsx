@@ -185,11 +185,7 @@ export default function PricingPage() {
                 {/* ── HERO ─────────────────────────────────────── */}
                 <section className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
                     <div>
-                        <div className="clinical-eyebrow">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            <span>{t("Pricing", "الأسعار")}</span>
-                        </div>
-                        <h1 className="mt-4 text-3xl xs:text-4xl sm:text-5xl font-black leading-tight text-white tracking-tight">
+                        <h1 className="mt-1 text-3xl xs:text-4xl sm:text-5xl font-black leading-tight text-white tracking-tight">
                             {isArabic ? (
                                 <>
                                     اختر الخطة التي{" "}

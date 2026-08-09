@@ -60,12 +60,6 @@ export function ChangelogView() {
             
             {/* ── HEADER ── */}
             <div className="text-center space-y-4 mb-12">
-                {/* Live Auto Sync Badge */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] text-emerald-300 text-xs font-semibold backdrop-blur-md">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <span>{t("Auto-Synced with GitHub Actions", "متزامن تلقائياً مع GitHub Actions")}</span>
-                </div>
-
                 <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
                     {isArabic ? (
                         <>

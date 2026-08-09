@@ -277,10 +277,6 @@ export default function DashboardPage() {
                 >
                     <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                         <div>
-                            <div className="clinical-eyebrow mb-3">
-                                <Activity className="h-3.5 w-3.5" />
-                                <span>{t("Your Workspace", "مساحة عملك")}</span>
-                            </div>
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
                                 {isArabic ? (
                                     <>أهلاً بك مجددًا<span className="text-cyan-400">.</span></>

@@ -78,10 +78,6 @@ testDrug("Panadol Extra");`;
 
                 {/* Header */}
                 <div className="text-center space-y-3">
-                    <div className="clinical-eyebrow mx-auto">
-                        <Terminal className="h-3.5 w-3.5" />
-                        <span>API Documentation</span>
-                    </div>
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">
                         Developer Hub
                     </h1>
