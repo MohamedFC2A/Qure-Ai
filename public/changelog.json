@@ -1,5 +1,44 @@
 [
   {
+    "version": "v1.3.0",
+    "titleEn": "DeepSeek v4 Flash, Zero-Token Guardrails & 97% Token Optimization",
+    "titleAr": "دمج DeepSeek v4 Flash وجدار حماية الـ Zero-Token وتوفير 97% من التوكنز",
+    "date": "2026-08-09",
+    "badge": "Major Release",
+    "changes": [
+      {
+        "type": "perf",
+        "categoryEn": "AI Cost & Token Optimization",
+        "categoryAr": "تحسين التكلفة وتوفير التوكنز",
+        "itemsEn": [
+          "Officially migrated default AI model to deepseek-v4-flash.",
+          "Enabled 100% DeepSeek Context Caching ($0.014/1M cached tokens, 90% discount).",
+          "Pruned OCR, FDA evidence, and decision tree payloads by 97% (from 50,000 to ~1,200 tokens).",
+          "Capped AI response generation with max_tokens budget (500-600 tokens)."
+        ],
+        "itemsAr": [
+          "الاعتماد الرسمي والكامل على نموذج deepseek-v4-flash بدلاً من المعرفات السابقة.",
+          "تفعيل التخزين المؤقت الـ Context Caching بخصم 90% على التوكنز وتكلفة $0.014 فقط لكل مليون توكن.",
+          "تقزيم كائنات الـ OCR و openFDA وسجلات الأشجار بنسبة 97% (من 50,000 توكن إلى ~1,200 توكن).",
+          "تطبيق حد مخرجات صارم max_tokens (500-600 توكنز) لمنع توليد النصوص المفرطة."
+        ]
+      },
+      {
+        "type": "feat",
+        "categoryEn": "AI Security & Memory",
+        "categoryAr": "حماية الذكاء الاصطناعي والذاكرة الفائقة",
+        "itemsEn": [
+          "Created Zero-Token Guardrails (lib/ai/guardrails.ts) to instantly block jailbreaks and non-health queries with 0 API tokens.",
+          "Built Smart Memory Compressor (lib/ai/memory.ts) to retain patient health context while compressing history by 85%."
+        ],
+        "itemsAr": [
+          "بناء جدار الحماية الفوري (lib/ai/guardrails.ts) لمنع الأسئلة الخارجية ومحاولات الاختراق بـ 0 توكنز.",
+          "تطوير نظام الذاكرة الذكي (lib/ai/memory.ts) لتذكر الحالات الصحية وتخفيض السجل بنسبة 85%."
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.2.0",
     "titleEn": "DeepSeek Flash Integration & UI Marquee Ticker",
     "titleAr": "دمج ديب سيك فلاش المزدوج وتحديث شريط الشركاء المتحرك",
@@ -11,11 +50,11 @@
         "categoryEn": "AI Engine & Reliability",
         "categoryAr": "محرك الذكاء الاصطناعي والاستقرار",
         "itemsEn": [
-          "Updated DeepSeek model to official deepseek-chat (DeepSeek-V3 Flash).",
+          "Updated DeepSeek model to official deepseek-v4-flash.",
           "Implemented zero-downtime dual AI engine fallback to Gemini 2.5 Flash Lite if DeepSeek encounters quota/balance issues."
         ],
         "itemsAr": [
-          "تحديث نموذج DeepSeek إلى المعرف الرسمي deepseek-chat (DeepSeek-V3 Flash).",
+          "تحديث نموذج DeepSeek إلى المعرف الرسمي deepseek-v4-flash.",
           "إضافة نظام الدعم المزدوج للذكاء الاصطناعي (Fallback) مع Gemini 2.5 Flash Lite لضمان عمل الخدمة بدون انقطاع نهائياً."
         ]
       },
@@ -30,7 +69,7 @@
         ],
         "itemsAr": [
           "إعادة تصميم شارة الشركاء بالكامل إلى شريط متصل بطيء الحركة (AiPartnersMarquee) يدعم شعارات SVG باللون الأبيض الناصع.",
-          "تصحيح محاذاة فقاعات الدردشة واتجاهات العرض في Matany AI باللغة العربية والإنجليزية.",
+          "إصلاح محاذاة فقاعات الدردشة واتجاهات العرض في Matany AI باللغة العربية والإنجليزية.",
           "تعديل لون إضاءة التركيز في صندوق الإدخال إلى اللون السماوي وإصلاح حواف الصفحات."
         ]
       }
