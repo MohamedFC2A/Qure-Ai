@@ -6,7 +6,7 @@ import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
 import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
-import { type AiChatMode, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
+import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 const META_SEPARATOR = "\n---METADATA---\n";
 
@@ -116,11 +116,20 @@ export async function POST(req: NextRequest) {
             contextData = { privateProfile, medicationMemories, recentScans };
         }
 
-        const systemPrompt = buildSystemPrompt(mode, language, contextData);
+        // Build 100% static system prompt (hits DeepSeek Prompt Cache every time)
+        const systemPrompt = buildSystemPrompt(mode, language);
 
         const deepseekMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
             { role: "system", content: systemPrompt },
         ];
+
+        // Add dynamic context block if in context mode
+        if (mode === "context" && contextData) {
+            const ctxMsg = buildContextMessage(contextData, language);
+            if (ctxMsg) {
+                deepseekMessages.push({ role: "user", content: ctxMsg });
+            }
+        }
 
         if (mode === "medication" && medicationData) {
             deepseekMessages.push({
@@ -155,7 +164,7 @@ export async function POST(req: NextRequest) {
                 messages: deepseekMessages,
                 stream: true,
                 temperature: 0.2,
-                max_tokens: 1000,
+                max_tokens: 600,
             });
         } catch (dsErr: any) {
             console.warn("[AI Stream Route] DeepSeek failed, attempting Gemini Flash streaming fallback:", dsErr?.message || dsErr);

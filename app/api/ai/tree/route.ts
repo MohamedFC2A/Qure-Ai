@@ -331,7 +331,7 @@ ${rootQuestion}
                 ],
                 response_format: { type: "json_object" },
                 temperature: 0.15,
-                max_tokens: 1000,
+                max_tokens: 500,
             });
             content = response.choices[0]?.message?.content || null;
         } catch (dsErr: any) {

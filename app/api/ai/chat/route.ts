@@ -7,7 +7,7 @@ import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
 import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
-import { type AiChatMode, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
+import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────
  *  Helper: extract & fix JSON from AI response
@@ -148,13 +148,20 @@ export async function POST(req: NextRequest) {
             contextData = { privateProfile, medicationMemories, recentScans };
         }
 
-        // Build system prompt
-        const systemPrompt = buildSystemPrompt(mode, language, contextData);
+        // Build 100% static system prompt (hits DeepSeek Prompt Cache every time)
+        const systemPrompt = buildSystemPrompt(mode, language);
 
-        // Build message array for DeepSeek
         const deepseekMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
             { role: "system", content: systemPrompt },
         ];
+
+        // Add dynamic context block if in context mode
+        if (mode === "context" && contextData) {
+            const ctxMsg = buildContextMessage(contextData, language);
+            if (ctxMsg) {
+                deepseekMessages.push({ role: "user", content: ctxMsg });
+            }
+        }
 
         // Add medication context if provided (for medication mode)
         if (mode === "medication" && medicationData) {
@@ -185,7 +192,7 @@ export async function POST(req: NextRequest) {
                 messages: deepseekMessages,
                 response_format: { type: "json_object" },
                 temperature: 0.15,
-                max_tokens: 1000,
+                max_tokens: 600,
             });
             content = response.choices[0]?.message?.content || null;
         } catch (dsErr: any) {

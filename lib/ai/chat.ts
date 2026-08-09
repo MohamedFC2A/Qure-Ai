@@ -231,25 +231,29 @@ export function getModeConfig(mode: AiChatMode): AiChatModeConfig {
 }
 
 /**
- * Build the system prompt for a given mode, injecting context data if applicable
+ * Build static system prompt for a given mode (100% constant across calls for DeepSeek prompt caching)
  */
 export function buildSystemPrompt(
     mode: AiChatMode,
-    language: "en" | "ar",
-    contextData?: {
-        privateProfile?: any;
-        medicationMemories?: string[];
-        recentScans?: string[];
-    }
+    language: "en" | "ar"
 ): string {
     const config = getModeConfig(mode);
     const basePrompt = language === "ar" ? config.systemPromptAr : config.systemPromptEn;
+    return basePrompt.replace("{{CONTEXT_DATA}}", "").trim();
+}
 
-    if (mode !== "context" || !contextData) {
-        return basePrompt;
-    }
-
-    // Build context block for integrated mode
+/**
+ * Build a compact dynamic context message for user profile data (passed after static system prompt)
+ */
+export function buildContextMessage(
+    contextData: {
+        privateProfile?: any;
+        medicationMemories?: string[];
+        recentScans?: string[];
+    } | null | undefined,
+    language: "en" | "ar"
+): string | null {
+    if (!contextData) return null;
     const ctx: string[] = [];
     const { privateProfile, medicationMemories, recentScans } = contextData;
 
@@ -259,23 +263,19 @@ export function buildSystemPrompt(
         if (privateProfile.weight) ctx.push(`Weight: ${privateProfile.weight}kg`);
         if (privateProfile.allergies) ctx.push(`Allergies: ${privateProfile.allergies}`);
         if (privateProfile.chronic_conditions) ctx.push(`Chronic Conditions: ${privateProfile.chronic_conditions}`);
-        if (privateProfile.current_medications) ctx.push(`Current Medications: ${privateProfile.current_medications}`);
-        if (privateProfile.notes) ctx.push(`Notes: ${privateProfile.notes}`);
+        if (privateProfile.current_medications) ctx.push(`Current Meds: ${privateProfile.current_medications}`);
     }
 
     if (medicationMemories && medicationMemories.length > 0) {
-        ctx.push(`Medication History: ${medicationMemories.join(", ")}`);
+        ctx.push(`Meds History: ${medicationMemories.slice(0, 10).join(", ")}`);
     }
 
     if (recentScans && recentScans.length > 0) {
-        ctx.push(`Recent Scans: ${recentScans.join(", ")}`);
+        ctx.push(`Recent Scans: ${recentScans.slice(0, 5).join(", ")}`);
     }
 
-    const contextBlock = ctx.length > 0
-        ? ctx.join("\n")
-        : (language === "ar" ? "لا توجد بيانات ملف شخصي محفوظة بعد." : "No profile data saved yet.");
-
-    return basePrompt.replace("{{CONTEXT_DATA}}", contextBlock);
+    if (ctx.length === 0) return null;
+    return `[USER HEALTH PROFILE CONTEXT]\n${ctx.join("\n")}`;
 }
 
 /**
