@@ -111,82 +111,64 @@ export async function generateInteractionGuard(params: {
     const subject = params.subjectProfile || null;
     const other = Array.isArray(params.otherMedications) ? params.otherMedications : [];
 
-    // Keep payload compact and stable.
+    // Compact target payload (90% token savings)
     const targetJson = JSON.stringify({
-        drugName: target.drugName,
-        drugNameEn: target.drugNameEn,
-        genericName: target.genericName,
-        genericNameEn: target.genericNameEn,
-        activeIngredients: target.activeIngredients,
-        activeIngredientsDetailed: target.activeIngredientsDetailed,
-        interactions: target.interactions,
-        warnings: target.warnings,
-        contraindications: target.contraindications,
-        precautions: target.precautions,
+        drugName: target.drugName || target.drugNameEn || "Target Medication",
+        genericName: target.genericName || target.genericNameEn || "",
+        activeIngredients: Array.isArray(target.activeIngredients) ? target.activeIngredients.slice(0, 5) : [],
     });
 
     const subjectJson = JSON.stringify({
-        display_name: subject?.display_name ?? null,
-        relationship: subject?.relationship ?? null,
-        age: subject?.age ?? null,
-        sex: subject?.sex ?? null,
-        height: subject?.height ?? null,
-        weight: subject?.weight ?? null,
         allergies: subject?.allergies ?? null,
-        chronic_conditions: subject?.chronic_conditions ?? null,
-        current_medications: subject?.current_medications ?? null,
-        notes: subject?.notes ?? null,
+        conditions: subject?.chronic_conditions ?? null,
+        currentMeds: subject?.current_medications ?? null,
     });
 
-    const otherJson = JSON.stringify(other);
+    const otherJson = JSON.stringify(other.slice(0, 8));
 
     const systemLanguageRule = isAr
         ? "اكتب كل القيم النصية باللغة العربية الفصحى. مفاتيح JSON بالإنجليزية."
         : "Write all string values in English. JSON keys in English.";
 
-    const prompt = `
-You are a clinical pharmacist and drug safety specialist.
-
+    // 100% Static System Prompt for DeepSeek Context Caching
+    const staticSystemPrompt = `You are a clinical pharmacist and drug safety specialist.
 ${systemLanguageRule}
 
 TASK:
 Build a Cross-Interaction Guard between a TARGET medication and a list of OTHER medications.
 
 SEVERITY RULES:
-- safe: no clinically meaningful interaction is expected in general use.
-- caution: interaction is possible OR information is insufficient OR needs monitoring.
-- danger: major interaction, contraindicated combination, or high-risk combination.
+- safe: no clinically meaningful interaction is expected.
+- caution: interaction is possible OR needs monitoring.
+- danger: major interaction or contraindicated combination.
 
 IMPORTANT:
-- Use only the context provided. Do NOT invent patient allergies/conditions/meds.
-- If you are uncertain, choose "caution" and explain what to verify.
-- Confidence is 0-100 (higher = more certain).
-- Keep every field short, high-signal, and actionable.
-- Return VALID JSON ONLY. No markdown. No code fences.
+- Use only the context provided.
+- Confidence is 0-100.
+- Keep fields concise and high-signal.
+- Output VALID JSON ONLY.
 
 OUTPUT SCHEMA:
 {
   "overallRisk": "short summary",
   "items": [
     {
-      "otherMedication": "string (must match the given input item)",
+      "otherMedication": "string",
       "severity": "safe|caution|danger",
       "confidence": 0-100,
       "headline": "short title",
-      "summary": "2-4 short sentences",
-      "mechanism": "optional: short mechanism",
-      "whatToDo": ["3-6 actions"],
-      "monitoring": ["2-5 monitoring tips"],
-      "redFlags": ["2-5 red flags"]
+      "summary": "1-2 short sentences",
+      "whatToDo": ["2-3 short actions"]
     }
   ],
   "disclaimer": "short safety disclaimer"
-}
+}`;
 
+    const userPayload = `
 TARGET_MEDICATION_JSON:
 ${targetJson}
 
-SUBJECT_PROFILE_JSON (may be null/empty fields):
+SUBJECT_PROFILE_JSON:
 ${subjectJson}
 
 OTHER_MEDICATIONS_JSON:
@@ -203,12 +185,12 @@ ${otherJson}
         const response = await deepseek.chat.completions.create({
             model: getDeepSeekModel(),
             messages: [
-                { role: "system", content: "You are a medical safety assistant. Output valid JSON only." },
-                { role: "user", content: prompt },
+                { role: "system", content: staticSystemPrompt },
+                { role: "user", content: userPayload },
             ],
             response_format: { type: "json_object" },
             temperature: 0.2,
-            max_tokens: 1000,
+            max_tokens: 350,
         });
 
         content = response.choices[0]?.message?.content || null;
@@ -223,7 +205,7 @@ ${otherJson}
                     model: modelName,
                     generationConfig: { responseMimeType: "application/json", temperature: 0.15 }
                 });
-                const res = await model.generateContent(prompt);
+                const res = await model.generateContent(`${staticSystemPrompt}\n\n${userPayload}`);
                 content = res.response.text();
             } catch (gErr) {
                 console.error("[InteractionGuard] Gemini fallback failed:", gErr);

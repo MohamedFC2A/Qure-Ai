@@ -276,20 +276,19 @@ export async function POST(req: NextRequest) {
         }));
         const pathJson = JSON.stringify(compactPath);
 
-        const prompt = `
-You are MATANY AI, an expert clinical pharmacist assistant.
+        // 100% Static System Prompt for DeepSeek Context Caching
+        const staticSystemPrompt = `You are MATANY AI, an expert clinical pharmacist assistant.
 Analyze the user's question about the medication using the provided clinical summary and profile.
 
 ${systemLanguageRule}
 
 IMPORTANT CLINICAL GUIDELINES:
-- Output VALID JSON ONLY. No markdown wrapper blocks (no \`\`\`json).
-- Provide concise, high-quality, professional clinical advice.
+- Output VALID JSON ONLY. No markdown wrapper blocks.
+- Provide concise, high-quality clinical advice.
 - Use Markdown formatting (bolding key words with **) in the "answer" field.
-- Keep the summary (TL;DR) to one sentence.
-- If relevant to user's allergies/conditions, reference them.
+- Keep summary (TL;DR) to one sentence.
 
-Return JSON with this schema:
+Return JSON schema:
 {
   "title": "Short title describing topic",
   "summary": "One-sentence TL;DR",
@@ -302,8 +301,9 @@ Return JSON with this schema:
 
 NEXT QUESTIONS RULES:
 - Provide EXACTLY 4 items.
-- Keep titles ultra-short.
+- Keep titles ultra-short.`;
 
+        const userPayload = `
 MEDICATION_SUMMARY_JSON:
 ${analysisJson}
 
@@ -326,12 +326,12 @@ ${rootQuestion}
             const response = await deepseek.chat.completions.create({
                 model: getDeepSeekModel(),
                 messages: [
-                    { role: "system", content: "You are a medical analysis assistant. Output valid JSON only." },
-                    { role: "user", content: prompt },
+                    { role: "system", content: staticSystemPrompt },
+                    { role: "user", content: userPayload },
                 ],
                 response_format: { type: "json_object" },
                 temperature: 0.15,
-                max_tokens: 500,
+                max_tokens: 400,
             });
             content = response.choices[0]?.message?.content || null;
         } catch (dsErr: any) {
@@ -345,7 +345,7 @@ ${rootQuestion}
                         model: modelName,
                         generationConfig: { responseMimeType: "application/json", temperature: 0.15 }
                     });
-                    const res = await model.generateContent(prompt);
+                    const res = await model.generateContent(`${staticSystemPrompt}\n\n${userPayload}`);
                     content = res.response.text();
                 } catch (gErr) {
                     console.error("[AI Tree API] Gemini fallback failed:", gErr);

@@ -109,88 +109,60 @@ export const analyzeMedicationText = async (
         } : null;
         const verificationJson = compactVerification ? JSON.stringify(compactVerification) : "null";
 
-        // Forensic Pharmacist Prompt V2 (Expanded)
-        const systemPrompt = `
-    You are a World-Class Clinical Pharmacist and Forensic Text Analyst.
-    You have been provided with messy, fragmented text extracted from a medication image via OCR.
-    
-    YOUR MISSION: 
-    Reconstruct the identity of the medication with 99.9% accuracy. You must use your extensive pharmaceutical knowledge to particularize the drug even from partial words (e.g., "Tyl..." -> "Tylenol/Acetaminophen").
-    
-    ${languageInstruction}
+        // 100% Static System Prompt for DeepSeek Context Caching
+        const staticSystemPrompt = `You are a World-Class Clinical Pharmacist and Forensic Text Analyst.
+Reconstruct medication identity from OCR text fragments with high clinical accuracy.
 
-    STRICT RULES:
-    1. NEVER return "Unknown" if there is even a slight clue. Infer the most likely match.
-    2. If the text contains purely random garbage (e.g. "%$&^#"), only then return "Unknown".
-    3. Output JSON ONLY. No markdown, no pre-text.
-    4. PERSONALIZATION: If PATIENT_CONTEXT_JSON is not null, add patient-specific warnings and interactions based ONLY on the provided context (allergies, conditions, current meds, and medication memories). Do NOT invent conditions/allergies.
-    5. If PATIENT_CONTEXT_JSON is null, set "personalized": null.
-    6. VERIFICATION: If VERIFICATION_EVIDENCE_JSON is not null, use it to improve correctness of drug name (especially drugNameEn/genericNameEn/manufacturer) and to reduce hallucinations. Prefer official sources (openFDA) when available. Do not invent citations or sources beyond what is provided.
-    
-    RETURN FORMAT (JSON):
-    {
-        "drugName": "Inferred Name (e.g. Panadol Extra, Nivea Pearl & Beauty Deodorant) - ALWAYS IN ENGLISH",
-        "drugNameEn": "The same product/drug name in English (for lookup). If already English, repeat it.",
-        "genericName": "Scientific Name / Active Formulation (e.g. Paracetamol 500mg + Caffeine 65mg, or Aluminum Chlorohydrate + Avocado Oil) - ALWAYS IN ENGLISH",
-        "genericNameEn": "Generic/active ingredient name in English. If already English, repeat it.",
-        "manufacturer": "Inferred Manufacturer (or 'Generic')",
-        "productCategory": "High-level classification: 'pharmaceutical_drug' | 'dietary_supplement' | 'topical_cosmetic_care' | 'deodorant_antiperspirant' | 'herbal_natural' | 'antiseptic_sanitizer' | 'medical_device_supply' | 'oral_care_mouthwash' | 'veterinary_product' | 'other'",
-        "productCategoryLabel": "Clear, beautiful category label in ${language === 'ar' ? 'Arabic (e.g. دواء علاجي صيدلاني / مستحضر عناية ومزيل عرق / مكمل غذائي وفيتامينات / مرهم وكريم جلدي علاجى)' : 'English (e.g. Pharmaceutical Prescription Drug / Personal Care & Deodorant / Dietary Supplement & Vitamins / Topical Ointment)'}",
-        "form": "Dosage/Product form (e.g. 'أقراص فموية (Tablets)', 'شراب سائل (Oral Syrup)', 'مرهم جلدي (Topical Ointment)', 'كريم موضعي (Topical Cream)', 'جل (Gel)', 'قطرة عين/أذن (Drops)', 'مزيل عرق رول أون (Roll-on Deodorant)', 'بخاخ رذاذي (Spray)', 'أمبولات وحقن (Injections)', 'تحاميل/لبوس (Suppositories)', 'لصقة جلدية (Patch)') - In ${language === 'ar' ? 'Arabic' : 'English'}",
-        "dosageForm": "Specific form: 'tablet' | 'capsule' | 'syrup' | 'ointment' | 'cream' | 'gel' | 'drops' | 'deodorant' | 'spray' | 'injection' | 'suppository' | 'patch' | 'sachet' | 'lotion' | 'liquid' | 'other'",
-        "routeOfAdministration": "Route of administration (e.g. 'استخدام فموي (Oral)', 'استخدام موضعي على الجلد فقط (Topical/External Only)', 'قطرة عينية (Ophthalmic)', 'قطرة أنفية (Nasal)', 'استنشاقي (Inhalation)', 'حقن عضلي/وريدي (Injectable)') - In ${language === 'ar' ? 'Arabic' : 'English'}",
-        "targetAudience": "Target usage advice (e.g. 'للاستخدام الخارجي فقط' or 'للبالغين والأطفال فوق 12 سنة') - In ${language === 'ar' ? 'Arabic' : 'English'}",
-        "strength": "Strength/Volume if inferable (e.g. 500mg, 50ml, 1%, 200mg/5ml) - ALWAYS IN ENGLISH",
-        "activeIngredients": ["List of active ingredients and key compounds (max 5) - ALWAYS IN ENGLISH"],
-        "activeIngredientsEn": ["List of active ingredients in English. If already English, repeat it."],
-        "description": "Professional description of the product and its primary purpose, suitable for a user/patient to understand. (In ${language === 'ar' ? 'Arabic' : 'English'})",
-        "category": "Therapeutic/Product Category (e.g. مسكن وخافض للحرارة, مزيل لرائحة العرق ومضاد للتعرق, مضاد حيوي واسع المجال, مضاد للالتهاب) (In ${language === 'ar' ? 'Arabic' : 'English'})",
-        "uses": ["List of 3-5 primary medical/product uses (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "dosage": "Standard instructions or usage method (e.g. 'قرص واحد كل 6-8 ساعات' or 'يوضع على بشرة نظيفة وجافة مرة يومياً') - In ${language === 'ar' ? 'Arabic' : 'English'}",
-        "missedDose": "What to do if a dose/application is missed (In ${language === 'ar' ? 'Arabic' : 'English'})",
-        "overdose": {
-            "symptoms": ["Overdose or excessive application symptoms (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-            "whatToDo": ["Actions if overused/ingested accidentally (In ${language === 'ar' ? 'Arabic' : 'English'})"]
-        },
-        "sideEffects": ["List of 3-7 common side effects or skin sensitivities (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "storage": "Storage instructions (e.g. 'يحفظ في درجة حرارة أقل من 25 مئوية بعيداً عن الرطوبة وأشعة الشمس') (In ${language === 'ar' ? 'Arabic' : 'English'})",
-        "warnings": ["Critical safety warnings (In ${language === 'ar' ? 'Arabic' : 'English'})", "Special precautions"],
-        "contraindications": ["Max 6 contraindications or when not to use (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "precautions": ["Max 6 precautions (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "interactions": ["Major interactions (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "whenToSeekHelp": ["Red-flag symptoms requiring medical attention (In ${language === 'ar' ? 'Arabic' : 'English'})"],
-        "personalized": {
-            "contextUsed": true,
-            "riskLevel": "low|medium|high",
-            "riskSummary": "Short user-specific risk summary (In ${language === 'ar' ? 'Arabic' : 'English'})",
-            "alerts": [
-                {
-                    "severity": "low|medium|high",
-                    "title": "Short title (In ${language === 'ar' ? 'Arabic' : 'English'})",
-                    "details": "Details (In ${language === 'ar' ? 'Arabic' : 'English'})"
-                }
-            ],
-            "basedOn": {
-                "allergies": true,
-                "conditions": true,
-                "currentMedications": true,
-                "medicationMemories": true
-            }
-        },
-        "confidenceScore": 0-100 (Confidence in this identification)
-    }
+${languageInstruction}
 
-    PATIENT_CONTEXT_JSON (Ultra only):
-    ${contextJson}
+STRICT RULES:
+1. Infer most likely match. Output JSON ONLY.
+2. If PATIENT_CONTEXT_JSON is provided, add personalized alerts.
+3. If VERIFICATION_EVIDENCE_JSON is provided, use it to improve accuracy.
 
-    VERIFICATION_EVIDENCE_JSON (pre-analysis web/FDA signals):
-    ${verificationJson}
-    
-    OCR TEXT FRAGMENTS:
-    "${extractedText}"
-    
-    END OF TEXT. ANALYZE NOW.
-  `;
+RETURN FORMAT (JSON):
+{
+    "drugName": "Name in English",
+    "drugNameEn": "Name in English",
+    "genericName": "Scientific Formulation in English",
+    "genericNameEn": "Generic Name in English",
+    "manufacturer": "Manufacturer name",
+    "productCategory": "pharmaceutical_drug | dietary_supplement | topical_cosmetic_care | deodorant_antiperspirant | herbal_natural | other",
+    "productCategoryLabel": "Category label",
+    "form": "Product form",
+    "dosageForm": "tablet | capsule | syrup | ointment | cream | gel | drops | deodorant | spray | other",
+    "routeOfAdministration": "Route of administration",
+    "targetAudience": "Usage advice",
+    "strength": "Strength/Volume",
+    "activeIngredients": ["Active ingredients in English"],
+    "activeIngredientsEn": ["Active ingredients in English"],
+    "description": "Short product description",
+    "category": "Therapeutic category",
+    "uses": ["3-5 primary uses"],
+    "dosage": "Usage instructions",
+    "missedDose": "Missed dose instructions",
+    "overdose": { "symptoms": ["Symptoms"], "whatToDo": ["Actions"] },
+    "sideEffects": ["Common side effects"],
+    "storage": "Storage instructions",
+    "warnings": ["Critical safety warnings"],
+    "contraindications": ["Contraindications"],
+    "precautions": ["Precautions"],
+    "interactions": ["Interactions"],
+    "whenToSeekHelp": ["Red-flag symptoms"],
+    "personalized": { "contextUsed": true, "riskLevel": "low|medium|high", "riskSummary": "Summary", "alerts": [] },
+    "confidenceScore": 0-100
+}`;
+
+        const userPayload = `
+PATIENT_CONTEXT_JSON:
+${contextJson}
+
+VERIFICATION_EVIDENCE_JSON:
+${verificationJson}
+
+OCR TEXT FRAGMENTS:
+"${extractedText}"
+`;
 
         let content: string | null = null;
         try {
@@ -201,12 +173,12 @@ export const analyzeMedicationText = async (
             const response = await deepseek.chat.completions.create({
                 model: getDeepSeekModel(),
                 messages: [
-                    { role: "system", content: "You are a specialized medical analysis AI. Output valid JSON only." },
-                    { role: "user", content: systemPrompt }
+                    { role: "system", content: staticSystemPrompt },
+                    { role: "user", content: userPayload }
                 ],
                 response_format: { type: "json_object" },
                 temperature: 0.2,
-                max_tokens: 1500,
+                max_tokens: 750,
             });
             content = response.choices[0]?.message?.content || null;
         } catch (dsErr: any) {
@@ -220,7 +192,7 @@ export const analyzeMedicationText = async (
                         model: modelName,
                         generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
                     });
-                    const res = await model.generateContent(systemPrompt);
+                    const res = await model.generateContent(`${staticSystemPrompt}\n\n${userPayload}`);
                     content = res.response.text();
                 } catch (gErr) {
                     console.error("[Vision API] Gemini fallback failed:", gErr);

@@ -223,30 +223,17 @@ export async function POST(req: NextRequest) {
                         answer = language === "ar" ? "عذرًا، لم أتمكن من توليد إجابة." : "Sorry, I couldn't generate an answer.";
                     }
 
-                    /* ── Fallback: quick metadata extraction if missing ── */
-                    if (keyPoints.length === 0 || suggestedFollowUps.length === 0) {
-                        try {
-                            const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
-                            const metaRes = await deepseek.chat.completions.create({
-                                model: getDeepSeekModel(),
-                                messages: [
-                                    { role: "system", content: "Extract metadata from medical answers. Output VALID JSON with exact keys: keyPoints (array of strings), suggestedFollowUps (array of strings)." },
-                                    {
-                                        role: "user",
-                                        content: `From this answer, extract key points and follow-up questions.\n\nAnswer:\n${answer.slice(0, 3000)}\n\nReturn JSON:\n{"keyPoints":["3-5 concise items"],"suggestedFollowUps":["4 short questions"]}`,
-                                    },
-                                ],
-                                response_format: { type: "json_object" },
-                                temperature: 0.1,
-                                max_tokens: 500,
-                            });
-                            const metaContent = metaRes.choices?.[0]?.message?.content;
-                            if (metaContent) {
-                                const metaParsed = parseAiResponse(metaContent);
-                                if (keyPoints.length === 0) keyPoints = metaParsed.keyPoints.slice(0, 7);
-                                if (suggestedFollowUps.length === 0) suggestedFollowUps = metaParsed.suggestedFollowUps.slice(0, 4);
-                            }
-                        } catch { /* fallback fails gracefully */ }
+                    /* ── Zero-Token Local Metadata Fallback (0 AI Tokens Consumed) ── */
+                    if (keyPoints.length === 0) {
+                        const bullets = answer.split("\n")
+                            .map((line) => line.replace(/^[-*•\d.]+\s*/, "").trim())
+                            .filter((line) => line.length >= 10 && line.length <= 150);
+                        keyPoints = bullets.slice(0, 5);
+                    }
+                    if (suggestedFollowUps.length === 0) {
+                        suggestedFollowUps = language === "ar"
+                            ? ["ما هي الآثار الجانبية الشائعة؟", "هل يتداخل مع أدوية أخرى؟", "ما هي الجرعة اليومية الموصى بها؟", "متى يجب استشارة الطبيب فورا؟"]
+                            : ["What are common side effects?", "Does it interact with other medications?", "What is the recommended daily dosage?", "When should I consult a doctor?"];
                     }
 
                     /* ── Persist to DB ── */
