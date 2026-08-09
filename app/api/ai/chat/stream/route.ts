@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
+import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
@@ -9,6 +10,33 @@ import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai
 import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 const META_SEPARATOR = "\n---METADATA---\n";
+
+function formatMedicationContext(med: any): string {
+    if (!med) return "";
+    const name = med.drug_name || med.drugName || med.drugNameEn || "Medication";
+    const mfg = med.manufacturer || med.manufacturerName || "";
+    const summary = med.summary || med.summaryAr || med.summaryEn || "";
+    const analysis = med.analysis_json || med;
+
+    const lines = [
+        `[TARGET MEDICATION DETAILS]`,
+        `Drug Name: ${name}`,
+        mfg ? `Manufacturer: ${mfg}` : "",
+        summary ? `Summary: ${summary}` : "",
+    ];
+
+    if (analysis && typeof analysis === "object") {
+        if (analysis.activeIngredients) lines.push(`Active Ingredients: ${JSON.stringify(analysis.activeIngredients)}`);
+        if (analysis.dosage) lines.push(`Dosage & Administration: ${JSON.stringify(analysis.dosage)}`);
+        if (analysis.warnings) lines.push(`Warnings & Precautions: ${JSON.stringify(analysis.warnings)}`);
+        if (analysis.sideEffects) lines.push(`Side Effects: ${JSON.stringify(analysis.sideEffects)}`);
+        if (analysis.interactions) lines.push(`Interactions: ${JSON.stringify(analysis.interactions)}`);
+        if (analysis.fdaData) lines.push(`FDA Verification Data: ${JSON.stringify(analysis.fdaData)}`);
+        if (analysis.raw_text || analysis.ocrText) lines.push(`Package Text: ${analysis.raw_text || analysis.ocrText}`);
+    }
+
+    return lines.filter(Boolean).join("\n");
+}
 
 /* ──────────────────────────────────────────────────────────
  *  POST /api/ai/chat/stream  —  SSE streaming chat
@@ -34,6 +62,20 @@ export async function POST(req: NextRequest) {
         const messageHistory: Array<{ role: "user" | "assistant"; content: string }> =
             Array.isArray(body?.messageHistory) ? body.messageHistory : [];
         const medicationData: any = body?.medicationData || null;
+
+        // Check ULTRA plan access
+        const plan = await getUserPlan(user.id, supabase);
+        if (plan !== 'ultra') {
+            return new Response(
+                JSON.stringify({
+                    error: language === "ar"
+                        ? "ميزة Mat AI متاحة حصرياً لمشتركي باقة ULTRA. يرجى الترقية لاستخدام المساعد الذكي."
+                        : "Mat AI is available exclusively on the ULTRA plan. Please upgrade your plan to access Mat AI.",
+                    requiresUltra: true,
+                }),
+                { status: 402, headers: { "Content-Type": "application/json" } }
+            );
+        }
 
         if (!mode || !["health", "medication", "context"].includes(mode)) {
             return new Response(JSON.stringify({ error: "Invalid mode" }), { status: 400, headers: { "Content-Type": "application/json" } });
@@ -133,11 +175,14 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        if (mode === "medication" && medicationData) {
-            deepseekMessages.push({
-                role: "user",
-                content: `Target Medication Details: ${medicationData.drugName || medicationData.drugNameEn || "Medication"} (${medicationData.genericName || ""})`,
-            });
+        if (medicationData) {
+            const medFormatted = formatMedicationContext(medicationData);
+            if (medFormatted) {
+                deepseekMessages.push({
+                    role: "user",
+                    content: medFormatted,
+                });
+            }
         }
 
         // Add smart compressed conversation history (max 85% token savings)

@@ -78,7 +78,7 @@ export default function SecuritySettingsPage() {
                     .from('user_passkeys')
                     .select('*')
                     .eq('user_id', user.id)
-                    .then(({ data }) => data && setPasskeys(data))
+                    .then(({ data }: { data: any }) => data && setPasskeys(data))
                 }
               }}
             />

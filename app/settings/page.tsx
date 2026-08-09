@@ -3,13 +3,33 @@
 import React from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useSettings } from "@/context/SettingsContext";
-import { Globe, Settings as SettingsIcon, MapPin, Smartphone, RotateCcw, Check } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { Globe, Settings as SettingsIcon, MapPin, Smartphone, RotateCcw, Check, Database, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 export default function SettingsPage() {
-    const { resultsLanguage, setResultsLanguage, isAutoDetected, resetToAutoDetect, detectedCountry } = useSettings();
+    const { resultsLanguage, setResultsLanguage, isAutoDetected, resetToAutoDetect, detectedCountry, fdaDrugsEnabled, setFdaDrugsEnabled } = useSettings();
+    const { user } = useUser();
+    const supabase = createClient();
+    const router = useRouter();
+
     const isArabic = resultsLanguage === 'ar';
     const t = (en: string, ar: string) => (isArabic ? ar : en);
+
+    const handleSignOut = async () => {
+        if (process.env.NODE_ENV === "development") {
+            document.cookie = "qurescan_dev_auth=; path=/; max-age=0; samesite=lax";
+        }
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("qurescan_active_care_profile");
+        }
+        await supabase.auth.signOut();
+        router.push('/login');
+    };
 
     return (
         <main className="min-h-screen pt-24 sm:pt-28 pb-24 md:pb-14 px-3 sm:px-6">
@@ -60,7 +80,7 @@ export default function SettingsPage() {
                                     )}
                                 >
                                     {resultsLanguage === "en" && <Check className="w-3.5 h-3.5" />}
-                                    {t("English", "الإنجليزية")}
+                                    {t("English", "English")}
                                 </button>
                                 <button
                                     onClick={() => setResultsLanguage("ar")}
@@ -101,7 +121,83 @@ export default function SettingsPage() {
                     </div>
                 </GlassCard>
 
+                {/* FDA Verification Settings */}
+                <GlassCard className="p-6 sm:p-8" hoverEffect={false}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="space-y-1.5 min-w-0">
+                            <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                                <Database className="w-5 h-5 text-emerald-400 shrink-0" />
+                                <span>{t("FDA Drugs Verification", "التحقق من الأدوية عبر هيئة الغذاء والدواء (FDA)")}</span>
+                            </h2>
+                            <p className="text-slate-400 text-xs sm:text-sm max-w-lg leading-relaxed">
+                                {t(
+                                    "Cross-check medication scans with official FDA datasets (openFDA) to verify manufacturer details, active ingredients, and exact dosages.",
+                                    "مطابقة فحوصات الأدوية مع قواعد بيانات الغذاء والدواء العالمية (openFDA) للتحقق من جهة التصنيع والمواد الفعالة والجرعات الدقيقة."
+                                )}
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={fdaDrugsEnabled}
+                            onClick={() => setFdaDrugsEnabled(!fdaDrugsEnabled)}
+                            className={cn(
+                                "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border transition-colors focus:outline-none",
+                                fdaDrugsEnabled
+                                    ? "bg-emerald-500/20 border-emerald-500/40"
+                                    : "bg-white/5 border-white/15"
+                            )}
+                        >
+                            <span
+                                className={cn(
+                                    "inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform",
+                                    isArabic
+                                        ? fdaDrugsEnabled ? "-translate-x-7" : "-translate-x-1"
+                                        : fdaDrugsEnabled ? "translate-x-7" : "translate-x-1"
+                                )}
+                            />
+                        </button>
+                    </div>
+                </GlassCard>
+
+                {/* Account & Logout Options */}
+                {user && (
+                    <GlassCard className="p-6 sm:p-8 border-rose-500/20 bg-gradient-to-br from-rose-950/20 to-slate-950/80" hoverEffect={false}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                            <div className="space-y-1">
+                                <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                                    <User className="w-5 h-5 text-rose-400" />
+                                    <span>{t("Account & Session", "الحساب ورلسة الدخول")}</span>
+                                </h2>
+                                <p className="text-slate-400 text-xs sm:text-sm">
+                                    {t("Currently signed in as:", "مسجل الدخول حالياً بحساب:")}{" "}
+                                    <span className="text-white font-medium">{user.email}</span>
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                                <Link href="/profile">
+                                    <Button variant="outline" size="sm" className="border-white/15 text-white">
+                                        {t("View Profile", "عرض الحساب")}
+                                    </Button>
+                                </Link>
+                                <Button
+                                    onClick={handleSignOut}
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:text-white font-semibold"
+                                >
+                                    <LogOut className="w-4 h-4 me-2 shrink-0" />
+                                    <span>{t("Sign Out / Switch Account", "تسجيل الخروج / تبديل الحساب")}</span>
+                                </Button>
+                            </div>
+                        </div>
+                    </GlassCard>
+                )}
+
             </div>
         </main>
     );
 }
+

@@ -1,1 +1,1 @@
-export const AI_DISPLAY_NAME = "MATANY AI";
+export const AI_DISPLAY_NAME = "Mat AI";

@@ -40,6 +40,9 @@ export const Navbar = () => {
         if (process.env.NODE_ENV === "development") {
             document.cookie = "qurescan_dev_auth=; path=/; max-age=0; samesite=lax";
         }
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("qurescan_active_care_profile");
+        }
         await supabase.auth.signOut();
         window.location.href = "/login";
     };
@@ -48,7 +51,7 @@ export const Navbar = () => {
         ? [
               { name: t("Home", "الرئيسية"),   href: "/",                  icon: Atom },
               { name: t("Scan", "فحص الدواء"), href: "/scan",              icon: ScanLine },
-              { name: "MATANY AI",              href: "/ai",                icon: Brain },
+              { name: "Mat AI",              href: "/ai",                icon: Brain },
               { name: t("Pricing", "الأسعار"), href: "/pricing",           icon: Gem },
               { name: t("Updates", "التحديثات"), href: "/changelog",       icon: Zap },
               { name: t("History", "السجل"),    href: "/dashboard/history", icon: Clock },
@@ -157,7 +160,7 @@ export const Navbar = () => {
                                         </span>
 
                                         {/* Label */}
-                                        <span className="text-[10px] font-medium text-slate-600 leading-none border-l border-white/[0.07] pl-2">
+                                        <span className="text-[10px] font-medium text-slate-600 leading-none border-l rtl:border-r rtl:border-l-0 border-white/[0.07] pl-2 rtl:pr-2 rtl:pl-0">
                                             {isUltra ? "ULTRA" : t("credits", "رصيد")}
                                         </span>
                                     </div>

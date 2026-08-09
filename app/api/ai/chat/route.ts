@@ -49,6 +49,33 @@ const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 const RATE_LIMIT_MAX = 20;      // max requests
 const RATE_LIMIT_WINDOW = 60_000; // per 60 seconds
 
+function formatMedicationContext(med: any): string {
+    if (!med) return "";
+    const name = med.drug_name || med.drugName || med.drugNameEn || "Medication";
+    const mfg = med.manufacturer || med.manufacturerName || "";
+    const summary = med.summary || med.summaryAr || med.summaryEn || "";
+    const analysis = med.analysis_json || med;
+
+    const lines = [
+        `[TARGET MEDICATION DETAILS]`,
+        `Drug Name: ${name}`,
+        mfg ? `Manufacturer: ${mfg}` : "",
+        summary ? `Summary: ${summary}` : "",
+    ];
+
+    if (analysis && typeof analysis === "object") {
+        if (analysis.activeIngredients) lines.push(`Active Ingredients: ${JSON.stringify(analysis.activeIngredients)}`);
+        if (analysis.dosage) lines.push(`Dosage & Administration: ${JSON.stringify(analysis.dosage)}`);
+        if (analysis.warnings) lines.push(`Warnings & Precautions: ${JSON.stringify(analysis.warnings)}`);
+        if (analysis.sideEffects) lines.push(`Side Effects: ${JSON.stringify(analysis.sideEffects)}`);
+        if (analysis.interactions) lines.push(`Interactions: ${JSON.stringify(analysis.interactions)}`);
+        if (analysis.fdaData) lines.push(`FDA Verification Data: ${JSON.stringify(analysis.fdaData)}`);
+        if (analysis.raw_text || analysis.ocrText) lines.push(`Package Text: ${analysis.raw_text || analysis.ocrText}`);
+    }
+
+    return lines.filter(Boolean).join("\n");
+}
+
 /* ──────────────────────────────────────────────────────────
  *  POST /api/ai/chat
  * ────────────────────────────────────────────────────────── */
@@ -66,21 +93,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Terms acceptance required", code: "TERMS_REQUIRED" }, { status: 403 });
         }
 
-        // Rate limiting: max 20 requests per 60s per user
-        const now = Date.now();
-        if (!rateLimitMap.has(user.id)) {
-            rateLimitMap.set(user.id, { count: 0, windowStart: now });
-        }
-        const userLimit = rateLimitMap.get(user.id)!;
-        if (now - userLimit.windowStart > RATE_LIMIT_WINDOW) {
-            userLimit.count = 0;
-            userLimit.windowStart = now;
-        }
-        userLimit.count++;
-        if (userLimit.count > RATE_LIMIT_MAX) {
-            return NextResponse.json({ error: "Rate limit exceeded. Please wait before sending more messages." }, { status: 429 });
-        }
-
         const body = await req.json();
         const mode: AiChatMode = body?.mode;
         const question: string | null = body?.question ? String(body.question).trim() : null;
@@ -88,6 +100,20 @@ export async function POST(req: NextRequest) {
         const conversationId: string | null = body?.conversationId ? String(body.conversationId) : null;
         const messageHistory: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.messageHistory) ? body.messageHistory : [];
         const medicationData: any = body?.medicationData || null;
+
+        // Check ULTRA plan access
+        const plan = await getUserPlan(user.id, supabase);
+        if (plan !== 'ultra') {
+            return NextResponse.json(
+                {
+                    error: language === "ar"
+                        ? "ميزة Mat AI متاحة حصرياً لمشتركي باقة ULTRA. يرجى الترقية لاستخدام المساعد الذكي."
+                        : "Mat AI is available exclusively on the ULTRA plan. Please upgrade your plan to access Mat AI.",
+                    requiresUltra: true,
+                },
+                { status: 402 }
+            );
+        }
 
         // Validation
         if (!mode || !["health", "medication", "context"].includes(mode)) {
@@ -189,12 +215,14 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Add medication context if provided (for medication mode)
-        if (mode === "medication" && medicationData) {
-            deepseekMessages.push({
-                role: "user",
-                content: `Target Medication Details: ${medicationData.drugName || medicationData.drugNameEn || "Medication"} (${medicationData.genericName || ""})`,
-            });
+        if (medicationData) {
+            const medFormatted = formatMedicationContext(medicationData);
+            if (medFormatted) {
+                deepseekMessages.push({
+                    role: "user",
+                    content: medFormatted,
+                });
+            }
         }
 
         // Add smart compressed conversation history (max 85% token savings)

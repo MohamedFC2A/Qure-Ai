@@ -101,16 +101,16 @@ export function ConversationSidebar({
                 style={{ background: "rgba(5, 8, 15, 0.97)" }}
             >
                 {/* Top accent line */}
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
 
                 {/* Header */}
                 <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/[0.05]">
-                    <div className="nexus-gold-logo w-8 h-8 rounded-xl flex items-center justify-center shrink-0">
-                        <Sparkles className="w-4 h-4 text-amber-950" />
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-500/10 border border-cyan-400/30 text-cyan-400">
+                        <Sparkles className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-white leading-none">MATANY AI</p>
-                        <p className="text-[10px] text-slate-600 mt-0.5">{isArabic ? "محادثاتي" : "My Chats"}</p>
+                        <p className="text-sm font-bold text-white leading-none">Mat AI</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{isArabic ? "محادثاتي" : "My Chats"}</p>
                     </div>
                     <button
                         onClick={onClose}

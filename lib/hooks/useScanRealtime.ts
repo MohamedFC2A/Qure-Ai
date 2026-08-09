@@ -57,7 +57,7 @@ export function useScanRealtime(userId: string | null, profileId: string | null)
           table: 'medication_history',
           filter: `profile_id=eq.${profileId}`,
         },
-        (payload) => {
+        (payload: any) => {
           if (payload.eventType === 'INSERT') {
             const newRecord = payload.new as MedicationScanRecord
             setScans((prev) => [newRecord, ...prev])
@@ -76,7 +76,7 @@ export function useScanRealtime(userId: string | null, profileId: string | null)
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         setIsConnected(status === 'SUBSCRIBED')
       })
 

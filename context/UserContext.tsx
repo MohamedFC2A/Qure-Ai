@@ -69,16 +69,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(user);
 
             if (user) {
-                // Fetch credits, plan, and now Profile details
                 try {
-                    // Fetch profile separately to get detailed fields
-                    const { data: profileData } = await supabase
-                        .from('profiles')
-                        .select('username, full_name, gender, age, height, weight, plan')
-                        .eq('id', user.id)
-                        .single();
+                    const [profileRes, creditsRes] = await Promise.all([
+                        supabase
+                            .from('profiles')
+                            .select('username, full_name, gender, age, height, weight, plan')
+                            .eq('id', user.id)
+                            .maybeSingle(),
+                        fetch('/api/credits/status'),
+                    ]);
 
-                    if (profileData) {
+                    if (profileRes.data) {
+                        const profileData = profileRes.data;
                         setProfile({
                             username: profileData.username,
                             full_name: profileData.full_name,
@@ -87,13 +89,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                             height: profileData.height,
                             weight: profileData.weight
                         });
-                        // Allow local plan state to be updated if needed, though status API is source of truth for limits
-                        // But let's stick to status API for plan/credits to ensure consistency with billing logic
+                        if (profileData.plan === 'ultra') {
+                            setPlan('ultra');
+                        }
                     }
 
-                    const res = await fetch('/api/credits/status');
-                    if (res.ok) {
-                        const data = await res.json();
+                    if (creditsRes.ok) {
+                        const data = await creditsRes.json();
                         setPlan(data.plan);
                         setCredits(Number(data.totalAvailable ?? 0));
                     }

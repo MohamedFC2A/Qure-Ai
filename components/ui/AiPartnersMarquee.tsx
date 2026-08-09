@@ -123,9 +123,9 @@ const PARTNERS: PartnerItem[] = [
     },
     {
         id: "matany",
-        name: "Matany AI",
+        name: "Mat AI",
         descriptionEn: "Clinical Intelligence Core",
-        descriptionAr: "نواة مطاني للذكاء الطبي",
+        descriptionAr: "نواة الذكاء الطبي المتقدم",
         logo: <MatanyAiWhiteLogo className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />,
     },
     {

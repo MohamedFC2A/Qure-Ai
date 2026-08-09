@@ -75,11 +75,11 @@ export default function HistoryPage() {
                     .eq("owner_user_id", authUser.id);
 
                 const rows = (careRes.data || []).map((r: any) => ({ id: String(r.id), display_name: String(r.display_name || (isArabic ? "أنا" : "Me")) }));
-                rows.sort((a, b) => (a.id === authUser.id ? -1 : b.id === authUser.id ? 1 : a.display_name.localeCompare(b.display_name)));
+                rows.sort((a: any, b: any) => (a.id === authUser.id ? -1 : b.id === authUser.id ? 1 : a.display_name.localeCompare(b.display_name)));
                 setCareProfiles(rows.length ? rows : [{ id: authUser.id, display_name: isArabic ? "أنا" : "Me" }]);
 
                 const saved = typeof window !== "undefined" ? localStorage.getItem("qurescan_active_care_profile") : null;
-                const preferred = saved && rows.some((p) => p.id === saved) ? saved : null;
+                const preferred = saved && rows.some((p: any) => p.id === saved) ? saved : null;
                 setProfileFilter(preferred || "all");
             } catch (err) {
                 console.error("History init error:", err);

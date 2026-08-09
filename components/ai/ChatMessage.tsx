@@ -154,8 +154,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                     <User className="w-3.5 h-3.5 text-slate-400" />
                 </div>
             ) : (
-                <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 nexus-gold-logo">
-                    <Sparkles className="w-3.5 h-3.5" style={{ color: "#1a0e00" }} />
+                <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 bg-cyan-500/10 border border-cyan-400/30 text-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.15)]">
+                    <Sparkles className="w-3.5 h-3.5" />
                 </div>
             )}
 
@@ -178,7 +178,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 ) : (
                     /* AI bubble — clean, no pseudo-element */
                     <div className={cn(
-                        "ai-bubble px-4 py-3.5",
+                        "ai-bubble px-4 py-3.5 border border-cyan-500/15 bg-slate-900/60 rounded-2xl backdrop-blur-md text-white",
                         isArabic ? "rounded-tl-sm" : "rounded-tr-sm"
                     )}>
                         {displayContent ? (
@@ -215,17 +215,16 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
                 {/* Key Points */}
                 {!isUser && displayKeyPoints && displayKeyPoints.length > 0 && (
-                    <div className="mt-3 rounded-xl border border-amber-400/15 p-3.5 space-y-2"
-                        style={{ background: "rgba(212, 168, 67, 0.04)" }}
+                    <div className="mt-3 rounded-xl border border-cyan-400/20 p-3.5 space-y-2 bg-cyan-950/20 backdrop-blur-sm"
                     >
-                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-500/70 mb-2 flex items-center gap-1.5">
-                            <span className="w-3 h-px bg-amber-400/40" />
+                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-cyan-400/90 mb-2 flex items-center gap-1.5">
+                            <span className="w-3 h-px bg-cyan-400/40" />
                             {isArabic ? "نقاط رئيسية" : "Key Points"}
-                            <span className="w-3 h-px bg-amber-400/40" />
+                            <span className="w-3 h-px bg-cyan-400/40" />
                         </p>
                         {displayKeyPoints.map((kp, i) => (
-                            <div key={i} className="flex items-start gap-2.5 text-xs text-white/75">
-                                <span className="text-amber-400/80 shrink-0 mt-0.5 text-[10px]">◆</span>
+                            <div key={i} className="flex items-start gap-2.5 text-xs text-slate-200">
+                                <span className="text-cyan-400 shrink-0 mt-0.5 text-[10px]">◆</span>
                                 <span className="leading-relaxed">{kp}</span>
                             </div>
                         ))}

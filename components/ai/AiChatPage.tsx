@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, Sparkles, RotateCcw, ArrowUp } from "lucide-react";
+import { Send, Mic, MicOff, Menu, Sparkles, RotateCcw, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -14,7 +14,7 @@ import { ConversationSidebar, type ConversationSummary } from "./ConversationSid
 import { MedicationSelect } from "./MedicationSelect";
 
 /* ──────────────────────────────────────────────────────────
- *  AiChatPage – Full-page MATANY AI chat (Premium Redesign)
+ *  AiChatPage – Full-page Mat AI chat (Clinical Cyan UI & Ultra Gated)
  * ────────────────────────────────────────────────────────── */
 
 const QUICK_PROMPTS: Record<AiChatMode, { en: string; ar: string }[]> = {
@@ -41,12 +41,14 @@ const QUICK_PROMPTS: Record<AiChatMode, { en: string; ar: string }[]> = {
 export function AiChatPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, loading } = useUser();
+    const { user, plan, loading } = useUser();
     const { resultsLanguage } = useSettings();
     const supabase = useMemo(() => createClient(), []);
 
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
+
+    const isUltra = plan === "ultra";
 
     /* ── State ── */
     const [mode, setMode] = useState<AiChatMode>(
@@ -79,7 +81,7 @@ export function AiChatPage() {
         } catch (e) { console.error("Failed to load conversations:", e); }
     }, []);
 
-    useEffect(() => { if (user) loadConversations(); }, [user, loadConversations]);
+    useEffect(() => { if (user && isUltra) loadConversations(); }, [user, isUltra, loadConversations]);
 
     /* ── Load a conversation's messages ── */
     const loadConversation = useCallback(async (convId: string) => {
@@ -105,7 +107,7 @@ export function AiChatPage() {
         } catch (e) { console.error("Failed to load conversation:", e); }
     }, []);
 
-    /* ── Handle URL params ── */
+    /* ── Handle URL params & Medication Selection ── */
     useEffect(() => {
         const medParam = searchParams.get("medication");
         if (medParam) {
@@ -116,6 +118,27 @@ export function AiChatPage() {
             } catch { /* ignore */ }
         }
     }, [searchParams]);
+
+    /* ── Handle medication context switch ── */
+    const handleSelectMedication = useCallback((med: any) => {
+        setSelectedMedication(med);
+        if (med) {
+            setMode("medication");
+            if (!activeConversationId && messages.length === 0) {
+                const medName = med.drug_name || med.drugName || "Medication";
+                const noticeText = isArabic
+                    ? `تم تمكين سياق الدواء: **${medName}**. يمكنك الآن طرح أي سؤال حول جرعاته، آثاره الجانبية، أو تداخلاته.`
+                    : `Medication context attached: **${medName}**. You can now ask questions about its dosage, side effects, or interactions.`;
+
+                setMessages([{
+                    id: `notice-${Date.now()}`,
+                    role: "assistant",
+                    content: noticeText,
+                    created_at: new Date().toISOString()
+                }]);
+            }
+        }
+    }, [activeConversationId, messages.length, isArabic]);
 
     /* ── Auto-scroll only when user is near bottom ── */
     useEffect(() => {
@@ -135,6 +158,11 @@ export function AiChatPage() {
     const sendMessage = useCallback(async (text: string) => {
         if (!text.trim() || isSending) return;
 
+        if (!isUltra) {
+            setError(t("Mat AI is exclusive to ULTRA plan members.", "ميزة Mat AI متاحة حصرياً لمشتركي باقة ULTRA."));
+            return;
+        }
+
         const userMessage: ChatMessageData = {
             id: `temp-${Date.now()}`,
             role: "user",
@@ -149,7 +177,6 @@ export function AiChatPage() {
         setError(null);
         setAutoScroll(true);
 
-        // Auto-resize textarea back
         if (inputRef.current) {
             inputRef.current.style.height = "auto";
         }
@@ -171,6 +198,10 @@ export function AiChatPage() {
                 content: m.content,
             }));
 
+            const medPayload = selectedMedication
+                ? (selectedMedication.analysis_json || selectedMedication)
+                : undefined;
+
             const res = await fetch("/api/ai/chat/stream", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -180,18 +211,16 @@ export function AiChatPage() {
                     conversationId: activeConversationId,
                     messageHistory: history.slice(0, -1),
                     language: isArabic ? "ar" : "en",
-                    medicationData: mode === "medication" && selectedMedication?.analysis_json
-                        ? selectedMedication.analysis_json
-                        : undefined,
+                    medicationData: medPayload,
                 }),
             });
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-                if (res.status === 402) setError(t("Ultra plan required", "يلزم الاشتراك Ultra"));
+                if (res.status === 402) setError(t("ULTRA plan subscription required.", "يلزم الاشتراك في باقة ULTRA لاستخدام Mat AI."));
                 else if (res.status === 401) setError(t("Please log in", "يرجى تسجيل الدخول"));
-                else setError(errData.error || t("Failed to get answer", "فشل في الحصول على إجابة"));
+                else setError(errData.error || t("Failed to get response", "فشل في الحصول على استجابة"));
                 return;
             }
 
@@ -248,7 +277,7 @@ export function AiChatPage() {
                             if (event.type === "error") {
                                 setError(event.error || t("Stream error", "خطأ في البث"));
                             }
-                        } catch { /* bad JSON, skip */ }
+                        } catch { /* skip invalid JSON */ }
                     }
                 }
             }
@@ -260,7 +289,7 @@ export function AiChatPage() {
             setIsSending(false);
             setIsStreaming(false);
         }
-    }, [isSending, messages, activeConversationId, mode, isArabic, selectedMedication, t, loadConversations]);
+    }, [isSending, isUltra, messages, activeConversationId, mode, isArabic, selectedMedication, t, loadConversations]);
 
     /* ── Voice input ── */
     const toggleVoice = useCallback(() => {
@@ -342,11 +371,11 @@ export function AiChatPage() {
     /* ── Loading ── */
     if (loading) {
         return (
-            <main className="min-h-screen pt-20 px-4">
-                <div className="mx-auto max-w-4xl space-y-4 mt-8">
-                    <div className="h-12 skeleton rounded-2xl" />
-                    <div className="h-[60vh] skeleton rounded-2xl" />
-                    <div className="h-14 skeleton rounded-2xl" />
+            <main className="min-h-screen pt-20 px-4 bg-slate-950 flex items-center justify-center">
+                <div className="w-full max-w-3xl space-y-4">
+                    <div className="h-12 skeleton rounded-2xl bg-white/[0.04]" />
+                    <div className="h-[60vh] skeleton rounded-2xl bg-white/[0.04]" />
+                    <div className="h-14 skeleton rounded-2xl bg-white/[0.04]" />
                 </div>
             </main>
         );
@@ -359,243 +388,323 @@ export function AiChatPage() {
         <main
             className="fixed inset-0 pt-16 sm:pt-20 md:pt-20 z-40 flex"
             dir={isArabic ? "rtl" : "ltr"}
-            style={{ background: "var(--q-base, #040810)" }}
+            style={{ background: "#050811" }}
         >
             {/* ── Sidebar ── */}
-            <ConversationSidebar
-                conversations={conversations}
-                activeConversationId={activeConversationId}
-                onSelect={handleSelectConversation}
-                onDelete={handleDeleteConversation}
-                onNewChat={handleNewChat}
-                isArabic={isArabic}
-                isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-            />
+            {isUltra && (
+                <ConversationSidebar
+                    conversations={conversations}
+                    activeConversationId={activeConversationId}
+                    onSelect={handleSelectConversation}
+                    onDelete={handleDeleteConversation}
+                    onNewChat={handleNewChat}
+                    isArabic={isArabic}
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                />
+            )}
 
             {/* ── Main Chat Area ── */}
             <div className="flex-1 flex flex-col min-w-0 relative z-10">
 
                 {/* ── Top Header ── */}
                 <div
-                    className="flex items-center gap-3 px-4 py-2 border-b border-white/[0.05] shrink-0"
-                    style={{ background: "rgba(4,8,16,0.95)", backdropFilter: "blur(16px)" }}
+                    className="flex items-center gap-3 px-4 py-3 border-b border-cyan-500/10 shrink-0"
+                    style={{ background: "rgba(5, 8, 17, 0.95)", backdropFilter: "blur(16px)" }}
                 >
                     {/* Mobile sidebar toggle */}
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden p-2 rounded-lg hover:bg-white/[0.05] text-slate-600 hover:text-slate-400 transition-all"
-                    >
-                        <Menu className="w-5 h-5" />
-                    </button>
+                    {isUltra && (
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="lg:hidden p-2 rounded-lg hover:bg-white/[0.05] text-slate-400 hover:text-white transition-all"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    )}
 
-                    {/* Center: mode indicator */}
-                    <div className="flex-1 flex items-center justify-center">
-                        <span className="text-xs font-medium text-slate-600">
+                    {/* Mat AI Branding Header */}
+                    <div className="flex-1 flex items-center justify-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                            <Sparkles className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-sm font-bold text-white tracking-wide">
+                            Mat AI
+                        </span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">
                             {mode === "health"
-                                ? t("Health AI", "الصحة")
+                                ? t("Health", "صحة")
                                 : mode === "medication"
-                                    ? t("Medication", "الدواء")
-                                    : t("QureScan Integrated", "المدمج")
+                                    ? t("Medication", "أدوية")
+                                    : t("Integrated", "شامل")
                             }
                         </span>
                     </div>
 
-                    {messages.length > 0 && (
+                    {isUltra && messages.length > 0 && (
                         <button
                             onClick={handleNewChat}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-white/[0.06] text-slate-600 hover:text-white hover:border-white/[0.15] hover:bg-white/[0.04] transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-cyan-500/20 text-slate-300 hover:text-white hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all"
                         >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">{isArabic ? "جديد" : "New"}</span>
+                            <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
+                            <span className="hidden sm:inline">{isArabic ? "محادثة جديدة" : "New Chat"}</span>
                         </button>
                     )}
                 </div>
 
-                {/* ── Scrollable Messages ── */}
-                <div
-                    ref={chatContainerRef}
-                    onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto px-4 py-6 no-scrollbar"
-                >
-                    <div className="max-w-2xl mx-auto space-y-6">
+                {/* ── ULTRA PAYWALL BLOCK (For Free Tier Users) ── */}
+                {!isUltra ? (
+                    <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
+                        <div className="max-w-xl w-full rounded-3xl border border-cyan-500/30 p-6 sm:p-8 text-center space-y-6 bg-slate-900/80 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-hidden">
+                            {/* Decorative background glow */}
+                            <div className="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl" />
+                            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl" />
 
-                        {/* Welcome (only when empty) */}
-                        {messages.length === 0 && (
-                            <div className="flex flex-col items-center text-center pt-16 pb-8 animate-fade-in">
-                                {/* Clean icon — no glow */}
-                                <div className="mb-5">
-                                    <div className="ai-orb">
-                                        <Sparkles className="w-6 h-6 relative z-10" style={{ color: "#1c1000" }} />
+                            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center mx-auto text-cyan-400 shadow-inner">
+                                <Lock className="w-8 h-8" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-cyan-400/10 text-cyan-300 border border-cyan-400/30">
+                                    <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                                    {t("ULTRA EXCLUSIVE FEATURE", "ميزة حصرية لمشتركي ULTRA")}
+                                </span>
+                                <h2 className="text-2xl font-extrabold text-white tracking-tight">
+                                    {t("Unlock Mat AI Assistant", "افتح المساعد الطبي الذكي Mat AI")}
+                                </h2>
+                                <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                                    {t(
+                                        "Mat AI is available exclusively for ULTRA members. Get personalized clinical insights, comprehensive medication analysis, and health advice.",
+                                        "مساعد Mat AI متاح حصرياً لأعضاء باقة ULTRA. احصل على تحليلات سريرية فائقة الدقة، قراءة شفرات الأدوية، واستشارات صحية مخصصة."
+                                    )}
+                                </p>
+                            </div>
+
+                            {/* Features list */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start pt-2">
+                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
+                                    <Pill className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                                    <div className="text-xs">
+                                        <p className="font-bold text-white">{t("Full Medication Context", "قراءة بيانات الأدوية بالكامل")}</p>
+                                        <p className="text-slate-400 text-[11px]">{t("Reads ingredients, warnings & FDA labels", "يفهم المواد الفعالة والتحذيرات والجرعات")}</p>
+                                    </div>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
+                                    <Brain className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                                    <div className="text-xs">
+                                        <p className="font-bold text-white">{t("Personalized Health Profile", "ربط بالملف الصحي الخاص")}</p>
+                                        <p className="text-slate-400 text-[11px]">{t("Cross-checks allergies & conditions", "يفحص الحساسية والتداخلات لملفك")}</p>
+                                    </div>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
+                                    <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                                    <div className="text-xs">
+                                        <p className="font-bold text-white">{t("Clinical Safety Guard", "فحص السلامة الصيدلانية")}</p>
+                                        <p className="text-slate-400 text-[11px]">{t("FDA verified interaction checks", "مراجعة معايير السلامة والتداخلات")}</p>
+                                    </div>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
+                                    <Zap className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                                    <div className="text-xs">
+                                        <p className="font-bold text-white">{t("Zero-Lag Streaming", "استجابة فائقة السرعة")}</p>
+                                        <p className="text-slate-400 text-[11px]">{t("Instant token streaming & continuous chat", "بث فوري للإجابات وحفظ المحادثات")}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Upgrade CTA Button */}
+                            <button
+                                onClick={() => router.push("/pricing")}
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-black text-base transition-all shadow-[0_0_25px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2"
+                            >
+                                <Sparkles className="w-5 h-5" />
+                                {t("Upgrade to ULTRA Now", "ترقية إلى باقة ULTRA الآن")}
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    /* ── CHAT MESSAGES & INPUT FOR ULTRA USERS ── */
+                    <>
+                        {/* Scrollable Messages */}
+                        <div
+                            ref={chatContainerRef}
+                            onScroll={handleScroll}
+                            className="flex-1 overflow-y-auto px-4 py-6 no-scrollbar"
+                        >
+                            <div className="max-w-2xl mx-auto space-y-6">
+
+                                {/* Welcome section when empty */}
+                                {messages.length === 0 && (
+                                    <div className="flex flex-col items-center text-center pt-12 pb-8 animate-fade-in space-y-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.2)]">
+                                            <Sparkles className="w-7 h-7" />
+                                        </div>
+
+                                        <h2 className="text-2xl font-black tracking-tight text-white">
+                                            Mat AI
+                                        </h2>
+                                        <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
+                                            {mode === "health" && t(
+                                                "Ask about health, nutrition, exercise, sleep, and clinical wellness.",
+                                                "اسأل عن الصحة، التغذية، الرياضة، النوم، والعافية الطبية."
+                                            )}
+                                            {mode === "medication" && t(
+                                                "Ask about any medication — active ingredients, side effects, alternatives, drug interactions.",
+                                                "اسأل عن أي دواء — المواد الفعالة، الآثار الجانبية، البدائل، والتداخلات الدوائية."
+                                            )}
+                                            {mode === "context" && t(
+                                                "Get personalized health advice cross-checked with your health profile and medication history.",
+                                                "احصل على استشارات مخصصة مطابقة لملفك الصحي وتاريخ أدويتك."
+                                            )}
+                                        </p>
+
+                                        {/* Quick Prompts */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-2">
+                                            {quickPrompts.map((s, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => sendMessage(isArabic ? s.ar : s.en)}
+                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-cyan-500/20 bg-slate-900/60 text-slate-300 hover:text-white hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all leading-relaxed backdrop-blur-sm"
+                                                >
+                                                    {isArabic ? s.ar : s.en}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Messages */}
+                                {messages.map((msg, idx) => (
+                                    <ChatMessage
+                                        key={msg.id || idx}
+                                        message={msg}
+                                        isArabic={isArabic}
+                                        accentColor={accentColor}
+                                        onSuggestionClick={handleSuggestionClick}
+                                    />
+                                ))}
+
+                                {/* Error */}
+                                {error && (
+                                    <div className="flex items-center justify-center animate-fade-in">
+                                        <div className="rounded-2xl border border-red-400/20 bg-red-400/5 px-5 py-3.5 text-xs text-red-300/90 text-center">
+                                            {error}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div ref={chatEndRef} />
+                            </div>
+                        </div>
+
+                        {/* ── INPUT BAR ── */}
+                        <div
+                            className="shrink-0 px-3 sm:px-6 pt-2 pb-20 sm:pb-4"
+                            style={{ background: "rgba(5, 8, 17, 0.95)", backdropFilter: "blur(24px)" }}
+                        >
+                            <div className="max-w-2xl mx-auto space-y-2">
+                                {/* Medication selector */}
+                                {mode === "medication" && (
+                                    <div className="mb-1">
+                                        <MedicationSelect
+                                            isArabic={isArabic}
+                                            onSelect={handleSelectMedication}
+                                            selected={selectedMedication}
+                                            onNavigateToScan={() => router.push("/scan")}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Main input container */}
+                                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.08)] focus-within:border-cyan-400/50 transition-all">
+                                    {/* Mode selector row */}
+                                    <div className="flex items-center gap-2 px-4 pt-3 pb-0">
+                                        <ModeSelector
+                                            activeMode={mode}
+                                            onModeChange={handleModeChange}
+                                            isArabic={isArabic}
+                                        />
+                                    </div>
+
+                                    {/* Textarea & Send button */}
+                                    <div className="flex items-end gap-2 px-4 pt-2 pb-3">
+                                        <textarea
+                                            ref={inputRef}
+                                            value={input}
+                                            onChange={handleInputChange}
+                                            onKeyDown={handleKeyDown}
+                                            placeholder={
+                                                mode === "health"
+                                                    ? t("Ask Mat AI about your health…", "اسأل Mat AI أي شيء عن صحتك…")
+                                                    : mode === "medication"
+                                                        ? t("Ask about a medication…", "اسأل عن دواء…")
+                                                        : t("Ask Mat AI — knowing your health profile", "اسأل Mat AI — بالاعتماد على ملفك الصحي")
+                                            }
+                                            className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder-slate-500 resize-none min-h-[36px] max-h-[140px] text-sm leading-relaxed py-1"
+                                            disabled={isSending}
+                                            dir={isArabic ? "rtl" : "ltr"}
+                                            rows={1}
+                                            style={{ overflowY: "auto" }}
+                                        />
+
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                            {/* Voice button */}
+                                            <button
+                                                type="button"
+                                                onClick={toggleVoice}
+                                                disabled={isSending}
+                                                className={cn(
+                                                    "p-2 rounded-xl transition-all",
+                                                    isListening
+                                                        ? "bg-red-500/20 text-red-400 animate-pulse"
+                                                        : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                                                )}
+                                                title={t("Voice input", "إدخال صوتي")}
+                                            >
+                                                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                            </button>
+
+                                            {/* Send button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => sendMessage(input)}
+                                                disabled={isSending || !input.trim()}
+                                                className={cn(
+                                                    "p-2.5 rounded-xl transition-all",
+                                                    input.trim() && !isSending
+                                                        ? "bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow-lg shadow-cyan-950/40"
+                                                        : "bg-white/[0.05] text-white/15 cursor-not-allowed"
+                                                )}
+                                            >
+                                                {isSending
+                                                    ? <div className="w-4 h-4 border-2 border-cyan-800/50 border-t-cyan-400 rounded-full animate-spin" />
+                                                    : <ArrowUp className="w-4 h-4" />
+                                                }
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <h2 className="text-xl font-black mb-2 tracking-tight">
-                                    <span className="nexus-gold-text">MATANY AI</span>
-                                </h2>
-                                <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-8">
-                                    {mode === "health" && t(
-                                        "Ask about health, nutrition, exercise, sleep, and wellness.",
-                                        "اسأل عن الصحة، التغذية، الرياضة، النوم، والعافية."
-                                    )}
-                                    {mode === "medication" && t(
-                                        "Ask about medications — side effects, alternatives, drug interactions, dosage.",
-                                        "اسأل عن أي دواء — آثار جانبية، بدائل، تداخلات دوائية، جرعات."
-                                    )}
-                                    {mode === "context" && t(
-                                        "Get personalized health advice based on your profile and medication history.",
-                                        "احصل على نصائح صحية مخصصة بناءً على ملفك وتاريخ أدويتك."
-                                    )}
-                                </p>
-
-                                {/* Quick Prompts */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
-                                    {quickPrompts.map((s, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => sendMessage(isArabic ? s.ar : s.en)}
-                                            className="px-4 py-3 rounded-2xl text-xs text-start border border-white/[0.07] bg-white/[0.03] text-slate-400 hover:text-white hover:border-white/[0.15] hover:bg-white/[0.06] transition-all leading-relaxed"
-                                        >
-                                            {isArabic ? s.ar : s.en}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Messages */}
-                        {messages.map((msg, idx) => (
-                            <ChatMessage
-                                key={msg.id || idx}
-                                message={msg}
-                                isArabic={isArabic}
-                                accentColor={accentColor}
-                                onSuggestionClick={handleSuggestionClick}
-                            />
-                        ))}
-
-                        {/* Error */}
-                        {error && (
-                            <div className="flex items-center justify-center animate-fade-in">
-                                <div className="rounded-2xl border border-red-400/20 bg-red-400/5 px-5 py-3.5 text-xs text-red-300/90 text-center">
-                                    {error}
-                                </div>
-                            </div>
-                        )}
-
-                        <div ref={chatEndRef} />
-                    </div>
-                </div>
-
-                {/* ══════════════════════════════════════════════
-                 *  PREMIUM INPUT BAR
-                 * ══════════════════════════════════════════════ */}
-                <div
-                    className="shrink-0 px-3 sm:px-6 pt-2 pb-20 sm:pb-4"
-                    style={{ background: "rgba(3,7,18,0.94)", backdropFilter: "blur(24px)" }}
-                >
-                    <div className="max-w-2xl mx-auto space-y-2">
-                        {/* Medication selector (medication mode only) */}
-                        {mode === "medication" && (
-                            <div className="mb-1">
-                                <MedicationSelect
-                                    isArabic={isArabic}
-                                    onSelect={setSelectedMedication}
-                                    selected={selectedMedication}
-                                    onNavigateToScan={() => router.push("/scan")}
-                                />
-                            </div>
-                        )}
-
-                        {/* Main input container */}
-                        <div className="ai-input-container">
-                            {/* Mode chips inside the container (top row) */}
-                            <div className="flex items-center gap-2 px-4 pt-3 pb-0">
-                                <ModeSelector
-                                    activeMode={mode}
-                                    onModeChange={handleModeChange}
-                                    isArabic={isArabic}
-                                />
-                            </div>
-
-                            {/* Textarea */}
-                            <div className="flex items-end gap-2 px-4 pt-2 pb-3">
-                                <textarea
-                                    ref={inputRef}
-                                    value={input}
-                                    onChange={handleInputChange}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder={
-                                        mode === "health"
-                                            ? t("Ask anything about your health…", "اسأل أي شيء عن صحتك…")
-                                            : mode === "medication"
-                                                ? t("Ask about a medication…", "اسأل عن دواء…")
-                                                : t("Ask — I know your health profile", "اسأل — أعرف ملفك الصحي")
-                                    }
-                                    className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder-white/20 resize-none min-h-[36px] max-h-[140px] text-sm leading-relaxed py-1"
-                                    disabled={isSending}
-                                    dir={isArabic ? "rtl" : "ltr"}
-                                    rows={1}
-                                    style={{ overflowY: "auto" }}
-                                />
-
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    {/* Voice */}
-                                    <button
-                                        type="button"
-                                        onClick={toggleVoice}
-                                        disabled={isSending}
-                                        className={cn(
-                                            "p-2 rounded-xl transition-all",
-                                            isListening
-                                                ? "bg-red-500/20 text-red-400 animate-pulse"
-                                                : "text-white/25 hover:text-white/50 hover:bg-white/[0.06]"
-                                        )}
-                                        title={t("Voice input", "إدخال صوتي")}
-                                    >
-                                        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                                    </button>
-
-                                    {/* Send */}
-                                    <button
-                                        type="button"
-                                        onClick={() => sendMessage(input)}
-                                        disabled={isSending || !input.trim()}
-                                        className={cn(
-                                            "p-2.5 rounded-xl transition-all",
-                                            input.trim() && !isSending
-                                                ? "bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow-lg shadow-cyan-950/40"
-                                                : "bg-white/[0.05] text-white/15 cursor-not-allowed"
-                                        )}
-                                    >
-                                        {isSending
-                                            ? <div className="w-4 h-4 border-2 border-cyan-800/50 border-t-cyan-400 rounded-full animate-spin" />
-                                            : <ArrowUp className="w-4 h-4" />
-                                        }
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Hint row */}
-                        <div className={cn(
-                            "flex items-center px-1",
-                            input.length > 0 ? "justify-between" : "justify-center"
-                        )}>
-                            <p className="text-[10px] text-white/12">
-                                {t("Enter to send  •  Shift+Enter for new line", "Enter للإرسال  •  Shift+Enter لسطر جديد")}
-                            </p>
-                            {input.length > 0 && (
-                                <p className={cn(
-                                    "text-[10px]",
-                                    input.length > 1800 ? "text-amber-400" : "text-white/15"
+                                {/* Hint row */}
+                                <div className={cn(
+                                    "flex items-center px-1",
+                                    input.length > 0 ? "justify-between" : "justify-center"
                                 )}>
-                                    {input.length}/2000
-                                </p>
-                            )}
+                                    <p className="text-[10px] text-slate-500">
+                                        {t("Enter to send  •  Shift+Enter for new line", "Enter للإرسال  •  Shift+Enter لسطر جديد")}
+                                    </p>
+                                    {input.length > 0 && (
+                                        <p className={cn(
+                                            "text-[10px]",
+                                            input.length > 1800 ? "text-amber-400" : "text-slate-500"
+                                        )}>
+                                            {input.length}/2000
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </>
+                )}
             </div>
         </main>
     );
