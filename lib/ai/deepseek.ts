@@ -1,23 +1,41 @@
 import OpenAI from "openai";
 
-export const DEEPSEEK_MODEL = process.env.POLLINATIONS_MODEL || process.env.DEEPSEEK_MODEL || "chirag-gamer/gpt-oss-120b";
-export const DEEPSEEK_BASE_URL = process.env.POLLINATIONS_BASE_URL || process.env.DEEPSEEK_BASE_URL || "https://gen.pollinations.ai/v1";
+const DEFAULT_POLLINATIONS_KEY = "sk_3cpHv0pELis47TdPWKSNvMwrJZKLXh1Y";
+const DEFAULT_POLLINATIONS_BASE_URL = "https://gen.pollinations.ai/v1";
+const DEFAULT_POLLINATIONS_MODEL = "chirag-gamer/gpt-oss-120b";
 
 export function getDeepSeekApiKey(): string {
     const envKey = process.env.POLLINATIONS_API_KEY?.trim() || process.env.DEEPSEEK_API_KEY?.trim();
-    if (envKey && envKey !== "your-deepseek-api-key" && envKey !== "your-pollinations-api-key") {
+    // Only accept valid Pollinations keys (starting with sk_). Ignore legacy DeepSeek keys (sk-...) or placeholders.
+    if (envKey && envKey.startsWith("sk_")) {
         return envKey;
     }
-    return "sk_3cpHv0pELis47TdPWKSNvMwrJZKLXh1Y";
+    return DEFAULT_POLLINATIONS_KEY;
 }
+
+export function getDeepSeekBaseUrl(): string {
+    const envUrl = process.env.POLLINATIONS_BASE_URL?.trim() || process.env.DEEPSEEK_BASE_URL?.trim();
+    if (envUrl && envUrl.includes("pollinations.ai")) {
+        return envUrl;
+    }
+    return DEFAULT_POLLINATIONS_BASE_URL;
+}
+
+export const DEEPSEEK_BASE_URL = DEFAULT_POLLINATIONS_BASE_URL;
 
 export function getDeepSeekModel(): string {
-    return process.env.POLLINATIONS_MODEL || process.env.DEEPSEEK_MODEL || "chirag-gamer/gpt-oss-120b";
+    const envModel = process.env.POLLINATIONS_MODEL?.trim() || process.env.DEEPSEEK_MODEL?.trim();
+    if (envModel && !envModel.includes("deepseek") && !envModel.includes("gemini")) {
+        return envModel;
+    }
+    return DEFAULT_POLLINATIONS_MODEL;
 }
 
+export const DEEPSEEK_MODEL = DEFAULT_POLLINATIONS_MODEL;
+
 export function createPollinationsClient(customKey?: string, customBaseUrl?: string): OpenAI {
-    const apiKey = customKey || getDeepSeekApiKey();
-    const baseURL = customBaseUrl || DEEPSEEK_BASE_URL;
+    const apiKey = (customKey && customKey.startsWith("sk_")) ? customKey : getDeepSeekApiKey();
+    const baseURL = (customBaseUrl && customBaseUrl.includes("pollinations.ai")) ? customBaseUrl : getDeepSeekBaseUrl();
     return new OpenAI({
         apiKey,
         baseURL,
