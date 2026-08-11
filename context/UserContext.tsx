@@ -117,8 +117,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         refreshUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-            refreshUser();
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+                refreshUser();
+            } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+                setUser(session.user);
+            }
         });
 
         return () => subscription.unsubscribe();

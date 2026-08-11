@@ -46,17 +46,20 @@ export async function middleware(request: NextRequest) {
         },
     });
 
-    // 2. Attach security headers & static caching
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('X-XSS-Protection', '1; mode=block');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.delete('x-powered-by');
-    response.headers.delete('server');
+    const applySecurityHeaders = (res: NextResponse) => {
+        res.headers.set('X-Content-Type-Options', 'nosniff');
+        res.headers.set('X-Frame-Options', 'DENY');
+        res.headers.set('X-XSS-Protection', '1; mode=block');
+        res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        res.headers.delete('x-powered-by');
+        res.headers.delete('server');
+        if (pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2)$/)) {
+            res.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        return res;
+    };
 
-    if (pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2)$/)) {
-        response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    }
+    applySecurityHeaders(response);
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,6 +72,7 @@ export async function middleware(request: NextRequest) {
                 setAll(cookiesToSet) {
                     cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
                     response = NextResponse.next({ request: { headers: request.headers } });
+                    applySecurityHeaders(response);
                     cookiesToSet.forEach(({ name, value, options }) =>
                         response.cookies.set(name, value, options)
                     );
