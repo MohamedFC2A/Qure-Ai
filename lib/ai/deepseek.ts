@@ -1,3 +1,5 @@
+import OpenAI from "openai";
+
 export const DEEPSEEK_MODEL = process.env.POLLINATIONS_MODEL || process.env.DEEPSEEK_MODEL || "chirag-gamer/gpt-oss-120b";
 export const DEEPSEEK_BASE_URL = process.env.POLLINATIONS_BASE_URL || process.env.DEEPSEEK_BASE_URL || "https://gen.pollinations.ai/v1";
 
@@ -11,4 +13,17 @@ export function getDeepSeekApiKey(): string {
 
 export function getDeepSeekModel(): string {
     return process.env.POLLINATIONS_MODEL || process.env.DEEPSEEK_MODEL || "chirag-gamer/gpt-oss-120b";
+}
+
+export function createPollinationsClient(customKey?: string, customBaseUrl?: string): OpenAI {
+    const apiKey = customKey || getDeepSeekApiKey();
+    const baseURL = customBaseUrl || DEEPSEEK_BASE_URL;
+    return new OpenAI({
+        apiKey,
+        baseURL,
+        defaultQuery: { key: apiKey },
+        defaultHeaders: {
+            "Authorization": `Bearer ${apiKey}`
+        }
+    });
 }

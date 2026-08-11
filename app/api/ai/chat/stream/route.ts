@@ -5,7 +5,7 @@ import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
-import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 const META_SEPARATOR = "\n---METADATA---\n";
@@ -204,13 +204,7 @@ export async function POST(req: NextRequest) {
 
         let tokenStream: AsyncIterable<any> | null = null;
         try {
-            const deepseek = new OpenAI({
-                apiKey: apiKey,
-                baseURL: DEEPSEEK_BASE_URL,
-                defaultHeaders: {
-                    "Authorization": `Bearer ${apiKey}`
-                }
-            });
+            const deepseek = createPollinationsClient(apiKey);
             tokenStream = await deepseek.chat.completions.create({
                 model: getDeepSeekModel(),
                 messages: deepseekMessages,

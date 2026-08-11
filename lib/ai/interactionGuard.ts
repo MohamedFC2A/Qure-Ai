@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 
 export type InteractionSeverity = "safe" | "caution" | "danger";
 
@@ -176,13 +176,7 @@ ${otherJson}
 
     let content: string | null = null;
     try {
-        const deepseek = new OpenAI({
-            apiKey: apiKey,
-            baseURL: DEEPSEEK_BASE_URL,
-            defaultHeaders: {
-                "Authorization": `Bearer ${apiKey}`
-            }
-        });
+        const deepseek = createPollinationsClient();
 
         const response = await deepseek.chat.completions.create({
             model: getDeepSeekModel(),

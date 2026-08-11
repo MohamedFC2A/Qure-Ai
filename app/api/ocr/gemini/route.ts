@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getDeepSeekApiKey } from "@/lib/ai/deepseek";
+import { createPollinationsClient, getDeepSeekApiKey } from "@/lib/ai/deepseek";
 import { createClient } from "@/lib/supabase/server";
 import { deductCredit, getCreditsStatus } from "@/lib/creditService";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -95,40 +95,39 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
 }`;
 
         let text = "";
-        const ocrVisionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
-        const pollinationsBaseUrl = process.env.POLLINATIONS_BASE_URL || "https://gen.pollinations.ai/v1";
+        const primaryVisionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
+        const visionModelsToTry = [primaryVisionModel, "qwen-vision", "openai"];
 
-        // Strategy 1: Pollinations Vision Model (YoannDev90/muse-glimmer-30b:free)
-        try {
-            const pollinationsKey = getDeepSeekApiKey();
-            console.log(`[OCR API] Calling Pollinations Vision API (${ocrVisionModel})...`);
-            const pollinations = new OpenAI({
-                apiKey: pollinationsKey,
-                baseURL: pollinationsBaseUrl,
-                defaultHeaders: {
-                    "Authorization": `Bearer ${pollinationsKey}`
+        const pollinations = createPollinationsClient();
+
+        for (const modelCandidate of visionModelsToTry) {
+            try {
+                console.log(`[OCR API] Calling Pollinations Vision API (${modelCandidate})...`);
+                const res = await pollinations.chat.completions.create({
+                    model: modelCandidate,
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                { type: "text", text: prompt },
+                                { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
+                            ]
+                        }
+                    ],
+                    temperature: 0.1,
+                });
+
+                text = res.choices[0]?.message?.content || "";
+                if (text && text.trim().length > 0) {
+                    console.log(`[OCR API] Pollinations Vision (${modelCandidate}) response received, length:`, text.length);
+                    break;
                 }
-            });
-
-            const res = await pollinations.chat.completions.create({
-                model: ocrVisionModel,
-                messages: [
-                    {
-                        role: "user",
-                        content: [
-                            { type: "text", text: prompt },
-                            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
-                        ]
-                    }
-                ],
-                temperature: 0.1,
-            });
-
-            text = res.choices[0]?.message?.content || "";
-            console.log("[OCR API] Pollinations Vision response received, length:", text.length);
-        } catch (polErr: any) {
-            console.error("[OCR API] Pollinations Vision API call failed:", polErr?.message || polErr);
-            throw polErr;
+            } catch (polErr: any) {
+                console.warn(`[OCR API] Vision model ${modelCandidate} failed:`, polErr?.message || polErr);
+                if (modelCandidate === visionModelsToTry[visionModelsToTry.length - 1]) {
+                    throw polErr;
+                }
+            }
         }
 
         // Multiple parsing strategies

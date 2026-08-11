@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
-import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 
 type PresetId = "alternative" | "personalized" | "history" | "suggestions";
@@ -320,13 +320,7 @@ ${rootQuestion}
 
         let content: string | null = null;
         try {
-            const deepseek = new OpenAI({
-                apiKey: apiKey,
-                baseURL: DEEPSEEK_BASE_URL,
-                defaultHeaders: {
-                    "Authorization": `Bearer ${apiKey}`
-                }
-            });
+            const deepseek = createPollinationsClient(apiKey);
             const response = await deepseek.chat.completions.create({
                 model: getDeepSeekModel(),
                 messages: [
