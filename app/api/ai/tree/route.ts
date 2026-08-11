@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
-import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 
 type PresetId = "alternative" | "personalized" | "history" | "suggestions";
@@ -319,21 +319,29 @@ ${rootQuestion}
 `;
 
         let content: string | null = null;
-        try {
-            const deepseek = createPollinationsClient(apiKey);
-            const response = await deepseek.chat.completions.create({
-                model: getDeepSeekModel(),
-                messages: [
-                    { role: "system", content: staticSystemPrompt },
-                    { role: "user", content: userPayload },
-                ],
-                response_format: { type: "json_object" },
-                temperature: 0.15,
-                max_tokens: 400,
-            });
-            content = response.choices[0]?.message?.content || null;
-        } catch (err: any) {
-            console.error("[AI Tree API] Pollinations AI call failed:", err?.message || err);
+        const pollinations = createPollinationsClient(apiKey);
+        const modelsToTry = getTextModelsToTry();
+
+        for (const candidateModel of modelsToTry) {
+            try {
+                console.log(`[AI Tree API] Calling Pollinations AI model (${candidateModel})...`);
+                const response = await pollinations.chat.completions.create({
+                    model: candidateModel,
+                    messages: [
+                        { role: "system", content: staticSystemPrompt },
+                        { role: "user", content: userPayload },
+                    ],
+                    temperature: 0.15,
+                    max_tokens: 400,
+                });
+                content = response.choices[0]?.message?.content || null;
+                if (content && content.trim().length > 0) {
+                    console.log(`[AI Tree API] Success using model (${candidateModel}), length:`, content.length);
+                    break;
+                }
+            } catch (err: any) {
+                console.warn(`[AI Tree API] Model (${candidateModel}) failed:`, err?.message || err);
+            }
         }
 
         if (!content) {

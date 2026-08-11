@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
 
 
 
@@ -160,21 +160,29 @@ OCR TEXT FRAGMENTS:
 `;
 
         let content: string | null = null;
-        try {
-            const deepseek = createPollinationsClient();
-            const response = await deepseek.chat.completions.create({
-                model: getDeepSeekModel(),
-                messages: [
-                    { role: "system", content: staticSystemPrompt },
-                    { role: "user", content: userPayload }
-                ],
-                response_format: { type: "json_object" },
-                temperature: 0.2,
-                max_tokens: 750,
-            });
-            content = response.choices[0]?.message?.content || null;
-        } catch (err: any) {
-            console.error("[Vision API] Pollinations AI (gpt-oss-120b) failed:", err?.message || err);
+        const pollinations = createPollinationsClient();
+        const modelsToTry = getTextModelsToTry();
+
+        for (const candidateModel of modelsToTry) {
+            try {
+                console.log(`[Vision API] Calling Pollinations AI model (${candidateModel})...`);
+                const response = await pollinations.chat.completions.create({
+                    model: candidateModel,
+                    messages: [
+                        { role: "system", content: staticSystemPrompt },
+                        { role: "user", content: userPayload }
+                    ],
+                    temperature: 0.2,
+                    max_tokens: 750,
+                });
+                content = response.choices[0]?.message?.content || null;
+                if (content && content.trim().length > 0) {
+                    console.log(`[Vision API] Success using model (${candidateModel}), length:`, content.length);
+                    break;
+                }
+            } catch (err: any) {
+                console.warn(`[Vision API] Model (${candidateModel}) failed:`, err?.message || err);
+            }
         }
 
         console.log("AI Raw Response:", content);

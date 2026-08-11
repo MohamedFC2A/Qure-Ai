@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
 
 export type InteractionSeverity = "safe" | "caution" | "danger";
 
@@ -175,23 +175,30 @@ ${otherJson}
 `;
 
     let content: string | null = null;
-    try {
-        const deepseek = createPollinationsClient();
+    const pollinations = createPollinationsClient();
+    const modelsToTry = getTextModelsToTry();
 
-        const response = await deepseek.chat.completions.create({
-            model: getDeepSeekModel(),
-            messages: [
-                { role: "system", content: staticSystemPrompt },
-                { role: "user", content: userPayload },
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.2,
-            max_tokens: 350,
-        });
+    for (const candidateModel of modelsToTry) {
+        try {
+            console.log(`[InteractionGuard] Calling Pollinations AI model (${candidateModel})...`);
+            const response = await pollinations.chat.completions.create({
+                model: candidateModel,
+                messages: [
+                    { role: "system", content: staticSystemPrompt },
+                    { role: "user", content: userPayload },
+                ],
+                temperature: 0.2,
+                max_tokens: 350,
+            });
 
-        content = response.choices[0]?.message?.content || null;
-    } catch (err: any) {
-        console.error("[InteractionGuard] Pollinations AI call failed:", err?.message || err);
+            content = response.choices[0]?.message?.content || null;
+            if (content && content.trim().length > 0) {
+                console.log(`[InteractionGuard] Success using model (${candidateModel}), length:`, content.length);
+                break;
+            }
+        } catch (err: any) {
+            console.warn(`[InteractionGuard] Model (${candidateModel}) failed:`, err?.message || err);
+        }
     }
     if (!content) {
         return {

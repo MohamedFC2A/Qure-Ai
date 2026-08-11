@@ -5,7 +5,7 @@ import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
-import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
 import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 const META_SEPARATOR = "\n---METADATA---\n";
@@ -203,18 +203,26 @@ export async function POST(req: NextRequest) {
         let fullText = "";
 
         let tokenStream: AsyncIterable<any> | null = null;
-        try {
-            const deepseek = createPollinationsClient(apiKey);
-            tokenStream = await deepseek.chat.completions.create({
-                model: getDeepSeekModel(),
-                messages: deepseekMessages,
-                stream: true,
-                temperature: 0.2,
-                max_tokens: 600,
-            });
-        } catch (err: any) {
-            console.error("[AI Stream Route] Pollinations stream failed:", err?.message || err);
-            throw err;
+        const pollinations = createPollinationsClient(apiKey);
+        const modelsToTry = getTextModelsToTry();
+
+        for (const candidateModel of modelsToTry) {
+            try {
+                console.log(`[AI Stream Route] Calling Pollinations AI stream model (${candidateModel})...`);
+                tokenStream = await pollinations.chat.completions.create({
+                    model: candidateModel,
+                    messages: deepseekMessages,
+                    stream: true,
+                    temperature: 0.2,
+                    max_tokens: 600,
+                });
+                if (tokenStream) {
+                    console.log(`[AI Stream Route] Stream initialized using model (${candidateModel})`);
+                    break;
+                }
+            } catch (err: any) {
+                console.warn(`[AI Stream Route] Stream model (${candidateModel}) failed:`, err?.message || err);
+            }
         }
 
         const readable = new ReadableStream({

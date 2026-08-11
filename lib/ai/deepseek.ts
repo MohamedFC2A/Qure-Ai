@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 const DEFAULT_POLLINATIONS_KEY = "sk_3cpHv0pELis47TdPWKSNvMwrJZKLXh1Y";
 const DEFAULT_POLLINATIONS_BASE_URL = "https://gen.pollinations.ai/v1";
-const DEFAULT_POLLINATIONS_MODEL = "chirag-gamer/gpt-oss-120b";
+const DEFAULT_POLLINATIONS_MODEL = "openai";
 
 export function getDeepSeekApiKey(): string {
     const envKey = process.env.POLLINATIONS_API_KEY?.trim() || process.env.DEEPSEEK_API_KEY?.trim();
@@ -25,13 +25,22 @@ export const DEEPSEEK_BASE_URL = DEFAULT_POLLINATIONS_BASE_URL;
 
 export function getDeepSeekModel(): string {
     const envModel = process.env.POLLINATIONS_MODEL?.trim() || process.env.DEEPSEEK_MODEL?.trim();
-    if (envModel && !envModel.includes("deepseek") && !envModel.includes("gemini")) {
+    if (envModel && !envModel.includes("chirag-gamer") && !envModel.includes("gemini")) {
         return envModel;
     }
     return DEFAULT_POLLINATIONS_MODEL;
 }
 
 export const DEEPSEEK_MODEL = DEFAULT_POLLINATIONS_MODEL;
+
+export function getTextModelsToTry(): string[] {
+    const configured = getDeepSeekModel();
+    const defaults = ["openai", "deepseek", "gpt-oss", "llama", "mistral"];
+    if (configured && !defaults.includes(configured)) {
+        return [configured, ...defaults];
+    }
+    return defaults;
+}
 
 export function createPollinationsClient(customKey?: string, customBaseUrl?: string): OpenAI {
     const apiKey = (customKey && customKey.startsWith("sk_")) ? customKey : getDeepSeekApiKey();

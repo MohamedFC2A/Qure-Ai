@@ -5,7 +5,7 @@ import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
-import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
+import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
 import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────
@@ -234,19 +234,26 @@ export async function POST(req: NextRequest) {
         deepseekMessages.push({ role: "user", content: question });
 
         let content: string | null = null;
-        try {
-            const deepseek = createPollinationsClient(apiKey);
+        const pollinations = createPollinationsClient(apiKey);
+        const modelsToTry = getTextModelsToTry();
 
-            const response = await deepseek.chat.completions.create({
-                model: getDeepSeekModel(),
-                messages: deepseekMessages,
-                response_format: { type: "json_object" },
-                temperature: 0.15,
-                max_tokens: 600,
-            });
-            content = response.choices[0]?.message?.content || null;
-        } catch (err: any) {
-            console.error("[AI Chat API] Pollinations AI (gpt-oss-120b) failed:", err?.message || err);
+        for (const candidateModel of modelsToTry) {
+            try {
+                console.log(`[AI Chat API] Calling Pollinations AI model (${candidateModel})...`);
+                const response = await pollinations.chat.completions.create({
+                    model: candidateModel,
+                    messages: deepseekMessages,
+                    temperature: 0.15,
+                    max_tokens: 600,
+                });
+                content = response.choices[0]?.message?.content || null;
+                if (content && content.trim().length > 0) {
+                    console.log(`[AI Chat API] Success using model (${candidateModel}), length:`, content.length);
+                    break;
+                }
+            } catch (err: any) {
+                console.warn(`[AI Chat API] Model (${candidateModel}) failed:`, err?.message || err);
+            }
         }
 
         if (!content) {
