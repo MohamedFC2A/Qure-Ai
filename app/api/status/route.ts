@@ -4,15 +4,19 @@ import { getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 export async function GET() {
     const status: Record<string, string> = {};
 
-    // 1. Check Gemini key configuration
-    const geminiKey = process.env.GEMINI_API_KEY;
-    status.gemini = geminiKey ? "connected" : "missing_key";
+    let aiKey = "";
+    try {
+        aiKey = getDeepSeekApiKey();
+    } catch {
+        aiKey = "";
+    }
 
-    status.openai = "disabled";
+    const activeModel = getDeepSeekModel();
+    const visionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
 
-    // 2. Check DeepSeek key configuration (zero API token cost)
-    const deepseekKey = getDeepSeekApiKey();
-    status.deepseek = deepseekKey ? `connected:${getDeepSeekModel()}` : "missing_key";
+    status.pollinationsAI = aiKey ? `connected:${activeModel}` : "missing_key";
+    status.ocrVision = aiKey ? `connected:${visionModel}` : "missing_key";
+    status.status = "operational";
 
     return NextResponse.json(status);
 }

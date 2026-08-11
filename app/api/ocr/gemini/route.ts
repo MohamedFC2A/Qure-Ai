@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
+import { getDeepSeekApiKey } from "@/lib/ai/deepseek";
 import { createClient } from "@/lib/supabase/server";
 import { deductCredit, getCreditsStatus } from "@/lib/creditService";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -54,22 +55,19 @@ export async function POST(req: NextRequest) {
         }
 
         const { image } = await req.json();
-        const apiKey = process.env.GEMINI_API_KEY;
-
         if (!image) {
             return NextResponse.json(
                 { error: "Missing image data." },
-                {
-                    status: 400,
-                    headers: { 'Content-Type': 'application/json' }
-                }
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
             );
         }
-
-        if (!apiKey) {
-            console.error("[OCR API] Gemini API Key missing in environment variables.");
+        let apiKey = "";
+        try {
+            apiKey = getDeepSeekApiKey();
+        } catch (e) {
+            console.error("[OCR API] Pollinations API Key missing in environment variables.");
             return NextResponse.json(
-                { error: "Server Configuration Error: API Key missing." },
+                { error: "Server Configuration Error: POLLINATIONS_API_KEY missing." },
                 {
                     status: 500,
                     headers: { 'Content-Type': 'application/json' }
@@ -78,13 +76,6 @@ export async function POST(req: NextRequest) {
         }
 
         console.log("[OCR API] Starting OCR process with quality verification...");
-
-        // Initialize Gemini with the active API key and reliable model
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const primaryModelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
-        const model = genAI.getGenerativeModel({
-            model: primaryModelName
-        });
 
         // Clean base64 string (remove data:image/jpeg;base64, prefix if present)
         const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
@@ -103,28 +94,39 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
   "qualityNote": "brief quality note (e.g. clear, blurry, low_light, non_medical)"
 }`;
 
-        console.log("[OCR API] Calling Gemini API...");
+        let text = "";
+        const ocrVisionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
+        const pollinationsBaseUrl = process.env.POLLINATIONS_BASE_URL || "https://gen.pollinations.ai/v1";
 
-        const result = await model.generateContent({
-            contents: [
-                {
-                    role: "user",
-                    parts: [
-                        { text: prompt },
-                        { inlineData: { data: base64Data, mimeType: "image/jpeg" } }
-                    ],
-                },
-            ],
-            generationConfig: {
-                responseMimeType: "application/json",
+        // Strategy 1: Pollinations Vision Model (YoannDev90/muse-glimmer-30b:free)
+        try {
+            const pollinationsKey = getDeepSeekApiKey();
+            console.log(`[OCR API] Calling Pollinations Vision API (${ocrVisionModel})...`);
+            const pollinations = new OpenAI({
+                apiKey: pollinationsKey,
+                baseURL: pollinationsBaseUrl,
+            });
+
+            const res = await pollinations.chat.completions.create({
+                model: ocrVisionModel,
+                messages: [
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: prompt },
+                            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
+                        ]
+                    }
+                ],
                 temperature: 0.1,
-            },
-        });
+            });
 
-        const response = await result.response;
-        const text = response.text();
-
-        console.log("[OCR API] Gemini response received, length:", text.length);
+            text = res.choices[0]?.message?.content || "";
+            console.log("[OCR API] Pollinations Vision response received, length:", text.length);
+        } catch (polErr: any) {
+            console.error("[OCR API] Pollinations Vision API call failed:", polErr?.message || polErr);
+            throw polErr;
+        }
 
         // Multiple parsing strategies
         let data: any = null;

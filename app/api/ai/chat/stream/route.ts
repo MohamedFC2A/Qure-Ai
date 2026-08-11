@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
@@ -213,31 +212,9 @@ export async function POST(req: NextRequest) {
                 temperature: 0.2,
                 max_tokens: 600,
             });
-        } catch (dsErr: any) {
-            console.warn("[AI Stream Route] DeepSeek failed, attempting Gemini Flash streaming fallback:", dsErr?.message || dsErr);
-            const geminiKey = process.env.GEMINI_API_KEY;
-            if (geminiKey) {
-                try {
-                    const genAI = new GoogleGenerativeAI(geminiKey);
-                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
-                    const model = genAI.getGenerativeModel({ model: modelName });
-                    const fullPrompt = `${systemPrompt}\n\nUser Question: ${question}\n\nFormat instructions: Answer in Markdown. At the end, write:\n${META_SEPARATOR}\n{"keyPoints":["point 1","point 2"],"suggestedFollowUps":["q1","q2"]}`;
-                    const res = await model.generateContentStream(fullPrompt);
-                    
-                    // Adapt Gemini stream chunks to yield object with text
-                    async function* geminiAdapter() {
-                        for await (const chunk of res.stream) {
-                            yield { choices: [{ delta: { content: chunk.text() } }] };
-                        }
-                    }
-                    tokenStream = geminiAdapter();
-                } catch (gErr: any) {
-                    console.error("[AI Stream Route] Gemini streaming fallback also failed:", gErr);
-                    throw dsErr;
-                }
-            } else {
-                throw dsErr;
-            }
+        } catch (err: any) {
+            console.error("[AI Stream Route] Pollinations stream failed:", err?.message || err);
+            throw err;
         }
 
         const readable = new ReadableStream({

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
@@ -249,24 +248,8 @@ export async function POST(req: NextRequest) {
                 max_tokens: 600,
             });
             content = response.choices[0]?.message?.content || null;
-        } catch (dsErr: any) {
-            console.warn("[AI Chat API] DeepSeek failed, switching to Gemini Flash fallback:", dsErr?.message || dsErr);
-            const geminiKey = process.env.GEMINI_API_KEY;
-            if (geminiKey) {
-                try {
-                    const genAI = new GoogleGenerativeAI(geminiKey);
-                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
-                    const model = genAI.getGenerativeModel({
-                        model: modelName,
-                        generationConfig: { responseMimeType: "application/json", temperature: 0.15 }
-                    });
-                    const prompt = `${systemPrompt}\n\nUser Question: ${question}\n\nReturn JSON in exact schema: {"answer": "...", "keyPoints": ["..."], "suggestedFollowUps": ["..."]}`;
-                    const res = await model.generateContent(prompt);
-                    content = res.response.text();
-                } catch (gErr: any) {
-                    console.error("[AI Chat API] Gemini fallback also failed:", gErr);
-                }
-            }
+        } catch (err: any) {
+            console.error("[AI Chat API] Pollinations AI (gpt-oss-120b) failed:", err?.message || err);
         }
 
         if (!content) {

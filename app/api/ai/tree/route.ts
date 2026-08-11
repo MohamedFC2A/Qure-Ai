@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
@@ -336,23 +335,8 @@ ${rootQuestion}
                 max_tokens: 400,
             });
             content = response.choices[0]?.message?.content || null;
-        } catch (dsErr: any) {
-            console.warn("[AI Tree API] DeepSeek failed, switching to Gemini Flash fallback:", dsErr?.message || dsErr);
-            const geminiKey = process.env.GEMINI_API_KEY;
-            if (geminiKey) {
-                try {
-                    const genAI = new GoogleGenerativeAI(geminiKey);
-                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
-                    const model = genAI.getGenerativeModel({
-                        model: modelName,
-                        generationConfig: { responseMimeType: "application/json", temperature: 0.15 }
-                    });
-                    const res = await model.generateContent(`${staticSystemPrompt}\n\n${userPayload}`);
-                    content = res.response.text();
-                } catch (gErr) {
-                    console.error("[AI Tree API] Gemini fallback failed:", gErr);
-                }
-            }
+        } catch (err: any) {
+            console.error("[AI Tree API] Pollinations AI call failed:", err?.message || err);
         }
 
         if (!content) {

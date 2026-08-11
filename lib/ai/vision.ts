@@ -1,5 +1,4 @@
 import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { DEEPSEEK_BASE_URL, getDeepSeekApiKey, getDeepSeekModel } from "@/lib/ai/deepseek";
 
 
@@ -177,23 +176,8 @@ OCR TEXT FRAGMENTS:
                 max_tokens: 750,
             });
             content = response.choices[0]?.message?.content || null;
-        } catch (dsErr: any) {
-            console.warn("[Vision API] DeepSeek failed, switching to Gemini Flash fallback:", dsErr?.message || dsErr);
-            const geminiKey = process.env.GEMINI_API_KEY;
-            if (geminiKey) {
-                try {
-                    const genAI = new GoogleGenerativeAI(geminiKey);
-                    const modelName = process.env.GEMINI_OCR_MODEL || "gemini-2.5-flash-lite";
-                    const model = genAI.getGenerativeModel({
-                        model: modelName,
-                        generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-                    });
-                    const res = await model.generateContent(`${staticSystemPrompt}\n\n${userPayload}`);
-                    content = res.response.text();
-                } catch (gErr) {
-                    console.error("[Vision API] Gemini fallback failed:", gErr);
-                }
-            }
+        } catch (err: any) {
+            console.error("[Vision API] Pollinations AI (gpt-oss-120b) failed:", err?.message || err);
         }
 
         console.log("AI Raw Response:", content);
