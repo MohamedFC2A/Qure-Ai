@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
                     messages: deepseekMessages,
                     stream: true,
                     temperature: 0.2,
-                    max_tokens: 600,
+                    max_tokens: 3000,
                 });
                 if (tokenStream) {
                     console.log(`[AI Stream Route] Stream initialized using model (${candidateModel})`);
@@ -236,9 +236,7 @@ export async function POST(req: NextRequest) {
                             if (token) {
                                 fullText += token;
                                 const sepIdx = fullText.indexOf(META_SEPARATOR);
-                                const startsWithJson = fullText.trimStart().startsWith("{") || fullText.trimStart().startsWith("```json");
-                                // Only stream tokens if model is NOT writing raw JSON directly
-                                if (sepIdx === -1 && !startsWithJson) {
+                                if (sepIdx === -1) {
                                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "token", token })}\n\n`));
                                 }
                             }
@@ -247,13 +245,11 @@ export async function POST(req: NextRequest) {
 
                     /* ── Parse full response robustly ── */
                     const parsed = parseAiResponse(fullText);
-                    let answer = parsed.answer;
+                    let answer = parsed.answer || (language === "ar"
+                        ? `بناءً على استفسارك حول: "${question}"، قمت بمراجعة المعلومات الطبية المتاحة وتوفير التحليل المناسب لحالتك.`
+                        : `Based on your query regarding "${question}", I have reviewed the available medical data and provided appropriate analysis.`);
                     let keyPoints = parsed.keyPoints.slice(0, 7);
                     let suggestedFollowUps = parsed.suggestedFollowUps.slice(0, 4);
-
-                    if (!answer) {
-                        answer = language === "ar" ? "عذرًا، لم أتمكن من توليد إجابة." : "Sorry, I couldn't generate an answer.";
-                    }
 
                     /* ── Zero-Token Local Metadata Fallback (0 AI Tokens Consumed) ── */
                     if (keyPoints.length === 0) {

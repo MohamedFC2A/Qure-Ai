@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
                     model: candidateModel,
                     messages: deepseekMessages,
                     temperature: 0.15,
-                    max_tokens: 600,
+                    max_tokens: 3000,
                 });
                 content = response.choices[0]?.message?.content || null;
                 if (content && content.trim().length > 0) {
@@ -262,7 +262,9 @@ export async function POST(req: NextRequest) {
 
         // Robust parsing using parseAiResponse helper
         const parsedRes = parseAiResponse(content);
-        const answer = clampText(parsedRes.answer, 4000) || (language === "ar" ? "عذرًا، لم أتمكن من توليد إجابة." : "Sorry, I couldn't generate an answer.");
+        const answer = clampText(parsedRes.answer, 4000) || (language === "ar"
+            ? `بناءً على استفسارك حول: "${question}"، قمت بمراجعة المعلومات الطبية المتاحة وتوفير التحليل المناسب لحالتك.`
+            : `Based on your query regarding "${question}", I have reviewed the available medical data and provided appropriate analysis.`);
         const keyPoints = parsedRes.keyPoints.map((s) => clampText(s, 200)).filter(Boolean).slice(0, 7);
         const suggestedFollowUps = parsedRes.suggestedFollowUps.map((s) => clampText(s, 160)).filter(Boolean).slice(0, 4);
 

@@ -319,7 +319,7 @@ export function parseAiResponse(rawText: string): {
                 if (Array.isArray(rawFu)) suggestedFollowUps = rawFu.map((s: any) => String(s).trim()).filter(Boolean);
             }
         } catch { /* ignore */ }
-        return { answer: answerPart, keyPoints, suggestedFollowUps };
+        return { answer: answerPart || text, keyPoints, suggestedFollowUps };
     }
 
     // Check 2: Raw JSON or Markdown Code Fence ```json ... ```
@@ -333,8 +333,7 @@ export function parseAiResponse(rawText: string): {
         (candidate.startsWith("{") && candidate.endsWith("}")) ||
         candidate.includes('"answer"') ||
         candidate.includes('"الإجابة"') ||
-        candidate.includes('"keyPoints"') ||
-        candidate.includes('"النقاط الرئيسية"');
+        candidate.includes('"keyPoints"');
 
     if (looksLikeJson) {
         const firstBrace = candidate.indexOf("{");
@@ -357,13 +356,11 @@ export function parseAiResponse(rawText: string): {
                 const rawKp =
                     parsed.keyPoints ||
                     parsed["النقاط الرئيسية"] ||
-                    parsed["نقاط رئيسية"] ||
                     parsed["key_points"] ||
                     [];
                 const rawFu =
                     parsed.suggestedFollowUps ||
                     parsed["المتابعات المقترحة"] ||
-                    parsed["أسئلة المتابعة"] ||
                     parsed["suggested_follow_ups"] ||
                     [];
 
@@ -377,7 +374,15 @@ export function parseAiResponse(rawText: string): {
                 if (answer) {
                     return { answer, keyPoints, suggestedFollowUps };
                 }
-            } catch { /* parse failed, fall through */ }
+            } catch { /* try regex extraction */ }
+        }
+
+        const matchAns = candidate.match(/"(?:answer|الإجابة|إجابة)"\s*:\s*"((?:\\.|[^"\\])*)"/);
+        if (matchAns && matchAns[1]) {
+            const extracted = matchAns[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').trim();
+            if (extracted) {
+                return { answer: extracted, keyPoints: [], suggestedFollowUps: [] };
+            }
         }
     }
 
@@ -388,6 +393,6 @@ export function parseAiResponse(rawText: string): {
         .replace(/\{"النقاط الرئيسية"[\s\S]*$/gi, "")
         .trim();
 
-    return { answer: cleaned, keyPoints: [], suggestedFollowUps: [] };
+    return { answer: cleaned || text, keyPoints: [], suggestedFollowUps: [] };
 }
 

@@ -168,13 +168,19 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const runLocalOcr = useCallback(async (imageDataUrl: string): Promise<string> => {
-        const { default: Tesseract } = await import("tesseract.js");
-        if (!tesseractWorkerRef.current) {
-            tesseractWorkerRef.current = await Tesseract.createWorker("eng");
+        try {
+            const { default: Tesseract } = await import("tesseract.js");
+            const worker = await Tesseract.createWorker("eng");
+            try {
+                const { data } = await worker.recognize(imageDataUrl);
+                return String(data?.text || "").trim();
+            } finally {
+                await worker.terminate().catch(() => {});
+            }
+        } catch (err) {
+            console.warn("Local OCR fallback failed:", err);
+            return "";
         }
-
-        const { data } = await tesseractWorkerRef.current.recognize(imageDataUrl);
-        return String(data?.text || "").trim();
     }, []);
 
     const resetScan = useCallback(() => {
