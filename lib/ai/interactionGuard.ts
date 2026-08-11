@@ -179,6 +179,9 @@ ${otherJson}
         const deepseek = new OpenAI({
             apiKey: apiKey,
             baseURL: DEEPSEEK_BASE_URL,
+            defaultHeaders: {
+                "Authorization": `Bearer ${apiKey}`
+            }
         });
 
         const response = await deepseek.chat.completions.create({

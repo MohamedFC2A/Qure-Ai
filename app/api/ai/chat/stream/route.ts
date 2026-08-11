@@ -204,7 +204,13 @@ export async function POST(req: NextRequest) {
 
         let tokenStream: AsyncIterable<any> | null = null;
         try {
-            const deepseek = new OpenAI({ apiKey: apiKey, baseURL: DEEPSEEK_BASE_URL });
+            const deepseek = new OpenAI({
+                apiKey: apiKey,
+                baseURL: DEEPSEEK_BASE_URL,
+                defaultHeaders: {
+                    "Authorization": `Bearer ${apiKey}`
+                }
+            });
             tokenStream = await deepseek.chat.completions.create({
                 model: getDeepSeekModel(),
                 messages: deepseekMessages,

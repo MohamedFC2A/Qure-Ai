@@ -105,6 +105,9 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
             const pollinations = new OpenAI({
                 apiKey: pollinationsKey,
                 baseURL: pollinationsBaseUrl,
+                defaultHeaders: {
+                    "Authorization": `Bearer ${pollinationsKey}`
+                }
             });
 
             const res = await pollinations.chat.completions.create({

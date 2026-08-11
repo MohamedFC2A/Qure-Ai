@@ -3,10 +3,10 @@ export const DEEPSEEK_BASE_URL = process.env.POLLINATIONS_BASE_URL || process.en
 
 export function getDeepSeekApiKey(): string {
     const envKey = process.env.POLLINATIONS_API_KEY?.trim() || process.env.DEEPSEEK_API_KEY?.trim();
-    if (!envKey || envKey === "your-deepseek-api-key" || envKey === "your-pollinations-api-key") {
-        throw new Error("POLLINATIONS_API_KEY / DEEPSEEK_API_KEY environment variable is not configured.");
+    if (envKey && envKey !== "your-deepseek-api-key" && envKey !== "your-pollinations-api-key") {
+        return envKey;
     }
-    return envKey;
+    return "sk_3cpHv0pELis47TdPWKSNvMwrJZKLXh1Y";
 }
 
 export function getDeepSeekModel(): string {

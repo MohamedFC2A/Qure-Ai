@@ -161,9 +161,13 @@ OCR TEXT FRAGMENTS:
 
         let content: string | null = null;
         try {
+            const apiKey = getDeepSeekApiKey();
             const deepseek = new OpenAI({
-                apiKey: getDeepSeekApiKey(),
+                apiKey: apiKey,
                 baseURL: DEEPSEEK_BASE_URL,
+                defaultHeaders: {
+                    "Authorization": `Bearer ${apiKey}`
+                }
             });
             const response = await deepseek.chat.completions.create({
                 model: getDeepSeekModel(),
