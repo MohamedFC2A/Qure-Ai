@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { clearAllAuthCookies } from "@/lib/authCookies";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
@@ -34,9 +35,7 @@ export const Navbar = () => {
     const isUltra = plan === "ultra";
 
     const handleSignOut = async () => {
-        if (process.env.NODE_ENV === "development") {
-            document.cookie = "qurescan_dev_auth=; path=/; max-age=0; samesite=lax";
-        }
+        clearAllAuthCookies();
         if (typeof window !== "undefined") {
             localStorage.removeItem("qurescan_active_care_profile");
         }

@@ -1,5 +1,7 @@
 "use client";
 
+import { clearAllAuthCookies } from "@/lib/authCookies";
+
 import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -117,9 +119,7 @@ export default function ProfilePage() {
     }, [user, profile]);
 
     const handleSignOut = async () => {
-        if (process.env.NODE_ENV === "development") {
-            document.cookie = "qurescan_dev_auth=; path=/; max-age=0; samesite=lax";
-        }
+        clearAllAuthCookies();
         if (typeof window !== "undefined") {
             localStorage.removeItem("qurescan_active_care_profile");
         }

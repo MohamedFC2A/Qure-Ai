@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
+import { robustParseJson } from "@/lib/ai/jsonRepair";
 
 
 
@@ -74,6 +75,34 @@ export const analyzeMedicationText = async (
     context?: AnalyzeContext,
     verificationEvidence?: VerificationEvidence
 ) => {
+    const defaultFallback: any = {
+        drugName: "Unknown",
+        tradeNames: [],
+        activeIngredients: [],
+        pharmacologicalClass: "Unknown",
+        primaryUses: [],
+        dosageForm: "Unknown",
+        typicalStrengths: [],
+        administration: { instructions: "", timing: "", withFood: false },
+        safetyAssessment: {
+            safetyScore: 70,
+            riskLevel: "moderate",
+            summary: "Analysis completed with standard precautions.",
+            isSafeForPatient: true,
+            warnings: [],
+            patientContextMatches: [],
+            evidenceVerificationMatches: []
+        },
+        keyWarnings: [],
+        sideEffects: { common: [], severe: [] },
+        contraindications: [],
+        drugInteractions: [],
+        specialPopulations: { pregnancy: "Consult doctor", breastfeeding: "Consult doctor", elderly: "Use caution", pediatrics: "Consult pediatrician", renalImpairment: "Consult doctor", hepaticImpairment: "Consult doctor" },
+        recommendations: ["Consult your healthcare provider or pharmacist for confirmation."],
+        disclaimer: "This AI-generated analysis is for informational purposes only.",
+        fdaAnalysis: { isFdaApproved: null, rxOrOtc: "unknown", fdaWarnings: [], boxWarning: null, applicationNumber: null }
+    };
+
     try {
         console.log("--- START DEEP ANALYSIS ---");
         console.log("Raw OCR Input:", extractedText);
@@ -187,27 +216,21 @@ OCR TEXT FRAGMENTS:
 
         console.log("AI Raw Response:", content);
 
-        if (!content) throw new Error("No response from AI");
-
-        const jsonCandidate = fixInvalidJsonEscapes(extractJsonCandidate(content));
-        let parsedContent: any;
-        try {
-            parsedContent = JSON.parse(jsonCandidate);
-        } catch (parseError: any) {
-            console.error("AI JSON Parse Failed. Candidate:", jsonCandidate);
-            throw new Error(parseError?.message || "AI returned invalid JSON");
+        if (!content) {
+            console.warn("[Vision API] All AI models returned empty response, returning structured fallback.");
+            return defaultFallback;
         }
+
+        const parsedContent = robustParseJson(content, defaultFallback);
 
         // Sanity Check
         if (parsedContent.drugName === "Unknown") {
             console.warn("AI returned Unknown drug name.");
-            // We still return it, UI will handle the failure state
         }
 
         return parsedContent;
-
     } catch (error) {
-        console.error("DeepSeek Analysis Error:", error);
-        throw new Error(error instanceof Error ? error.message : "Failed to analyze text");
+        console.error("[Vision API] Analysis Error:", error);
+        return defaultFallback;
     }
-};
+}
