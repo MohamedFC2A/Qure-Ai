@@ -16,15 +16,13 @@ import {
     Users,
     Zap,
     ChevronDown,
-    ChevronUp,
     Brain,
     HelpCircle,
     CheckCircle2,
-    Sparkles,
     Crown,
+    Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
 import { cn } from "@/lib/utils";
@@ -103,9 +101,9 @@ function FeatureList({ items, isUltra, isArabic }: { items: { en: string; ar: st
             {items.map((item, i) => (
                 <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
                     <span className={cn(
-                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
+                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
                         isUltra
-                            ? "border-cyan-400/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.2)]"
+                            ? "border-cyan-400/40 bg-cyan-500/10 text-cyan-300"
                             : "border-slate-700 bg-slate-800/80 text-cyan-400"
                     )}>
                         <Check className="h-3 w-3 stroke-[2.5]" />
@@ -124,7 +122,7 @@ function ComparisonValue({ value, highlighted = false }: { value: boolean | stri
             <div className="flex items-center justify-center">
                 <span className={cn(
                     "flex h-6 w-6 items-center justify-center rounded-full",
-                    highlighted ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/30" : "bg-white/5 text-slate-300 border border-white/10"
+                    highlighted ? "bg-cyan-500/15 text-cyan-300 border border-cyan-400/30" : "bg-white/5 text-slate-300 border border-white/10"
                 )}>
                     <Check className="h-3.5 w-3.5 stroke-[2.5]" />
                 </span>
@@ -142,7 +140,7 @@ function ComparisonValue({ value, highlighted = false }: { value: boolean | stri
             <span className={cn(
                 "text-xs sm:text-sm px-2.5 py-0.5 rounded-lg border",
                 highlighted
-                    ? "bg-cyan-500/15 border-cyan-400/30 text-cyan-300 font-bold"
+                    ? "bg-cyan-500/10 border-cyan-400/30 text-cyan-300 font-bold"
                     : "bg-white/5 border-white/10 text-slate-300 font-medium"
             )}>
                 {value}
@@ -156,9 +154,9 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
     const [open, setOpen] = useState(false);
     return (
         <div className={cn(
-            "rounded-2xl border transition-all duration-200 overflow-hidden",
+            "rounded-2xl border transition-colors duration-150 overflow-hidden",
             open
-                ? "border-cyan-500/30 bg-cyan-950/20 shadow-[0_4px_20px_rgba(0,0,0,0.25)]"
+                ? "border-cyan-500/30 bg-slate-900/90"
                 : "border-white/[0.08] bg-slate-900/60 hover:border-white/15"
         )}>
             <button
@@ -179,7 +177,7 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        transition={{ duration: 0.18, ease: "easeInOut" }}
                     >
                         <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
                             {isArabic ? a.ar : a.en}
@@ -193,14 +191,51 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
 
 /* ── Main Page ──────────────────────────────────────────────────── */
 export default function PricingPage() {
-    const { plan, loading } = useUser();
+    const { user, plan, loading } = useUser();
     const { resultsLanguage } = useSettings();
     const router = useRouter();
 
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
+    const [ceoLoading, setCeoLoading] = useState(false);
+    const [ceoMessage, setCeoMessage] = useState<string | null>(null);
+    const [ceoError, setCeoError] = useState<string | null>(null);
+
     const handlePurchase = () => router.push("/billing");
+
+    const handleGoldenCeoRequest = async () => {
+        if (!user) {
+            router.push("/auth");
+            return;
+        }
+
+        setCeoLoading(true);
+        setCeoError(null);
+        setCeoMessage(null);
+
+        try {
+            const res = await fetch("/api/golden-ceo/request", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setCeoMessage(
+                    isArabic
+                        ? "تم إرسال طلبك بنجاح، سيتم مراجعة معرف المستخدم من قبل الإدارة وتفعيل الحساب."
+                        : "Your request has been sent successfully. Your User ID will be reviewed by admin for instant activation."
+                );
+            } else {
+                setCeoError(data.error || (isArabic ? "فشل إرسال الطلب. يرجى المحاولة لاحقاً." : "Failed to send request."));
+            }
+        } catch (err: any) {
+            setCeoError(isArabic ? "حدث خطأ في الاتصال. يرجى المحاولة لاحقاً." : "Network connection error.");
+        } finally {
+            setCeoLoading(false);
+        }
+    };
 
     const iconBadgeMap: Record<string, string> = {
         cyan:    "icon-badge-cyan",
@@ -215,7 +250,7 @@ export default function PricingPage() {
                 {/* ── HERO SECTION ────────────────────────────────── */}
                 <section className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/25 text-cyan-300 text-xs font-bold mb-3 backdrop-blur-md">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-cyan-300 text-xs font-bold mb-3">
                             <Zap className="h-3.5 w-3.5 text-cyan-400" />
                             <span>{t("Transparent Clinical Pricing", "خطط مرنة وواضحة بدون تعقيد")}</span>
                         </div>
@@ -223,14 +258,14 @@ export default function PricingPage() {
                             {isArabic ? (
                                 <>
                                     اختر الخطة التي{" "}
-                                    <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300 bg-clip-text text-transparent">
+                                    <span className="text-cyan-300">
                                         تناسب احتياجاتك.
                                     </span>
                                 </>
                             ) : (
                                 <>
                                     Choose the plan that{" "}
-                                    <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300 bg-clip-text text-transparent">
+                                    <span className="text-cyan-300">
                                         fits your healthcare needs.
                                     </span>
                                 </>
@@ -252,7 +287,7 @@ export default function PricingPage() {
                         ].map((item) => (
                             <div
                                 key={item.labelEn}
-                                className="stat-card p-4 flex flex-col justify-between rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl"
+                                className="stat-card p-4 flex flex-col justify-between rounded-2xl bg-slate-900/60 border border-white/[0.08]"
                             >
                                 <div className={cn("icon-badge w-9 h-9 rounded-xl mb-2 sm:mb-3 flex items-center justify-center", `icon-badge-${item.color}`)}>
                                     <item.icon className="h-4.5 w-4.5" />
@@ -270,7 +305,7 @@ export default function PricingPage() {
                 <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
                     
                     {/* Free Plan Card */}
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-200 hover:border-white/20 shadow-xl">
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
                         <div>
                             <div className="flex items-center justify-between gap-4">
                                 <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800/80 border border-slate-700 text-slate-300">
@@ -303,7 +338,7 @@ export default function PricingPage() {
                             <Button
                                 disabled={plan === "free" || loading}
                                 variant="outline"
-                                className="w-full py-3.5 rounded-2xl border-white/15 bg-white/5 text-slate-300 font-bold hover:bg-white/10 transition-colors"
+                                className="w-full py-3.5 rounded-2xl border-white/15 bg-white/5 text-slate-300 font-bold hover:bg-white/10"
                             >
                                 {loading
                                     ? t("Checking plan...", "جاري التحقق...")
@@ -315,20 +350,17 @@ export default function PricingPage() {
                     </div>
 
                     {/* Ultra Plan Card */}
-                    <div className="relative rounded-3xl border border-cyan-500/40 bg-gradient-to-b from-slate-900/90 via-slate-900/95 to-slate-950/95 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:border-cyan-400/60 transition-all duration-200">
+                    <div className="relative rounded-3xl border border-cyan-500/30 bg-slate-900/90 p-6 sm:p-8 flex flex-col justify-between shadow-md">
                         
-                        {/* Top decorative glow */}
-                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-t-3xl" />
-
                         <div>
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.25)] flex items-center gap-1.5">
-                                        <Zap className="h-3.5 w-3.5 text-cyan-400 fill-cyan-400" />
+                                    <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-800 border border-slate-700 text-cyan-300 flex items-center gap-1.5">
+                                        <Zap className="h-3.5 w-3.5 text-cyan-400" />
                                         {t("Ultra Plan", "خطة ألترا")}
                                     </span>
                                 </div>
-                                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-500/15 border border-indigo-400/30 text-indigo-300">
+                                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-800 border border-slate-700 text-slate-300">
                                     {t("Most Popular", "الأكثر تميزاً")}
                                 </span>
                             </div>
@@ -343,7 +375,7 @@ export default function PricingPage() {
                                 {t("For regular health checks, Mat AI medical chat, and full family care.", "للرعاية المتكاملة، استشارات Mat AI، ومتابعة صحة الأسرة بدون حدود.")}
                             </p>
 
-                            <div className="my-6 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+                            <div className="my-6 h-px bg-slate-800" />
 
                             <p className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3">
                                 {t("Everything in Free, plus:", "كل ما في المجاني، بالإضافة إلى:")}
@@ -355,14 +387,14 @@ export default function PricingPage() {
                             {loading ? (
                                 <div className="h-12 w-full skeleton rounded-2xl" />
                             ) : plan === "ultra" ? (
-                                <div className="w-full py-3.5 rounded-2xl bg-cyan-950/60 border border-cyan-500/50 text-cyan-300 font-bold text-center flex items-center justify-center gap-2 shadow-lg">
+                                <div className="w-full py-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-cyan-300 font-bold text-center flex items-center justify-center gap-2">
                                     <CheckCircle2 className="w-4 h-4 text-cyan-400" />
                                     <span>{t("Ultra is Active", "ألترا مفعّل بحسابك")}</span>
                                 </div>
                             ) : (
                                 <button
                                     onClick={handlePurchase}
-                                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-cyan-500/25 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-sm transition-colors flex items-center justify-center gap-2"
                                 >
                                     <span>{t("Upgrade to Ultra ($9/mo)", "الترقية إلى ألترا ($9/شهر)")}</span>
                                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
@@ -377,7 +409,7 @@ export default function PricingPage() {
                     {valueCards.map((item) => (
                         <div
                             key={item.en.title}
-                            className="stat-card p-5 sm:p-6 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl hover:border-white/15 transition-colors"
+                            className="stat-card p-5 sm:p-6 rounded-2xl bg-slate-900/60 border border-white/[0.08]"
                         >
                             <div className={cn("icon-badge w-10 h-10 rounded-xl mb-4 flex items-center justify-center", iconBadgeMap[item.color] || "icon-badge-cyan")}>
                                 <item.icon className="h-5 w-5" />
@@ -394,7 +426,7 @@ export default function PricingPage() {
 
                 {/* ── COMPARISON TABLE ────────────────────────────── */}
                 <section>
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-2xl overflow-hidden shadow-xl">
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 overflow-hidden shadow-sm">
                         <div className="border-b border-white/[0.08] p-5 sm:p-7">
                             <h2 className="text-xl sm:text-2xl font-black text-white">
                                 {t("Plan Comparison Matrix", "جدول مقارنة الخطط التفصيلي")}
@@ -414,21 +446,21 @@ export default function PricingPage() {
                                         <th className="p-4 sm:p-5 font-bold text-slate-300 text-center w-36 sm:w-44">
                                             {t("Free Plan", "المجاني")}
                                         </th>
-                                        <th className="bg-cyan-500/10 p-4 sm:p-5 font-black text-cyan-300 text-center w-36 sm:w-44 border-s border-cyan-500/20">
+                                        <th className="bg-slate-800/40 p-4 sm:p-5 font-black text-cyan-300 text-center w-36 sm:w-44 border-s border-slate-800">
                                             {t("Ultra Plan", "ألترا")}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {comparisonRows.map((row) => (
-                                        <tr key={row.en} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition-colors">
+                                        <tr key={row.en} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] transition-colors">
                                             <td className="p-4 sm:p-5 text-slate-200 font-medium text-start">
                                                 {isArabic ? row.ar : row.en}
                                             </td>
                                             <td className="p-4 sm:p-5 text-center">
                                                 <ComparisonValue value={row.free} />
                                             </td>
-                                            <td className="bg-cyan-500/[0.04] p-4 sm:p-5 text-center border-s border-cyan-500/20">
+                                            <td className="bg-slate-800/20 p-4 sm:p-5 text-center border-s border-slate-800">
                                                 <ComparisonValue value={row.ultra} highlighted />
                                             </td>
                                         </tr>
@@ -439,78 +471,101 @@ export default function PricingPage() {
                     </div>
                 </section>
 
-                {/* ── VOUCHER + FAQ BALANCED SECTION ─────────────── */}
+                {/* ── VOUCHER & GOLDEN CEO SECTION ────────────────── */}
                 <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
                     
-                    {/* Voucher Card */}
-                    <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/30 via-slate-900/80 to-slate-950/80 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-xl">
+                    {/* Golden CEO & Voucher Card */}
+                    <div className="rounded-3xl border border-slate-700 bg-slate-900/80 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
                         <div>
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                                    <Gift className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-white">
-                                        {t("Have a Voucher Code?", "هل لديك كود قسيمة؟")}
-                                    </h2>
-                                    <p className="text-xs text-cyan-300/80 mt-0.5">
-                                        {t("Instant Credit Redemption", "شحن رصيد إضافي فوري")}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <p className="text-xs sm:text-sm leading-relaxed text-slate-300">
-                                {t(
-                                    "Redeem your promotional voucher or gift code directly into your account to unlock additional monthly credits or trial access.",
-                                    "استبدل كود القسيمة أو الرمز الترويجي من ملفك الشخصي لإضافة رصيد إضافي فوري أو تفعيل مزايا باقة ألترا المرتبطة بحسابك."
-                                )}
-                            </p>
-
-                            {/* Golden CEO Subscription - Beta Exclusive */}
-                            <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/20 border border-amber-400/30 backdrop-blur-md shadow-lg">
-                                <div className="flex items-center justify-between gap-2 mb-2">
+                            {/* Golden CEO Pass */}
+                            <div className="p-5 rounded-2xl bg-slate-800/80 border border-amber-500/40">
+                                <div className="flex items-center justify-between gap-2 mb-3">
                                     <div className="flex items-center gap-2">
-                                        <Crown className="w-5 h-5 text-amber-400 fill-amber-400/20" />
+                                        <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                                            <Crown className="w-4 h-4 text-amber-400" />
+                                        </div>
                                         <h3 className="text-sm font-black text-amber-300">
                                             {t("Golden CEO Subscription", "الاشتراك الذهبي من قبل CEO")}
                                         </h3>
                                     </div>
-                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400/20 border border-amber-400/40 text-amber-300">
-                                        {t("Beta Only", "متوفر الآن فقط في نسخة البيتا")}
+                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/15 border border-amber-400/30 text-amber-300">
+                                        {t("Beta Version Only", "متوفر الآن فقط في نسخة البيتا")}
                                     </span>
                                 </div>
-                                <p className="text-xs text-amber-100/80 leading-relaxed mb-3">
+                                <p className="text-xs text-slate-300 leading-relaxed mb-4">
                                     {t(
-                                        "Exclusive VIP access granted directly by the CEO for early adopters during the beta testing phase.",
-                                        "ترقية VIP حصرية واستثنائية مقدمة مباشرة من الـ CEO لمستخدمي النسخة التجريبية (Beta)."
+                                        "Direct executive activation authorized by the CEO for beta testers, granting full access and priority privileges.",
+                                        "ترقية تنفيذية معتمدة ومباشرة من الـ CEO لمختبري النسخة التجريبية (Beta) تمنحك وصولاً شاملاً لكافة ميزات المنصة."
                                     )}
                                 </p>
-                                <Link href="/billing?plan=golden_ceo" className="block w-full">
-                                    <button className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
-                                        <Crown className="w-4 h-4 fill-current" />
-                                        <span>{t("Claim Golden CEO Subscription", "طلب الاشتراك الذهبي من قبل CEO")}</span>
+
+                                {ceoMessage ? (
+                                    <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 font-medium">
+                                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                                        <span>{ceoMessage}</span>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {ceoError && (
+                                            <p className="text-xs text-rose-400 mb-2 font-medium">{ceoError}</p>
+                                        )}
+                                        <button
+                                            onClick={handleGoldenCeoRequest}
+                                            disabled={ceoLoading}
+                                            className="w-full py-3 px-4 rounded-xl bg-slate-900 border border-amber-500/50 hover:bg-slate-800 text-amber-300 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                        >
+                                            {ceoLoading ? (
+                                                <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                                            ) : (
+                                                <Crown className="w-4 h-4 text-amber-400" />
+                                            )}
+                                            <span>
+                                                {ceoLoading
+                                                    ? t("Sending request...", "جاري إرسال الطلب...")
+                                                    : t("Request Golden CEO Subscription", "طلب الاشتراك الذهبي من قبل CEO")}
+                                            </span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Standard Voucher Redeem Link */}
+                            <div className="mt-5 p-4 rounded-2xl bg-slate-800/40 border border-white/5 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
+                                        <Gift className="h-4.5 w-4.5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-white">
+                                            {t("Have a Voucher Code?", "هل لديك كود قسيمة؟")}
+                                        </h4>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">
+                                            {t("Redeem code directly in your profile", "استبدل الرمز من صفحة حسابك")}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Link href="/profile" className="shrink-0">
+                                    <button className="py-2 px-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 font-medium text-xs transition-colors flex items-center gap-1.5">
+                                        <span>{t("Redeem", "استبدال")}</span>
                                         <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                                     </button>
                                 </Link>
                             </div>
                         </div>
 
-                        <div className="pt-5 mt-auto">
-                            <Link href="/profile" className="block w-full">
-                                <button className="w-full py-3 px-4 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2">
-                                    <span>{t("Go to Profile & Redeem Code", "انتقل للملف الشخصي واستبدل الكود")}</span>
-                                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                                </button>
-                            </Link>
+                        <div className="pt-4 mt-auto text-center">
+                            <p className="text-[11px] text-slate-400">
+                                {t("Enterprise inquiries? Contact us directly.", "للاستفسارات الخاصة بالشركات، تواصل مع الإدارة مباشرة.")}
+                            </p>
                         </div>
                     </div>
 
                     {/* FAQ Accordion */}
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-xl">
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
                         <div>
                             <div className="flex items-center gap-3 mb-5">
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 flex items-center justify-center shrink-0">
-                                    <HelpCircle className="h-6 w-6" />
+                                <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0">
+                                    <HelpCircle className="h-5 w-5" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-white">
