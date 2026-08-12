@@ -3,6 +3,7 @@
 import { ScannerInterface } from "@/components/scanner/ScannerInterface";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useScan } from "@/context/ScanContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, Zap, Lock } from "lucide-react";
@@ -55,15 +56,20 @@ const CreditsUpsellBanner = () => {
 export default function ScanPage() {
     const router = useRouter();
     const { resultsLanguage } = useSettings();
+    const { file, previewSrc, finalResult, resetScan } = useScan();
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
-    const goBack = () => {
-        if (typeof window !== "undefined" && window.history.length > 1) {
-            router.back();
-            return;
+    const handleBackClick = () => {
+        if (file || previewSrc || finalResult) {
+            resetScan();
+        } else {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back();
+            } else {
+                router.push("/");
+            }
         }
-        router.push("/");
     };
 
     return (
@@ -72,11 +78,11 @@ export default function ScanPage() {
                 {/* ── Back button ── */}
                 <div className="w-full mb-3 sm:mb-4 flex items-center justify-start">
                     <button
-                        onClick={goBack}
+                        onClick={handleBackClick}
                         className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs sm:text-sm text-slate-400 transition-all hover:bg-white/[0.08] hover:text-white"
                     >
                         <ArrowLeft className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
-                        <span>{t("Back", "رجوع")}</span>
+                        <span>{t("Back to Scan", "رجوع للفحص")}</span>
                     </button>
                 </div>
 
