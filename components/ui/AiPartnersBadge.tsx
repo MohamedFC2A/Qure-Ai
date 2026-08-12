@@ -64,7 +64,7 @@ export const MatanyAiLogo = ({ className = "" }: { className?: string }) => (
                 letterSpacing="1.8"
             >
                 <textPath href="#netflixMatanyArc" startOffset="50%" textAnchor="middle">
-                    Mat AI
+                    AOS AI
                 </textPath>
             </text>
         </svg>
@@ -119,10 +119,10 @@ export const AiPartnersBadge: React.FC<AiPartnersBadgeProps> = ({
             {/* Separator Cross */}
             <span className="text-[10px] font-semibold text-slate-400 shrink-0">×</span>
 
-            {/* Matany AI Brand */}
+            {/* Aura-OS Ai Brand */}
             <div className="flex items-center gap-1 shrink-0">
                 <span className="font-black text-[11px] sm:text-xs text-white tracking-tight uppercase">
-                    Mat AI
+                    Aura-OS Ai (AOS AI)
                 </span>
             </div>
         </div>

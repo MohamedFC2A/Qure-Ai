@@ -1,5 +1,44 @@
 [
   {
+    "version": "v1.3.5 (Beta)",
+    "titleEn": "Aura-OS Ai Updates: Cleaner Interface, Smarter Changelog, and Enhanced Telegram Controls",
+    "titleAr": "تحديثات Aura-OS Ai: واجهة أنظف، سجل تغييرات أذكى، وتحكمات محسّنة في تلغرام",
+    "date": "2026-08-12",
+    "badge": "Beta Release",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "New Features & Enhancements",
+        "categoryAr": "الميزات والتحسينات الجديدة",
+        "itemsEn": [
+          "Aura-OS Ai (AOS AI) now delivers more human-friendly release notes in both English and Arabic—clear, natural, and free of technical jargon.",
+          "Introduced a complete Telegram Bot control hub for quick, one-click subscription revocation, easy subscriber viewing, and real-time live statistics."
+        ],
+        "itemsAr": [
+          "باتت Aura-OS Ai (AOS AI) تعرض ملاحظات التحديثات بصياغة أكثر ودّية للمستخدم باللغتين الإنجليزية والعربية—بأسلوب واضح وطبيعي وبدون أي تعقيد تقني.",
+          "إتاحة لوحة تحكم كاملة لروبوت تلغرام تتيح إلغاء الاشتراكات بنقرة واحدة، عرض المشتركين بسهولة، وإحصاءات مباشرة لحظية."
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "System Stability & User Experience",
+        "categoryAr": "استقرار النظام وسلاسة الاستخدام",
+        "itemsEn": [
+          "Improved reliability for Telegram webhook delivery by optimizing routing and bypassing unnecessary checks for faster, seamless execution.",
+          "Ensured secure access flow by allowing the required Telegram endpoints to run smoothly without being blocked by authentication cookie checks.",
+          "Enhanced overall system stability for automated release note generation with smoother handling of update versions.",
+          "Updated the platform fallback behavior to improve resilience for zero-setup serverless operation."
+        ],
+        "itemsAr": [
+          "تم تحسين موثوقية تسليم Webhooks الخاصة بتلغرام عبر تحسين المسارات وتجاوز الفحوصات غير الضرورية للحصول على تنفيذ أسرع وسلس.",
+          "تم ضبط مسار الوصول بشكل آمن عبر السماح لنقاط تلغرام المطلوبة بالعمل بسلاسة دون أن يتم حظرها بسبب فحوصات ملفات تعريف المصادقة.",
+          "تم تعزيز استقرار النظام بشكل عام لتوليد ملاحظات التحديثات تلقائياً عبر معالجة أكثر سلاسة لإصدارات التحديث.",
+          "تم تحديث آلية النسخ الاحتياطي لتحسين المرونة لعمليات الخوادم بدون إعداد مسبق."
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.3.4 (Beta)",
     "titleEn": "Clean UI Refresh and Improved Telegram CEO Controls",
     "titleAr": "تحديث واجهة أنظف وتحسين أدوات التحكم لدى الرئيس عبر تيليجرام",

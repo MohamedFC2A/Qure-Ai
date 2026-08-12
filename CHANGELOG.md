@@ -1,6 +1,18 @@
 # 🚀 QureScan Changelog (Beta)
 
-Smart release notes powered by Mat AI.
+Smart release notes powered by Aura-OS Ai (AOS AI).
+
+## v1.3.5 (Beta) — Aura-OS Ai Updates: Cleaner Interface, Smarter Changelog, and Enhanced Telegram Controls (2026-08-12)
+
+### New Features & Enhancements
+- Aura-OS Ai (AOS AI) now delivers more human-friendly release notes in both English and Arabic—clear, natural, and free of technical jargon.
+- Introduced a complete Telegram Bot control hub for quick, one-click subscription revocation, easy subscriber viewing, and real-time live statistics.
+
+### System Stability & User Experience
+- Improved reliability for Telegram webhook delivery by optimizing routing and bypassing unnecessary checks for faster, seamless execution.
+- Ensured secure access flow by allowing the required Telegram endpoints to run smoothly without being blocked by authentication cookie checks.
+- Enhanced overall system stability for automated release note generation with smoother handling of update versions.
+- Updated the platform fallback behavior to improve resilience for zero-setup serverless operation.
 
 ## v1.3.4 (Beta) — Clean UI Refresh and Improved Telegram CEO Controls (2026-08-12)
 

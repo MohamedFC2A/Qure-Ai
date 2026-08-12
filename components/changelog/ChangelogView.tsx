@@ -80,8 +80,8 @@ export function ChangelogView() {
 
                 <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
                     {t(
-                        "Real-time platform release notes and intelligent feature updates summarized by Mat AI.",
-                        "سجل الإصدارات والتحسينات المباشرة للمنصة الموثق والملخص بواسطة الذكاء الاصطناعي Mat AI."
+                        "Real-time platform release notes and intelligent feature updates summarized by Aura-OS Ai (AOS AI).",
+                        "سجل الإصدارات والتحسينات المباشرة للمنصة الموثق والملخص بواسطة الذكاء الاصطناعي Aura-OS Ai (AOS AI)."
                     )}
                 </p>
 

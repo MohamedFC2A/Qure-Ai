@@ -27,9 +27,9 @@ function humanizeAndTranslate(commits) {
         } else if (lower.includes('telegram') || lower.includes('bot')) {
             featEn.push('Enhanced Telegram bot assistant with live statistics, subscriber overview, and instant actions.');
             featAr.push('تعزيز مساعد تيليجرام الذكي مع إحصائيات حية وعرض المشتركين والأوامر الفورية.');
-        } else if (lower.includes('deepseek') || lower.includes('model') || lower.includes('ai') || lower.includes('chat')) {
-            perfEn.push('Enhanced Mat AI medical reasoning engine for faster, more accurate clinical insights.');
-            perfAr.push('تسريع محرك Mat AI الطبي لتقديم إجابات سريرية وتحليلات دوائية أكثر دقة وسرعة.');
+        } else if (lower.includes('deepseek') || lower.includes('model') || lower.includes('ai') || lower.includes('chat') || lower.includes('aura')) {
+            perfEn.push('Enhanced Aura-OS Ai (AOS AI) medical reasoning engine for faster, more accurate clinical insights.');
+            perfAr.push('تسريع محرك Aura-OS Ai (AOS AI) الطبي لتقديم إجابات سريرية وتحليلات دوائية أكثر دقة وسرعة.');
         } else if (lower.includes('middleware') || lower.includes('auth') || lower.includes('key') || lower.includes('security') || lower.includes('fail')) {
             fixEn.push('Boosted system stability, security safeguards, and continuous server availability.');
             fixAr.push('تعزيز استقرار وأمان النظام لضمان استمرارية الخدمات والاتصال السحابي بدون انقطاع.');
@@ -48,16 +48,17 @@ function humanizeAndTranslate(commits) {
     };
 }
 
-async function summarizeWithMatAI(commitList) {
+async function summarizeWithAosAi(commitList) {
     try {
-        console.log('[Mat AI] Summarizing recent updates using Mat AI engine...');
-        const prompt = `You are Mat AI, an expert medical tech product manager.
+        console.log('[Aura-OS Ai] Summarizing recent updates using AOS AI engine...');
+        const prompt = `You are Aura-OS Ai (AOS AI), an expert medical tech product manager.
 Summarize the following recent platform changes into a user-friendly, professional, non-technical release note.
 Strict rules:
 1. NEVER mention git, github, commits, branches, sha hashes, pull requests, vercel, or code filenames.
 2. Use clear, elegant, user-friendly language understandable by patients, doctors, and regular users.
-3. Provide both English and fluent Arabic translations.
-4. Output STRICT JSON ONLY matching this structure:
+3. Refer to the AI assistant as "Aura-OS Ai (AOS AI)" or "AOS AI".
+4. Provide both English and fluent Arabic translations.
+5. Output STRICT JSON ONLY matching this structure:
 {
   "titleEn": "Short descriptive title in English",
   "titleAr": "عنوان وصفي موجز بالعربية",
@@ -89,7 +90,7 @@ ${commitList.slice(0, 8).join('\n')}`;
         const rawContent = data.choices?.[0]?.message?.content || '{}';
         return JSON.parse(rawContent);
     } catch (e) {
-        console.warn('[Mat AI] AI generation fallback triggered:', e.message);
+        console.warn('[Aura-OS Ai] AI generation fallback triggered:', e.message);
         return null;
     }
 }
@@ -137,8 +138,8 @@ async function generateChangelog() {
         const newVersionNumber = parts.join('.');
         const newVersionWithBeta = `v${newVersionNumber} (Beta)`;
 
-        // Try AI summarization with Mat AI
-        const aiSummary = await summarizeWithMatAI(filteredCommits);
+        // Try AI summarization with Aura-OS Ai (AOS AI)
+        const aiSummary = await summarizeWithAosAi(filteredCommits);
 
         let newRelease;
         if (aiSummary && (aiSummary.titleEn || aiSummary.titleAr)) {
@@ -249,7 +250,7 @@ async function generateChangelog() {
         }
 
         // Generate clean Markdown
-        let md = `# 🚀 QureScan Changelog (Beta)\n\nSmart release notes powered by Mat AI.\n\n`;
+        let md = `# 🚀 QureScan Changelog (Beta)\n\nSmart release notes powered by Aura-OS Ai (AOS AI).\n\n`;
         currentData.forEach(entry => {
             md += `## ${entry.version} — ${entry.titleEn} (${entry.date})\n\n`;
             entry.changes.forEach(c => {
@@ -262,7 +263,7 @@ async function generateChangelog() {
         });
         fs.writeFileSync(path.join(process.cwd(), 'CHANGELOG.md'), md, 'utf8');
 
-        console.log(`[Changelog Generator] ✅ Generated Mat AI Changelog for ${newVersionWithBeta}`);
+        console.log(`[Changelog Generator] ✅ Generated Aura-OS Ai (AOS AI) Changelog for ${newVersionWithBeta}`);
     } catch (err) {
         console.error('[Changelog Generator] Error:', err);
     }

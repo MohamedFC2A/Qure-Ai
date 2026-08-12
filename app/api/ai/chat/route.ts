@@ -112,8 +112,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 {
                     error: language === "ar"
-                        ? "ميزة Mat AI متاحة حصرياً لمشتركي باقة ULTRA. يرجى الترقية لاستخدام المساعد الذكي."
-                        : "Mat AI is available exclusively on the ULTRA plan. Please upgrade your plan to access Mat AI.",
+                        ? "ميزة Aura-OS Ai (AOS AI) متاحة حصرياً لمشتركي باقة ULTRA. يرجى الترقية لاستخدام المساعد الذكي."
+                        : "Aura-OS Ai (AOS AI) is available exclusively on the ULTRA plan. Please upgrade your plan to access Aura-OS Ai.",
                     requiresUltra: true,
                 },
                 { status: 402 }

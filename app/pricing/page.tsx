@@ -37,7 +37,7 @@ const freeFeatures = [
 
 const ultraFeatures = [
     { en: "300 monthly credits (scans & AI messages)",  ar: "٣٠٠ رصيد شهرياً للفحوصات ورسائل AI"      },
-    { en: "Full Mat AI medical assistant access",      ar: "المساعد الطبي الذكي Mat AI بلا قيود"     },
+    { en: "Full Aura-OS Ai (AOS AI) medical assistant", ar: "المساعد الطبي الذكي Aura-OS Ai (AOS AI) بلا قيود" },
     { en: "Private health profile & allergy context",   ar: "سياق الملف الصحي والتفاعلات والحساسية"  },
     { en: "Family and caregiver profiles management",   ar: "إدارة ملفات العائلة ومقدمي الرعاية"      },
     { en: "Smart interaction guard & medication memory",ar: "حارس التداخلات الدوائية وذاكرة الأدوية"  },
@@ -47,7 +47,7 @@ const ultraFeatures = [
 
 const comparisonRows = [
     { en: "Medication OCR analysis & OCR scanning",  ar: "تحليل علب الأدوية والروشتات بالذكاء الاصطناعي", free: true,          ultra: true                },
-    { en: "Mat AI medical assistant chat",           ar: "المساعد الطبي الذكي Mat AI",                    free: false,         ultra: true                },
+    { en: "Aura-OS Ai (AOS AI) medical assistant chat", ar: "المساعد الطبي الذكي Aura-OS Ai (AOS AI)",     free: false,         ultra: true                },
     { en: "Private health profile context",          ar: "سياق الملف الصحي والحساسية الشخصية",             free: false,         ultra: true                },
     { en: "Medication memory & deduplication",       ar: "ذاكرة الأدوية والربط الذكي في السجل",            free: "أساسي",       ultra: "شامل ومتقدم"       },
     { en: "Drug interaction & safety guard",         ar: "حارس التداخلات الدوائية والتحذيرات",            free: false,         ultra: true                },
@@ -82,7 +82,7 @@ const valueCards = [
 const faqs = [
     {
         q: { en: "Is the free plan sufficient for daily use?", ar: "هل الخطة المجانية كافية للاستخدام اليومي؟" },
-        a: { en: "The free plan grants 30 credits monthly for basic OCR analysis. ULTRA is recommended for continuous family scanning, Mat AI chat, and comprehensive safety checks.", ar: "تمنحك الخطة المجانية 30 رصيداً شهرياً للفحص الأساسي. باقة ألترا هي الخيار المثالي إذا كنت ترغب في محادثات Mat AI غير المحدودة، ملفات الأسرة، والتقارير الاحترافية." },
+        a: { en: "The free plan grants 30 credits monthly for basic OCR analysis. ULTRA is recommended for continuous family scanning, Aura-OS Ai (AOS AI) chat, and comprehensive safety checks.", ar: "تمنحك الخطة المجانية 30 رصيداً شهرياً للفحص الأساسي. باقة ألترا هي الخيار المثالي إذا كنت ترغب في محادثات Aura-OS Ai (AOS AI) غير المحدودة، ملفات الأسرة، والتقارير الاحترافية." },
     },
     {
         q: { en: "Are the AI results a replacement for a doctor?", ar: "هل نتائج الذكاء الاصطناعي بديل للطبيب المعالج؟" },
@@ -300,8 +300,8 @@ export default function PricingPage() {
                         </h1>
                         <p className="mt-3 sm:mt-4 text-xs sm:text-sm lg:text-base leading-relaxed text-slate-300 max-w-xl">
                             {t(
-                                "Start with core medication analysis for free. Upgrade to ULTRA when you want personal safety context, family profiles, Mat AI chat, and clinical PDF exports.",
-                                "ابدأ بفحص الأدوية مجاناً مع ٣٠ رصيد شهرياً. قم بالترقية إلى ULTRA للوصول الكامل لمساعد Mat AI الطبي، ملفات الأسرة، وسياق الأمان المتقدم."
+                                "Start with core medication analysis for free. Upgrade to ULTRA when you want personal safety context, family profiles, Aura-OS Ai (AOS AI) chat, and clinical PDF exports.",
+                                "ابدأ بفحص الأدوية مجاناً مع ٣٠ رصيد شهرياً. قم بالترقية إلى ULTRA للوصول الكامل لمساعد Aura-OS Ai (AOS AI) الطبي، ملفات الأسرة، وسياق الأمان المتقدم."
                             )}
                         </p>
                     </div>
@@ -399,7 +399,7 @@ export default function PricingPage() {
                                 </span>
                             </div>
                             <p className="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                                {t("For regular health checks, Mat AI medical chat, and full family care.", "للرعاية المتكاملة، استشارات Mat AI، ومتابعة صحة الأسرة بدون حدود.")}
+                                {t("For regular health checks, Aura-OS Ai (AOS AI) medical chat, and full family care.", "للرعاية المتكاملة، استشارات Aura-OS Ai (AOS AI)، ومتابعة صحة الأسرة بدون حدود.")}
                             </p>
 
                             <div className="my-6 h-px bg-slate-800" />

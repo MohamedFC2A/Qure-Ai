@@ -13,7 +13,7 @@ import { ConversationSidebar, type ConversationSummary } from "./ConversationSid
 import { MedicationSelect } from "./MedicationSelect";
 
 /* ──────────────────────────────────────────────────────────
- *  AiChatPage – Unified Mat AI (Smart context, no mode juggling)
+ *  AiChatPage – Unified Aura-OS Ai (AOS AI) (Smart context, no mode juggling)
  * ────────────────────────────────────────────────────────── */
 
 // Smart intent detection to auto-route mode without user interaction
@@ -172,7 +172,7 @@ export function AiChatPage() {
         if (!text.trim() || isSending) return;
 
         if (!isUltra) {
-            setError(t("Mat AI is exclusive to ULTRA plan members.", "ميزة Mat AI متاحة حصرياً لمشتركي باقة ULTRA."));
+            setError(t("Aura-OS Ai (AOS AI) is exclusive to ULTRA plan members.", "ميزة Aura-OS Ai (AOS AI) متاحة حصرياً لمشتركي باقة ULTRA."));
             return;
         }
 
@@ -239,7 +239,7 @@ export function AiChatPage() {
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-                if (res.status === 402) setError(t("ULTRA plan subscription required.", "يلزم الاشتراك في باقة ULTRA لاستخدام Mat AI."));
+                if (res.status === 402) setError(t("ULTRA plan subscription required to access Aura-OS Ai (AOS AI).", "يلزم الاشتراك في باقة ULTRA لاستخدام مساعد Aura-OS Ai (AOS AI)."));
                 else if (res.status === 401) setError(t("Please log in", "يرجى تسجيل الدخول"));
                 else setError(errData.error || t("Failed to get response", "فشل في الحصول على استجابة"));
                 return;
@@ -451,12 +451,12 @@ export function AiChatPage() {
                                     {t("ULTRA EXCLUSIVE FEATURE", "ميزة حصرية لمشتركي ULTRA")}
                                 </span>
                                 <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                                    {t("Unlock Mat AI Assistant", "افتح المساعد الطبي الذكي Mat AI")}
+                                    {t("Unlock Aura-OS Ai (AOS AI) Assistant", "افتح المساعد الطبي الذكي Aura-OS Ai (AOS AI)")}
                                 </h2>
                                 <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
                                     {t(
-                                        "Mat AI is available exclusively for ULTRA members. Get personalized clinical insights, comprehensive medication analysis, and health advice.",
-                                        "مساعد Mat AI متاح حصرياً لأعضاء باقة ULTRA. احصل على تحليلات سريرية فائقة الدقة، قراءة شفرات الأدوية، واستشارات صحية مخصصة."
+                                        "Aura-OS Ai (AOS AI) is available exclusively for ULTRA members. Get personalized clinical insights, comprehensive medication analysis, and health advice.",
+                                        "مساعد Aura-OS Ai (AOS AI) متاح حصرياً لأعضاء باقة ULTRA. احصل على تحليلات سريرية فائقة الدقة، قراءة شفرات الأدوية، واستشارات صحية مخصصة."
                                     )}
                                 </p>
                             </div>
@@ -520,7 +520,10 @@ export function AiChatPage() {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <h2 className="text-2xl font-black tracking-tight text-white">Mat AI</h2>
+                                            <div className="flex items-center gap-2 justify-center">
+                                                <h2 className="text-2xl font-black tracking-tight text-white">Aura-OS Ai</h2>
+                                                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-cyan-300 font-mono">AOS AI</span>
+                                            </div>
                                             <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
                                                 {t(
                                                     "Your personal health AI — knows your profile, your medications, and gives you personalized answers. Just ask anything.",
@@ -607,8 +610,8 @@ export function AiChatPage() {
                                                         `اسأل عن ${selectedMedication.drug_name || "هذا الدواء"} أو هل يناسبك…`
                                                     )
                                                     : t(
-                                                        "Ask Mat AI anything — health, medications, or your personal profile…",
-                                                        "اسأل Mat AI أي شيء — صحة، دواء، أو عن ملفك الشخصي…"
+                                                        "Ask Aura-OS Ai (AOS AI) anything — health, medications, or your personal profile…",
+                                                        "اسأل Aura-OS Ai (AOS AI) أي شيء — صحة، دواء، أو عن ملفك الشخصي…"
                                                     )
                                             }
                                             className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder-slate-500 resize-none min-h-[36px] max-h-[140px] text-sm leading-relaxed py-1"

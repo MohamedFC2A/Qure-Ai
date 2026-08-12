@@ -109,8 +109,8 @@ export function ConversationSidebar({
                         <Brain className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-white leading-none">Mat AI</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">{isArabic ? "محادثاتي" : "My Chats"}</p>
+                        <p className="text-sm font-bold text-white leading-none">Aura-OS Ai</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{isArabic ? "محادثات AOS AI" : "AOS AI Chats"}</p>
                     </div>
                     <button
                         onClick={onClose}

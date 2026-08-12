@@ -122,8 +122,8 @@ const PARTNERS: PartnerItem[] = [
         logo: <DeepSeekWhiteLogo className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />,
     },
     {
-        id: "matany",
-        name: "Mat AI",
+        id: "aura-os",
+        name: "Aura-OS Ai (AOS AI)",
         descriptionEn: "Clinical Intelligence Core",
         descriptionAr: "نواة الذكاء الطبي المتقدم",
         logo: <MatanyAiWhiteLogo className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />,

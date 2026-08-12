@@ -19,7 +19,7 @@ export const MobileNav = () => {
         ? [
               { name: t("Home", "الرئيسية"), href: "/",                  icon: Atom },
               { name: t("Scan", "الفحص"),    href: "/scan",              icon: ScanLine },
-              { name: "Mat AI",               href: "/ai",                icon: Brain },
+              { name: "AOS AI",               href: "/ai",                icon: Brain },
               { name: t("History", "السجل"), href: "/dashboard/history", icon: Clock },
               // { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard", icon: LayoutDashboard }, // TODO: unhide
           ]
