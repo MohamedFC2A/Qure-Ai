@@ -664,7 +664,7 @@ export function AiChatPage() {
                                     "flex items-center px-1",
                                     input.length > 0 ? "justify-between" : "justify-center"
                                 )}>
-                                    <p className="text-[10px] text-slate-500">
+                                    <p className="text-[10px] text-slate-500 hidden lg:block">
                                         {t("Enter to send  •  Shift+Enter for new line", "Enter للإرسال  •  Shift+Enter لسطر جديد")}
                                     </p>
                                     {input.length > 0 && (

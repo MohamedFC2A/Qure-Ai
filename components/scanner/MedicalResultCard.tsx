@@ -2322,10 +2322,13 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </div>
                             </div>
                             <div className="flex items-center justify-between px-2 text-[10px]">
-                                <p className="text-white/25">
+                                <p className="text-white/25 hidden lg:block">
                                     {t("Press Enter to send, Shift+Enter for new line", "اضغط Enter للإرسال، Shift+Enter لسطر جديد")}
                                 </p>
-                                <p className={cn(customQuestion.length > 450 ? "text-amber-400" : "text-white/25")}>
+                                <p className={cn(
+                                    "text-white/25 ms-auto lg:ms-0",
+                                    customQuestion.length > 450 && "text-amber-400"
+                                )}>
                                     {customQuestion.length}/500
                                 </p>
                             </div>
