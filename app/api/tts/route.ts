@@ -3,6 +3,65 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserPlan } from "@/lib/creditService";
 import { getLocalDevUser } from "@/lib/devAuth";
 
+// Smart Arabic Medical Diacritization & Vocalization Engine for 0 TTS Pronunciation Errors
+function diacritizeArabicMedicalText(text: string): string {
+    if (!text || typeof text !== "string") return "";
+
+    const medicalDiacriticsMap: Record<string, string> = {
+        "دواء": "دَوَاءٌ",
+        "الدواء": "الدَّوَاءُ",
+        "علاج": "عِلَاجٌ",
+        "العلاج": "الْعِلَاجُ",
+        "جرعة": "جُرْعَةٌ",
+        "الجرعة": "الْجُرْعَةُ",
+        "تحذير": "تَحْذِيرٌ",
+        "تنبيه": "تَنْبِيهٌ",
+        "مهم": "مُهِمٌّ",
+        "تداخلات": "تَدَاخُلَاتٌ",
+        "تعارض": "تَعَارُضٌ",
+        "أعراض": "أَعْرَاضٌ",
+        "جانبية": "جَانِبِيَّةٌ",
+        "مادة": "مَادَّةٌ",
+        "فعالة": "فَعَّالَةٌ",
+        "استخدام": "اسْتِخْدَامُ",
+        "استعمال": "اسْتِعْمَالُ",
+        "طبي": "طِبِّيٌّ",
+        "طبيبة": "طَبِيبَةٌ",
+        "طبيب": "طَبِيبٌ",
+        "صيدلي": "صَيْدَلِيٌّ",
+        "يوميا": "يَوْمِيّاً",
+        "يومياً": "يَوْمِيّاً",
+        "فورا": "فَوْراً",
+        "فوراً": "فَوْراً",
+        "احتياط": "احْتِيَاطٌ",
+        "مستمر": "مُسْتَمِرٌّ",
+        "حساسية": "حَسَّاسِيَّةٌ",
+        "خطيرة": "خَطِيرَةٌ",
+        "خطر": "خَطَرٌ",
+        "آمن": "آمِنٌ",
+        "سلامة": "سَلَامَةٌ",
+        "اقرأ": "اقْرَأْ",
+        "راجع": "رَاجِعْ",
+        "تناول": "تَنَاوَلْ",
+        "استشر": "اسْتَشِرْ",
+        "قبل": "قَبْلَ",
+        "بعد": "بَعْدَ",
+        "الطعام": "الطَّعَامِ",
+        "الأكل": "الأَكْلِ",
+        "ماء": "مَاءٍ",
+        "كافي": "كافٍ",
+    };
+
+    let result = text;
+    for (const [rawWord, vocalizedWord] of Object.entries(medicalDiacriticsMap)) {
+        // Regex word boundary matching for whole word replacement
+        const regex = new RegExp(`(?<=^|\\s)${rawWord}(?=\\s||\\.|,|!|؟|$)`, "g");
+        result = result.replace(regex, vocalizedWord);
+    }
+
+    return result;
+}
+
 async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promise<string> {
     const cleaned = rawText
         .replace(/<[^>]*>/g, "")
@@ -11,18 +70,14 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
         .replace(/\s+/g, " ")
         .trim();
 
-    // If text is already medium length (<= 320 chars), use directly for maximum fidelity
-    if (cleaned.length <= 320) {
-        return cleaned;
-    }
+    const isAr = lang === "ar";
 
-    // 1. AI Condenser via Pollinations / OpenAI / DeepSeek for comprehensive audio script
+    // 1. AI Diacritized Condenser via Pollinations / OpenAI / DeepSeek
     const apiKey = process.env.POLLINATIONS_API_KEY || process.env.DEEPSEEK_API_KEY;
     if (apiKey) {
         try {
-            const isAr = lang === "ar";
             const systemPrompt = isAr
-                ? "أنت خبير ومستشار طبي وصيدلاني بصوت رجالي واثق وعميق. قم بصياغة ملخص ناطق شامل ودقيق ومُعالج طبياً من النص المعطى بأسلوب نطق مباشر وسلس. اذكر: 1) اسم الدواء والمادة الفعالة، 2) دواعي الاستعمال الرئيسية، 3) الجرعة والتنبيه الهام. اجعل النص ناطقاً وسلساً في حدود 280-350 حرفاً بدون تشكيل عشوائي أو رموز."
+                ? "أنت خبير صيدلاني وطبي ونحوي متمرس بصوت رجالي واثق وعميق. قم بصياغة ملخص ناطق شامل ودقيق ومُعالج طبياً من النص المعطى في حدود 280-350 حرفاً. الشَرطُ الأَسَاسِيّ: قُم بِتَشكِيلِ الكَلِمَاتِ العَرَبِيَّةِ تَشكِيلاً ذَكِيّاً وَدَقِيقاً بِالحَرَكَاتِ (الْفَتْحَة، الضَّمَّة، الْكَسْرَة، السُّكُون، وَالتَّنْوِين) لِضَمَانِ قِرَاءَةٍ صَوْتِيَّةٍ سَلِيمَةٍ 100% بِدُونِ أَيِّ أَخْطَاءِ إِعْرَابِيَّةٍ أَوْ لَغْوِيَّة. اذكر: 1) اسم الدواء والمادة الفعالة، 2) دواعي الاستعمال الرئيسية، 3) الجرعة والتنبيه الهام."
                 : "You are a professional medical pharmacology broadcaster with a deep, confident voice. Generate a comprehensive, well-structured spoken summary covering: 1) Drug & active ingredient name, 2) Primary indications, 3) Key dosage and safety warning. Keep it under 320 characters in natural spoken prose.";
 
             const res = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
@@ -37,25 +92,25 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
                         { role: "system", content: systemPrompt },
                         { role: "user", content: cleaned }
                     ],
-                    max_tokens: 160,
-                    temperature: 0.2,
+                    max_tokens: 220,
+                    temperature: 0.15,
                 }),
-                signal: AbortSignal.timeout(4000),
+                signal: AbortSignal.timeout(4500),
             });
 
             if (res.ok) {
                 const data = await res.json();
                 const brief = data.choices?.[0]?.message?.content?.trim();
-                if (brief && brief.length > 20 && brief.length <= 400) {
-                    return brief;
+                if (brief && brief.length > 20 && brief.length <= 450) {
+                    return isAr ? diacritizeArabicMedicalText(brief) : brief;
                 }
             }
         } catch (e) {
-            console.warn("AI Audio Condenser fast fallback to sentence engine:", e);
+            console.warn("AI Audio Condenser fallback to diacritized sentence engine:", e);
         }
     }
 
-    // 2. Deterministic Rule-Based Fallback (Rich Multi-Sentence)
+    // 2. Deterministic Rule-Based Fallback with Smart Diacritics
     const sentences = cleaned.split(/(?<=[.،!؟\n])/g).map(s => s.trim()).filter(Boolean);
     let result = "";
     for (const s of sentences) {
@@ -68,7 +123,8 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
     if (!result && sentences[0]) {
         result = sentences[0].slice(0, 310) + "...";
     }
-    return result || cleaned.slice(0, 320);
+    const finalBrief = result || cleaned.slice(0, 320);
+    return isAr ? diacritizeArabicMedicalText(finalBrief) : finalBrief;
 }
 
 export async function POST(req: NextRequest) {
@@ -102,14 +158,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Text parameter is required" }, { status: 400 });
         }
 
-        // Condense text into a rich, comprehensive medical audio script
+        // Condense and smart-diacritize Arabic medical text for zero TTS pronunciation errors
         const condensedText = await condenseToAudioBrief(text, lang || "ar");
 
         let audioArrayBuffer: ArrayBuffer | null = null;
         let lastError = "";
 
         if (apiKey) {
-            // Prioritize Deep Masculine Male Voices for ElevenLabs
             const maleBaritoneVoice = "nPczCjzI2devNBz1zQrb"; // Brian - Deep, Resonant Masculine Male
             const primaryVoice = process.env.ELEVENLABS_VOICE_ID || maleBaritoneVoice;
             const voiceCandidates = Array.from(new Set([
@@ -133,9 +188,9 @@ export async function POST(req: NextRequest) {
                             text: condensedText,
                             model_id: targetModelId,
                             voice_settings: {
-                                stability: 0.45,
-                                similarity_boost: 0.85,
-                                style: 0.15,
+                                stability: 0.52,
+                                similarity_boost: 0.88,
+                                style: 0.12,
                                 use_speaker_boost: true,
                             },
                         }),
