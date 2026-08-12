@@ -438,7 +438,27 @@ function AuthFormContent({ type }: AuthFormProps) {
                         return;
                     }
 
-                    // Hide signup form and show dedicated waiting screen
+                    if (payload.success) {
+                        // Automatically sign in user immediately for instant 1-click onboarding
+                        const loginResult = await supabase.auth.signInWithPassword({
+                            email: cleanEmail,
+                            password: cleanPassword,
+                        });
+
+                        if (!loginResult.error) {
+                            setSuccessMessage(
+                                t("Account created successfully! Redirecting...", "✓ تم إنشاء الحساب بنجاح! جاري تحويلك...")
+                            );
+                            speakVoiceOs(isArabic ? "تم التسجيل بنجاح" : "Successfully registered!");
+                            setTimeout(() => {
+                                router.push(getNextPath());
+                                router.refresh();
+                            }, 500);
+                            return;
+                        }
+                    }
+
+                    // Fallback to verification waiting screen if auto-login pending
                     setRegisteredEmail(cleanEmail);
                     setResendCooldown(60);
                     setIsLoading(false);

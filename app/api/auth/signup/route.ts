@@ -17,7 +17,6 @@ function getPublicSiteUrl(request: NextRequest): string {
         return process.env.NEXT_PUBLIC_SITE_URL;
     }
 
-    // Default fallback to public domain for mobile phone compatibility
     return host ? `http://${host}` : "https://qure-ai-nexus.vercel.app";
 }
 
@@ -41,14 +40,14 @@ export async function POST(request: NextRequest) {
 
         if (!cleanEmail || !cleanEmail.includes("@")) {
             return NextResponse.json(
-                { error: "Please provide a valid email address." },
+                { error: "Please provide a valid email address.", errorAr: "يرجى إدخال بريد إلكتروني صحيح." },
                 { status: 400 }
             );
         }
 
         if (!cleanPassword || cleanPassword.length < 8) {
             return NextResponse.json(
-                { error: "Password must be at least 8 characters long." },
+                { error: "Password must be at least 8 characters long.", errorAr: "يجب أن تكون كلمة المرور 8 أحرف على الأقل." },
                 { status: 400 }
             );
         }
@@ -84,93 +83,81 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({
                         alreadyRegistered: true,
                         confirmed: true,
-                        message: "This email is already registered and verified. Please sign in with your password.",
+                        message: "This email is already registered. Please sign in directly.",
+                        messageAr: "هذا البريد الإلكتروني مسجل مسبقاً! يرجى تسجيل الدخول مباشرة بكلمة المرور الخاصة بك.",
                     });
                 } else {
-                    // User exists but unconfirmed: generate link & send email again
-                    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
-                        type: "signup",
-                        email: cleanEmail,
+                    // Update user to confirmed status & update password
+                    await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+                        email_confirm: true,
                         password: cleanPassword,
-                        options: {
-                            redirectTo: targetCallbackUrl,
-                            data: userMetadata,
-                        },
+                        user_metadata: userMetadata,
                     });
 
-                    if (!linkErr && linkData?.properties?.action_link) {
-                        const emailResult = await sendSignupVerificationEmail({
-                            email: cleanEmail,
-                            username: cleanUsername,
-                            confirmationUrl: linkData.properties.action_link,
-                            siteUrl,
-                        });
-
-                        return NextResponse.json({
-                            success: true,
-                            email: cleanEmail,
-                            resent: true,
-                            emailSent: emailResult.success,
-                            message: "Confirmation link regenerated and sent to your email.",
-                        });
-                    }
+                    return NextResponse.json({
+                        success: true,
+                        email: cleanEmail,
+                        confirmed: true,
+                        message: "Account verified and activated. Signing in...",
+                        messageAr: "تم تفعيل الحساب بنجاح. جاري تسجيل الدخول...",
+                    });
                 }
             }
         }
 
-        // 2. Generate new user signup verification link
-        const { data: linkData, error: generateError } = await supabaseAdmin.auth.admin.generateLink({
-            type: "signup",
+        // 2. Create user directly with auto-confirmation enabled (no email block!)
+        const { data: createdData, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email: cleanEmail,
             password: cleanPassword,
-            options: {
-                redirectTo: targetCallbackUrl,
-                data: userMetadata,
-            },
+            email_confirm: true,
+            user_metadata: userMetadata,
         });
 
-        if (generateError) {
-            console.warn("[Signup API] generateLink error, falling back to direct create:", generateError.message);
-            // Fallback: create user directly
-            const { data: createdUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        if (createError) {
+            console.warn("[Signup API] createUser error, fallback to generateLink:", createError.message);
+            // Fallback: generate signup link
+            const { data: linkData, error: generateError } = await supabaseAdmin.auth.admin.generateLink({
+                type: "signup",
                 email: cleanEmail,
                 password: cleanPassword,
-                email_confirm: false,
-                user_metadata: userMetadata,
+                options: {
+                    redirectTo: targetCallbackUrl,
+                    data: userMetadata,
+                },
             });
 
-            if (createError) {
-                throw createError;
+            if (generateError) {
+                throw generateError;
             }
 
-            return NextResponse.json({
-                success: true,
-                email: cleanEmail,
-                message: "Account created successfully. Please check your inbox for confirmation.",
-            });
+            if (linkData?.properties?.action_link) {
+                sendSignupVerificationEmail({
+                    email: cleanEmail,
+                    username: cleanUsername,
+                    confirmationUrl: linkData.properties.action_link,
+                    siteUrl,
+                }).catch((e) => console.warn("[Signup Email Fail]:", e));
+            }
         }
 
-        const confirmationUrl = linkData.properties.action_link;
-
-        // 3. Send custom styled confirmation email via our multi-transport service
-        const emailResult = await sendSignupVerificationEmail({
+        // Send welcome email asynchronously without blocking signup response
+        sendSignupVerificationEmail({
             email: cleanEmail,
             username: cleanUsername,
-            confirmationUrl,
+            confirmationUrl: `${siteUrl}/login`,
             siteUrl,
-        });
-
-        console.log(`[Signup API] Processed signup for ${cleanEmail}, email sent via: ${emailResult.method}`);
+        }).catch((e) => console.warn("[Signup Welcome Email Fail]:", e));
 
         return NextResponse.json({
             success: true,
             email: cleanEmail,
-            emailSent: emailResult.success,
-            message: "Account created successfully. Confirmation link sent to your email.",
+            confirmed: true,
+            message: "Account created successfully. Signing in...",
+            messageAr: "تم إنشاء الحساب بنجاح. جاري تسجيل الدخول...",
         });
 
     } catch (err: any) {
-        console.error("[Signup API Error]:", err);
+        console.error("[Signup API Exception]:", err);
         return NextResponse.json(
             { error: err.message || "An unexpected error occurred during registration." },
             { status: 500 }
