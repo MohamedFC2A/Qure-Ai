@@ -65,12 +65,12 @@ export const translateMedicalTerm = (str: string | undefined | null, isArabic: b
     if (lower.includes("deodorant")) return "مزيل عرق طبي";
 
     // Categories & Manufacturers
-    if (lower === "dawa" || lower === "medication" || lower === "drug" || lower === "human_drug") return "دواء علاجي";
+    if (lower === "dawa" || lower === "medication" || lower === "drug" || lower === "human_drug") return "دواء";
     if (lower === "human_supplement" || lower.includes("supplement")) return "مكمل غذائي";
-    if (lower.includes("cosmetic")) return "مستحضر تجميل";
+    if (lower.includes("cosmetic") || lower.includes("topical_cosmetic")) return "مستحضر تجميل";
     if (lower === "veterinary_drug" || lower === "veterinary_supplement" || lower.includes("veterinary")) return "مستحضر بيطري";
-    if (lower.includes("otc") || lower.includes("over-the-counter")) return "دواء بدون روشتة (OTC)";
-    if (lower.includes("prescription")) return "دواء بفرمان طبي";
+    if (lower.includes("otc") || lower.includes("over-the-counter")) return "دواء OTC";
+    if (lower.includes("prescription")) return "دواء بوصفة";
     if (lower === "unknown" || lower === "generic") return "غير محدد";
 
     return trimmed;
@@ -2548,127 +2548,166 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
             ? data.activeIngredients
             : [data.genericName || (isArabic ? "مكونات تجميلية مرطبة ومغذية" : "Nourishing Skin Formula")];
 
+        const benefits = data.uses && data.uses.length > 0 ? data.uses : [];
+        const routine = data.dosage || (isArabic
+            ? "يُوضع على بشرة نظيفة وجافة صباحاً ومساءً مع الدلك الخفيف حتى الامتصاص الكامل."
+            : "Apply to clean, dry skin morning and evening. Massage gently until fully absorbed.");
+
+        const skinTypes = [
+            { label: t("Oily", "دهنية"), color: "emerald", hint: t("Controls shine", "يقلل الإفرازات") },
+            { label: t("Dry", "جافة"), color: "cyan", hint: t("Deep hydration", "ترطيب عميق") },
+            { label: t("Combination", "مختلطة"), color: "violet", hint: t("Balancing", "يوازن") },
+            { label: t("Sensitive", "حساسة"), color: "amber", hint: t("Patch test first", "اختبر أولاً") },
+            { label: t("Normal", "عادية"), color: "pink", hint: t("All-round care", "عناية شاملة") },
+        ];
+
+        const colorMap: Record<string, { bg: string; border: string; text: string; sub: string }> = {
+            emerald: { bg: "bg-emerald-500/8", border: "border-emerald-500/20", text: "text-emerald-300", sub: "text-emerald-200/60" },
+            cyan: { bg: "bg-cyan-500/8", border: "border-cyan-500/20", text: "text-cyan-300", sub: "text-cyan-200/60" },
+            violet: { bg: "bg-violet-500/8", border: "border-violet-500/20", text: "text-violet-300", sub: "text-violet-200/60" },
+            amber: { bg: "bg-amber-500/8", border: "border-amber-500/20", text: "text-amber-300", sub: "text-amber-200/60" },
+            pink: { bg: "bg-pink-500/8", border: "border-pink-500/20", text: "text-pink-300", sub: "text-pink-200/60" },
+        };
+
+        const purityItems = [
+            t("Paraben-Free", "خالٍ من البارابين"),
+            t("Sulfate-Free", "خالٍ من السولفات"),
+            t("Non-Comedogenic", "لا يسد المسام"),
+            t("Dermatologist Tested", "مفحوص جلدياً"),
+            t("Fragrance Optional", "بدون عطور قوية"),
+            t("Cruelty-Free", "لا يختبر على الحيوانات"),
+        ];
+
         return (
-            <div className="space-y-6 p-3.5 sm:p-8">
-                {/* Header Banner */}
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-pink-950/40 via-purple-950/30 to-slate-950 border border-pink-500/20 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/30 text-pink-400 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-6 h-6 text-pink-400 animate-pulse" />
+            <div className="space-y-4 p-3 sm:p-5">
+
+                {/* Hero Header */}
+                <div className="rounded-2xl overflow-hidden border border-pink-500/15 bg-gradient-to-br from-pink-950/30 via-purple-950/20 to-slate-950/60 backdrop-blur-xl">
+                    <div className="px-5 py-4 flex items-center gap-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-5 h-5 text-pink-400" />
                         </div>
-                        <div>
-                            <h3 className="text-white font-extrabold text-base sm:text-lg flex items-center gap-2">
-                                <span>{t("Cosmetic Skincare Analysis", "تحليل مستحضر التجميل والعناية بالبشرة")}</span>
-                                <span className="px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-xs border border-pink-500/30 font-bold">
-                                    {t("Cosmetic", "مستحضر تجميل")}
-                                </span>
-                            </h3>
-                            <p className="text-white/60 text-xs mt-1">
-                                {t("Analyzed skin suitability, active ingredients, and application routine.", "تم تحليل ملاءمة البشرة والمكونات التجميلية الفعالة وطريقة الاستخدام المثالية.")}
-                            </p>
+                        <div className="min-w-0">
+                            <p className="text-white font-bold text-sm">{t("Skin & Beauty Guide", "دليل البشرة والتجميل")}</p>
+                            <p className="text-white/40 text-[11px] truncate">{t("Ingredients · Routine · Skin Compatibility", "المكونات · الروتين · ملاءمة البشرة")}</p>
                         </div>
+                        <span className="ms-auto shrink-0 px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/25 text-pink-300 text-[10px] font-bold uppercase tracking-wider">
+                            {t("Cosmetic", "تجميل")}
+                        </span>
                     </div>
                 </div>
 
-                {/* Grid Section 1: Skin Type Compatibility & Active Ingredients */}
-                <div className="grid gap-6 md:grid-cols-2">
-                    {/* Skin Type Compatibility */}
-                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-4">
-                        <h4 className="text-white font-bold text-sm sm:text-base flex items-center gap-2 text-pink-300">
-                            <Activity className="w-4 h-4 text-pink-400" />
-                            {t("Skin Type Compatibility", "ملاءمة المستحضر لأنواع البشرة")}
-                        </h4>
-
-                        <div className="grid grid-cols-2 gap-2.5">
-                            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                                <span className="text-xs font-bold text-emerald-300 block">{t("Oily Skin", "البشرة الدهنية")}</span>
-                                <span className="text-[10px] text-emerald-200/70">{t("Suitable & Controls Shine", "مناسب ويقلل الإفرازات")}</span>
-                            </div>
-                            <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-center">
-                                <span className="text-xs font-bold text-cyan-300 block">{t("Dry Skin", "البشرة الجافة")}</span>
-                                <span className="text-[10px] text-cyan-200/70">{t("Hydrating & Restorative", "مرطب ومغذي")}</span>
-                            </div>
-                            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
-                                <span className="text-xs font-bold text-purple-300 block">{t("Combination", "البشرة المختلطة")}</span>
-                                <span className="text-[10px] text-purple-200/70">{t("Balanced Formula", "يعيد التوازن")}</span>
-                            </div>
-                            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-                                <span className="text-xs font-bold text-amber-300 block">{t("Sensitive Skin", "البشرة الحساسة")}</span>
-                                <span className="text-[10px] text-amber-200/70">{t("Patch Test Advised", "يُنصح باختبار الحساسية")}</span>
-                            </div>
-                        </div>
+                {/* Skin Type Grid */}
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5 text-pink-400" />
+                        <p className="text-xs font-semibold text-white/70">{t("Skin Type Compatibility", "ملاءمة أنواع البشرة")}</p>
                     </div>
+                    <div className="p-3 grid grid-cols-5 gap-2">
+                        {skinTypes.map((st) => {
+                            const c = colorMap[st.color];
+                            return (
+                                <div key={st.label} className={`rounded-xl ${c.bg} border ${c.border} py-3 px-1 flex flex-col items-center gap-1 text-center`}>
+                                    <span className={`text-[11px] font-bold ${c.text}`}>{st.label}</span>
+                                    <span className={`text-[9px] ${c.sub} leading-tight`}>{st.hint}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
 
-                    {/* Cosmetic Active Ingredients & Benefits */}
-                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-4">
-                        <h4 className="text-white font-bold text-sm sm:text-base flex items-center gap-2 text-pink-300">
-                            <Sparkles className="w-4 h-4 text-pink-400" />
-                            {t("Active Cosmetic Ingredients & Benefits", "المكونات التجميلية الفعالة والفوائد")}
-                        </h4>
-
-                        <div className="space-y-2">
-                            {ingredientsList.map((ing, i) => (
-                                <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-2">
-                                    <span className="text-white font-bold text-xs dir-ltr" dir="ltr">{ing}</span>
-                                    <span className="text-[10px] text-pink-300 bg-pink-500/10 px-2 py-0.5 rounded-md font-semibold border border-pink-500/20">
-                                        {t("Active Formula", "مكون فعال")}
-                                    </span>
+                {/* Ingredients + Benefits */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {/* Ingredients */}
+                    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
+                        <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+                            <p className="text-xs font-semibold text-white/70">{t("Key Ingredients", "المكونات الفعالة")}</p>
+                        </div>
+                        <div className="p-3 space-y-1.5">
+                            {ingredientsList.slice(0, 6).map((ing, i) => (
+                                <div key={i} className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                                    <span className="text-white/85 text-xs font-medium truncate" dir="ltr">{ing}</span>
+                                    <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-pink-400/60" />
                                 </div>
                             ))}
-                            {(data.uses && data.uses.length > 0) && (
-                                <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 leading-relaxed">
-                                    <strong className="block mb-1 text-purple-300">{t("Primary Benefits:", "الفوائد الرئيسية للبشرة:")}</strong>
-                                    {data.uses.join(" • ")}
-                                </div>
+                        </div>
+                    </div>
+
+                    {/* Benefits */}
+                    {benefits.length > 0 ? (
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
+                            <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                <p className="text-xs font-semibold text-white/70">{t("Benefits", "الفوائد")}</p>
+                            </div>
+                            <div className="p-3 space-y-1.5">
+                                {benefits.slice(0, 6).map((b, i) => (
+                                    <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                                        <div className="w-1 h-1 rounded-full bg-emerald-400/70 mt-1.5 shrink-0" />
+                                        <span className="text-white/75 text-xs leading-relaxed">{b}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        /* Purity Checklist fallback */
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
+                            <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                <p className="text-xs font-semibold text-white/70">{t("Purity & Safety", "النقاء والسلامة")}</p>
+                            </div>
+                            <div className="p-3 grid grid-cols-2 gap-1.5">
+                                {purityItems.map((item, i) => (
+                                    <div key={i} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
+                                        <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                                        <span className="text-emerald-200/80 text-[10px] font-medium leading-tight">{item}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Application Routine */}
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                        <p className="text-xs font-semibold text-white/70">{t("How to Use", "طريقة الاستخدام")}</p>
+                        <span className="ms-auto text-[10px] text-cyan-400/60 font-semibold">{t("AM · PM", "صباح · مساء")}</span>
+                    </div>
+                    <div className="p-4">
+                        <p className="text-white/75 text-sm leading-relaxed">{routine}</p>
+                    </div>
+                    <div className="mx-4 mb-4 flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-amber-500/6 border border-amber-500/15">
+                        <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <p className="text-amber-200/80 text-[11px] leading-relaxed">
+                            {t(
+                                "Do a patch test on your inner wrist 24h before first use to check for reactions.",
+                                "اختبر المستحضر على معصمك الداخلي لمدة ٢٤ ساعة قبل الاستخدام الكامل."
                             )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Grid Section 2: Application Routine & Free-From Checklist */}
-                <div className="grid gap-6 md:grid-cols-2">
-                    {/* Routine & Application */}
-                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-                        <h4 className="text-white font-bold text-sm sm:text-base flex items-center gap-2 text-cyan-300">
-                            <Clock className="w-4 h-4 text-cyan-400" />
-                            {t("Application & Skincare Routine", "طريقة الاستخدام وروتين العناية")}
-                        </h4>
-                        <p className="text-white/80 text-xs sm:text-sm leading-relaxed p-3.5 rounded-xl bg-white/5 border border-white/10">
-                            {data.dosage || (isArabic ? "يُوضع على بشرة نظيفة وجافة صباحاً ومساءً مع الدلك الخفيف حتى الامتصاص الكامل." : "Apply evenly to cleansed, dry skin morning and evening.")}
                         </p>
-                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center gap-2">
-                            <ShieldAlert className="w-4 h-4 text-amber-300 shrink-0" />
-                            <span>{t("Important: Perform a patch test on a small area of the arm before full face application.", "تنبيه هام: قم بإجراء اختبار حساسية على جزء صغير من الساعد قبل الاستخدام على الوجه.")}</span>
-                        </div>
-                    </div>
-
-                    {/* Free-From Safety Checklist */}
-                    <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-                        <h4 className="text-white font-bold text-sm sm:text-base flex items-center gap-2 text-emerald-300">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                            {t("Purity & Safety Checklist", "قائمة نماء وسلامة المستحضر")}
-                        </h4>
-
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-200 flex items-center gap-1.5">
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>{t("Paraben-Free", "خالٍ من البارابين")}</span>
-                            </div>
-                            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-200 flex items-center gap-1.5">
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>{t("Sulfate-Free", "خالٍ من السولفات")}</span>
-                            </div>
-                            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-200 flex items-center gap-1.5">
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>{t("Non-Comedogenic", "لا يسد المسام")}</span>
-                            </div>
-                            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-200 flex items-center gap-1.5">
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>{t("Dermatologically Tested", "مفحوص جلدياً")}</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
+
+                {/* Purity checklist (shown always when benefits were shown above) */}
+                {benefits.length > 0 && (
+                    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
+                        <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <p className="text-xs font-semibold text-white/70">{t("Purity & Safety", "النقاء والسلامة")}</p>
+                        </div>
+                        <div className="p-3 grid grid-cols-3 gap-1.5">
+                            {purityItems.map((item, i) => (
+                                <div key={i} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
+                                    <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                                    <span className="text-emerald-200/80 text-[10px] font-medium leading-tight">{item}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
             </div>
         );
     };
