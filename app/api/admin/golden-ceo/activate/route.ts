@@ -15,11 +15,19 @@ export async function GET(req: NextRequest) {
             `
             <!DOCTYPE html>
             <html dir="rtl" lang="ar">
-            <head><meta charset="utf-8"><title>خطأ في التفعيل</title></head>
-            <body style="background:#0f172a;color:#f87171;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-                <div style="background:#1e293b;padding:32px;border-radius:16px;border:1px solid #ef4444;text-align:center;">
-                    <h2>❌ رابط التفعيل غير صالح أو ناقص</h2>
-                    <p style="color:#94a3b8;">يرجى التأكد من الضغط على الرابط الصحيح من البريد الإلكتروني.</p>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>خطأ في التفعيل</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #030712; color: #f87171; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; }
+                    .card { background: #0f172a; padding: 28px; border-radius: 20px; border: 1px solid #ef4444; text-align: center; max-width: 440px; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h2 style="margin:0 0 8px;">❌ رابط التفعيل غير صالح</h2>
+                    <p style="color:#94a3b8; font-size:14px; margin:0;">يرجى التأكد من الضغط على الرابط الصحيح من البريد الإلكتروني.</p>
                 </div>
             </body>
             </html>
@@ -48,17 +56,26 @@ export async function GET(req: NextRequest) {
                 `
                 <!DOCTYPE html>
                 <html dir="rtl" lang="ar">
-                <head><meta charset="utf-8"><title>خطأ في التفعيل</title></head>
-                <body style="background:#0f172a;color:#f87171;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-                    <div style="background:#1e293b;padding:32px;border-radius:16px;border:1px solid #ef4444;text-align:center;max-width:500px;">
-                        <h2>❌ لم يتم العثور على هذا الطلب أو الرمز مستخدم مسبقاً</h2>
-                        <p style="color:#94a3b8;">تأكد من عدم تفعيل هذا الحساب بالفعل سابقاً.</p>
-                        <a href="${OFFICIAL_SITE_URL}/admin/ceo-requests" style="color:#38bdf8;text-decoration:none;margin-top:12px;display:inline-block;">الانتقال إلى لوحة طلبات CEO</a>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>الطلب مفعل مسبقاً</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #030712; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; }
+                        .card { background: #0f172a; padding: 32px; border-radius: 20px; border: 1px solid #3b82f6; text-align: center; max-width: 460px; }
+                        .btn { background: #3b82f6; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; display: inline-block; margin-top: 16px; font-size: 14px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <h2 style="color:#60a5fa; margin:0 0 8px;">ℹ️ تم تفعيل هذا الحساب بالفعل سابقاً</h2>
+                        <p style="color:#94a3b8; font-size:14px; margin:0;">هذا الطلب قد تم تفعيله مسبقاً، والمستخدم يتمتع بباقة ألترا حالياً.</p>
+                        <a href="${OFFICIAL_SITE_URL}/admin/ceo-requests" class="btn">الانتقال إلى لوحة تحكم CEO</a>
                     </div>
                 </body>
                 </html>
                 `,
-                { headers: { "Content-Type": "text/html; charset=utf-8" }, status: 404 }
+                { headers: { "Content-Type": "text/html; charset=utf-8" }, status: 200 }
             );
         }
 
@@ -105,7 +122,8 @@ export async function GET(req: NextRequest) {
             })
             .eq("id", requestRecord.id);
 
-        const userName = requestRecord.full_name || requestRecord.email || userId;
+        const userName = requestRecord.full_name || requestRecord.username || requestRecord.email || "مستخدم VIP";
+        const userEmail = requestRecord.email;
 
         return new NextResponse(
             `
@@ -113,27 +131,28 @@ export async function GET(req: NextRequest) {
             <html dir="rtl" lang="ar">
             <head>
                 <meta charset="utf-8">
-                <title>تم التفعيل بنجاح • QureScan CEO</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>تم التفعيل بنجاح • QureScan CEO</title>
                 <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #070b14; color: #ffffff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-                    .card { background: #0f172a; border: 1px solid #22c55e; border-radius: 24px; padding: 40px; text-align: center; max-width: 540px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-                    .icon { width: 64px; height: 64px; background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; }
-                    h1 { color: #4ade80; font-size: 24px; margin: 0 0 10px; }
-                    p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px; }
-                    .info-box { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 28px; text-align: right; }
-                    .info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #334155; }
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #030712; color: #ffffff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; box-sizing: border-box; }
+                    .card { background: #0f172a; border: 1.5px solid #22c55e; border-radius: 24px; padding: 32px 24px; text-align: center; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+                    .icon { width: 70px; height: 70px; background: rgba(34, 197, 94, 0.15); border: 2px solid #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 36px; }
+                    h1 { color: #4ade80; font-size: 22px; font-weight: 900; margin: 0 0 8px; }
+                    p { color: #94a3b8; font-size: 13px; line-height: 1.5; margin: 0 0 20px; }
+                    .info-box { background: #131d31; border: 1px solid #1e293b; border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: right; }
+                    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; border-bottom: 1px solid #1e293b; }
                     .info-row:last-child { border-bottom: none; }
-                    .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-                    .btn { background: #22c55e; color: #000000 !important; font-weight: 800; text-decoration: none; padding: 12px 24px; border-radius: 10px; display: inline-block; font-size: 14px; }
-                    .btn-secondary { background: #334155; color: #ffffff !important; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 10px; display: inline-block; font-size: 14px; }
+                    .badge { background: #22c55e; color: #000; font-weight: 900; font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+                    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+                    .btn { background: #22c55e; color: #000000 !important; font-weight: 900; text-decoration: none; padding: 14px 20px; border-radius: 14px; display: block; font-size: 14px; }
+                    .btn-secondary { background: #1e293b; border: 1px solid #334155; color: #cbd5e1 !important; font-weight: bold; text-decoration: none; padding: 12px 20px; border-radius: 14px; display: block; font-size: 13px; }
                 </style>
             </head>
             <body>
                 <div class="card">
                     <div class="icon">👑</div>
                     <h1>تم تفعيل الاشتراك الذهبي بنجاح!</h1>
-                    <p>تم ترقية حساب المستخدم بنجاح إلى باقة <strong>ULTRA</strong> وتعيين الرصيد الشهري إلى <strong>300 رصيد</strong>.</p>
+                    <p>تم ترقية الحساب فوراً إلى باقة <strong>ULTRA</strong> وتعيين الرصيد الشهري إلى <strong>٣٠٠ رصيد</strong>.</p>
                     
                     <div class="info-box">
                         <div class="info-row">
@@ -141,22 +160,22 @@ export async function GET(req: NextRequest) {
                             <span style="color:#f8fafc; font-weight: bold;">${userName}</span>
                         </div>
                         <div class="info-row">
-                            <span style="color:#94a3b8;">معرف الحساب:</span>
-                            <span style="font-family:monospace; color:#38bdf8;">${userId}</span>
+                            <span style="color:#94a3b8;">البريد الإلكتروني:</span>
+                            <span style="color:#38bdf8;">${userEmail}</span>
                         </div>
                         <div class="info-row">
                             <span style="color:#94a3b8;">الخطة الجديدة:</span>
-                            <span style="color:#4ade80; font-weight: bold;">ULTRA (Golden CEO Pass)</span>
+                            <span class="badge">ULTRA (VIP)</span>
                         </div>
                         <div class="info-row">
-                            <span style="color:#94a3b8;">الرصيد المتاح:</span>
-                            <span style="color:#facc15; font-weight: bold;">300 رصيد شهرياً</span>
+                            <span style="color:#94a3b8;">الرصيد الشهري:</span>
+                            <span style="color:#facc15; font-weight: bold;">٣٠٠ رصيد شهرياً</span>
                         </div>
                     </div>
 
                     <div class="btn-group">
                         <a href="${OFFICIAL_SITE_URL}" class="btn">الانتقال إلى منصة QureScan</a>
-                        <a href="${OFFICIAL_SITE_URL}/admin/ceo-requests" class="btn-secondary">لوحة تحكم CEO</a>
+                        <a href="${OFFICIAL_SITE_URL}/admin/ceo-requests" class="btn-secondary">فتح لوحة تحكم CEO</a>
                     </div>
                 </div>
             </body>
