@@ -243,13 +243,41 @@ export async function POST(req: NextRequest) {
                         }
                     }
 
+                    /* ── Non-streaming fallback retry if stream returned empty text ── */
+                    if (!fullText || fullText.trim().length === 0) {
+                        console.log("[AI Stream Route] Stream returned empty text. Performing non-streaming fallback...");
+                        for (const candidateModel of modelsToTry) {
+                            try {
+                                const fallbackRes = await pollinations.chat.completions.create({
+                                    model: candidateModel,
+                                    messages: deepseekMessages,
+                                    stream: false,
+                                    temperature: 0.2,
+                                    max_tokens: 3000,
+                                });
+                                const text = fallbackRes.choices?.[0]?.message?.content;
+                                if (text && text.trim().length > 0) {
+                                    fullText = text.trim();
+                                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "token", token: fullText })}\n\n`));
+                                    break;
+                                }
+                            } catch (e: any) {
+                                console.warn(`[AI Stream Route] Fallback model (${candidateModel}) failed:`, e?.message || e);
+                            }
+                        }
+                    }
+
                     /* ── Parse full response robustly ── */
                     const parsed = parseAiResponse(fullText);
-                    let answer = parsed.answer || (language === "ar"
-                        ? `بناءً على استفسارك حول: "${question}"، قمت بمراجعة المعلومات الطبية المتاحة وتوفير التحليل المناسب لحالتك.`
-                        : `Based on your query regarding "${question}", I have reviewed the available medical data and provided appropriate analysis.`);
+                    let answer = parsed.answer || fullText;
                     let keyPoints = parsed.keyPoints.slice(0, 7);
                     let suggestedFollowUps = parsed.suggestedFollowUps.slice(0, 4);
+
+                    if (!answer || answer.trim().length === 0) {
+                        answer = language === "ar"
+                            ? "عذرًا، حدث انقطاع مؤقت في الاتصال بالشبكة الطبية. يرجى إعادة إرسال السؤال وسأجيبك فوراً."
+                            : "Sorry, a temporary network glitch occurred. Please resend your question and I will answer immediately.";
+                    }
 
                     /* ── Zero-Token Local Metadata Fallback (0 AI Tokens Consumed) ── */
                     if (keyPoints.length === 0) {

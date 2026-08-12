@@ -22,10 +22,10 @@ function trimToMaxWords(text: string, maxWords: number): string {
 }
 
 /**
- * Builds an ultra-compact, high-recall message payload for DeepSeek.
- * - Filters out raw JSON metadata, key points, follow-ups.
- * - Retains last 6 turns in full clean text format.
- * - Summarizes turns older than 6 into a single 2-line context memory.
+ * Builds an ultra-compact, high-recall message payload for DeepSeek / OpenAI.
+ * - Filters out raw JSON metadata, key points, follow-ups, and legacy dummy sentences.
+ * - Retains last 10 turns in clean text format for deep context memory.
+ * - Summarizes turns older than 10 into a single context memory block.
  */
 export function buildSmartMemoryMessages(
     history: ChatHistoryMessage[],
@@ -39,19 +39,28 @@ export function buildSmartMemoryMessages(
         const role = msg.role === "user" ? "user" : "assistant";
 
         if (role === "user") {
-            const userText = trimToMaxWords(msg.content, 120);
+            const userText = trimToMaxWords(msg.content, 150);
             if (userText) sanitizedHistory.push({ role: "user", content: userText });
         } else {
             // Assistant message: extract clean answer text only
             const parsed = parseAiResponse(msg.content);
             const cleanAnswer = parsed.answer || msg.content;
-            const trimmedAnswer = trimToMaxWords(cleanAnswer, 180);
+
+            // CRITICAL: Filter out any legacy dummy sentences from old database records
+            if (
+                cleanAnswer.includes("بناءً على استفسارك حول") ||
+                cleanAnswer.includes("Based on your query regarding")
+            ) {
+                continue; // Skip dummy message from memory completely!
+            }
+
+            const trimmedAnswer = trimToMaxWords(cleanAnswer, 250);
             if (trimmedAnswer) sanitizedHistory.push({ role: "assistant", content: trimmedAnswer });
         }
     }
 
-    // 2. Separate recent turns (last 6) from older turns
-    const RECENT_TURN_COUNT = 6;
+    // 2. Separate recent turns (last 10) from older turns
+    const RECENT_TURN_COUNT = 10;
     if (sanitizedHistory.length <= RECENT_TURN_COUNT) {
         return sanitizedHistory;
     }

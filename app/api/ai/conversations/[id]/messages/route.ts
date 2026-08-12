@@ -54,9 +54,20 @@ export async function GET(
             return NextResponse.json({ conversation: convRes.data, messages: [] });
         }
 
+        // Clean out any legacy dummy sentences from old database records
+        const sanitizedMessages = (messages || []).filter((msg: any) => {
+            if (!msg || !msg.content) return false;
+            if (typeof msg.content === "string") {
+                if (msg.content.includes("بناءً على استفسارك حول") || msg.content.includes("Based on your query regarding")) {
+                    return false; // Exclude legacy corrupted message
+                }
+            }
+            return true;
+        });
+
         return NextResponse.json({
             conversation: convRes.data,
-            messages: messages || [],
+            messages: sanitizedMessages,
         });
     } catch (error: any) {
         console.error("Messages GET Error:", error);
