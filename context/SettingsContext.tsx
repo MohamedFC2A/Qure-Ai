@@ -167,7 +167,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, []);
 
-    const speakVoiceOs = useCallback((phrase: string, options?: { lang?: "ar" | "en"; override?: boolean }) => {
+    const speakVoiceOs = useCallback(async (phrase: string, options?: { lang?: "ar" | "en"; override?: boolean }) => {
         if (typeof window === "undefined") return;
         const isEnabled = options?.override || (localStorage.getItem("qurescan_voice_os_enabled") !== "0");
         if (!isEnabled) return;
@@ -180,15 +180,36 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
 
         if (!cleaned) return;
 
+        // 1. Primary: Authentic ElevenLabs Neural Male Voice via /api/tts
+        try {
+            const res = await fetch("/api/tts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: cleaned, lang: options?.lang || resultsLanguage }),
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+                const audioBlob = new Blob([blob], { type: "audio/mpeg" });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.onended = () => URL.revokeObjectURL(audioUrl);
+                await audio.play();
+                return;
+            }
+        } catch (e) {
+            console.warn("ElevenLabs VOICE OS playback failed, using fallback:", e);
+        }
+
+        // 2. Secondary: Web Speech API Fallback
         try {
             if ("speechSynthesis" in window) {
-                // Immediate cancel of previous speech for zero lag
                 window.speechSynthesis.cancel();
 
                 const utterance = new SpeechSynthesisUtterance(cleaned);
                 utterance.lang = (options?.lang || resultsLanguage) === "en" ? "en-US" : "ar-SA";
-                utterance.pitch = 0.88; // Deep masculine tone
-                utterance.rate = 1.05;  // Fast, crisp masculine cadence
+                utterance.pitch = 0.82; // Deep masculine tone
+                utterance.rate = 1.0;
 
                 const voices = window.speechSynthesis.getVoices();
                 const targetLang = utterance.lang.slice(0, 2);
@@ -199,13 +220,12 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
 
                 if (maleVoice) utterance.voice = maleVoice;
                 
-                // Micro-delay to avoid browser audio context throttling
                 requestAnimationFrame(() => {
                     window.speechSynthesis.speak(utterance);
                 });
             }
         } catch (e) {
-            console.warn("VOICE OS Speech Error:", e);
+            console.warn("VOICE OS Fallback Speech Error:", e);
         }
     }, [resultsLanguage]);
 
