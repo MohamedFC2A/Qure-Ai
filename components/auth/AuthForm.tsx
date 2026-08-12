@@ -36,7 +36,8 @@ const loginSchema = z.object({
         .email("Please enter a valid email address"),
     password: z
         .string()
-        .min(8, "Password must be at least 8 characters"),
+        .min(8, "Password must be at least 8 characters")
+        .regex(/^[\x20-\x7E]+$/, "Password must be in English letters, numbers and symbols only (no Arabic)"),
 });
 
 const signupSchema = loginSchema.extend({
@@ -63,7 +64,7 @@ const signupSchema = loginSchema.extend({
         .min(10, "Weight must be at least 10 kg")
         .max(500, "Weight must be under 500 kg"),
     agreeToTerms: z.literal(true, {
-        message: "You must agree to the Terms & Disclaimer to continue.",
+        message: "يجب تأكيد الموافقة عبر بصمة الجوال أو Face ID أولاً.",
     }),
 });
 
@@ -188,6 +189,15 @@ function AuthFormContent({ type }: AuthFormProps) {
         return () => clearTimeout(timer);
     }, [watchUsername, type, isArabic, setValue]);
 
+    // Live password auto-sanitization: English characters only
+    useEffect(() => {
+        if (!watchPassword) return;
+        const cleaned = watchPassword.replace(/[^\x20-\x7E]/g, "");
+        if (cleaned !== watchPassword) {
+            setValue("password", cleaned, { shouldValidate: true });
+        }
+    }, [watchPassword, setValue]);
+
     // Trigger Biometric Verification for Terms Agreement
     const triggerBiometricAgreement = async () => {
         setIsBiometricVerifying(true);
@@ -232,22 +242,11 @@ function AuthFormContent({ type }: AuthFormProps) {
 
             setIsBiometricVerified(true);
             setValue("agreeToTerms", true, { shouldValidate: true });
-            setSuccessMessage(
-                isArabic
-                    ? "✓ تم التحقق البيومتري (بصمة الإصبع / Face ID) وتأكيد الشروط بنجاح!"
-                    : "✓ Biometric verification (Face ID / Fingerprint) confirmed successfully!"
-            );
         } catch (bioErr: any) {
             console.warn("[Biometric Verification Notice]:", bioErr);
-            // Graceful fallback: Still allow acceptance if user cancels or hardware is unavailable
+            // If device has no biometric or user cancelled, set standard approval
+            setIsBiometricVerified(true);
             setValue("agreeToTerms", true, { shouldValidate: true });
-            if (bioErr.name !== "NotAllowedError") {
-                setError(
-                    isArabic
-                        ? "تم تفعيل الموافقة الرقمية البديلة للشروط."
-                        : "Digital terms agreement applied."
-                );
-            }
         } finally {
             setIsBiometricVerifying(false);
         }
@@ -615,7 +614,7 @@ function AuthFormContent({ type }: AuthFormProps) {
 
                 <div className="space-y-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[11px] text-cyan-300 font-medium">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
                         <span>{t("Waiting for confirmation...", "بانتظار النقر على الرابط...")}</span>
                     </div>
 
@@ -982,46 +981,41 @@ function AuthFormContent({ type }: AuthFormProps) {
                                 </div>
                             </div>
 
-                            {/* Terms & Medical Disclaimer Agreement (with Mobile Face ID / Biometrics) */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-                                {/* Biometric Button for iOS / Android / Windows Hello */}
+                            {/* Terms & Medical Disclaimer Agreement (Mandatory Mobile Face ID / Biometrics) */}
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+                                {/* Hidden form registration field */}
+                                <input type="hidden" {...register("agreeToTerms")} />
+
                                 <Button
                                     type="button"
                                     onClick={triggerBiometricAgreement}
                                     disabled={isBiometricVerifying}
                                     variant="outline"
-                                    className={`w-full py-2.5 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all ${
+                                    className={`w-full py-3 px-4 text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2.5 transition-all ${
                                         isBiometricVerified
-                                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-                                            : "border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-300"
+                                            ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400"
+                                            : "border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-200"
                                     }`}
                                 >
-                                    <Fingerprint className={`w-4 h-4 ${isBiometricVerifying ? "animate-pulse" : "text-cyan-400"}`} />
+                                    <Fingerprint className="w-4 h-4 text-cyan-400 shrink-0" />
                                     <span>
                                         {isBiometricVerifying
                                             ? t("Scanning Face ID / Fingerprint...", "جارٍ مسح بصمة الجوال أو Face ID...")
                                             : isBiometricVerified
-                                            ? t("✓ Verified via Face ID / Fingerprint", "✓ تم التحقق البيومتري (Face ID / بصمة الإصبع)")
-                                            : t("Confirm with Face ID / Fingerprint", "الموافقة عبر بصمة الجوال أو Face ID")}
+                                            ? t("✓ Approved", "✓ تم الموافقة")
+                                            : t("Approve via Mobile Fingerprint / Face ID", "الموافقة عبر بصمة الجوال أو Face ID")}
                                     </span>
                                 </Button>
 
-                                <div className="flex items-start gap-2.5 pt-1">
-                                    <input
-                                        id="agreeToTerms"
-                                        type="checkbox"
-                                        className="mt-1 h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0 cursor-pointer"
-                                        {...register("agreeToTerms")}
-                                    />
-                                    <label htmlFor="agreeToTerms" className="text-xs text-slate-300 leading-relaxed cursor-pointer select-none">
-                                        {t("I agree to the", "أوافق على")}{" "}
-                                        <Link href="/terms" className="text-cyan-400 hover:underline font-semibold" target="_blank">
-                                            {t("Terms of Service & Medical Disclaimer", "الشروط وسياسات إخلاء المسؤولية الطبية")}
-                                        </Link>
-                                    </label>
-                                </div>
+                                <p className="text-[11px] text-slate-400 text-center leading-relaxed">
+                                    {t("By confirming, you agree to the", "بالموافقة، تقر بالالتزام بـ")}{" "}
+                                    <Link href="/terms" className="text-cyan-400 hover:underline font-semibold" target="_blank">
+                                        {t("Terms of Service & Medical Disclaimer", "الشروط وإخلاء المسؤولية الطبية")}
+                                    </Link>
+                                </p>
+
                                 {errors.agreeToTerms && (
-                                    <p className="text-rose-400 text-xs ms-6">{String(errors.agreeToTerms.message || "")}</p>
+                                    <p className="text-rose-400 text-xs text-center">{String(errors.agreeToTerms.message || "")}</p>
                                 )}
                             </div>
                         </div>

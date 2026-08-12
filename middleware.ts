@@ -103,6 +103,7 @@ export async function middleware(request: NextRequest) {
     const isAuthFlow = pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup';
 
     const publicApiPrefixes = [
+        '/api/auth',
         '/api/status',
         '/api/tts',
         '/api/credits/status',
@@ -110,7 +111,8 @@ export async function middleware(request: NextRequest) {
         '/api/dev/login',
         '/api/telegram',
         '/api/admin/golden-ceo/activate',
-        '/api/golden-ceo/request'
+        '/api/golden-ceo/request',
+        '/api/changelog',
     ];
     const isPublicApi = isApi && publicApiPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
