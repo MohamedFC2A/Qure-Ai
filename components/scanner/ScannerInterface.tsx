@@ -726,18 +726,30 @@ export const ScannerInterface = () => {
                                     {t("No scans yet. Run your first scan to start your personal database.", "لا توجد فحوصات بعد. أجرِ أول فحص لبدء بناء سجلك الشخصي.")}
                                 </div>
                             ) : (
-                                <div className="space-y-2">
-                                    {recentHistory.map((item) => (
-                                        <Link key={item.id} href="/dashboard/history">
-                                            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.07] hover:bg-white/[0.07] hover:border-cyan-400/30 transition-all">
-                                                <div className="min-w-0">
-                                                    <p className="text-white font-semibold text-xs truncate">{item.drug_name}</p>
-                                                    <p className="text-slate-500 text-[10px] truncate mt-0.5">{item.manufacturer || t("Generic", "عام")} • {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-SA" : "en-US")}</p>
+                                <div className="flex flex-col gap-3">
+                                    {recentHistory.map((item) => {
+                                        const scanCount = item.analysis_json?.meta?.scanCount || item.scan_count || 1;
+                                        return (
+                                            <Link key={item.id} href="/dashboard/history" className="block group">
+                                                <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-cyan-400/40 hover:shadow-lg hover:shadow-cyan-950/20 transition-all duration-200">
+                                                    <div className="min-w-0 flex-1 me-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-white font-bold text-xs sm:text-sm truncate group-hover:text-cyan-300 transition-colors">{item.drug_name}</p>
+                                                            {scanCount > 1 && (
+                                                                <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-bold shrink-0">
+                                                                    ×{scanCount}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-slate-400 text-[11px] truncate mt-1">
+                                                            {item.manufacturer || t("Generic", "عام")} • {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-SA" : "en-US")}
+                                                        </p>
+                                                    </div>
+                                                    <ChevronRight className={cn("w-4 h-4 text-slate-500 group-hover:text-cyan-300 transition-colors shrink-0", isArabic ? "rotate-180" : "")} />
                                                 </div>
-                                                <ChevronRight className={cn("w-4 h-4 text-slate-500 shrink-0", isArabic ? "rotate-180" : "")} />
-                                            </div>
-                                        </Link>
-                                    ))}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
