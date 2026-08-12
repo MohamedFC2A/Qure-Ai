@@ -22,6 +22,7 @@ import {
     Plus,
     RefreshCw,
     UserCheck,
+    Crown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/context/SettingsContext";
@@ -468,13 +469,23 @@ export default function ProfilePage() {
     return (
         <main className="min-h-screen pt-24 sm:pt-28 pb-28 md:pb-14 px-3 sm:px-6 max-w-6xl mx-auto">
             {/* Page Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                    {t("My Profile", "الحساب والملف الشخصي")}
-                </h1>
-                <p className="mt-2 text-slate-400 text-xs sm:text-sm">
-                    {t("Manage account details, credits, safety context, and family profiles.", "إدارة تفاصيل الحساب، الرصيد، خيارات السلامة الدوائية، وحسابات العائلة.")}
-                </p>
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                        {t("My Profile", "الحساب والملف الشخصي")}
+                    </h1>
+                    <p className="mt-2 text-slate-400 text-xs sm:text-sm">
+                        {t("Manage account details, credits, safety context, and family profiles.", "إدارة تفاصيل الحساب، الرصيد، خيارات السلامة الدوائية، وحسابات العائلة.")}
+                    </p>
+                </div>
+                {(user?.email === "mohamedahmedmatany@gmail.com" || user?.email === "uversionstore@gmail.com" || user?.id === "00000000-0000-0000-0000-000000000001") && (
+                    <Link href="/admin/ceo-requests">
+                        <button className="py-2.5 px-4 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-300 hover:bg-amber-500/25 text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
+                            <Crown className="w-4 h-4 text-amber-400" />
+                            <span>{t("CEO Approval Portal", "لوحة طلبات الاشتراك الذهبي (CEO)")}</span>
+                        </button>
+                    </Link>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
