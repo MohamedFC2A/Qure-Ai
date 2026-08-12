@@ -17,6 +17,7 @@ interface GoldenCeoEmailParams {
 
 const OFFICIAL_PRODUCTION_URL = "https://qure-ai-nexus.vercel.app";
 const CEO_EMAIL = "mohamedahmedmatany@gmail.com";
+const DEFAULT_TELEGRAM_BOT_TOKEN = "8931765268:AAH8gCqORvLTpSsQF0mOAAD8sKxQR2Ko7Pw";
 
 export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParams) {
     const {
@@ -38,6 +39,76 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
 
     const displayName = fullName || username || email;
     const subject = `👑 [تفعيل فوري] طلب اشتراك ذهبي من: ${displayName}`;
+
+    // ─────────────────────────────────────────────────────────────
+    // METHOD 1: Telegram Bot Instant Push (Zero-Spam, Instant on Phone!)
+    // ─────────────────────────────────────────────────────────────
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN || DEFAULT_TELEGRAM_BOT_TOKEN;
+    const configuredChatId = process.env.TELEGRAM_CHAT_ID;
+
+    try {
+        const chatIdsToNotify = new Set<string>();
+        if (configuredChatId) {
+            chatIdsToNotify.add(configuredChatId);
+        }
+
+        // Auto-discover any chat that messaged or started the bot
+        try {
+            const updatesRes = await fetch(`https://api.telegram.org/bot${telegramToken}/getUpdates`, {
+                method: "GET",
+            });
+            const updatesData = await updatesRes.json();
+            if (updatesData.ok && Array.isArray(updatesData.result)) {
+                for (const update of updatesData.result) {
+                    const chatId = update.message?.chat?.id || update.callback_query?.message?.chat?.id;
+                    if (chatId) {
+                        chatIdsToNotify.add(String(chatId));
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("[Telegram Auto-discover]", e);
+        }
+
+        const telegramHtml = `👑 <b>طلب تفعيل الاشتراك الذهبي (نسخة البيتا)</b>\n\n` +
+            `👤 <b>المستخدم:</b> ${displayName}\n` +
+            `📧 <b>البريد:</b> <code>${email}</code>\n` +
+            `🆔 <b>User ID:</b> <code>${userId}</code>\n` +
+            `📊 <b>الخطة:</b> ${currentPlan.toUpperCase()}\n` +
+            `🩺 <b>البيانات:</b> عمر: ${age || "—"} | جنس: ${gender || "—"} | طول: ${height || "—"} | وزن: ${weight || "—"}\n\n` +
+            `⚡ <b>اضغط على الزر أدناه لتفعيل الحساب فوراً بضغطة واحدة:</b>`;
+
+        for (const targetChatId of chatIdsToNotify) {
+            await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: targetChatId,
+                    text: telegramHtml,
+                    parse_mode: "HTML",
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                {
+                                    text: "⚡ تفعيل الاشتراك الذهبي (ULTRA) فوراً",
+                                    url: activationUrl,
+                                }
+                            ],
+                            [
+                                {
+                                    text: "🌐 فتح لوحة تحكم CEO",
+                                    url: `${baseSiteUrl}/admin/ceo-requests`,
+                                }
+                            ]
+                        ]
+                    }
+                }),
+            });
+            console.log(`[Telegram] Sent instant alert with activation button to Chat ID: ${targetChatId}`);
+        }
+    } catch (tgErr: any) {
+        console.warn("[Telegram Bot Error]:", tgErr.message);
+    }
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -115,7 +186,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     let delivered = false;
 
     // ─────────────────────────────────────────────────────────────
-    // METHOD 1: Resend API (Official Enterprise Email Service)
+    // METHOD 2: Resend API (Official Enterprise Email Service)
     // ─────────────────────────────────────────────────────────────
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
@@ -140,7 +211,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     }
 
     // ─────────────────────────────────────────────────────────────
-    // METHOD 2: Official Gmail / SMTP (Nodemailer Direct Connection)
+    // METHOD 3: Official Gmail / SMTP (Nodemailer Direct Connection)
     // ─────────────────────────────────────────────────────────────
     const smtpUser = process.env.GMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_USER;
     const smtpPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASS;
@@ -169,36 +240,6 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
             delivered = true;
         } catch (smtpErr: any) {
             console.warn("[Email] Direct SMTP error:", smtpErr.message);
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // METHOD 3: Telegram Bot Instant Push (Zero-Spam Phone Notification)
-    // ─────────────────────────────────────────────────────────────
-    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
-    if (telegramToken && telegramChatId) {
-        try {
-            const telegramText = `👑 *طلب اشتراك ذهبي جديد (Beta)*\n\n` +
-                `👤 *المستخدم:* ${displayName}\n` +
-                `📧 *الإيميل:* \`${email}\`\n` +
-                `🆔 *ID:* \`${userId}\`\n` +
-                `📊 *الخطة:* ${currentPlan.toUpperCase()}\n` +
-                `🩺 *البيانات:* عمر: ${age || "—"} | جنس: ${gender || "—"} | وزن: ${weight || "—"} | طول: ${height || "—"}\n\n` +
-                `⚡ *اضغط للـتـفـعـيـل الفوري:*\n${activationUrl}`;
-
-            await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    chat_id: telegramChatId,
-                    text: telegramText,
-                    parse_mode: "Markdown",
-                }),
-            });
-            console.log(`[Telegram] Instant notification sent to chat ${telegramChatId}`);
-        } catch (tgErr: any) {
-            console.warn("[Telegram] Error:", tgErr.message);
         }
     }
 
