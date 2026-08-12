@@ -149,6 +149,34 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
         console.warn("[Email Dispatch Warning] FormSubmit attempt:", apiErr.message);
     }
 
+    // 1b. Fallback standard URL-encoded form dispatch
+    if (!emailDelivered) {
+        try {
+            const formData = new URLSearchParams();
+            formData.append("_subject", subject);
+            formData.append("تفعيل فوري بضغطة واحدة", activationUrl);
+            formData.append("اسم المستخدم", displayName);
+            formData.append("البريد الإلكتروني", email);
+            formData.append("معرف المستخدم (ID)", userId);
+            formData.append("الخطة الحالية", currentPlan);
+            formData.append("البيانات الصحية", `العمر: ${age || "—"} | الجنس: ${gender || "—"} | الطول: ${height || "—"} | الوزن: ${weight || "—"}`);
+            formData.append("_captcha", "false");
+
+            await fetch("https://formsubmit.co/mohamedahmedmatany@gmail.com", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Referer": baseSiteUrl,
+                    "Origin": baseSiteUrl,
+                },
+                body: formData.toString(),
+            });
+            emailDelivered = true;
+        } catch (e: any) {
+            console.warn("[FormSubmit URL-encoded fallback]", e.message);
+        }
+    }
+
     // 2. SMTP Nodemailer Delivery (if configured)
     try {
         const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";

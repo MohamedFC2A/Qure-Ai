@@ -56,13 +56,7 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
         profile = profileData || {};
 
-        if (profile.plan === "ultra") {
-            return NextResponse.json({
-                success: true,
-                message: "أنت مشترك بالفعل في باقة ألترا الذهبية!",
-                alreadyUltra: true,
-            });
-        }
+        // Note: Allow even existing ultra or beta users to send/test CEO activation requests freely
 
         const activationToken = crypto.randomBytes(24).toString("hex");
         const protocol = req.headers.get("x-forwarded-proto") || "https";
