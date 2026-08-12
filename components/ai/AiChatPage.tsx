@@ -407,49 +407,16 @@ export function AiChatPage() {
             {/* ── Main Chat Area ── */}
             <div className="flex-1 flex flex-col min-w-0 relative z-10">
 
-                {/* ── Top Header ── */}
-                <div
-                    className="flex items-center gap-3 px-4 py-3 border-b border-cyan-500/10 shrink-0"
-                    style={{ background: "rgba(5, 8, 17, 0.95)", backdropFilter: "blur(16px)" }}
-                >
-                    {/* Mobile sidebar toggle */}
-                    {isUltra && (
-                        <button
-                            onClick={() => setSidebarOpen(true)}
-                            className="lg:hidden p-2 rounded-lg hover:bg-white/[0.05] text-slate-400 hover:text-white transition-all"
-                        >
-                            <Menu className="w-5 h-5" />
-                        </button>
-                    )}
-
-                    {/* Mat AI Branding Header */}
-                    <div className="flex-1 flex items-center justify-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
-                            <Sparkles className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="text-sm font-bold text-white tracking-wide">
-                            Mat AI
-                        </span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">
-                            {mode === "health"
-                                ? t("Health", "صحة")
-                                : mode === "medication"
-                                    ? t("Medication", "أدوية")
-                                    : t("Integrated", "شامل")
-                            }
-                        </span>
-                    </div>
-
-                    {isUltra && messages.length > 0 && (
-                        <button
-                            onClick={handleNewChat}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-cyan-500/20 text-slate-300 hover:text-white hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all"
-                        >
-                            <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
-                            <span className="hidden sm:inline">{isArabic ? "محادثة جديدة" : "New Chat"}</span>
-                        </button>
-                    )}
-                </div>
+                {/* Floating mobile sidebar toggle */}
+                {isUltra && (
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="lg:hidden fixed top-20 right-3 z-30 p-2 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 hover:text-white shadow-md"
+                        title="Open Conversations"
+                    >
+                        <Menu className="w-4 h-4" />
+                    </button>
+                )}
 
                 {/* ── ULTRA PAYWALL BLOCK (For Free Tier Users) ── */}
                 {!isUltra ? (
