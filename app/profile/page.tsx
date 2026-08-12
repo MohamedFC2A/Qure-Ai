@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/context/SettingsContext";
+import { useUltraCelebration } from "@/context/UltraCelebrationContext";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,6 +35,7 @@ import { SmartHeightInput, SmartWeightInput } from "@/components/ui/SmartMeasure
 export default function ProfilePage() {
     const { user, profile, plan, credits, loading: userLoading, refreshUser } = useUser();
     const { resultsLanguage, setResultsLanguage, fdaDrugsEnabled, setFdaDrugsEnabled } = useSettings();
+    const { triggerCelebration } = useUltraCelebration();
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
     const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'family' | 'private' | 'memories'>('account');
@@ -165,6 +167,9 @@ export default function ProfilePage() {
                 setRedeemMsg(data.message || t("Voucher redeemed successfully!", "تم شحن القسيمة بنجاح!"));
                 setRedeemCode("");
                 await refreshUser();
+                setTimeout(() => {
+                    triggerCelebration({ force: true });
+                }, 300);
             } else {
                 setRedeemMsg(data.error || t("Failed to redeem code", "فشل استبدال الكود"));
             }
@@ -559,6 +564,32 @@ export default function ProfilePage() {
                                         <p className="text-xs font-mono text-white/60 truncate">{user?.id}</p>
                                     </div>
                                 </div>
+
+                                {plan === 'ultra' && (
+                                    <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-cyan-500/15 to-violet-500/15 border border-amber-400/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3 text-center sm:text-start">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-400 flex items-center justify-center shrink-0">
+                                                <Crown className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-white flex items-center justify-center sm:justify-start gap-1.5">
+                                                    <span>{t("ULTRA VIP Member", "عضوية باقة ULTRA الماسية")}</span>
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                                                </p>
+                                                <p className="text-xs text-slate-300 mt-0.5">
+                                                    {t("All 8 powerhouse features are unlocked and active on your account.", "جميع الـ 8 مميزات الاحترافية مفتوحة ومفعّلة في حسابك.")}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => triggerCelebration({ force: true })}
+                                            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition-colors flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer"
+                                        >
+                                            <Crown className="w-3.5 h-3.5" />
+                                            <span>{t("Explore Features 👑", "استعراض المميزات 👑")}</span>
+                                        </button>
+                                    </div>
+                                )}
                             </GlassCard>
 
                             {/* Basic Profile Form */}
@@ -663,11 +694,22 @@ export default function ProfilePage() {
                                             {credits} <span className="text-lg text-white/50 font-normal">{t("credits", "رصيد")}</span>
                                         </p>
                                     </div>
-                                    <Link href="/pricing">
-                                        <Button className="bg-white text-cyan-950 hover:bg-cyan-50 font-bold border-none shadow-lg">
-                                            {t("Manage Plan", "إدارة الباقة / الترقية")}
-                                        </Button>
-                                    </Link>
+                                    <div className="flex items-center gap-2">
+                                        {plan === 'ultra' && (
+                                            <button
+                                                onClick={() => triggerCelebration({ force: true })}
+                                                className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-cyan-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+                                            >
+                                                <Crown className="w-4 h-4 text-amber-400" />
+                                                <span>{t("Explore Ultra Perks 👑", "استعراض مميزات ألترا 👑")}</span>
+                                            </button>
+                                        )}
+                                        <Link href="/pricing">
+                                            <Button className="bg-white text-cyan-950 hover:bg-cyan-50 font-bold border-none shadow-lg">
+                                                {t("Manage Plan", "إدارة الباقة / الترقية")}
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </div>
 
                                 <div className="max-w-md mx-auto sm:mx-0">

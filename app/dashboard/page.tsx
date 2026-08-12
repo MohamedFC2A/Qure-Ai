@@ -28,12 +28,14 @@ import {
     Fingerprint,
     BarChart3,
     BadgeCheck,
+    Crown,
 } from "lucide-react";
 import { getLocalScans, mergeHistoryItems } from "@/lib/localHistory";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useUltraCelebration } from "@/context/UltraCelebrationContext";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -125,6 +127,7 @@ function StatMetric({ value, label, sub, color }: { value: string | number; labe
 export default function DashboardPage() {
     const { user, profile, plan, credits, loading } = useUser();
     const { resultsLanguage } = useSettings();
+    const { triggerCelebration } = useUltraCelebration();
     const router = useRouter();
     const supabase = useMemo(() => createClient(), []);
     const [recent, setRecent] = useState<HistoryItem[]>([]);
@@ -462,18 +465,27 @@ export default function DashboardPage() {
                             </GlassCard>
                         ) : (
                             <GlassCard accent="amber" hoverEffect={false} className="p-5" style={{ background: "rgba(245,158,11,0.04)" }}>
-                                <div className="flex items-center gap-3">
-                                    <div className="icon-badge icon-badge-amber w-10 h-10 rounded-xl shrink-0">
-                                        <BadgeCheck className="h-5 w-5" />
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="icon-badge icon-badge-amber w-10 h-10 rounded-xl shrink-0">
+                                            <Crown className="h-5 w-5 text-amber-400" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-amber-300 text-sm flex items-center gap-1.5">
+                                                <span>{t("Ultra Active 👑", "باقة ألترا مفعّلة 👑")}</span>
+                                            </p>
+                                            <p className="text-xs text-slate-400">
+                                                {t("All 8 premium features unlocked.", "جميع الـ 8 مميزات الاحترافية متاحة.")}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-bold text-amber-300 text-sm">
-                                            {t("Ultra Active", "Ultra مفعّل")}
-                                        </p>
-                                        <p className="text-xs text-slate-400">
-                                            {t("All premium features unlocked.", "جميع الميزات المميزة مفعّلة.")}
-                                        </p>
-                                    </div>
+                                    <button
+                                        onClick={() => triggerCelebration({ force: true })}
+                                        className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-amber-300 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                                    >
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        <span>{t("Showcase", "المميزات")}</span>
+                                    </button>
                                 </div>
                             </GlassCard>
                         )}

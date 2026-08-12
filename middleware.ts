@@ -104,6 +104,7 @@ export async function middleware(request: NextRequest) {
 
     const publicApiPrefixes = [
         '/api/status',
+        '/api/tts',
         '/api/credits/status',
         '/api/v1/analyze',
         '/api/dev/login',

@@ -7,6 +7,8 @@ import { Navbar } from "@/components/Navbar";
 import { SettingsProvider } from "@/context/SettingsContext";
 import { UserProvider } from "@/context/UserContext";
 import { ScanProvider } from "@/context/ScanContext";
+import { UltraCelebrationProvider } from "@/context/UltraCelebrationContext";
+import { UltraCelebrationModal } from "@/components/ui/UltraCelebrationModal";
 import { GoogleAdsense } from "@/components/GoogleAdsense";
 import { Footer } from "@/components/Footer";
 
@@ -76,6 +78,12 @@ export const metadata: Metadata = {
         description: "Advanced AI-powered medication analysis and clinical safety guard.",
         creator: "@QureScan",
     },
+    icons: {
+        icon: [
+            { url: "/icon.svg", type: "image/svg+xml" },
+        ],
+        apple: "/icon.svg",
+    },
 };
 
 const jsonLdSchema = {
@@ -144,13 +152,16 @@ export default function RootLayout({
                 <LiquidBackground />
                 <SettingsProvider>
                     <UserProvider>
-                        <ScanProvider>
-                            <Navbar />
-                            <div className="flex-1 w-full pb-16 md:pb-0" suppressHydrationWarning>
-                                {children}
-                            </div>
-                            <Footer />
-                        </ScanProvider>
+                        <UltraCelebrationProvider>
+                            <ScanProvider>
+                                <Navbar />
+                                <UltraCelebrationModal />
+                                <div className="flex-1 w-full pb-16 md:pb-0" suppressHydrationWarning>
+                                    {children}
+                                </div>
+                                <Footer />
+                            </ScanProvider>
+                        </UltraCelebrationProvider>
                     </UserProvider>
                 </SettingsProvider>
             </body>

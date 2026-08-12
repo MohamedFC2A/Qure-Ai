@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Atom, Clock, Brain, MoreHorizontal } from "lucide-react";
+import { Home, Clock, Brain, MoreHorizontal } from "lucide-react";
 import { useSettings } from "@/context/SettingsContext";
 import { MobileHubDrawer } from "./MobileHubDrawer";
 
@@ -20,7 +20,7 @@ export const MobileNav = () => {
         {
             name: t("Home", "الرئيسية"),
             href: "/",
-            icon: Atom,
+            icon: Home,
         },
         {
             name: "Qure AI",

@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { useSettings } from "@/context/SettingsContext";
 import { useUser } from "@/context/UserContext";
 import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
+import { getLocalScans } from "@/lib/localHistory";
 
 export type StepStatus = "idle" | "running" | "done" | "error";
 
@@ -84,6 +85,14 @@ interface ScanContextValue {
     finalResult: any | null;
     errorMsg: string | null;
     errorAction: ErrorAction;
+    rotation: number;
+    setRotation: (fn: number | ((prev: number) => number)) => void;
+    brightness: number;
+    setBrightness: (val: number) => void;
+    contrast: number;
+    setContrast: (val: number) => void;
+    highContrastMode: boolean;
+    setHighContrastMode: (val: boolean) => void;
     setFile: (file: File) => void;
     resetScan: () => void;
     startScan: (profileIdOverride?: string) => Promise<void>;
@@ -103,6 +112,19 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const [processedImageDataUrl, setProcessedImageDataUrl] = useState<string | null>(null);
     const [extractedText, setExtractedText] = useState<string | null>(null);
     const [subjectProfileId, setSubjectProfileIdState] = useState<string | null>(null);
+
+    // Image pre-processing controls
+    const [rotation, setRotationState] = useState<number>(0);
+    const [brightness, setBrightness] = useState<number>(0);
+    const [contrast, setContrast] = useState<number>(0);
+    const [highContrastMode, setHighContrastMode] = useState<boolean>(false);
+
+    const setRotation = useCallback((val: number | ((prev: number) => number)) => {
+        setRotationState((prev) => {
+            const next = typeof val === "function" ? val(prev) : val;
+            return (next % 360 + 360) % 360;
+        });
+    }, []);
 
     const [isScanning, setIsScanning] = useState(false);
     const [steps, setSteps] = useState<PipelineStep[]>(INITIAL_STEPS);
@@ -140,20 +162,32 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             img.onload = () => {
                 try {
                     const canvas = document.createElement("canvas");
-                    const MAX_WIDTH = 1000;
+                    const MAX_WIDTH = 1200;
                     const scaleSize = MAX_WIDTH / img.width;
                     const finalWidth = Math.min(img.width, MAX_WIDTH);
                     const finalHeight = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
 
-                    canvas.width = finalWidth;
-                    canvas.height = finalHeight;
+                    const isSwapped = rotation === 90 || rotation === 270;
+                    canvas.width = isSwapped ? finalHeight : finalWidth;
+                    canvas.height = isSwapped ? finalWidth : finalHeight;
 
                     const ctx = canvas.getContext("2d");
                     if (ctx) {
-                        ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
+                        ctx.save();
+                        ctx.translate(canvas.width / 2, canvas.height / 2);
+                        ctx.rotate((rotation * Math.PI) / 180);
+
+                        let filterStr = `brightness(${100 + brightness}%) contrast(${100 + contrast}%)`;
+                        if (highContrastMode) {
+                            filterStr += " grayscale(100%) contrast(220%)";
+                        }
+                        ctx.filter = filterStr;
+
+                        ctx.drawImage(img, -finalWidth / 2, -finalHeight / 2, finalWidth, finalHeight);
+                        ctx.restore();
                     }
 
-                    resolve(canvas.toDataURL("image/jpeg", 0.8));
+                    resolve(canvas.toDataURL("image/jpeg", 0.85));
                 } catch (e) {
                     reject(e);
                 } finally {
@@ -165,7 +199,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                 reject(new Error("Failed to load image."));
             };
         });
-    }, []);
+    }, [rotation, brightness, contrast, highContrastMode]);
 
     const runLocalOcr = useCallback(async (imageDataUrl: string): Promise<string> => {
         try {
@@ -370,6 +404,8 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             updateStep("analyze", { status: "running", startTime: analyzeStart });
 
             const effectiveProfileId = profileIdOverride || subjectProfileId || user.id;
+            const localScans = getLocalScans();
+            const localHistoryMedications = localScans.map((s) => s.drug_name).filter(Boolean);
 
             const analyzeResponse = await fetch("/api/analyze", {
                 method: "POST",
@@ -380,6 +416,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                     fdaEnabled: fdaDrugsEnabled,
                     profileId: effectiveProfileId,
                     scannedImage: imageDataUrl,
+                    localHistoryMedications,
                 }),
                 signal: controller.signal,
             });
@@ -628,11 +665,40 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             finalResult,
             errorMsg,
             errorAction,
+            rotation,
+            setRotation,
+            brightness,
+            setBrightness,
+            contrast,
+            setContrast,
+            highContrastMode,
+            setHighContrastMode,
             setFile,
             resetScan,
             startScan,
         }),
-        [errorAction, errorMsg, extractedText, file, finalResult, isScanning, previewSrc, processedImageDataUrl, resetScan, setFile, setSubjectProfileId, startScan, steps, subjectProfileId, totalDuration]
+        [
+            errorAction,
+            errorMsg,
+            extractedText,
+            file,
+            finalResult,
+            isScanning,
+            previewSrc,
+            processedImageDataUrl,
+            resetScan,
+            setFile,
+            setSubjectProfileId,
+            startScan,
+            steps,
+            subjectProfileId,
+            totalDuration,
+            rotation,
+            setRotation,
+            brightness,
+            contrast,
+            highContrastMode,
+        ]
     );
 
     return <ScanContext.Provider value={value}>{children}</ScanContext.Provider>;

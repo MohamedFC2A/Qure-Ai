@@ -273,8 +273,7 @@ export default function TermsPage() {
                             <Button
                                 onClick={accept}
                                 disabled={!agree || saving || !user}
-                                className="w-full sm:w-auto font-bold text-xs sm:text-sm px-6 py-2.5"
-                                glow
+                                className="w-full sm:w-auto font-bold text-xs sm:text-sm px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl"
                             >
                                 <CheckCircle2 className="w-4 h-4 me-2" />
                                 <span>{saving ? t("Saving...", "جارٍ الحفظ...") : t("Accept & Continue", "إقرار وافقت والمتابعة")}</span>

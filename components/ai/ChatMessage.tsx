@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Copy, Check, User, CheckCircle2, AlertTriangle, Zap, Info, HelpCircle, ArrowRight, XCircle, Brain } from "lucide-react";
 import { useState } from "react";
 import { parseAiResponse } from "@/lib/ai/chat";
+import { VoiceReaderButton } from "@/components/ui/VoiceReaderButton";
 
 export interface ChatMessageData {
     id?: string;
@@ -69,19 +70,19 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             // 1. Red Critical Threat Warning Badge: ⚠️ [...] or [⚠️ ...]
             formatted = formatted.replace(
                 /(?:⚠️\s*\[|\[⚠️\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/80 border border-red-500/60 text-red-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 font-bold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
             );
 
             // 2. Amber Caution Badge: ⚡ [...] or [⚡ ...]
             formatted = formatted.replace(
                 /(?:⚡\s*\[|\[⚡\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/80 border border-amber-500/60 text-amber-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-bold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
             );
 
             // 3. Green Verified Document Badge: ✓ [...] or [✓ ...]
             formatted = formatted.replace(
                 /(?:✓\s*\[|\[✓\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-semibold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 font-semibold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
             );
 
             // Replace raw emojis with clean SVG representations
@@ -105,25 +106,32 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 continue;
             }
 
-            // High-impact Verdict Banner (First non-empty line with bold decision)
-            if (elements.length === 0 && line.startsWith("**")) {
+            // High-impact Verdict Banner (First non-empty line decision)
+            if (elements.length === 0) {
                 const lower = line.toLowerCase();
-                const isYes = lower.includes("نعم") || lower.includes("مناسب") || lower.includes("آمن") || lower.includes("yes") || lower.includes("suitable") || lower.includes("safe");
-                const isNo = lower.includes("لا") || lower.includes("غير مناسب") || lower.includes("غير آمن") || lower.includes("ممنوع") || lower.includes("خطير") || lower.includes("no") || lower.includes("unsuitable") || lower.includes("unsafe");
 
-                if (isNo) {
+                // Explicit positive indicators
+                const startsWithYes = /^(?:\*\*|\#\#|\*)*\s*(?:نعم|آمن|مناسب|مسموح|يمكن|عادي|صحيح|ممتاز|جيد|yes|suitable|safe|allowed|correct|good)/i.test(line);
+                const hasPositiveWords = lower.includes("نعم") || lower.includes("مناسب") || lower.includes("آمن") || lower.includes("yes") || lower.includes("suitable") || lower.includes("safe");
+                
+                // Explicit negative indicators (standalone "لا" or phrases like "غير مناسب", "غير آمن", "ممنوع", "خطير")
+                const startsWithNo = /^(?:\*\*|\#\#|\*)*\s*(?:لا|غير\s*مناسب|غير\s*آمن|ممنوع|خطير|تجنب|تحذير|no|unsuitable|unsafe|forbidden)/i.test(line);
+                const hasNegativePhrase = lower.includes("غير مناسب") || lower.includes("غير آمن") || lower.includes("ممنوع") || lower.includes("خطير") || lower.includes("تجنب") || lower.includes("تحذير") || lower.includes("unsuitable") || lower.includes("unsafe") || lower.includes("forbidden") || /(?:^|[\s،.!:;?])لا(?:[\s،.!:;?]|$)/.test(lower);
+
+                // Priority to negative if starts with "لا" / "غير مناسب"
+                if (startsWithNo || (hasNegativePhrase && !startsWithYes && !lower.includes("نعم"))) {
                     elements.push(
-                        <div key={`verdict-${i}`} className="my-2 p-3.5 rounded-xl border border-red-500/40 bg-red-950/40 text-red-200 text-sm font-semibold flex items-center gap-3 shadow-md">
-                            <XCircle className="w-5 h-5 text-red-400 shrink-0" />
-                            <div className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                        <div key={`verdict-${i}`} className="my-2.5 p-4 rounded-xl border border-red-500/30 bg-red-950/30 text-red-100 text-sm font-bold flex items-start sm:items-center gap-3">
+                            <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5 sm:mt-0" />
+                            <div className="flex-1 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
                         </div>
                     );
                     continue;
-                } else if (isYes) {
+                } else if (startsWithYes || (hasPositiveWords && !lower.includes("غير مناسب") && !lower.includes("غير آمن") && !lower.includes("غير مفضل"))) {
                     elements.push(
-                        <div key={`verdict-${i}`} className="my-2 p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-emerald-100 text-sm font-semibold flex items-center gap-3 shadow-md">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                            <div className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                        <div key={`verdict-${i}`} className="my-2.5 p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/30 text-emerald-100 text-sm font-bold flex items-start sm:items-center gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
+                            <div className="flex-1 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
                         </div>
                     );
                     continue;
@@ -294,23 +302,27 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                     </div>
                 )}
 
-                {/* Copy button for AI messages */}
+                {/* Copy & TTS buttons for AI messages */}
                 {!isUser && displayContent && (
-                    <button
-                        onClick={handleCopy}
-                        className={cn(
-                            "absolute -bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-200",
-                            isArabic ? "left-2" : "right-2",
-                            "p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700",
-                            "text-slate-400 hover:text-white shadow-md"
-                        )}
-                        title="Copy"
-                    >
-                        {copied
-                            ? <Check className="w-3.5 h-3.5 text-emerald-400" />
-                            : <Copy className="w-3.5 h-3.5 text-slate-400" />
-                        }
-                    </button>
+                    <div className={cn(
+                        "absolute -bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center gap-1.5 z-10",
+                        isArabic ? "left-2" : "right-2"
+                    )}>
+                        <VoiceReaderButton text={displayContent} lang={isArabic ? "ar" : "en"} size="xs" />
+                        <button
+                            onClick={handleCopy}
+                            className={cn(
+                                "p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700",
+                                "text-slate-400 hover:text-white shadow-md"
+                            )}
+                            title="Copy"
+                        >
+                            {copied
+                                ? <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                : <Copy className="w-3.5 h-3.5 text-slate-400" />
+                            }
+                        </button>
+                    </div>
                 )}
 
                 {/* Key Points */}

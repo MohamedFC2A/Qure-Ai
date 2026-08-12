@@ -323,54 +323,82 @@ export async function POST(req: NextRequest) {
             scannedImage,
         };
 
-        // Ultra-only: Cross-Interaction Guard (target drug vs current meds + memories)
+        // Cross-Interaction Guard (target drug vs current meds + memories + history + localHistoryMedications)
         let interactionGuard: any = null;
         let interactionGuardUsed = false;
-        if (isUltra) {
-            const privateProfile = analysisContext?.privateProfile as any;
-            const currentMeds = parseMedicationList(privateProfile?.current_medications);
-            const memoryMeds = Array.isArray(analysisContext?.medicationMemories) ? analysisContext.medicationMemories : [];
-            const candidates = [...currentMeds, ...memoryMeds].map((s) => String(s || "").trim()).filter(Boolean);
 
-            const centralNorm = normalizeMedicationName((analysisWithEnrichment as any)?.drugName || "");
-            const seen = new Set<string>();
-            const otherMeds: string[] = [];
-            for (const med of candidates) {
-                const norm = normalizeMedicationName(med);
-                if (!norm) continue;
-                if (centralNorm && norm === centralNorm) continue;
-                if (seen.has(norm)) continue;
-                seen.add(norm);
-                otherMeds.push(med);
-                if (otherMeds.length >= 12) break;
-            }
+        const privateProfile = analysisContext?.privateProfile as any;
+        const currentMeds = parseMedicationList(privateProfile?.current_medications);
+        const memoryMeds = Array.isArray(analysisContext?.medicationMemories) ? analysisContext.medicationMemories : [];
+        const requestLocalMeds = Array.isArray((body as any)?.localHistoryMedications)
+            ? (body as any).localHistoryMedications.map((s: any) => String(s || "").trim()).filter(Boolean)
+            : [];
 
-            if (otherMeds.length > 0) {
-                try {
-                    const result = await generateInteractionGuard({
-                        language: lang,
-                        targetMedication: analysisWithEnrichment as any,
-                        subjectProfile: privateProfile || null,
-                        otherMedications: otherMeds,
-                    });
-
-                    interactionGuard = {
-                        subject: {
-                            profileId: subjectProfileId,
-                            displayName: subjectProfile?.display_name ?? null,
-                            relationship: subjectProfile?.relationship ?? null,
-                        },
-                        target: {
-                            name: (analysisWithEnrichment as any)?.drugName ?? null,
-                            genericName: (analysisWithEnrichment as any)?.genericName ?? null,
-                        },
-                        ...result,
-                    };
-                    interactionGuardUsed = true;
-                } catch (e) {
-                    console.warn("Interaction guard generation failed:", e);
-                    interactionGuard = null;
+        // Query medication_history table in Supabase for user's past scans
+        let dbHistoryMeds: string[] = [];
+        try {
+            if (user && supabase) {
+                const { data: dbScans } = await supabase
+                    .from("medication_history")
+                    .select("drug_name")
+                    .eq("user_id", user.id)
+                    .order("created_at", { ascending: false })
+                    .limit(25);
+                if (dbScans && dbScans.length > 0) {
+                    dbHistoryMeds = dbScans.map((s: any) => String(s.drug_name || "").trim()).filter(Boolean);
                 }
+            }
+        } catch (e) {
+            console.warn("Failed to fetch medication_history for interaction guard:", e);
+        }
+
+        const candidates = [...currentMeds, ...memoryMeds, ...dbHistoryMeds, ...requestLocalMeds]
+            .map((s) => String(s || "").trim())
+            .filter(Boolean);
+
+        const centralNorm = normalizeMedicationName((analysisWithEnrichment as any)?.drugName || "");
+        const seen = new Set<string>();
+        const otherMeds: string[] = [];
+        for (const med of candidates) {
+            const norm = normalizeMedicationName(med);
+            if (!norm) continue;
+            if (centralNorm && (norm === centralNorm || (centralNorm.length >= 4 && norm.length >= 4 && (norm.includes(centralNorm) || centralNorm.includes(norm))))) continue;
+            if (seen.has(norm)) continue;
+            seen.add(norm);
+            otherMeds.push(med);
+            if (otherMeds.length >= 15) break;
+        }
+
+        // Fallback: If otherMeds is empty (e.g. first scan ever), use multi-ingredients of the target drug itself!
+        if (otherMeds.length === 0 && Array.isArray((analysisWithEnrichment as any)?.activeIngredients) && (analysisWithEnrichment as any).activeIngredients.length > 1) {
+            otherMeds.push(...(analysisWithEnrichment as any).activeIngredients.slice(0, 5));
+        }
+
+        if (otherMeds.length > 0) {
+            try {
+                const result = await generateInteractionGuard({
+                    language: lang,
+                    targetMedication: analysisWithEnrichment as any,
+                    subjectProfile: privateProfile || null,
+                    otherMedications: otherMeds,
+                });
+
+                interactionGuard = {
+                    subject: {
+                        profileId: subjectProfileId,
+                        displayName: subjectProfile?.display_name ?? null,
+                        relationship: subjectProfile?.relationship ?? null,
+                    },
+                    target: {
+                        name: (analysisWithEnrichment as any)?.drugName ?? null,
+                        genericName: (analysisWithEnrichment as any)?.genericName ?? null,
+                    },
+                    ...result,
+                };
+                interactionGuardUsed = true;
+            } catch (e) {
+                console.warn("Interaction guard generation failed:", e);
+                interactionGuard = null;
             }
         }
 

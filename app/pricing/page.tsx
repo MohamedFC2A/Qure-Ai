@@ -21,10 +21,12 @@ import {
     CheckCircle2,
     Crown,
     Loader2,
+    Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useUltraCelebration } from "@/context/UltraCelebrationContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -193,6 +195,7 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
 export default function PricingPage() {
     const { user, plan, loading } = useUser();
     const { resultsLanguage } = useSettings();
+    const { triggerCelebration } = useUltraCelebration();
     const router = useRouter();
 
     const isArabic = resultsLanguage === "ar";
@@ -410,14 +413,23 @@ export default function PricingPage() {
                             <FeatureList items={ultraFeatures} isUltra isArabic={isArabic} />
                         </div>
 
-                        <div className="pt-8 mt-auto">
+                        <div className="pt-8 mt-auto space-y-2.5">
                             {loading ? (
                                 <div className="h-12 w-full skeleton rounded-2xl" />
                             ) : plan === "ultra" ? (
-                                <div className="w-full py-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-cyan-300 font-bold text-center flex items-center justify-center gap-2">
-                                    <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                                    <span>{t("Ultra is Active", "ألترا مفعّل بحسابك")}</span>
-                                </div>
+                                <>
+                                    <div className="w-full py-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-cyan-300 font-bold text-center flex items-center justify-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                                        <span>{t("Ultra is Active", "ألترا مفعّل بحسابك")}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => triggerCelebration({ force: true })}
+                                        className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-cyan-500/20 to-violet-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-400/40 text-amber-300 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                                    >
+                                        <Crown className="w-4 h-4 text-amber-400" />
+                                        <span>{t("Explore All ULTRA Perks 👑", "استعراض كافة مميزات ألترا المفتوحة 👑")}</span>
+                                    </button>
+                                </>
                             ) : (
                                 <button
                                     onClick={handlePurchase}

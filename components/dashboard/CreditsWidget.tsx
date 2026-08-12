@@ -2,10 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Zap, Clock, TrendingUp, Gift } from 'lucide-react';
+import { Zap, Clock, TrendingUp, Gift, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useUltraCelebration } from '@/context/UltraCelebrationContext';
+import { useUser } from '@/context/UserContext';
 
 interface CreditStatus {
     plan: 'free' | 'ultra';
@@ -16,6 +18,8 @@ interface CreditStatus {
 }
 
 export const CreditsWidget = () => {
+    const { triggerCelebration } = useUltraCelebration();
+    const { refreshUser } = useUser();
     const [status, setStatus] = useState<CreditStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [showRedeem, setShowRedeem] = useState(false);
@@ -44,6 +48,7 @@ export const CreditsWidget = () => {
         try {
             const res = await fetch('/api/credits/redeem', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: promoCode })
             });
             const data = await res.json();
@@ -51,6 +56,10 @@ export const CreditsWidget = () => {
                 setRedeemMsg("Success! Credits added.");
                 setPromoCode("");
                 await fetchCredits();
+                await refreshUser();
+                setTimeout(() => {
+                    triggerCelebration({ force: true });
+                }, 300);
                 setTimeout(() => {
                     setShowRedeem(false);
                     setRedeemMsg("");
@@ -127,7 +136,17 @@ export const CreditsWidget = () => {
                 </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
+                {isUltra && (
+                    <button
+                        onClick={() => triggerCelebration({ force: true })}
+                        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-cyan-500/20 to-violet-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                    >
+                        <Crown className="w-4 h-4 text-amber-400" />
+                        <span>Explore Ultra VIP Perks 👑</span>
+                    </button>
+                )}
+
                 <Link href={isUltra ? "/billing" : "/pricing"}>
                     <Button
                         className={cn("w-full transition-all",

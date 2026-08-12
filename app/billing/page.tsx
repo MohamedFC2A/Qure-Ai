@@ -4,17 +4,22 @@ import React, { useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { AlertTriangle, CreditCard, Banknote, ShieldCheck, Zap } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSettings } from "@/context/SettingsContext";
+import { useUser } from "@/context/UserContext";
+import { useUltraCelebration } from "@/context/UltraCelebrationContext";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 function BillingContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const plan = searchParams.get("plan") || "ultra";
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const { resultsLanguage } = useSettings();
+    const { refreshUser } = useUser();
+    const { triggerCelebration } = useUltraCelebration();
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
@@ -51,13 +56,17 @@ function BillingContent() {
         try {
             const res = await fetch('/api/credits/redeem', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: voucherCode })
             });
             const data = await res.json();
             if (res.ok) {
                 setRedeemMsg(data.message || t("Success! Credits added.", "تم بنجاح! أضيف الرصيد."));
                 setVoucherCode("");
-                setTimeout(() => window.location.href = "/dashboard", 1500);
+                await refreshUser();
+                setTimeout(() => {
+                    triggerCelebration({ force: true });
+                }, 300);
             } else {
                 setRedeemMsg(data.error || t("Failed", "فشل الاستبدال"));
             }

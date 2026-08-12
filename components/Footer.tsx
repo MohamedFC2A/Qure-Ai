@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSettings } from "@/context/SettingsContext";
-import { Atom, Github, Shield } from "lucide-react";
+import { Github, Shield } from "lucide-react";
 import { AiPartnersBadge } from "@/components/ui/AiPartnersBadge";
 
 export const Footer = () => {
@@ -39,13 +39,8 @@ export const Footer = () => {
                 <div className="grid gap-8 py-10 sm:py-12 grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr]">
                     {/* Brand Column */}
                     <div>
-                        <Link href="/" className="inline-flex items-center gap-2.5 font-bold text-base">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-950/40">
-                                <Atom className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-white font-display">
-                                Qure<span className="text-cyan-400">Scan</span>
-                            </span>
+                        <Link href="/" dir="ltr" className="inline-flex items-center text-xl font-bold font-display select-none transition-opacity hover:opacity-90">
+                            <span className="font-extrabold text-white">Qure</span><span className="text-cyan-400 font-bold">Scan</span>
                         </Link>
 
                         <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-400 max-w-xs">

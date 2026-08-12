@@ -23,12 +23,17 @@ import {
     Image as ImageIcon,
     ShieldAlert,
     RefreshCw,
+    RotateCw,
+    Sun,
+    SlidersHorizontal,
+    Layers,
 } from 'lucide-react';
 import { getLocalScans, saveLocalScan, mergeHistoryItems } from "@/lib/localHistory";
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
 import { MedicalResultCard } from './MedicalResultCard';
+import { InteractionMatrixModal } from './InteractionMatrixModal';
 import { useSettings } from '@/context/SettingsContext';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
@@ -58,6 +63,14 @@ export const ScannerInterface = () => {
         errorAction,
         subjectProfileId,
         setSubjectProfileId,
+        rotation,
+        setRotation,
+        brightness,
+        setBrightness,
+        contrast,
+        setContrast,
+        highContrastMode,
+        setHighContrastMode,
         setFile,
         resetScan,
         startScan,
@@ -66,6 +79,7 @@ export const ScannerInterface = () => {
 
     const isArabic = resultsLanguage === 'ar';
     const t = (en: string, ar: string) => (isArabic ? ar : en);
+    const [isMatrixOpen, setIsMatrixOpen] = useState(false);
 
     const supabaseRef = useRef<any>(null);
     if (!supabaseRef.current) supabaseRef.current = createClient();
@@ -785,12 +799,16 @@ export const ScannerInterface = () => {
                             )}
 
                             {/* Image Container */}
-                            <div className="relative w-full h-[400px] flex items-center justify-center p-4 bg-black/40">
+                            <div className="relative w-full h-[380px] flex items-center justify-center p-4 bg-black/40">
                                 <img
                                     src={previewSrc!}
                                     alt="Medication Preview"
+                                    style={{
+                                        transform: `rotate(${rotation}deg)`,
+                                        filter: `brightness(${100 + brightness}%) contrast(${100 + contrast}%) ${highContrastMode ? "grayscale(100%) contrast(220%)" : ""}`,
+                                    }}
                                     className={cn(
-                                        "max-w-full max-h-full object-contain rounded-2xl transition-all duration-500",
+                                        "max-w-full max-h-full object-contain rounded-2xl transition-all duration-300",
                                         isScanning && "opacity-50 scale-95 blur-sm"
                                     )}
                                 />
@@ -839,6 +857,47 @@ export const ScannerInterface = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Image Pre-Processing Control Toolbar */}
+                            {!isScanning && (
+                                <div className="p-3 border-t border-white/10 bg-slate-950/90 backdrop-blur-md flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRotation((r) => r + 90)}
+                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all"
+                                            title={t("Rotate 90°", "تدوير 90 درجة")}
+                                        >
+                                            <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
+                                            <span>{t("Rotate", "تدوير")}</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setHighContrastMode(!highContrastMode)}
+                                            className={cn(
+                                                "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-medium transition-all",
+                                                highContrastMode
+                                                    ? "bg-cyan-500/20 text-cyan-200 border-cyan-500/40"
+                                                    : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                                            )}
+                                            title={t("High Contrast OCR Filter", "فلتر تباين عالي لقراءة النصوص")}
+                                        >
+                                            <SlidersHorizontal className="w-3.5 h-3.5" />
+                                            <span>{t("B&W OCR Filter", "تباين عالي")}</span>
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMatrixOpen(true)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all font-semibold"
+                                    >
+                                        <ShieldAlert className="w-3.5 h-3.5" />
+                                        <span>{t("Interaction Matrix", "مصفوفة التداخلات")}</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Right: Timeline & Analysis Progress */}
@@ -848,6 +907,8 @@ export const ScannerInterface = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <InteractionMatrixModal isOpen={isMatrixOpen} onClose={() => setIsMatrixOpen(false)} />
         </div>
     );
 };

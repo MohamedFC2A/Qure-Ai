@@ -6,7 +6,7 @@ import { clearAllAuthCookies } from "@/lib/authCookies";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
 import {
-    Atom,
+    Home,
     ScanLine,
     User,
     Clock,
@@ -15,19 +15,24 @@ import {
     LogOut,
     Brain,
     Zap,
+    Crown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
 import { useScan } from "@/context/ScanContext";
 import { useSettings } from "@/context/SettingsContext";
+import { useUltraCelebration } from "@/context/UltraCelebrationContext";
 import { MobileNav } from "./layout/MobileNav";
 import { OnboardingModal } from "@/components/auth/OnboardingModal";
+import { CommandPalette } from "./ui/CommandPalette";
+import { Search } from "lucide-react";
 
 export const Navbar = () => {
     const pathname = usePathname();
     const { user, credits, plan, loading } = useUser();
     const { isScanning, totalDuration } = useScan();
     const { resultsLanguage } = useSettings();
+    const { triggerCelebration } = useUltraCelebration();
     const supabase = createClient();
 
     const isArabic = resultsLanguage === "ar";
@@ -45,7 +50,7 @@ export const Navbar = () => {
 
     const navItems = user
         ? [
-              { name: t("Home", "الرئيسية"),   href: "/",                  icon: Atom },
+              { name: t("Home", "الرئيسية"),   href: "/",                  icon: Home },
               { name: t("Scan", "فحص الدواء"), href: "/scan",              icon: ScanLine },
               { name: "Qure AI",              href: "/ai",                icon: Brain },
               { name: t("Pricing", "الأسعار"), href: "/pricing",           icon: Gem },
@@ -53,7 +58,7 @@ export const Navbar = () => {
               { name: t("History", "السجل"),    href: "/dashboard/history", icon: Clock },
           ]
         : [
-              { name: t("Home", "الرئيسية"),   href: "/",        icon: Atom },
+              { name: t("Home", "الرئيسية"),   href: "/",        icon: Home },
               { name: t("Pricing", "الأسعار"), href: "/pricing", icon: Gem },
               { name: t("Updates", "التحديثات"), href: "/changelog", icon: Zap },
           ];
@@ -76,21 +81,17 @@ export const Navbar = () => {
                 >
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
 
-                    {/* Logo */}
+                    {/* Brand Typography */}
                     <Link
                         href="/"
                         aria-label="QureScan Home"
-                        className="flex items-center gap-2 sm:gap-2.5 font-bold text-sm sm:text-base tracking-tight shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded-xl"
+                        dir="ltr"
+                        className="flex items-center gap-1 font-display tracking-tight text-lg sm:text-xl font-bold shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded-lg group select-none transition-opacity hover:opacity-90"
                     >
-                        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center bg-white/[0.08] border border-white/[0.10] transition-transform active:scale-95">
-                            <Atom className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/80" />
-                        </div>
-                        <span className="text-white font-display tracking-tight flex items-center gap-1.5">
-                            <span>Qure</span>
-                            <span className="text-slate-400">Scan</span>
-                            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-gradient-to-b from-white via-slate-200 to-slate-400 bg-clip-text text-transparent select-none ms-0.5">
-                                Beta
-                            </span>
+                        <span className="text-white font-extrabold">Qure</span>
+                        <span className="text-cyan-400 font-bold">Scan</span>
+                        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-gradient-to-b from-white via-slate-200 to-slate-400 bg-clip-text text-transparent select-none ms-1">
+                            Beta
                         </span>
                     </Link>
 
@@ -138,20 +139,32 @@ export const Navbar = () => {
                                     </Link>
                                 )}
 
-                                <Link href="/profile" aria-label={t("Account Credits", "رصيد الحساب")} className="shrink-0">
-                                    <div className="flex h-8 items-center gap-2 rounded-xl border border-white/10 bg-slate-900/90 hover:border-white/20 hover:bg-slate-800/90 px-3 transition-all whitespace-nowrap backdrop-blur-md shadow-sm">
-                                        <Brain className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
+                                {isUltra ? (
+                                    <button
+                                        onClick={() => triggerCelebration({ force: true })}
+                                        title={t("Explore ULTRA features", "استعراض مميزات ألترا")}
+                                        className="flex h-8 items-center gap-2 rounded-xl border border-white/10 bg-slate-900/90 hover:border-white/20 hover:bg-slate-800/90 px-3 transition-all whitespace-nowrap backdrop-blur-md cursor-pointer select-none"
+                                    >
                                         <span className="font-mono tabular-nums font-bold text-xs sm:text-sm text-white leading-none">
                                             {creditsDisplay}
                                         </span>
-                                        <span className={cn(
-                                            "text-[10px] font-black tracking-widest leading-none border-l rtl:border-r rtl:border-l-0 pl-2 rtl:pr-2 rtl:pl-0 uppercase",
-                                            isUltra ? "border-slate-700 text-cyan-300" : "border-white/10 text-slate-400 font-medium"
-                                        )}>
-                                            {isUltra ? "ULTRA" : t("credits", "رصيد")}
+                                        <span className="text-[10px] font-bold tracking-wider leading-none border-l rtl:border-r rtl:border-l-0 pl-2 rtl:pr-2 rtl:pl-0 uppercase text-amber-400">
+                                            ULTRA
                                         </span>
-                                    </div>
-                                </Link>
+                                    </button>
+                                ) : (
+                                    <Link href="/pricing" aria-label={t("Upgrade to Ultra", "الترقية إلى ألترا")} className="shrink-0">
+                                        <div className="flex h-8 items-center gap-2 rounded-xl border border-white/10 bg-slate-900/90 hover:border-cyan-500/40 hover:bg-slate-800/90 px-3 transition-all whitespace-nowrap backdrop-blur-md shadow-sm">
+                                            <Brain className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
+                                            <span className="font-mono tabular-nums font-bold text-xs sm:text-sm text-white leading-none">
+                                                {creditsDisplay}
+                                            </span>
+                                            <span className="text-[10px] font-medium tracking-widest leading-none border-l rtl:border-r rtl:border-l-0 pl-2 rtl:pr-2 rtl:pl-0 uppercase text-slate-400">
+                                                {t("credits", "رصيد")}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                )}
 
                                 <Link href="/profile" aria-label={t("User Profile", "الملف الشخصي")} className="shrink-0">
                                     <div className="flex h-8 w-8 rounded-xl items-center justify-center border border-white/[0.10] bg-white/[0.05] overflow-hidden transition-all hover:border-white/[0.20] hover:bg-white/[0.10]">
@@ -185,7 +198,7 @@ export const Navbar = () => {
                                     </Button>
                                 </Link>
                                 <Link href="/signup" className="shrink-0">
-                                    <Button variant="primary" size="xs" className="px-4 text-xs font-bold whitespace-nowrap" glow>
+                                    <Button variant="primary" size="xs" className="px-4 text-xs font-bold whitespace-nowrap">
                                         {t("Get Started", "ابدأ الآن")}
                                     </Button>
                                 </Link>
