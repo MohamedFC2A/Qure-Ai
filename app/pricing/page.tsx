@@ -21,6 +21,7 @@ import {
     HelpCircle,
     CheckCircle2,
     Sparkles,
+    Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -465,17 +466,38 @@ export default function PricingPage() {
                                 )}
                             </p>
 
-                            <div className="mt-6 p-4 rounded-2xl bg-black/40 border border-white/10 flex items-center gap-3">
-                                <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0" />
-                                <p className="text-xs text-slate-300">
-                                    {t("Voucher credits never expire and add to your active balance.", "الرصيد المشحون عبر القسائم دائم ولا تنتهي صلاحيته.")}
+                            {/* Golden CEO Subscription - Beta Exclusive */}
+                            <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-yellow-500/10 to-amber-600/20 border border-amber-400/30 backdrop-blur-md shadow-lg">
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Crown className="w-5 h-5 text-amber-400 fill-amber-400/20" />
+                                        <h3 className="text-sm font-black text-amber-300">
+                                            {t("Golden CEO Subscription", "الاشتراك الذهبي من قبل CEO")}
+                                        </h3>
+                                    </div>
+                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400/20 border border-amber-400/40 text-amber-300">
+                                        {t("Beta Only", "متوفر الآن فقط في نسخة البيتا")}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-amber-100/80 leading-relaxed mb-3">
+                                    {t(
+                                        "Exclusive VIP access granted directly by the CEO for early adopters during the beta testing phase.",
+                                        "ترقية VIP حصرية واستثنائية مقدمة مباشرة من الـ CEO لمستخدمي النسخة التجريبية (Beta)."
+                                    )}
                                 </p>
+                                <Link href="/billing?plan=golden_ceo" className="block w-full">
+                                    <button className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
+                                        <Crown className="w-4 h-4 fill-current" />
+                                        <span>{t("Claim Golden CEO Subscription", "طلب الاشتراك الذهبي من قبل CEO")}</span>
+                                        <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+                                    </button>
+                                </Link>
                             </div>
                         </div>
 
-                        <div className="pt-6 mt-auto">
+                        <div className="pt-5 mt-auto">
                             <Link href="/profile" className="block w-full">
-                                <button className="w-full py-3.5 px-4 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2">
+                                <button className="w-full py-3 px-4 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2">
                                     <span>{t("Go to Profile & Redeem Code", "انتقل للملف الشخصي واستبدل الكود")}</span>
                                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                                 </button>
