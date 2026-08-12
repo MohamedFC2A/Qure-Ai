@@ -169,7 +169,7 @@ function AuthFormContent({ type }: AuthFormProps) {
         let isMounted = true;
 
         // 1. Listen for auth state changes from Supabase
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
             if (session && isMounted) {
                 setSuccessMessage(
                     isArabic
