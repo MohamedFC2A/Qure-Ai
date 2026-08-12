@@ -28,6 +28,9 @@ const ARAB_TIMEZONES = [
     "casablanca", "tunis", "algiers", "tripoli", "khartoum"
 ];
 
+// Global in-memory phrase audio cache (0ms latency, zero token burn)
+const VOICE_OS_AUDIO_CACHE = new Map<string, string>();
+
 function detectDeviceAndLocationLanguage(): ResultsLanguage {
     if (typeof window === "undefined") return "ar";
 
@@ -180,6 +183,19 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
 
         if (!cleaned) return;
 
+        // Fast path 0: In-Memory Static Audio Cache (0ms latency, 0 AI tokens burned)
+        const cacheKey = `${options?.lang || resultsLanguage}:${cleaned}`;
+        const cachedUrl = VOICE_OS_AUDIO_CACHE.get(cacheKey);
+        if (cachedUrl) {
+            try {
+                const audio = new Audio(cachedUrl);
+                await audio.play();
+                return;
+            } catch {
+                // If blob expired, proceed to fetch
+            }
+        }
+
         // 1. Primary: Authentic ElevenLabs Neural Male Voice via /api/tts
         try {
             const res = await fetch("/api/tts", {
@@ -192,8 +208,11 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                 const blob = await res.blob();
                 const audioBlob = new Blob([blob], { type: "audio/mpeg" });
                 const audioUrl = URL.createObjectURL(audioBlob);
+                
+                // Cache phrase audio URL for zero-latency future calls
+                VOICE_OS_AUDIO_CACHE.set(cacheKey, audioUrl);
+
                 const audio = new Audio(audioUrl);
-                audio.onended = () => URL.revokeObjectURL(audioUrl);
                 await audio.play();
                 return;
             }

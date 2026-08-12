@@ -110,7 +110,7 @@ function AuthFormContent({ type }: AuthFormProps) {
     const supabase = createClient();
     const schema = type === "signup" ? signupSchema : loginSchema;
     const isLocalDev = process.env.NODE_ENV === "development";
-    const { resultsLanguage } = useSettings();
+    const { resultsLanguage, speakVoiceOs } = useSettings();
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
@@ -242,11 +242,13 @@ function AuthFormContent({ type }: AuthFormProps) {
 
             setIsBiometricVerified(true);
             setValue("agreeToTerms", true, { shouldValidate: true });
+            speakVoiceOs(isArabic ? "تم التسجيل بنجاح" : "Successfully registered!");
         } catch (bioErr: any) {
             console.warn("[Biometric Verification Notice]:", bioErr);
             // If device has no biometric or user cancelled, set standard approval
             setIsBiometricVerified(true);
             setValue("agreeToTerms", true, { shouldValidate: true });
+            speakVoiceOs(isArabic ? "تم التسجيل بنجاح" : "Successfully registered!");
         } finally {
             setIsBiometricVerifying(false);
         }

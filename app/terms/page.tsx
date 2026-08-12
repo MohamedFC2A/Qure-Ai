@@ -31,7 +31,7 @@ export default function TermsPage() {
     const router = useRouter();
     const supabase = useMemo(() => createClient(), []);
     const { user, loading, refreshUser } = useUser();
-    const { resultsLanguage } = useSettings();
+    const { resultsLanguage, speakVoiceOs } = useSettings();
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
@@ -88,9 +88,11 @@ export default function TermsPage() {
 
             setIsBiometricVerified(true);
             setAgree(true);
+            speakVoiceOs(isArabic ? "تم التسجيل بنجاح" : "Successfully registered!");
         } catch (bioErr: any) {
             console.warn("[Terms Biometric]:", bioErr);
             setAgree(true);
+            speakVoiceOs(isArabic ? "تم التسجيل بنجاح" : "Successfully registered!");
             if (bioErr.name !== "NotAllowedError") {
                 setError(
                     isArabic
