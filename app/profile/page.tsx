@@ -49,6 +49,8 @@ export default function ProfilePage() {
         setFdaDrugsEnabled,
         requireBiometricOnScan,
         setRequireBiometricOnScan,
+        voiceOsEnabled,
+        setVoiceOsEnabled,
     } = useSettings();
     const { triggerCelebration } = useUltraCelebration();
     const isArabic = resultsLanguage === "ar";
@@ -878,6 +880,44 @@ export default function ProfilePage() {
                                         isArabic
                                             ? requireBiometricOnScan ? "-translate-x-6" : "-translate-x-1"
                                             : requireBiometricOnScan ? "translate-x-6" : "translate-x-1"
+                                    )} />
+                                </button>
+                            </div>
+
+                            {/* VOICE OS Row */}
+                            <div className="px-5 py-4 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className={cn(
+                                        "w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 transition-colors",
+                                        voiceOsEnabled
+                                            ? "bg-cyan-500/10 border-cyan-500/20"
+                                            : "bg-white/5 border-white/[0.07]"
+                                    )}>
+                                        <Zap className={cn("w-4 h-4 transition-colors", voiceOsEnabled ? "text-cyan-400" : "text-white/40")} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-white">{t("VOICE OS — Auto Background Voice", "VOICE OS — المساعد الصوتي التلقائي")}</p>
+                                        <p className="text-[11px] text-white/35 truncate">{t("Automatic male voice warnings and ULTRA activation speech", "سرد تلقائي بالصوت الرجالي للتحذيرات الطبية واشتراك ألترا")}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={voiceOsEnabled}
+                                    onClick={() => setVoiceOsEnabled(!voiceOsEnabled)}
+                                    className={cn(
+                                        "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-all duration-200",
+                                        voiceOsEnabled
+                                            ? "bg-cyan-500/25 border-cyan-400/30"
+                                            : "bg-white/[0.05] border-white/10"
+                                    )}
+                                >
+                                    <span className={cn(
+                                        "inline-block h-5 w-5 rounded-full transition-transform duration-200",
+                                        voiceOsEnabled ? "bg-cyan-300" : "bg-white/40",
+                                        isArabic
+                                            ? voiceOsEnabled ? "-translate-x-6" : "-translate-x-1"
+                                            : voiceOsEnabled ? "translate-x-6" : "translate-x-1"
                                     )} />
                                 </button>
                             </div>

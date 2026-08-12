@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 type ResultsLanguage = "en" | "ar";
 
@@ -11,6 +11,9 @@ interface SettingsContextType {
     setFdaDrugsEnabled: (enabled: boolean) => void;
     requireBiometricOnScan: boolean;
     setRequireBiometricOnScan: (enabled: boolean) => void;
+    voiceOsEnabled: boolean;
+    setVoiceOsEnabled: (enabled: boolean) => void;
+    speakVoiceOs: (phrase: string, options?: { lang?: "ar" | "en"; override?: boolean }) => void;
     isAutoDetected: boolean;
     resetToAutoDetect: () => void;
     detectedCountry?: string | null;
@@ -28,7 +31,6 @@ const ARAB_TIMEZONES = [
 function detectDeviceAndLocationLanguage(): ResultsLanguage {
     if (typeof window === "undefined") return "ar";
 
-    // 1. Check Device / Mobile Language (navigator.languages & navigator.language)
     const browserLangs = Array.from(navigator.languages || [navigator.language || ""]);
     for (const lang of browserLangs) {
         if (lang && String(lang).toLowerCase().startsWith("ar")) {
@@ -36,7 +38,6 @@ function detectDeviceAndLocationLanguage(): ResultsLanguage {
         }
     }
 
-    // 2. Check Device TimeZone Location
     try {
         const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone.toLowerCase();
         for (const tz of ARAB_TIMEZONES) {
@@ -44,16 +45,13 @@ function detectDeviceAndLocationLanguage(): ResultsLanguage {
                 return "ar";
             }
         }
-    } catch {
-        // fallback
-    }
+    } catch {}
 
-    // 3. Fallback to English only if browser explicitly requests English
     if (navigator.language && navigator.language.toLowerCase().startsWith("en")) {
         return "en";
     }
 
-    return "ar"; // Default target audience: Arabic
+    return "ar";
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -62,6 +60,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
     const [resultsLanguage, setResultsLanguage] = useState<ResultsLanguage>("ar");
     const [fdaDrugsEnabled, setFdaDrugsEnabled] = useState<boolean>(true);
     const [requireBiometricOnScan, setRequireBiometricOnScanState] = useState<boolean>(false);
+    const [voiceOsEnabled, setVoiceOsEnabledState] = useState<boolean>(true);
     const [isAutoDetected, setIsAutoDetected] = useState<boolean>(true);
     const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
 
@@ -71,7 +70,6 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
             setResultsLanguage(savedLang);
             setIsAutoDetected(false);
         } else {
-            // Auto detect from mobile device + timezone
             const detected = detectDeviceAndLocationLanguage();
             setResultsLanguage(detected);
             setIsAutoDetected(true);
@@ -91,7 +89,13 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
             setRequireBiometricOnScanState(false);
         }
 
-        // Optional: Fast Client GeoIP Check in background
+        const savedVoiceOs = localStorage.getItem("qurescan_voice_os_enabled");
+        if (savedVoiceOs === "0" || savedVoiceOs === "false") {
+            setVoiceOsEnabledState(false);
+        } else {
+            setVoiceOsEnabledState(true);
+        }
+
         fetch("https://ipapi.co/json/")
             .then((res) => res.json())
             .then((data) => {
@@ -103,9 +107,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     }
                 }
             })
-            .catch(() => {
-                // best effort
-            });
+            .catch(() => {});
     }, []);
 
     const updateLanguage = (lang: ResultsLanguage) => {
@@ -146,6 +148,49 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
+    const setVoiceOsEnabled = (enabled: boolean) => {
+        setVoiceOsEnabledState(Boolean(enabled));
+        if (typeof window !== "undefined") {
+            localStorage.setItem("qurescan_voice_os_enabled", enabled ? "1" : "0");
+        }
+    };
+
+    const speakVoiceOs = useCallback((phrase: string, options?: { lang?: "ar" | "en"; override?: boolean }) => {
+        if (typeof window === "undefined") return;
+        const isEnabled = options?.override || (localStorage.getItem("qurescan_voice_os_enabled") !== "0");
+        if (!isEnabled) return;
+
+        const cleaned = phrase
+            .replace(/<[^>]*>/g, "")
+            .replace(/[\*\_`#~]/g, "")
+            .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+            .trim();
+
+        if (!cleaned) return;
+
+        try {
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(cleaned);
+                utterance.lang = (options?.lang || resultsLanguage) === "en" ? "en-US" : "ar-SA";
+                utterance.pitch = 0.88; // Deep masculine voice pitch
+                utterance.rate = 0.96;  // Natural masculine cadence
+
+                const voices = window.speechSynthesis.getVoices();
+                const targetLang = utterance.lang.slice(0, 2);
+                const maleVoice = voices.find((v) => 
+                    v.lang.startsWith(targetLang) && 
+                    (v.name.toLowerCase().includes("male") || v.name.toLowerCase().includes("tarik") || v.name.toLowerCase().includes("naayf") || v.name.toLowerCase().includes("george") || v.name.toLowerCase().includes("brian"))
+                ) || voices.find((v) => v.lang.startsWith(targetLang));
+
+                if (maleVoice) utterance.voice = maleVoice;
+                window.speechSynthesis.speak(utterance);
+            }
+        } catch (e) {
+            console.warn("VOICE OS Speech Error:", e);
+        }
+    }, [resultsLanguage]);
+
     return (
         <SettingsContext.Provider
             value={{
@@ -155,6 +200,9 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                 setFdaDrugsEnabled: updateFdaDrugsEnabled,
                 requireBiometricOnScan,
                 setRequireBiometricOnScan,
+                voiceOsEnabled,
+                setVoiceOsEnabled,
+                speakVoiceOs,
                 isAutoDetected,
                 resetToAutoDetect,
                 detectedCountry,

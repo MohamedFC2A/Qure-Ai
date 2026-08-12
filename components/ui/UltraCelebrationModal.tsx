@@ -177,7 +177,7 @@ const featuresList: UltraFeatureItem[] = [
 export function UltraCelebrationModal() {
     const { isOpen, closeCelebration } = useUltraCelebration();
     const { user, profile } = useUser();
-    const { resultsLanguage } = useSettings();
+    const { resultsLanguage, speakVoiceOs } = useSettings();
     const router = useRouter();
 
     const isArabic = resultsLanguage === "ar";
@@ -195,12 +195,17 @@ export function UltraCelebrationModal() {
             fireCelebrationConfetti();
             if (soundEnabled && !hasPlayedSoundRef.current) {
                 playCelebrationChime();
+                speakVoiceOs(
+                    isArabic
+                        ? "تم تفعيل اشتراك ألترا بنجاح، مبروك لك! جرب جميع المميزات المتاحة الآن."
+                        : "ULTRA subscription activated successfully, congratulations! Try all available features now."
+                );
                 hasPlayedSoundRef.current = true;
             }
         } else {
             hasPlayedSoundRef.current = false;
         }
-    }, [isOpen, soundEnabled]);
+    }, [isOpen, soundEnabled, speakVoiceOs, isArabic]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {

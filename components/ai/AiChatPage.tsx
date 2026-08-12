@@ -59,7 +59,7 @@ export function AiChatPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, plan, loading } = useUser();
-    const { resultsLanguage } = useSettings();
+    const { resultsLanguage, speakVoiceOs } = useSettings();
     const supabase = useMemo(() => createClient(), []);
 
     const isArabic = resultsLanguage === "ar";
@@ -277,18 +277,27 @@ export function AiChatPage() {
                             }
 
                             if (event.type === "done") {
+                                const finalAns = event.answer || streamedContent || "";
                                 setMessages((prev) =>
                                     prev.map((m) =>
                                         m.id === assistantId
                                             ? {
                                                 ...m,
-                                                content: event.answer || streamedContent || m.content,
+                                                content: finalAns || m.content,
                                                 keyPoints: event.keyPoints || [],
                                                 suggestedFollowUps: event.suggestedFollowUps || [],
                                             }
                                             : m
                                     )
                                 );
+
+                                // VOICE OS Automatic Background Warning Announcement
+                                if (finalAns && /(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)/i.test(finalAns)) {
+                                    const match = finalAns.match(/[^.!?\n]*(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)[^.!?\n]*/i);
+                                    const warningTxt = match ? match[0].trim() : finalAns.slice(0, 140);
+                                    speakVoiceOs((isArabic ? "تنبيه طبي مهم: " : "Important Medical Warning: ") + warningTxt);
+                                }
+
                                 if (event.conversationId && event.conversationId !== activeConversationId) {
                                     setActiveConversationId(event.conversationId);
                                     loadConversations();
