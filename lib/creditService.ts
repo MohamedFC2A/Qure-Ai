@@ -10,7 +10,7 @@ interface PlanLimits {
 
 const PLANS: Record<PlanType, PlanLimits> = {
     free: { dailyLimit: 30, monthlyLimit: 30 },
-    ultra: { dailyLimit: 500, monthlyLimit: 500 },
+    ultra: { dailyLimit: 300, monthlyLimit: 300 },
 };
 
 function normalizePlan(plan: unknown): PlanType {
@@ -168,8 +168,12 @@ export async function getCreditsStatus(userId: string, supabaseClient?: any) {
         needsUpdate = true;
     }
 
-    // Monthly Reset check (if different month)
-    if (now.getUTCMonth() !== monthlyStart.getUTCMonth() || now.getUTCFullYear() !== monthlyStart.getUTCFullYear()) {
+    // Smart Monthly Refill check (resets every month from creation date / 30 days window)
+    const msIn30Days = 30 * 24 * 60 * 60 * 1000;
+    const isNewCalendarMonth = now.getUTCMonth() !== monthlyStart.getUTCMonth() || now.getUTCFullYear() !== monthlyStart.getUTCFullYear();
+    const is30DaysElapsed = (now.getTime() - monthlyStart.getTime()) >= msIn30Days;
+
+    if (isNewCalendarMonth || is30DaysElapsed) {
         monthlyUsed = 0;
         newMonthlyStart = now.toISOString();
         needsUpdate = true;

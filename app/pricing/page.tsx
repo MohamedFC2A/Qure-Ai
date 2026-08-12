@@ -36,7 +36,7 @@ const freeFeatures = [
 ];
 
 const ultraFeatures = [
-    { en: "500 monthly credits (scans & AI messages)",  ar: "٥٠٠ رصيد شهرياً للفحوصات والرسائل"       },
+    { en: "300 monthly credits (scans & AI messages)",  ar: "٣٠٠ رصيد شهرياً للفحوصات والرسائل"       },
     { en: "Full Mat AI medical assistant access",      ar: "المساعد الطبي الذكي Mat AI بلا قيود"     },
     { en: "Private health profile & allergy context",   ar: "سياق الملف الصحي والتفاعلات والحساسية"  },
     { en: "Family and caregiver profiles management",   ar: "إدارة ملفات العائلة ومقدمي الرعاية"      },
@@ -55,7 +55,7 @@ const comparisonRows = [
     { en: "Interactive follow-up question tree",     ar: "شجرة أسئلة المتابعة والتحليلات الذكية",         free: false,         ultra: true                },
     { en: "FDA label & NDC database checks",         ar: "التحقق الفوري من قواعد بيانات FDA الرسمية",    free: "أساسي",       ultra: "تلقائي وتفصيلي"    },
     { en: "Report exports",                          ar: "تصدير التقارير والنتائج",                       free: "صورة PNG",    ultra: "PNG + PDF طبي"     },
-    { en: "Monthly credits (scans & chat)",          ar: "الاستخدام الشهري (الفحوصات والرسائل)",          free: "30 رصيد",     ultra: "500 رصيد"          },
+    { en: "Monthly credits (scans & chat)",          ar: "الاستخدام الشهري (الفحوصات والرسائل)",          free: "30 رصيد",     ultra: "300 رصيد"          },
 ];
 
 const valueCards = [
