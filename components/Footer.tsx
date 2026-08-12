@@ -111,8 +111,11 @@ export const Footer = () => {
                             <span>© 2026</span>
                         </p>
                         <span className="text-slate-600 hidden sm:inline">•</span>
-                        <Link href="/changelog" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-cyan-300 font-mono text-[11px] font-bold transition-colors">
-                            <span>v1.3.1 (Beta)</span>
+                        <Link href="/changelog" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+                            <span>v1.3.7</span>
+                            <span className="font-black uppercase tracking-wider bg-gradient-to-b from-white via-slate-200 to-slate-400 bg-clip-text text-transparent text-[10px]">
+                                Beta
+                            </span>
                         </Link>
                     </div>
 

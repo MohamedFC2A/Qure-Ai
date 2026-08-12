@@ -88,7 +88,7 @@ export const Navbar = () => {
                         <span className="text-white font-display tracking-tight flex items-center gap-1.5">
                             <span>Qure</span>
                             <span className="text-slate-400">Scan</span>
-                            <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-cyan-300 font-mono tracking-tight select-none">
+                            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-gradient-to-b from-white via-slate-200 to-slate-400 bg-clip-text text-transparent select-none ms-0.5">
                                 Beta
                             </span>
                         </span>
