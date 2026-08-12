@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getLocalDevUser } from "@/lib/devAuth";
 
 /* ──────────────────────────────────────────────────────────
  *  GET /api/ai/conversations/[id]/messages
@@ -12,7 +13,8 @@ export async function GET(
 ) {
     try {
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const user = authUser || getLocalDevUser(req);
 
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

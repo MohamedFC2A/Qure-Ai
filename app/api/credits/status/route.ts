@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCreditsStatus } from "@/lib/creditService";
+import { getLocalDevUser } from "@/lib/devAuth";
 
 export async function GET(req: NextRequest) {
     try {
         const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const user = authUser || getLocalDevUser(req);
 
-        if (authError || !user) {
-            // Return 200 with loggedIn: false to prevent frontend 500s on public pages
+        if (!user) {
             return NextResponse.json({
                 loggedIn: false,
                 plan: 'free',
@@ -20,13 +21,23 @@ export async function GET(req: NextRequest) {
             }, { status: 200 });
         }
 
+        if (process.env.NODE_ENV === "development" && user.id === "00000000-0000-0000-0000-000000000001") {
+            return NextResponse.json({
+                loggedIn: true,
+                plan: 'ultra',
+                planRemaining: 999999,
+                dailyUsed: 0,
+                monthlyUsed: 0,
+                extraCredits: 999999,
+                totalAvailable: 999999,
+            });
+        }
+
         try {
-            // Pass the authenticated client so we can see RLS-protected data (like ledger)
             const status = await getCreditsStatus(user.id, supabase);
             return NextResponse.json({ loggedIn: true, ...status });
         } catch (serviceError: any) {
             console.error("Credit Service Error:", serviceError);
-            // Fallback if DB is not set up yet
             return NextResponse.json({
                 loggedIn: true,
                 plan: 'free',

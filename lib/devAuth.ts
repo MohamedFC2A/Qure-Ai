@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
 
-export const LOCAL_DEV_USER_ID = "local-dev-user";
+export const LOCAL_DEV_USER_ID = "00000000-0000-0000-0000-000000000001";
 export const LOCAL_DEV_EMAIL = "local.dev@qurescan.local";
 export const LOCAL_DEV_COOKIE = "qurescan_dev_auth";
 
