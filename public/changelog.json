@@ -1,5 +1,117 @@
 [
   {
+    "version": "v1.3.2 (Beta)",
+    "titleEn": "style: remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+    "titleAr": "تحديث تلقائي: style: remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+    "date": "2026-08-12",
+    "badge": "Beta Update",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "Features & UI Enhancements",
+        "categoryAr": "الميزات وتحسينات الواجهة",
+        "itemsEn": [
+          "[6ac5f20] style: remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+          "[ead46a8] style: remove 'الاشتراك الذهبي' label and apply pure matte executive dark styling with zero glow across all pages",
+          "[58078af] feat(ceo): implement full Telegram Bot interactive control hub with 1-click subscription revocation, subscriber listing, and live stats",
+          "[f52d98e] feat(telegram): natively integrate @QureScanbot for instant CEO push notifications with inline 1-tap activation buttons",
+          "[9fe45a0] feat(email): integrate Resend enterprise API, direct Gmail SMTP, and Telegram instant push for 100% reliable CEO notifications"
+        ],
+        "itemsAr": [
+          "[6ac5f20] remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+          "[ead46a8] remove 'الاشتراك الذهبي' label and apply pure matte executive dark styling with zero glow across all pages",
+          "[58078af] implement full Telegram Bot interactive control hub with 1-click subscription revocation, subscriber listing, and live stats",
+          "[f52d98e] natively integrate @QureScanbot for instant CEO push notifications with inline 1-tap activation buttons",
+          "[9fe45a0] integrate Resend enterprise API, direct Gmail SMTP, and Telegram instant push for 100% reliable CEO notifications"
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "Bug Fixes & Security Hardening",
+        "categoryAr": "إصلاح الأخطاء وتعزيز الأمان",
+        "itemsEn": [
+          "[045f39f] fix(middleware): add top-level fast-path bypass for /api/telegram webhooks and public callbacks",
+          "[6ba314a] fix(middleware): whitelist /api/telegram and /api/admin/golden-ceo/activate from auth cookie check for seamless webhook execution",
+          "[8034e63] fix(vercel): add self-contained resilient fallback keys for zero-config Vercel serverless execution",
+          "[3773812] fix(ceo): ensure Golden CEO requests always trigger email dispatch on production and add URL-encoded fallback"
+        ],
+        "itemsAr": [
+          "[045f39f] add top-level fast-path bypass for /api/telegram webhooks and public callbacks",
+          "[6ba314a] whitelist /api/telegram and /api/admin/golden-ceo/activate from auth cookie check for seamless webhook execution",
+          "[8034e63] add self-contained resilient fallback keys for zero-config Vercel serverless execution",
+          "[3773812] ensure Golden CEO requests always trigger email dispatch on production and add URL-encoded fallback"
+        ]
+      },
+      {
+        "type": "perf",
+        "categoryEn": "Performance & Optimization",
+        "categoryAr": "تحسين الأداء والسرعة",
+        "itemsEn": [
+          "[9ff9df4] feat(ceo): optimize 1-tap direct mobile activation from email without opening PC or logging in"
+        ],
+        "itemsAr": [
+          "[9ff9df4] optimize 1-tap direct mobile activation from email without opening PC or logging in"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "v1.3.1 (Beta)",
+    "titleEn": "style: remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+    "titleAr": "تحديث تلقائي: style: remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+    "date": "2026-08-12",
+    "badge": "Beta Update",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "Features & UI Enhancements",
+        "categoryAr": "الميزات وتحسينات الواجهة",
+        "itemsEn": [
+          "[6ac5f20] style: remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+          "[ead46a8] style: remove 'الاشتراك الذهبي' label and apply pure matte executive dark styling with zero glow across all pages",
+          "[58078af] feat(ceo): implement full Telegram Bot interactive control hub with 1-click subscription revocation, subscriber listing, and live stats",
+          "[f52d98e] feat(telegram): natively integrate @QureScanbot for instant CEO push notifications with inline 1-tap activation buttons",
+          "[9fe45a0] feat(email): integrate Resend enterprise API, direct Gmail SMTP, and Telegram instant push for 100% reliable CEO notifications"
+        ],
+        "itemsAr": [
+          "[6ac5f20] remove glowing borders and neon shadows across all components, navbars, and buttons for clean matte executive UI",
+          "[ead46a8] remove 'الاشتراك الذهبي' label and apply pure matte executive dark styling with zero glow across all pages",
+          "[58078af] implement full Telegram Bot interactive control hub with 1-click subscription revocation, subscriber listing, and live stats",
+          "[f52d98e] natively integrate @QureScanbot for instant CEO push notifications with inline 1-tap activation buttons",
+          "[9fe45a0] integrate Resend enterprise API, direct Gmail SMTP, and Telegram instant push for 100% reliable CEO notifications"
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "Bug Fixes & Security Hardening",
+        "categoryAr": "إصلاح الأخطاء وتعزيز الأمان",
+        "itemsEn": [
+          "[045f39f] fix(middleware): add top-level fast-path bypass for /api/telegram webhooks and public callbacks",
+          "[6ba314a] fix(middleware): whitelist /api/telegram and /api/admin/golden-ceo/activate from auth cookie check for seamless webhook execution",
+          "[8034e63] fix(vercel): add self-contained resilient fallback keys for zero-config Vercel serverless execution",
+          "[3773812] fix(ceo): ensure Golden CEO requests always trigger email dispatch on production and add URL-encoded fallback"
+        ],
+        "itemsAr": [
+          "[045f39f] add top-level fast-path bypass for /api/telegram webhooks and public callbacks",
+          "[6ba314a] whitelist /api/telegram and /api/admin/golden-ceo/activate from auth cookie check for seamless webhook execution",
+          "[8034e63] add self-contained resilient fallback keys for zero-config Vercel serverless execution",
+          "[3773812] ensure Golden CEO requests always trigger email dispatch on production and add URL-encoded fallback"
+        ]
+      },
+      {
+        "type": "perf",
+        "categoryEn": "Performance & Optimization",
+        "categoryAr": "تحسين الأداء والسرعة",
+        "itemsEn": [
+          "[9ff9df4] feat(ceo): optimize 1-tap direct mobile activation from email without opening PC or logging in"
+        ],
+        "itemsAr": [
+          "[9ff9df4] optimize 1-tap direct mobile activation from email without opening PC or logging in"
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.3.0",
     "titleEn": "DeepSeek v4 Flash, Zero-Token Guardrails & 97% Token Optimization",
     "titleAr": "دمج DeepSeek v4 Flash وجدار حماية الـ Zero-Token وتوفير 97% من التوكنز",

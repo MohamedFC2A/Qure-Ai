@@ -22,107 +22,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Generate Automatic Changelog JSON & MD
-        run: |
-          node -e "
-          const fs = require('fs');
-          const execSync = require('child_process').execSync;
+      - name: Generate Changelog
+        run: node scripts/generate-changelog.js
 
-          try {
-            // Fetch recent commits
-            const rawLogs = execSync('git log -n 15 --pretty=format:\"%s|||%h|||%an|||%ad\" --date=short').toString();
-            const lines = rawLogs.split('\n').filter(Boolean);
-
-            const latestCommit = lines[0] ? lines[0].split('|||') : [];
-            const commitMsg = latestCommit[0] || 'Minor update';
-
-            // Skip if this push was an automated changelog commit
-            if (commitMsg.includes('auto: update changelog') || commitMsg.includes('[skip ci]')) {
-              console.log('Skipping automated changelog loop');
-              process.exit(0);
-            }
-
-            let currentData = [];
-            const changelogPath = 'public/changelog.json';
-            if (fs.existsSync(changelogPath)) {
-              currentData = JSON.parse(fs.readFileSync(changelogPath, 'utf8'));
-            }
-
-            const today = new Date().toISOString().split('T')[0];
-            const latestVer = currentData[0] ? currentData[0].version : 'v1.0.0';
-            
-            // Auto increment minor version
-            const parts = latestVer.replace('v', '').split('.').map(Number);
-            parts[2] = (parts[2] || 0) + 1;
-            const newVersion = 'v' + parts.join('.');
-
-            const fixItems = [];
-            const featItems = [];
-
-            lines.slice(0, 5).forEach(line => {
-              const [msg] = line.split('|||');
-              if (!msg) return;
-              if (msg.startsWith('fix') || msg.toLowerCase().includes('fix')) {
-                fixItems.push(msg);
-              } else if (msg.startsWith('feat') || msg.toLowerCase().includes('add') || msg.toLowerCase().includes('design')) {
-                featItems.push(msg);
-              }
-            });
-
-            if (fixItems.length === 0 && featItems.length === 0) {
-              featItems.push(commitMsg);
-            }
-
-            const newEntry = {
-              version: newVersion,
-              titleEn: commitMsg,
-              titleAr: 'تحديث تلقائي: ' + commitMsg,
-              date: today,
-              badge: 'Auto Update',
-              changes: [
-                ...(featItems.length > 0 ? [{
-                  type: 'feat',
-                  categoryEn: 'Features & Enhancements',
-                  categoryAr: 'الميزات والتحسينات',
-                  itemsEn: featItems,
-                  itemsAr: featItems
-                }] : []),
-                ...(fixItems.length > 0 ? [{
-                  type: 'fix',
-                  categoryEn: 'Bug Fixes & System Stability',
-                  categoryAr: 'إصلاح الأخطاء واستقرار النظام',
-                  itemsEn: fixItems,
-                  itemsAr: fixItems
-                }] : [])
-              ]
-            };
-
-            currentData.unshift(newEntry);
-            fs.writeFileSync(changelogPath, JSON.stringify(currentData.slice(0, 30), null, 2));
-
-            // Generate CHANGELOG.md
-            let mdContent = '# 🚀 QureScan Changelog\n\nAutomated real-time updates pushed from GitHub commits.\n\n';
-            currentData.forEach(entry => {
-              mdContent += '## ' + entry.version + ' - ' + entry.titleEn + ' (' + entry.date + ')\n';
-              entry.changes.forEach(c => {
-                mdContent += '### ' + c.categoryEn + '\n';
-                c.itemsEn.forEach(item => {
-                  mdContent += '- ' + item + '\n';
-                });
-              });
-              mdContent += '\n';
-            });
-            fs.writeFileSync('CHANGELOG.md', mdContent);
-
-            console.log('Successfully generated automated changelog for ' + newVersion);
-          } catch (e) {
-            console.error('Error generating changelog:', e);
-          }
-          "
-
-      - name: Commit and Push Changelog Updates
+      - name: Commit and Push Updates
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/changelog.json CHANGELOG.md
-          git diff --quiet && git diff --staged --quiet || (git commit -m "auto: update changelog [skip ci]" && git push)
+          git add public/changelog.json CHANGELOG.md package.json
+          git diff --staged --quiet || (git commit -m "auto: update changelog [skip ci]" && git push)

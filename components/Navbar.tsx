@@ -85,9 +85,12 @@ export const Navbar = () => {
                         <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center bg-white/[0.08] border border-white/[0.10] transition-transform active:scale-95">
                             <Atom className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/80" />
                         </div>
-                        <span className="text-white font-display tracking-tight flex items-center gap-1">
+                        <span className="text-white font-display tracking-tight flex items-center gap-1.5">
                             <span>Qure</span>
                             <span className="text-slate-400">Scan</span>
+                            <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-cyan-300 font-mono tracking-tight select-none">
+                                Beta
+                            </span>
                         </span>
                     </Link>
 

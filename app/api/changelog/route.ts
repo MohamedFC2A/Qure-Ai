@@ -77,8 +77,9 @@ export async function GET() {
                             ? commits[0].commit.committer.date.split("T")[0]
                             : new Date().toISOString().split("T")[0];
 
+                        const latestJsonVer = localData[0]?.version || "v1.3.1 (Beta)";
                         const liveGithubRelease = {
-                            version: `v1.3.0-live`,
+                            version: `${latestJsonVer.split(' ')[0]}-live (Beta)`,
                             titleEn: "Live GitHub Pushes & Real-Time Sync",
                             titleAr: "التحديثات المرفوعة المباشرة عبر GitHub",
                             date: latestCommitDate,
@@ -94,8 +95,8 @@ export async function GET() {
                             ]
                         };
 
-                        // Avoid duplicating if v1.3.0-live is already present
-                        localData = localData.filter((d: any) => d.version !== "v1.3.0-live");
+                        // Avoid duplicating if live is already present
+                        localData = localData.filter((d: any) => !d.version.includes("-live"));
                         localData.unshift(liveGithubRelease);
                     }
                 }

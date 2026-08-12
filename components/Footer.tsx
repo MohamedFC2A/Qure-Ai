@@ -103,12 +103,18 @@ export const Footer = () => {
 
                 {/* Bottom bar */}
                 <div className="border-t border-white/[0.06] py-5 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-                    <p>
-                        {t("Built by ", "تم التطوير بواسطة ")}
-                        <span className="text-slate-300 font-medium">Matany Labs</span>
-                        {" · "}
-                        <span>© 2026</span>
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <p>
+                            {t("Built by ", "تم التطوير بواسطة ")}
+                            <span className="text-slate-300 font-medium">Matany Labs</span>
+                            {" · "}
+                            <span>© 2026</span>
+                        </p>
+                        <span className="text-slate-600 hidden sm:inline">•</span>
+                        <Link href="/changelog" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-cyan-300 font-mono text-[11px] font-bold transition-colors">
+                            <span>v1.3.1 (Beta)</span>
+                        </Link>
+                    </div>
 
                     <div className="flex items-center gap-4">
                         <AiPartnersBadge showLabel={false} />
