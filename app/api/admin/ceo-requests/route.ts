@@ -118,6 +118,22 @@ export async function POST(req: NextRequest) {
                 .eq("id", requestId);
 
             return NextResponse.json({ success: true, message: "تم تفعيل باقة ألترا للمستخدم بنجاح!" });
+        } else if (action === "revoke") {
+            // Downgrade to free
+            await adminSupabase
+                .from("profiles")
+                .update({
+                    plan: "free",
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", requestRecord.user_id);
+
+            await adminSupabase
+                .from("ceo_upgrade_requests")
+                .update({ status: "revoked" })
+                .eq("id", requestId);
+
+            return NextResponse.json({ success: true, message: "تم إلغاء الاشتراك الذهبي وإعادة المستخدم للخطة المجانية." });
         } else if (action === "reject") {
             await adminSupabase
                 .from("ceo_upgrade_requests")
