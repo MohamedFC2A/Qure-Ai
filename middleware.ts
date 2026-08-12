@@ -24,6 +24,18 @@ function applyRateLimit(ip: string, limit: number = 60, windowMs: number = 60000
 
 export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
+
+    // Fast-path bypass for webhooks and public callbacks
+    if (
+        pathname.startsWith('/api/telegram') ||
+        pathname.startsWith('/api/admin/golden-ceo/activate') ||
+        pathname.startsWith('/api/golden-ceo') ||
+        pathname.startsWith('/api/status') ||
+        pathname.startsWith('/api/v1/analyze')
+    ) {
+        return NextResponse.next();
+    }
+
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
 
     // 1. Rate limiting check for API routes
