@@ -703,7 +703,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                     "Precautions, interactions, side effects, overdose guidance, and when to seek help.",
                     "احتياطات، تداخلات، آثار جانبية، إرشادات الجرعة الزائدة، ومتى تطلب المساعدة."
                 ),
-                icon: <Sparkles className="w-4 h-4 text-white" />,
+                icon: <Zap className="w-4 h-4 text-white" />,
                 cta: { label: t("Upgrade", "ترقية"), href: "/pricing" },
             });
         }
@@ -1493,11 +1493,11 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                 <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
                     <div className="flex items-center justify-between gap-4 mb-4">
                         <div className="flex items-center gap-2 text-cyan-300 font-bold">
-                            <Sparkles className="w-5 h-5 text-amber-300" />
+                            <Brain className="w-5 h-5 text-cyan-300" />
                             <h3 className="text-white text-base sm:text-lg">{t('Advanced Safety Pack', 'حزمة الأمان المتقدمة')}</h3>
                         </div>
                         {plan !== 'ultra' && (
-                            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
+                            <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
                                 <Lock className="w-3 h-3" /> {t("Ultra", "ألترا")}
                             </span>
                         )}
@@ -1834,7 +1834,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         <h3 className="text-white text-base sm:text-lg">{t('Private AI Context & Interaction Guard', 'سياقك الصحي وحارس التداخلات')}</h3>
                     </div>
                     {plan !== 'ultra' && (
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
+                        <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
                             <Lock className="w-3 h-3" /> {t("Ultra", "ألترا")}
                         </span>
                     )}
@@ -2615,7 +2615,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             </Button>
                         )
                     ) : (
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
+                        <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-bold flex items-center gap-1 uppercase tracking-wider">
                             <Lock className="w-3 h-3" /> {t("Ultra", "ألترا")}
                         </span>
                     )}
@@ -2921,7 +2921,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 { id: "overview", label: t("Overview", "نظرة عامة"), icon: <Activity className="w-4 h-4" /> },
                                 { id: "safety", label: t("Safety & Side Effects", "الأمان والآثار الجانبية"), icon: <ShieldAlert className="w-4 h-4" /> },
                                 { id: "guard", label: t("Interaction Guard", "حارس التداخلات الدوائية"), icon: <GitBranch className="w-4 h-4" /> },
-                                { id: "chat", label: t("Ask AI", "اسأل الذكاء الاصطناعي"), icon: <Sparkles className="w-4 h-4" /> },
+                                { id: "chat", label: t("Ask AI", "اسأل الذكاء الاصطناعي"), icon: <Brain className="w-4 h-4" /> },
                                 { id: "fda", label: t("FDA Database", "التحقق من FDA"), icon: <Database className="w-4 h-4" /> },
                             ].map((item) => {
                                 const active = activeTab === item.id;

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Trash2, Pill, HeartPulse, Brain, X, MessageSquare, Plus, Sparkles } from "lucide-react";
+import { Trash2, Pill, HeartPulse, Brain, X, MessageSquare, Plus } from "lucide-react";
 import type { AiChatMode } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ export function ConversationSidebar({
                 {/* Header */}
                 <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/[0.05]">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-500/10 border border-cyan-400/30 text-cyan-400">
-                        <Sparkles className="w-4 h-4" />
+                        <Brain className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white leading-none">Mat AI</p>

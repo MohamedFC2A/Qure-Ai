@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, Sparkles, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain } from "lucide-react";
+import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -499,7 +499,7 @@ export function AiChatPage() {
                                 onClick={() => router.push("/pricing")}
                                 className="w-full py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-base transition-all flex items-center justify-center gap-2"
                             >
-                                <Sparkles className="w-5 h-5" />
+                                <Zap className="w-5 h-5" />
                                 {t("Upgrade to ULTRA Now", "ترقية إلى باقة ULTRA الآن")}
                             </button>
                         </div>
@@ -519,7 +519,7 @@ export function AiChatPage() {
                                 {messages.length === 0 && (
                                     <div className="flex flex-col items-center text-center pt-10 pb-6 animate-fade-in space-y-4">
                                         <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                                            <Sparkles className="w-7 h-7" />
+                                            <Brain className="w-7 h-7" />
                                         </div>
 
                                         <div className="space-y-1">

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Copy, Check, Sparkles, User, CheckCircle2, AlertTriangle, Zap, Info, HelpCircle, ArrowRight, XCircle } from "lucide-react";
+import { Copy, Check, User, CheckCircle2, AlertTriangle, Zap, Info, HelpCircle, ArrowRight, XCircle, Brain } from "lucide-react";
 import { useState } from "react";
 import { parseAiResponse } from "@/lib/ai/chat";
 
@@ -255,7 +255,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 </div>
             ) : (
                 <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 bg-cyan-950/60 border border-cyan-500/30 text-cyan-400">
-                    <Sparkles className="w-4 h-4" />
+                    <Brain className="w-4 h-4" />
                 </div>
             )}
 
@@ -317,7 +317,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 {!isUser && displayKeyPoints && displayKeyPoints.length > 0 && (
                     <div className="mt-3.5 rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-2.5 shadow-sm">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                            <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                             <span>{isArabic ? "أهم النقاط السريرية" : "Key Clinical Takeaways"}</span>
                         </p>
                         <div className="space-y-2">
