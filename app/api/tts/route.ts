@@ -10,6 +10,8 @@ function diacritizeArabicMedicalText(text: string): string {
     const medicalDiacriticsMap: Record<string, string> = {
         "دواء": "دَوَاءٌ",
         "الدواء": "الدَّوَاءُ",
+        "مستحضر": "مُسْتَحْضَرٌ",
+        "المستحضر": "الْمُسْتَحْضَرُ",
         "علاج": "عِلَاجٌ",
         "العلاج": "الْعِلَاجُ",
         "جرعة": "جُرْعَةٌ",
@@ -25,6 +27,9 @@ function diacritizeArabicMedicalText(text: string): string {
         "فعالة": "فَعَّالَةٌ",
         "استخدام": "اسْتِخْدَامُ",
         "استعمال": "اسْتِعْمَالُ",
+        "دواعي": "دَوَاعِي",
+        "فوائد": "فَوَائِدُ",
+        "فائدة": "فَائِدَةُ",
         "طبي": "طِبِّيٌّ",
         "طبيبة": "طَبِيبَةٌ",
         "طبيب": "طَبِيبٌ",
@@ -54,7 +59,6 @@ function diacritizeArabicMedicalText(text: string): string {
 
     let result = text;
     for (const [rawWord, vocalizedWord] of Object.entries(medicalDiacriticsMap)) {
-        // Regex word boundary matching for whole word replacement
         const regex = new RegExp(`(?<=^|\\s)${rawWord}(?=\\s||\\.|,|!|؟|$)`, "g");
         result = result.replace(regex, vocalizedWord);
     }
@@ -72,13 +76,13 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
 
     const isAr = lang === "ar";
 
-    // 1. AI Diacritized Condenser via Pollinations / OpenAI / DeepSeek
+    // 1. AI Intelligent Audio Brief Generator via Pollinations / OpenAI / DeepSeek
     const apiKey = process.env.POLLINATIONS_API_KEY || process.env.DEEPSEEK_API_KEY;
     if (apiKey) {
         try {
             const systemPrompt = isAr
-                ? "أنت خبير صيدلاني وطبي ونحوي متمرس بصوت رجالي واثق وعميق. قم بصياغة ملخص ناطق شامل ودقيق ومُعالج طبياً من النص المعطى في حدود 280-350 حرفاً. الشَرطُ الأَسَاسِيّ: قُم بِتَشكِيلِ الكَلِمَاتِ العَرَبِيَّةِ تَشكِيلاً ذَكِيّاً وَدَقِيقاً بِالحَرَكَاتِ (الْفَتْحَة، الضَّمَّة، الْكَسْرَة، السُّكُون، وَالتَّنْوِين) لِضَمَانِ قِرَاءَةٍ صَوْتِيَّةٍ سَلِيمَةٍ 100% بِدُونِ أَيِّ أَخْطَاءِ إِعْرَابِيَّةٍ أَوْ لَغْوِيَّة. اذكر: 1) اسم الدواء والمادة الفعالة، 2) دواعي الاستعمال الرئيسية، 3) الجرعة والتنبيه الهام."
-                : "You are a professional medical pharmacology broadcaster with a deep, confident voice. Generate a comprehensive, well-structured spoken summary covering: 1) Drug & active ingredient name, 2) Primary indications, 3) Key dosage and safety warning. Keep it under 320 characters in natural spoken prose.";
+                ? "أنت خبير ومستشار صيدلاني بصوت رجالي واثق ومثقف. مهمتك إنتاج خلاصة ناطقة ذكية وممتعة للمستمع. لا تكتفِ بذكر اسم المنتج فقط، بل اشرح فوراً وبشكل سريع وذكي: 1) ماهية الدواء أو المستحضر، 2) دواعي استخدامه وفائدته الرئيسية، 3) الجرعة أو طريقة الاستخدام والتنبيه الأهم. صغ الجمل بأسلوب ناطق ذكي في حدود 250-350 حرفاً ومُشَكَّل بالحركات الإعرابية التامة لضمان نطق رجالي ممتاز وبلا أي خطأ."
+                : "You are an expert medical pharmacology broadcaster. Generate a smart, natural, and informative spoken brief. Do not just read the name—explain clearly: 1) What the medication/product is, 2) Primary indications and benefits, 3) Recommended usage & key safety precaution. Keep it engaging, natural, and under 320 characters.";
 
             const res = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
                 method: "POST",
@@ -93,38 +97,30 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
                         { role: "user", content: cleaned }
                     ],
                     max_tokens: 220,
-                    temperature: 0.15,
+                    temperature: 0.2,
                 }),
-                signal: AbortSignal.timeout(2500),
+                signal: AbortSignal.timeout(3500),
             });
 
             if (res.ok) {
                 const data = await res.json();
                 const brief = data.choices?.[0]?.message?.content?.trim();
-                if (brief && brief.length > 20 && brief.length <= 450) {
+                if (brief && brief.length > 25 && brief.length <= 450) {
                     return isAr ? diacritizeArabicMedicalText(brief) : brief;
                 }
             }
         } catch (e) {
-            console.warn("AI Audio Condenser fallback to diacritized sentence engine:", e);
+            console.warn("AI Audio Condenser fallback to structured briefing:", e);
         }
     }
 
-    // 2. Deterministic Rule-Based Fallback with Smart Diacritics
-    const sentences = cleaned.split(/(?<=[.،!؟\n])/g).map(s => s.trim()).filter(Boolean);
-    let result = "";
-    for (const s of sentences) {
-        if ((result + " " + s).trim().length <= 320) {
-            result = (result + " " + s).trim();
-        } else {
-            break;
-        }
+    // 2. Deterministic Structured Fallback (Rich Spoken Template)
+    if (isAr) {
+        const fallbackScript = `هَذَا الْمُسْتَحْضَرُ الطِّبِّيُّ: ${cleaned}. يُسْتَخْدَمُ لِتَسْكِينِ الأَعْرَاضِ وَالْعِلَاجِ الصَّيْدَلَانِيِّ. يُنْصَحُ بِقِرَاءَةِ النَّشْرَةِ الدَّاخِلِيَّةِ وَاسْتِشَارَةِ الطَّبِيبِ أَوْ الصَّيْدَلِيِّ قَبْلَ الاسْتِخْدَامِ.`;
+        return diacritizeArabicMedicalText(fallbackScript);
     }
-    if (!result && sentences[0]) {
-        result = sentences[0].slice(0, 310) + "...";
-    }
-    const finalBrief = result || cleaned.slice(0, 320);
-    return isAr ? diacritizeArabicMedicalText(finalBrief) : finalBrief;
+
+    return `Medical Brief: ${cleaned}. Use as directed by a healthcare professional. Read the package insert for complete usage guidelines.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -158,7 +154,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Text parameter is required" }, { status: 400 });
         }
 
-        // Condense and smart-diacritize Arabic medical text for zero TTS pronunciation errors
+        // Condense and smart-diacritize Arabic medical text into an intelligent spoken summary
         const condensedText = await condenseToAudioBrief(text, lang || "ar");
 
         let audioArrayBuffer: ArrayBuffer | null = null;
