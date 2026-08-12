@@ -39,7 +39,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         } catch { /* ignore */ }
     };
 
-    // Advanced Markdown renderer for AI answers
+    // Advanced Markdown & Table renderer for AI answers
     const renderMarkdown = (text: string) => {
         const lines = text.split("\n");
         const elements: React.ReactNode[] = [];
@@ -66,23 +66,29 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         const formatInline = (s: string): string => {
             let formatted = s;
 
-            // 1. Red Critical Threat Warning Badge: ⚠️ [...] or [⚠️ ...]
+            // 1. Red Critical Threat Warning Badge (No pulse animation): ⚠️ [...] or [⚠️ ...]
             formatted = formatted.replace(
                 /(?:⚠️\s*\[|\[⚠️\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/60 border border-red-500/50 text-red-400 font-bold text-xs shrink-0 shadow-sm align-middle animate-pulse"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/70 border border-red-500/50 text-red-400 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
             );
 
             // 2. Amber Caution Badge: ⚡ [...] or [⚡ ...]
             formatted = formatted.replace(
                 /(?:⚡\s*\[|\[⚡\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/60 border border-amber-500/50 text-amber-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
             );
 
             // 3. Green Verified Document Badge: ✓ [...] or [✓ ...]
             formatted = formatted.replace(
                 /(?:✓\s*\[|\[✓\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 font-semibold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-400 font-semibold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
             );
+
+            // Replace raw emojis with clean SVG representations
+            formatted = formatted
+                .replace(/✅/g, '<svg class="w-3.5 h-3.5 text-emerald-400 inline-block align-middle mx-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>')
+                .replace(/⚠️/g, '<svg class="w-3.5 h-3.5 text-amber-400 inline-block align-middle mx-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>')
+                .replace(/❌/g, '<svg class="w-3.5 h-3.5 text-red-400 inline-block align-middle mx-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>');
 
             // Bold, italic, code formatting
             return formatted
@@ -92,11 +98,64 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         };
 
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
+            let line = lines[i].trim();
 
             if (!line) {
                 flushList();
                 continue;
+            }
+
+            // Divider lines (--- or ***)
+            if (line.match(/^[-*_]{3,}$/)) {
+                flushList();
+                elements.push(<hr key={`hr-${i}`} className="my-4 border-slate-800/80" />);
+                continue;
+            }
+
+            // Markdown Table Detection
+            if (line.startsWith("|") && line.endsWith("|")) {
+                flushList();
+                const tableLines: string[] = [];
+                while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+                    tableLines.push(lines[i].trim());
+                    i++;
+                }
+                i--; // Adjust loop counter
+
+                if (tableLines.length >= 2) {
+                    const parseRow = (l: string) => l.split("|").slice(1, -1).map((c) => c.trim());
+                    const headers = parseRow(tableLines[0]);
+                    const startIdx = tableLines[1].match(/^\|[\s:-|-]+\|$/) ? 2 : 1;
+                    const bodyRows = tableLines.slice(startIdx).map(parseRow);
+
+                    elements.push(
+                        <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/90 shadow-sm">
+                            <table className="w-full text-xs sm:text-sm text-slate-200 border-collapse">
+                                <thead className="bg-cyan-950/40 text-cyan-300 font-bold border-b border-slate-800">
+                                    <tr>
+                                        {headers.map((h, hIdx) => (
+                                            <th key={hIdx} className="px-4 py-3 text-start font-bold border-x border-slate-800/60 whitespace-nowrap">
+                                                <span dangerouslySetInnerHTML={{ __html: formatInline(h) }} />
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/70">
+                                    {bodyRows.map((r, rIdx) => (
+                                        <tr key={rIdx} className="hover:bg-slate-900/60 transition-colors">
+                                            {r.map((cell, cIdx) => (
+                                                <td key={cIdx} className="px-4 py-3 leading-relaxed border-x border-slate-800/50">
+                                                    <span dangerouslySetInnerHTML={{ __html: formatInline(cell) }} />
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                    continue;
+                }
             }
 
             // Clinical Callout Box (> quote)
@@ -162,8 +221,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
     return (
         <div className={cn(
             "flex gap-3 items-start w-full",
-            isUser ? "flex-row-reverse" : "flex-row",
-            isUser ? "animate-chat-in-right" : "animate-chat-in-left"
+            isUser ? "flex-row-reverse" : "flex-row"
         )}>
             {/* Avatar */}
             {isUser ? (
@@ -203,9 +261,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         ) : (
                             /* Streaming: typing indicator */
                             <div className="flex items-center gap-1.5 py-1">
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-150" />
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-300" />
+                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
                             </div>
                         )}
                     </div>
