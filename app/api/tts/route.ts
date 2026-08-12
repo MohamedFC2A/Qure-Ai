@@ -11,19 +11,19 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
         .replace(/\s+/g, " ")
         .trim();
 
-    // If already crisp (<= 110 chars), use directly
-    if (cleaned.length <= 110) {
+    // If text is already medium length (<= 320 chars), use directly for maximum fidelity
+    if (cleaned.length <= 320) {
         return cleaned;
     }
 
-    // 1. Ultra-fast AI Condenser via Pollinations/DeepSeek
+    // 1. AI Condenser via Pollinations / OpenAI / DeepSeek for comprehensive audio script
     const apiKey = process.env.POLLINATIONS_API_KEY || process.env.DEEPSEEK_API_KEY;
     if (apiKey) {
         try {
             const isAr = lang === "ar";
             const systemPrompt = isAr
-                ? "أنت معد نصوص صوتية طبية احترافي فائق الإيجاز. لخص النص المعطى في جملة واحدة منطوقة وسلسة وبشرية تماماً (اسم المنتج أو الدواء + الغرض/الفائدة الأساسية + الجرعة أو التحذير الأهم) بحد أقصى 90 حرف فقط. أرجع فقط الجملة المنطوقة بدون أي مقدمات أو تشكيل معقد."
-                : "You are an ultra-concise medical audio condenser. Summarize the text into ONE natural spoken sentence (Product/Drug name + Core benefit/purpose + Key dose or advice) in under 90 characters. Return ONLY the plain spoken sentence.";
+                ? "أنت خبير ومستشار طبي وصيدلاني بصوت رجالي واثق وعميق. قم بصياغة ملخص ناطق شامل ودقيق ومُعالج طبياً من النص المعطى بأسلوب نطق مباشر وسلس. اذكر: 1) اسم الدواء والمادة الفعالة، 2) دواعي الاستعمال الرئيسية، 3) الجرعة والتنبيه الهام. اجعل النص ناطقاً وسلساً في حدود 280-350 حرفاً بدون تشكيل عشوائي أو رموز."
+                : "You are a professional medical pharmacology broadcaster with a deep, confident voice. Generate a comprehensive, well-structured spoken summary covering: 1) Drug & active ingredient name, 2) Primary indications, 3) Key dosage and safety warning. Keep it under 320 characters in natural spoken prose.";
 
             const res = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
                 method: "POST",
@@ -37,38 +37,38 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
                         { role: "system", content: systemPrompt },
                         { role: "user", content: cleaned }
                     ],
-                    max_tokens: 45,
+                    max_tokens: 160,
                     temperature: 0.2,
                 }),
-                signal: AbortSignal.timeout(3500),
+                signal: AbortSignal.timeout(4000),
             });
 
             if (res.ok) {
                 const data = await res.json();
                 const brief = data.choices?.[0]?.message?.content?.trim();
-                if (brief && brief.length > 5 && brief.length <= 140) {
+                if (brief && brief.length > 20 && brief.length <= 400) {
                     return brief;
                 }
             }
         } catch (e) {
-            console.warn("AI Audio Condenser fast fallback to rule engine:", e);
+            console.warn("AI Audio Condenser fast fallback to sentence engine:", e);
         }
     }
 
-    // 2. Deterministic Rule-Based Fallback (Instant & 0 latency)
+    // 2. Deterministic Rule-Based Fallback (Rich Multi-Sentence)
     const sentences = cleaned.split(/(?<=[.،!؟\n])/g).map(s => s.trim()).filter(Boolean);
     let result = "";
     for (const s of sentences) {
-        if ((result + " " + s).trim().length <= 120) {
+        if ((result + " " + s).trim().length <= 320) {
             result = (result + " " + s).trim();
         } else {
             break;
         }
     }
     if (!result && sentences[0]) {
-        result = sentences[0].slice(0, 117) + "...";
+        result = sentences[0].slice(0, 310) + "...";
     }
-    return result || cleaned.slice(0, 120);
+    return result || cleaned.slice(0, 320);
 }
 
 export async function POST(req: NextRequest) {
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
         if (!isUltra) {
             return NextResponse.json({ 
-                error: "Ultra plan required to use ElevenLabs neural audio", 
+                error: "Ultra plan required to use neural audio", 
                 code: "PLAN_UPGRADE_REQUIRED" 
             }, { status: 403 });
         }
@@ -102,22 +102,23 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Text parameter is required" }, { status: 400 });
         }
 
-        // Condense text to a short high-impact audio script saving 85%+ ElevenLabs quota
+        // Condense text into a rich, comprehensive medical audio script
         const condensedText = await condenseToAudioBrief(text, lang || "ar");
 
         let audioArrayBuffer: ArrayBuffer | null = null;
         let lastError = "";
 
         if (apiKey) {
-            const primaryVoice = process.env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb";
+            // Prioritize Deep Masculine Male Voices for ElevenLabs
+            const maleBaritoneVoice = "nPczCjzI2devNBz1zQrb"; // Brian - Deep, Resonant Masculine Male
+            const primaryVoice = process.env.ELEVENLABS_VOICE_ID || maleBaritoneVoice;
             const voiceCandidates = Array.from(new Set([
                 voiceId,
+                maleBaritoneVoice,
                 primaryVoice,
-                "JBFqnCBsd6RMkjVDRZzb", // George - Warm, Captivating Storyteller (Top Natural Human Voice)
-                "nPczCjzI2devNBz1zQrb", // Brian - Deep, Resonant & Comforting
-                "TX3LPaxmHKxFdv7VOQHJ", // Liam - Energetic, Clear
-                "EXAVITQu4vr4xnSDxMaL", // Sarah - Reassuring, Mature
-                "enzbGixeo55iqn1QxbbC", // Jon - Calm Presence
+                "JBFqnCBsd6RMkjVDRZzb", // George - Warm & Resonant Male
+                "ONw916nC9r1qSbb1W84R", // Marcus - Deep Baritone
+                "TX3LPaxmHKxFdv7VOQHJ", // Liam - Clear Male
             ].filter(Boolean)));
 
             for (const vid of voiceCandidates) {
@@ -132,9 +133,9 @@ export async function POST(req: NextRequest) {
                             text: condensedText,
                             model_id: targetModelId,
                             voice_settings: {
-                                stability: 0.5,
-                                similarity_boost: 0.75,
-                                style: 0.0,
+                                stability: 0.45,
+                                similarity_boost: 0.85,
+                                style: 0.15,
                                 use_speaker_boost: true,
                             },
                         }),

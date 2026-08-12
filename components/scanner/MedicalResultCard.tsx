@@ -1413,7 +1413,11 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 {data.description}
                             </p>
                         </div>
-                        <VoiceReaderButton text={`${data.drugName}. ${data.description}. ${t('Dosage:', 'الجرعة:')} ${data.dosage || ''}`} lang={resultsLanguage} size="sm" />
+                        <VoiceReaderButton 
+                            text={`${data.drugName || ''}. ${data.activeIngredients ? (isArabic ? 'المكونات الفعالة: ' : 'Active ingredients: ') + data.activeIngredients : ''}. ${data.description || ''}. ${t('Dosage:', 'الجرعة:')} ${data.dosage || ''}. ${data.warnings ? (isArabic ? 'تنبيه هام: ' : 'Warning: ') + data.warnings : ''}`} 
+                            lang={resultsLanguage} 
+                            size="sm" 
+                        />
                     </div>
                     {scannedImage && typeof scannedImage === "string" && (scannedImage.startsWith("data:") || scannedImage.startsWith("blob:") || scannedImage.startsWith("http")) ? (
                         <div className="mt-5 overflow-hidden rounded-xl border border-white/10 bg-slate-950/60 p-2.5 transition-all duration-500 hover:border-cyan-500/30 group">
