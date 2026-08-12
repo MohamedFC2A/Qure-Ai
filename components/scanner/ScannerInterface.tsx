@@ -603,12 +603,12 @@ export const ScannerInterface = () => {
                         {/* ── Main Dropzone Area ── */}
                         <div className="flex flex-col gap-4">
                             <div {...getRootProps()} className={cn(
-                                "relative min-h-[320px] sm:min-h-[350px] border-2 border-dashed rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group overflow-hidden flex-1",
-                                isDragActive ? "border-cyan-300 bg-cyan-300/10 scale-[0.99]" : "border-white/15 hover:border-cyan-400/50 hover:bg-white/[0.04] bg-slate-950/40 backdrop-blur-2xl"
+                                "relative min-h-[320px] sm:min-h-[350px] border-2 border-dashed rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group overflow-hidden flex-1",
+                                isDragActive ? "border-cyan-400 bg-slate-900" : "border-white/15 hover:border-white/30 hover:bg-slate-900/50 bg-slate-950/40 backdrop-blur-2xl"
                             )}>
                                 <input {...getInputProps()} />
 
-                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-cyan-400/20 via-cyan-500/10 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center mb-4 group-hover:scale-105 group-hover:border-cyan-400/60 transition-all duration-300 shadow-xl shadow-cyan-950/40">
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-4 text-cyan-300 shadow-sm">
                                     <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
                                 </div>
 
@@ -628,7 +628,7 @@ export const ScannerInterface = () => {
                                     <button
                                         type="button"
                                         onClick={triggerCamera}
-                                        className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-950/60 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                        className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-sm shadow-sm active:scale-[0.98] transition-all duration-150"
                                     >
                                         <Camera className="w-4.5 h-4.5 shrink-0" />
                                         <span>{t("Take Photo", "التقاط بالكاميرا")}</span>
@@ -731,7 +731,7 @@ export const ScannerInterface = () => {
                                         const scanCount = item.analysis_json?.meta?.scanCount || item.scan_count || 1;
                                         return (
                                             <Link key={item.id} href="/dashboard/history" className="block group">
-                                                <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-cyan-400/40 hover:shadow-lg hover:shadow-cyan-950/20 transition-all duration-200">
+                                                <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:border-white/20 transition-all duration-150 shadow-sm">
                                                     <div className="min-w-0 flex-1 me-2">
                                                         <div className="flex items-center gap-2">
                                                             <p className="text-white font-bold text-xs sm:text-sm truncate group-hover:text-cyan-300 transition-colors">{item.drug_name}</p>

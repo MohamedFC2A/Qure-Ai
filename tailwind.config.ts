@@ -109,10 +109,10 @@ const config: Config = {
             boxShadow: {
                 "glass":        "0 20px 60px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.06) inset",
                 "glass-lg":     "0 32px 80px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.08) inset",
-                "glow-cyan":    "0 0 20px rgba(34,211,238,0.2), 0 0 60px rgba(34,211,238,0.06)",
-                "glow-emerald": "0 0 20px rgba(16,185,129,0.2), 0 0 60px rgba(16,185,129,0.06)",
-                "glow-amber":   "0 0 20px rgba(245,158,11,0.2), 0 0 60px rgba(245,158,11,0.06)",
-                "glow-violet":  "0 0 20px rgba(139,92,246,0.2), 0 0 60px rgba(139,92,246,0.06)",
+                "glow-cyan":    "0 4px 16px rgba(0,0,0,0.3)",
+                "glow-emerald": "0 4px 16px rgba(0,0,0,0.3)",
+                "glow-amber":   "0 4px 16px rgba(0,0,0,0.3)",
+                "glow-violet":  "0 4px 16px rgba(0,0,0,0.3)",
             },
             borderRadius: {
                 "2xl": "1rem",

@@ -86,21 +86,21 @@ export const CreditsWidget = () => {
 
     return (
         <GlassCard className={cn("p-6 flex flex-col justify-between relative overflow-hidden h-full",
-            isUltra ? "border-cyan-500/30" : "border-white/5"
+            isUltra ? "border-slate-700 bg-slate-900/90" : "border-white/10 bg-slate-900/60"
         )}>
             {isUltra && (
-                <div className="absolute top-0 right-0 p-3 bg-cyan-500/10 rounded-bl-2xl border-b border-l border-cyan-500/20">
+                <div className="absolute top-0 right-0 p-3 bg-slate-800 rounded-bl-2xl border-b border-l border-slate-700">
                     <Zap className="w-5 h-5 text-cyan-400" />
                 </div>
             )}
 
             <div>
                 <div className="flex items-center gap-3 mb-6">
-                    <div className={cn("p-2.5 rounded-lg", isUltra ? "bg-cyan-500/20 text-cyan-400" : "bg-white/10 text-white")}>
+                    <div className={cn("p-2.5 rounded-xl border", isUltra ? "bg-slate-800 border-slate-700 text-cyan-400" : "bg-white/5 border-white/10 text-white")}>
                         <TrendingUp className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-white/40 text-xs font-bold uppercase tracking-wider">Current Plan</p>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Current Plan</p>
                         <h3 className="text-xl font-bold text-white capitalize">{status.plan} Plan</h3>
                     </div>
                 </div>
@@ -110,18 +110,18 @@ export const CreditsWidget = () => {
                         <span className="text-5xl font-bold text-white tracking-tight">
                             {status.totalAvailable > 10000 ? "∞" : status.totalAvailable}
                         </span>
-                        <span className="text-white/40 font-medium">credits left</span>
+                        <span className="text-slate-400 font-medium">credits left</span>
                     </div>
 
                     {isUltra ? (
-                        <div className="flex items-center gap-2 text-cyan-400 text-sm bg-cyan-500/10 px-3 py-1.5 rounded-full w-fit">
-                            <Clock className="w-4 h-4" />
-                            <span>Resets daily (50/day)</span>
+                        <div className="flex items-center gap-2 text-slate-300 text-sm bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full w-fit">
+                            <Clock className="w-4 h-4 text-cyan-400" />
+                            <span>Resets monthly (300/mo)</span>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2 text-white/40 text-sm bg-white/5 px-3 py-1.5 rounded-full w-fit">
+                        <div className="flex items-center gap-2 text-slate-400 text-sm bg-white/5 border border-white/10 px-3 py-1.5 rounded-full w-fit">
                             <Clock className="w-4 h-4" />
-                            <span>Resets monthly</span>
+                            <span>Resets monthly (30/mo)</span>
                         </div>
                     )}
                 </div>
@@ -131,7 +131,7 @@ export const CreditsWidget = () => {
                 <Link href={isUltra ? "/billing" : "/pricing"}>
                     <Button
                         className={cn("w-full transition-all",
-                            isUltra ? "bg-white/10 hover:bg-white/20 text-white" : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
+                            isUltra ? "bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white shadow-sm" : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm"
                         )}
                     >
                         {isUltra ? "Manage Subscription" : "Upgrade to Ultra"}

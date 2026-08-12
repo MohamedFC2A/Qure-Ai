@@ -779,26 +779,26 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
         switch (tone) {
             case "danger":
                 return {
-                    card: "bg-red-500/5 hover:bg-red-500/10 border-red-500/20 shadow-[0_0_15px_-4px_rgba(239,68,68,0.15)]",
-                    icon: "bg-red-500/15 border border-red-500/25 text-red-300 shadow-[0_0_10px_-2px_rgba(239,68,68,0.3)]",
+                    card: "bg-red-500/5 hover:bg-red-500/10 border-red-500/20 shadow-sm",
+                    icon: "bg-red-500/15 border border-red-500/25 text-red-300 shadow-sm",
                     title: "text-red-200",
                 };
             case "warn":
                 return {
-                    card: "bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/20 shadow-[0_0_15px_-4px_rgba(245,158,11,0.15)]",
-                    icon: "bg-amber-500/15 border border-amber-500/25 text-amber-300 shadow-[0_0_10px_-2px_rgba(245,158,11,0.3)]",
+                    card: "bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/20 shadow-sm",
+                    icon: "bg-amber-500/15 border border-amber-500/25 text-amber-300 shadow-sm",
                     title: "text-amber-200",
                 };
             case "success":
                 return {
-                    card: "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_15px_-4px_rgba(16,185,129,0.15)]",
-                    icon: "bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 shadow-[0_0_10px_-2px_rgba(16,185,129,0.3)]",
+                    card: "bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 shadow-sm",
+                    icon: "bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 shadow-sm",
                     title: "text-emerald-200",
                 };
             default:
                 return {
-                    card: "bg-white/[0.02] hover:bg-white/[0.04] border-white/10 shadow-[0_0_15px_-4px_rgba(255,255,255,0.05)]",
-                    icon: "bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 shadow-[0_0_10px_-2px_rgba(6,182,212,0.2)]",
+                    card: "bg-white/[0.02] hover:bg-white/[0.04] border-white/10 shadow-sm",
+                    icon: "bg-slate-800 border border-slate-700 text-cyan-300 shadow-sm",
                     title: "text-white",
                 };
         }
@@ -1147,9 +1147,9 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
             <div className="space-y-6 p-3.5 sm:p-8">
                 {/* Smart Merged Record Notification Banner */}
                 {(meta?.isMergedRecord || (meta?.scanCount && meta.scanCount > 1)) && (
-                    <div className="p-4 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-slate-900/90 to-cyan-950/60 backdrop-blur-xl flex items-center justify-between gap-3 shadow-md animate-fade-in">
+                    <div className="p-4 rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex items-center justify-between gap-3 shadow-md animate-fade-in">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shrink-0">
+                            <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-300 shrink-0">
                                 <RotateCcw className="w-4 h-4" />
                             </div>
                             <div>
@@ -1163,16 +1163,16 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </p>
                             </div>
                         </div>
-                        <span className="px-3 py-1 rounded-xl bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold shrink-0">
+                        <span className="px-3 py-1 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono font-bold shrink-0">
                             {isArabic ? `فحص ×${meta?.scanCount || 2}` : `Scanned ×${meta?.scanCount || 2}`}
                         </span>
                     </div>
                 )}
 
                 {/* Description */}
-                <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-md hover:border-cyan-500/20 transition-all duration-300 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3)]">
+                <div className="p-5 rounded-2xl bg-slate-900/60 border border-white/10 backdrop-blur-md hover:border-white/20 transition-all duration-200 shadow-sm">
                     <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+                        <div className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-cyan-300">
                             <Info className="w-5 h-5 shrink-0" />
                         </div>
                         <p className="text-slate-300 leading-relaxed text-sm">
@@ -2034,7 +2034,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
 
                                         {/* Center Target Med */}
                                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                                            <div className="w-[125px] sm:w-[150px] rounded-2xl border-2 border-cyan-400 bg-slate-950/90 p-3 text-center shadow-[0_0_30px_0_rgba(6,182,212,0.5)] animate-pulse transition-all duration-300">
+                                            <div className="w-[125px] sm:w-[150px] rounded-2xl border border-white/15 bg-slate-900/95 p-3 text-center shadow-lg transition-all duration-300">
                                                 <p className="text-[8px] text-cyan-300 font-bold uppercase tracking-wider">{t("Target medication", "الدواء الأساسي")}</p>
                                                 <p className="text-white font-extrabold text-xs sm:text-sm mt-0.5 leading-tight line-clamp-1">{displayDrugName}</p>
                                             </div>
@@ -2365,7 +2365,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 <button
                                     onClick={() => askAi({ preset: "alternative", reset: true })}
                                     disabled={aiLoading}
-                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-start hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-[0_0_15px_-3px_rgba(168,85,247,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                    className="p-4 rounded-xl border border-white/10 bg-slate-900/60 text-start hover:border-purple-500/40 hover:bg-purple-500/5 transition-all duration-200"
                                 >
                                     <div className="flex items-center gap-2 mb-2 text-purple-300">
                                         <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
@@ -2378,7 +2378,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 <button
                                     onClick={() => askAi({ preset: "personalized", reset: true })}
                                     disabled={aiLoading}
-                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-start hover:border-amber-500/30 hover:bg-amber-500/5 hover:shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                    className="p-4 rounded-xl border border-white/10 bg-slate-900/60 text-start hover:border-amber-500/40 hover:bg-amber-500/5 transition-all duration-200"
                                 >
                                     <div className="flex items-center gap-2 mb-2 text-amber-300">
                                         <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
@@ -2391,7 +2391,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 <button
                                     onClick={() => askAi({ preset: "history", reset: true })}
                                     disabled={aiLoading}
-                                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 text-start hover:border-cyan-500/30 hover:bg-cyan-500/5 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)] transition-all duration-300 hover:scale-[1.02]"
+                                    className="p-4 rounded-xl border border-white/10 bg-slate-900/60 text-start hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all duration-200"
                                 >
                                     <div className="flex items-center gap-2 mb-2 text-cyan-300">
                                         <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">

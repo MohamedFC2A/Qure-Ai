@@ -16,23 +16,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant = "primary", size = "md", isLoading, glow = false, children, ...props }, ref) => {
         const variants: Record<ButtonVariant, string> = {
             primary:
-                "bg-cyan-400 text-slate-950 font-semibold hover:bg-cyan-300 border border-cyan-300/60 shadow-lg shadow-cyan-950/25 hover:shadow-glow-cyan",
+                "bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold border border-cyan-400/40 shadow-sm",
             secondary:
-                "bg-white text-slate-950 hover:bg-slate-100 border border-white font-semibold",
+                "bg-slate-800 hover:bg-slate-750 text-white border border-slate-700 font-semibold shadow-sm",
             glass:
-                "backdrop-blur-md border border-white/12 text-white font-medium hover:border-white/20",
+                "backdrop-blur-md border border-white/10 bg-white/[0.04] text-white font-medium hover:border-white/20 hover:bg-white/[0.08]",
             outline:
-                "border border-white/12 bg-transparent hover:bg-white/[0.05] hover:border-white/20 text-white font-medium",
+                "border border-white/10 bg-transparent hover:bg-white/[0.05] hover:border-white/20 text-white font-medium",
             ghost:
                 "hover:bg-white/[0.06] text-slate-300 hover:text-white font-medium",
             violet:
-                "bg-violet-600 text-white font-semibold hover:bg-violet-500 border border-violet-400/40 shadow-lg shadow-violet-950/30 hover:shadow-glow-violet",
+                "bg-violet-600 text-white font-semibold hover:bg-violet-500 border border-violet-500/30 shadow-sm",
             rose:
-                "bg-rose-600 text-white font-semibold hover:bg-rose-500 border border-rose-400/40 shadow-lg shadow-rose-950/30",
+                "bg-rose-600 text-white font-semibold hover:bg-rose-500 border border-rose-500/30 shadow-sm",
             emerald:
-                "bg-emerald-600 text-white font-semibold hover:bg-emerald-500 border border-emerald-400/40 shadow-lg shadow-emerald-950/30 hover:shadow-glow-emerald",
+                "bg-emerald-600 text-white font-semibold hover:bg-emerald-500 border border-emerald-500/30 shadow-sm",
             amber:
-                "bg-amber-500 text-black font-semibold hover:bg-amber-400 border border-amber-400/60 shadow-lg shadow-amber-950/25 hover:shadow-glow-amber",
+                "bg-amber-500 text-black font-semibold hover:bg-amber-400 border border-amber-500/30 shadow-sm",
         };
 
         const sizes: Record<ButtonSize, string> = {
@@ -42,30 +42,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             lg: "h-13 px-8 text-base rounded-xl",
         };
 
-        const glowMap: Record<ButtonVariant, string> = {
-            primary: "shadow-glow-cyan",
-            violet:  "shadow-glow-violet",
-            emerald: "shadow-glow-emerald",
-            amber:   "shadow-glow-amber",
-            secondary: "",
-            glass: "",
-            outline: "",
-            ghost: "",
-            rose: "",
-        };
-
         return (
             <button
                 ref={ref}
                 disabled={isLoading || props.disabled}
                 className={cn(
-                    "inline-flex items-center justify-center font-medium transition-all duration-200",
+                    "inline-flex items-center justify-center font-medium transition-all duration-150",
                     "disabled:opacity-40 disabled:pointer-events-none",
-                    "active:scale-[0.97] focus-visible:outline-none",
-                    "focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent",
+                    "active:scale-[0.98] focus-visible:outline-none",
+                    "focus-visible:ring-1 focus-visible:ring-white/20",
                     variants[variant],
                     sizes[size],
-                    glow && glowMap[variant],
                     className
                 )}
                 {...props}

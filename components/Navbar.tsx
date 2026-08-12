@@ -127,7 +127,7 @@ export const Navbar = () => {
 
                                 {isScanning && (
                                     <Link href="/scan" aria-label="Current Scan Progress" className="shrink-0">
-                                        <div className="flex items-center gap-1.5 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-medium text-cyan-300 transition-all hover:bg-cyan-500/20 whitespace-nowrap">
+                                        <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-slate-900/80 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition-all hover:bg-slate-800 hover:border-white/20 whitespace-nowrap">
                                             <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0 text-cyan-400" />
                                             <span className="hidden sm:inline">{t("Scanning", "جارٍ الفحص")}</span>
                                             <span className="font-mono tabular-nums">{totalDuration}s</span>
@@ -136,22 +136,14 @@ export const Navbar = () => {
                                 )}
 
                                 <Link href="/profile" aria-label={t("Account Credits", "رصيد الحساب")} className="shrink-0">
-                                    <div className={cn(
-                                        "flex h-8 items-center gap-2 rounded-xl border px-3 transition-all whitespace-nowrap backdrop-blur-md shadow-sm",
-                                        isUltra
-                                            ? "border-slate-700/80 bg-slate-900/90 hover:border-cyan-500/50 hover:bg-slate-800/90"
-                                            : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
-                                    )}>
-                                        <Brain className={cn(
-                                            "w-3.5 h-3.5 shrink-0",
-                                            isUltra ? "text-cyan-400" : "text-slate-400"
-                                        )} />
+                                    <div className="flex h-8 items-center gap-2 rounded-xl border border-white/10 bg-slate-900/90 hover:border-white/20 hover:bg-slate-800/90 px-3 transition-all whitespace-nowrap backdrop-blur-md shadow-sm">
+                                        <Brain className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
                                         <span className="font-mono tabular-nums font-bold text-xs sm:text-sm text-white leading-none">
                                             {creditsDisplay}
                                         </span>
                                         <span className={cn(
                                             "text-[10px] font-black tracking-widest leading-none border-l rtl:border-r rtl:border-l-0 pl-2 rtl:pr-2 rtl:pl-0 uppercase",
-                                            isUltra ? "border-slate-700 text-cyan-400" : "border-white/[0.10] text-slate-400 font-medium"
+                                            isUltra ? "border-slate-700 text-cyan-300" : "border-white/10 text-slate-400 font-medium"
                                         )}>
                                             {isUltra ? "ULTRA" : t("credits", "رصيد")}
                                         </span>

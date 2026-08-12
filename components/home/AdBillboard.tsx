@@ -107,8 +107,7 @@ export function AdBillboard({
                 hoveringRef.current = false;
             }}
         >
-            <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-r from-cyan-500/20 via-purple-500/10 to-fuchsia-500/20 blur-2xl opacity-70" />
-            <div className="absolute inset-0 rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(14,165,233,0.12)]" />
+            <div className="absolute inset-0 rounded-3xl border border-white/10 shadow-lg" />
             <div
                 ref={trackRef}
                 className={cn(

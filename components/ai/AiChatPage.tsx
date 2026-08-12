@@ -440,16 +440,13 @@ export function AiChatPage() {
                 {/* ── ULTRA PAYWALL BLOCK (For Free Tier Users) ── */}
                 {!isUltra ? (
                     <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
-                        <div className="max-w-xl w-full rounded-3xl border border-cyan-500/30 p-6 sm:p-8 text-center space-y-6 bg-slate-900/80 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-hidden">
-                            <div className="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl" />
-                            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl" />
-
-                            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center mx-auto text-cyan-400 shadow-inner">
+                        <div className="max-w-xl w-full rounded-3xl border border-white/10 p-6 sm:p-8 text-center space-y-6 bg-slate-900/90 backdrop-blur-xl shadow-xl relative overflow-hidden">
+                            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-cyan-400">
                                 <Lock className="w-8 h-8" />
                             </div>
 
                             <div className="space-y-2">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-cyan-400/10 text-cyan-300 border border-cyan-400/30">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
                                     <Zap className="w-3.5 h-3.5 text-cyan-400" />
                                     {t("ULTRA EXCLUSIVE FEATURE", "ميزة حصرية لمشتركي ULTRA")}
                                 </span>
