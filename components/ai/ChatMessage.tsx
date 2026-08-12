@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Copy, Check, Sparkles, User, CheckCircle2 } from "lucide-react";
+import { Copy, Check, Sparkles, User, CheckCircle2, AlertTriangle, Zap, Info } from "lucide-react";
 import { useState } from "react";
 import { parseAiResponse } from "@/lib/ai/chat";
 
@@ -39,7 +39,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         } catch { /* ignore */ }
     };
 
-    // Markdown renderer for AI answers
+    // Advanced Markdown renderer for AI answers
     const renderMarkdown = (text: string) => {
         const lines = text.split("\n");
         const elements: React.ReactNode[] = [];
@@ -49,9 +49,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         const flushList = () => {
             if (listItems.length > 0) {
                 elements.push(
-                    <ul key={`ul-${elements.length}`} className="list-none space-y-1.5 my-2.5">
+                    <ul key={`ul-${elements.length}`} className="list-none space-y-2 my-3">
                         {listItems.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2">
+                            <li key={i} className="flex items-start gap-2.5">
                                 <span className="mt-2 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
                                 <span className="text-sm leading-relaxed text-slate-200" dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
                             </li>
@@ -64,12 +64,27 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         };
 
         const formatInline = (s: string): string => {
-            // Replace verified document tags with green clinical check badge
-            let formatted = s.replace(
-                /(?:✓\s*\[|\[✓\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 my-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 font-semibold text-xs shrink-0 align-middle"><svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
+            let formatted = s;
+
+            // 1. Red Critical Threat Warning Badge: ⚠️ [...] or [⚠️ ...]
+            formatted = formatted.replace(
+                /(?:⚠️\s*\[|\[⚠️\s*)([^\]]+)\]/gi,
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/60 border border-red-500/50 text-red-400 font-bold text-xs shrink-0 shadow-sm align-middle animate-pulse"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
             );
 
+            // 2. Amber Caution Badge: ⚡ [...] or [⚡ ...]
+            formatted = formatted.replace(
+                /(?:⚡\s*\[|\[⚡\s*)([^\]]+)\]/gi,
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/60 border border-amber-500/50 text-amber-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
+            );
+
+            // 3. Green Verified Document Badge: ✓ [...] or [✓ ...]
+            formatted = formatted.replace(
+                /(?:✓\s*\[|\[✓\s*)([^\]]+)\]/gi,
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 font-semibold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
+            );
+
+            // Bold, italic, code formatting
             return formatted
                 .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
                 .replace(/\*(.+?)\*/g, '<em class="italic text-slate-300">$1</em>')
@@ -84,12 +99,24 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 continue;
             }
 
+            // Clinical Callout Box (> quote)
+            if (line.startsWith("> ")) {
+                flushList();
+                elements.push(
+                    <div key={`quote-${i}`} className="my-3.5 p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/30 text-cyan-200 text-xs sm:text-sm leading-relaxed flex items-start gap-3 shadow-sm">
+                        <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                        <div className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^>\s+/, "")) }} />
+                    </div>
+                );
+                continue;
+            }
+
             // Headers
             if (line.startsWith("## ")) {
                 flushList();
                 elements.push(
-                    <h4 key={`h-${i}`} className="font-bold text-white text-base mt-4 mb-2 flex items-center gap-2">
-                        <span className="w-1 h-4 rounded-full bg-cyan-400 shrink-0" />
+                    <h4 key={`h-${i}`} className="font-extrabold text-white text-base mt-6 mb-3 flex items-center gap-2.5 pb-1.5 border-b border-slate-800/80">
+                        <span className="w-1.5 h-4.5 rounded-full bg-cyan-400 shrink-0" />
                         <span dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^##\s+/, "")) }} />
                     </h4>
                 );
@@ -98,7 +125,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             if (line.startsWith("### ")) {
                 flushList();
                 elements.push(
-                    <h5 key={`h-${i}`} className="font-semibold text-white text-sm mt-3 mb-1">
+                    <h5 key={`h-${i}`} className="font-bold text-white text-sm mt-4 mb-2 flex items-center gap-2">
+                        <span className="w-1 h-3.5 rounded-full bg-cyan-500/70 shrink-0" />
                         <span dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^###\s+/, "")) }} />
                     </h5>
                 );
@@ -121,7 +149,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
             flushList();
             elements.push(
-                <p key={`p-${i}`} className="text-sm leading-relaxed my-1 text-slate-200"
+                <p key={`p-${i}`} className="text-sm leading-relaxed my-1.5 text-slate-200"
                     dangerouslySetInnerHTML={{ __html: formatInline(line) }}
                 />
             );
