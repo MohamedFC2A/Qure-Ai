@@ -15,6 +15,7 @@ import {
     LogOut,
     Brain,
     Zap,
+    Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -137,19 +138,25 @@ export const Navbar = () => {
 
                                 <Link href="/profile" aria-label={t("Account Credits", "رصيد الحساب")} className="shrink-0">
                                     <div className={cn(
-                                        "flex items-center gap-2 rounded-xl border px-3 py-1.5 transition-all whitespace-nowrap",
+                                        "flex h-8 items-center gap-2 rounded-xl border px-3 transition-all whitespace-nowrap backdrop-blur-md shadow-sm",
                                         isUltra
-                                            ? "border-amber-500/25 bg-amber-500/10 hover:bg-amber-500/15"
+                                            ? "border-cyan-400/30 bg-gradient-to-r from-cyan-950/50 via-slate-900/80 to-violet-950/50 hover:border-cyan-400/60 hover:shadow-[0_0_15px_rgba(6,182,212,0.25)]"
                                             : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
                                     )}>
-                                        <Zap className={cn(
-                                            "w-3.5 h-3.5 shrink-0",
-                                            isUltra ? "text-amber-400" : "text-slate-400"
-                                        )} />
-                                        <span className="font-mono tabular-nums font-bold text-sm text-white leading-none">
+                                        {isUltra ? (
+                                            <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse shrink-0" />
+                                        ) : (
+                                            <Zap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                        )}
+                                        <span className="font-mono tabular-nums font-bold text-sm text-cyan-50 leading-none">
                                             {creditsDisplay}
                                         </span>
-                                        <span className="text-[10px] font-medium text-slate-400 leading-none border-l rtl:border-r rtl:border-l-0 border-white/[0.10] pl-2 rtl:pr-2 rtl:pl-0">
+                                        <span className={cn(
+                                            "text-[10px] font-black tracking-wider leading-none border-l rtl:border-r rtl:border-l-0 pl-2 rtl:pr-2 rtl:pl-0",
+                                            isUltra
+                                                ? "border-white/15 bg-gradient-to-r from-cyan-300 via-sky-200 to-violet-300 bg-clip-text text-transparent uppercase"
+                                                : "border-white/[0.10] text-slate-400 font-medium"
+                                        )}>
                                             {isUltra ? "ULTRA" : t("credits", "رصيد")}
                                         </span>
                                     </div>
