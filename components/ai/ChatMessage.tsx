@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Copy, Check, Sparkles, User } from "lucide-react";
+import { Copy, Check, Sparkles, User, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { parseAiResponse } from "@/lib/ai/chat";
 
@@ -64,8 +64,14 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         };
 
         const formatInline = (s: string): string => {
-            return s
-                .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>')
+            // Replace verified document tags with green clinical check badge
+            let formatted = s.replace(
+                /(?:✓\s*\[|\[✓\s*)([^\]]+)\]/gi,
+                '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 my-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 font-semibold text-xs shrink-0 align-middle"><svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
+            );
+
+            return formatted
+                .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
                 .replace(/\*(.+?)\*/g, '<em class="italic text-slate-300">$1</em>')
                 .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-800 text-cyan-300 text-xs font-mono border border-slate-700">$1</code>');
         };
@@ -84,7 +90,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 elements.push(
                     <h4 key={`h-${i}`} className="font-bold text-white text-base mt-4 mb-2 flex items-center gap-2">
                         <span className="w-1 h-4 rounded-full bg-cyan-400 shrink-0" />
-                        {line.replace(/^##\s+/, "")}
+                        <span dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^##\s+/, "")) }} />
                     </h4>
                 );
                 continue;
@@ -93,7 +99,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 flushList();
                 elements.push(
                     <h5 key={`h-${i}`} className="font-semibold text-white text-sm mt-3 mb-1">
-                        {line.replace(/^###\s+/, "")}
+                        <span dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^###\s+/, "")) }} />
                     </h5>
                 );
                 continue;
