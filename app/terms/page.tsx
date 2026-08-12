@@ -118,7 +118,7 @@ export default function TermsPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ biometricVerified: isBiometricVerified }),
-            }).catch((apiErr) => console.warn("[Terms API Error]:", apiErr));
+            }).catch((apiErr: any) => console.warn("[Terms API Error]:", apiErr));
 
             if (user && user?.id !== "local-dev-user" && user?.id !== "00000000-0000-0000-0000-000000000001") {
                 await supabase.auth.updateUser({
@@ -127,7 +127,7 @@ export default function TermsPage() {
                         terms_version: TERMS_VERSION,
                         biometric_verified: isBiometricVerified,
                     },
-                }).catch((upErr) => console.warn("[Supabase UpdateUser Error]:", upErr));
+                }).catch((upErr: any) => console.warn("[Supabase UpdateUser Error]:", upErr));
             }
 
             try {
