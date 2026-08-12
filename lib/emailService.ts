@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 interface GoldenCeoEmailParams {
     userId: string;
@@ -15,6 +16,7 @@ interface GoldenCeoEmailParams {
 }
 
 const OFFICIAL_PRODUCTION_URL = "https://qure-ai-nexus.vercel.app";
+const CEO_EMAIL = "mohamedahmedmatany@gmail.com";
 
 export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParams) {
     const {
@@ -45,10 +47,10 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>تفعيل الاشتراك الذهبي</title>
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #030712; color: #f9fafb; padding: 12px; margin: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #030712; color: #f9fafb; padding: 12px; margin: 0; }
         .card { max-width: 540px; margin: 0 auto; background: #0f172a; border: 1.5px solid #eab308; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .header { text-align: center; border-bottom: 1px solid #1e293b; padding-bottom: 16px; margin-bottom: 20px; }
-        .badge { background: #ca8a04; color: #000; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 12px; display: inline-block; letter-spacing: 0.5px; }
+        .badge { background: #ca8a04; color: #000; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 12px; display: inline-block; }
         h1 { color: #facc15; font-size: 20px; margin: 10px 0 4px; font-weight: 900; }
         .btn-box { text-align: center; margin: 24px 0; }
         .btn { background: #22c55e !important; color: #000000 !important; font-size: 17px; font-weight: 900; padding: 16px 28px; border-radius: 14px; text-decoration: none; display: block; box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4); text-align: center; }
@@ -68,7 +70,6 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
           <p style="color: #cbd5e1; font-size: 13px; margin: 4px 0 0;">المستخدم يطلب ترقية حسابه إلى باقة ألترا (٣٠٠ رصيد شهرياً)</p>
         </div>
 
-        <!-- DIRECT 1-TAP ACTIVATION BUTTON AT TOP FOR MOBILE -->
         <div class="btn-box">
           <a href="${activationUrl}" class="btn" target="_blank">
             ⚡ اضغط هنا لتفعيل الحساب فوراً
@@ -111,80 +112,43 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     </html>
     `;
 
-    let emailDelivered = false;
+    let delivered = false;
 
-    // 1. Direct Web-API Dispatch via FormSubmit
-    try {
-        const formSubmitRes = await fetch("https://formsubmit.co/ajax/mohamedahmedmatany@gmail.com", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "Referer": baseSiteUrl,
-                "Origin": baseSiteUrl,
-                "User-Agent": "QureScan-Platform/1.0",
-            },
-            body: JSON.stringify({
-                _subject: subject,
-                "⚡ اضغط هنا للتفعيل الفوري بضغطة واحدة": activationUrl,
-                "اسم المستخدم": displayName,
-                "البريد الإلكتروني": email,
-                "معرف المستخدم": userId,
-                "الخطة الحالية": currentPlan,
-                "العمر والجنس": `${age || "—"} / ${gender || "—"}`,
-                "الطول والوزن": `${height || "—"} / ${weight || "—"}`,
-                "وقت الطلب": new Date().toLocaleString("ar-EG", { timeZone: "Africa/Cairo" }),
-                "رابط الموقع": baseSiteUrl,
-                _template: "table",
-                _captcha: "false",
-            }),
-        });
-
-        const formJson = await formSubmitRes.json().catch(() => ({}));
-        if (formSubmitRes.ok && formJson.success !== false) {
-            console.log(`[Email] Notification delivered directly to mohamedahmedmatany@gmail.com via FormSubmit API.`);
-            emailDelivered = true;
-        }
-    } catch (apiErr: any) {
-        console.warn("[Email Dispatch Warning] FormSubmit attempt:", apiErr.message);
-    }
-
-    // 1b. Fallback standard URL-encoded form dispatch
-    if (!emailDelivered) {
+    // ─────────────────────────────────────────────────────────────
+    // METHOD 1: Resend API (Official Enterprise Email Service)
+    // ─────────────────────────────────────────────────────────────
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
         try {
-            const formData = new URLSearchParams();
-            formData.append("_subject", subject);
-            formData.append("تفعيل فوري بضغطة واحدة", activationUrl);
-            formData.append("اسم المستخدم", displayName);
-            formData.append("البريد الإلكتروني", email);
-            formData.append("معرف المستخدم (ID)", userId);
-            formData.append("الخطة الحالية", currentPlan);
-            formData.append("البيانات الصحية", `العمر: ${age || "—"} | الجنس: ${gender || "—"} | الطول: ${height || "—"} | الوزن: ${weight || "—"}`);
-            formData.append("_captcha", "false");
-
-            await fetch("https://formsubmit.co/mohamedahmedmatany@gmail.com", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Referer": baseSiteUrl,
-                    "Origin": baseSiteUrl,
-                },
-                body: formData.toString(),
+            const resend = new Resend(resendApiKey);
+            const sendRes = await resend.emails.send({
+                from: process.env.RESEND_FROM_EMAIL || "QureScan <onboarding@resend.dev>",
+                to: [CEO_EMAIL],
+                subject,
+                html: htmlContent,
             });
-            emailDelivered = true;
-        } catch (e: any) {
-            console.warn("[FormSubmit URL-encoded fallback]", e.message);
+
+            if (sendRes.data?.id) {
+                console.log(`[Email] Delivered via Resend API (ID: ${sendRes.data.id}) to ${CEO_EMAIL}`);
+                delivered = true;
+            } else if (sendRes.error) {
+                console.warn("[Email] Resend API error:", sendRes.error.message);
+            }
+        } catch (err: any) {
+            console.warn("[Email] Resend exception:", err.message);
         }
     }
 
-    // 2. SMTP Nodemailer Delivery (if configured)
-    try {
-        const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-        const smtpPort = Number(process.env.SMTP_PORT) || 465;
-        const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-        const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+    // ─────────────────────────────────────────────────────────────
+    // METHOD 2: Official Gmail / SMTP (Nodemailer Direct Connection)
+    // ─────────────────────────────────────────────────────────────
+    const smtpUser = process.env.GMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_USER;
+    const smtpPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASS;
+    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+    const smtpPort = Number(process.env.SMTP_PORT) || 465;
 
-        if (smtpUser && smtpPass) {
+    if (!delivered && smtpUser && smtpPass) {
+        try {
             const transporter = nodemailer.createTransport({
                 host: smtpHost,
                 port: smtpPort,
@@ -197,16 +161,103 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
 
             await transporter.sendMail({
                 from: `"QureScan CEO Gateway" <${smtpUser}>`,
-                to: "mohamedahmedmatany@gmail.com",
+                to: CEO_EMAIL,
                 subject,
                 html: htmlContent,
             });
-            console.log(`[Email] Sent via SMTP to mohamedahmedmatany@gmail.com for user ${userId}`);
-            emailDelivered = true;
+            console.log(`[Email] Delivered via Direct SMTP to ${CEO_EMAIL}`);
+            delivered = true;
+        } catch (smtpErr: any) {
+            console.warn("[Email] Direct SMTP error:", smtpErr.message);
         }
-    } catch (smtpErr: any) {
-        console.warn("[Email Dispatch Warning] SMTP attempt:", smtpErr.message);
     }
 
-    console.log(`[Email Summary] User: ${email}, Activation URL: ${activationUrl}, Delivered: ${emailDelivered}`);
+    // ─────────────────────────────────────────────────────────────
+    // METHOD 3: Telegram Bot Instant Push (Zero-Spam Phone Notification)
+    // ─────────────────────────────────────────────────────────────
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    if (telegramToken && telegramChatId) {
+        try {
+            const telegramText = `👑 *طلب اشتراك ذهبي جديد (Beta)*\n\n` +
+                `👤 *المستخدم:* ${displayName}\n` +
+                `📧 *الإيميل:* \`${email}\`\n` +
+                `🆔 *ID:* \`${userId}\`\n` +
+                `📊 *الخطة:* ${currentPlan.toUpperCase()}\n` +
+                `🩺 *البيانات:* عمر: ${age || "—"} | جنس: ${gender || "—"} | وزن: ${weight || "—"} | طول: ${height || "—"}\n\n` +
+                `⚡ *اضغط للـتـفـعـيـل الفوري:*\n${activationUrl}`;
+
+            await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: telegramChatId,
+                    text: telegramText,
+                    parse_mode: "Markdown",
+                }),
+            });
+            console.log(`[Telegram] Instant notification sent to chat ${telegramChatId}`);
+        } catch (tgErr: any) {
+            console.warn("[Telegram] Error:", tgErr.message);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // METHOD 4: Discord Webhook Push (if configured)
+    // ─────────────────────────────────────────────────────────────
+    const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (discordWebhookUrl) {
+        try {
+            await fetch(discordWebhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    embeds: [{
+                        title: "👑 طلب تفعيل الاشتراك الذهبي (Beta)",
+                        color: 16758784, // Gold
+                        fields: [
+                            { name: "المستخدم", value: displayName, inline: true },
+                            { name: "البريد الإلكتروني", value: email, inline: true },
+                            { name: "معرف المستخدم (User ID)", value: userId, inline: false },
+                            { name: "رابط التفعيل الفوري", value: `[⚡ اضغط هنا لتفعيل الحساب فوراً](${activationUrl})`, inline: false },
+                        ],
+                        timestamp: new Date().toISOString(),
+                    }],
+                }),
+            });
+        } catch (dErr: any) {
+            console.warn("[Discord] Error:", dErr.message);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // METHOD 5: Public Web Dispatch (FormSubmit Fallback)
+    // ─────────────────────────────────────────────────────────────
+    if (!delivered) {
+        try {
+            const formData = new URLSearchParams();
+            formData.append("_subject", subject);
+            formData.append("⚡ تفعيل فوري", activationUrl);
+            formData.append("المستخدم", displayName);
+            formData.append("البريد الإلكتروني", email);
+            formData.append("User ID", userId);
+            formData.append("الخطة", currentPlan);
+            formData.append("_captcha", "false");
+
+            await fetch(`https://formsubmit.co/${CEO_EMAIL}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Referer": baseSiteUrl,
+                    "Origin": baseSiteUrl,
+                },
+                body: formData.toString(),
+            });
+            console.log(`[FormSubmit] Dispatched form payload to ${CEO_EMAIL}`);
+        } catch (fsErr: any) {
+            console.warn("[FormSubmit] Error:", fsErr.message);
+        }
+    }
+
+    console.log(`[Golden CEO Dispatch Summary] User: ${email}, Activation: ${activationUrl}`);
 }
