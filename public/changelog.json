@@ -1,5 +1,42 @@
 [
   {
+    "version": "v1.3.6 (Beta)",
+    "titleEn": "Aura-OS Ai (AOS AI) Branding Update & Telegram Control Enhancements",
+    "titleAr": "تحديث علامة Aura-OS Ai (AOS AI) وتحسينات لوحة تحكم بوت تيليجرام",
+    "date": "2026-08-12",
+    "badge": "Beta Release",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "New Features & Enhancements",
+        "categoryAr": "الميزات والتحسينات الجديدة",
+        "itemsEn": [
+          "Unified the experience with the updated “Aura-OS Ai (AOS AI)” branding across the platform, including badges and release notes.",
+          "Upgraded the release notes to be more human-friendly, bilingual, and free of technical jargon for clearer updates."
+        ],
+        "itemsAr": [
+          "تم توحيد تجربة الاستخدام بعلامة “Aura-OS Ai (AOS AI)” عبر المنصة بالكامل، بما في ذلك الشارات وملاحظات الإصدارات.",
+          "تم تحسين ملاحظات الإصدارات لتكون أكثر وضوحًا وسهلة القراءة، مع دعم اللغتين وتجنب المصطلحات التقنية."
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "System Stability & User Experience",
+        "categoryAr": "استقرار النظام وسلاسة الاستخدام",
+        "itemsEn": [
+          "Refreshed the visual design for a clean, matte executive look by removing glowing borders and neon effects from components, navigation, and buttons.",
+          "Improved Telegram Bot reliability by optimizing webhook and public callback handling for faster, smoother execution.",
+          "Secured webhook flows by allowing key Telegram endpoints to run without interruption from standard auth-cookie checks."
+        ],
+        "itemsAr": [
+          "تم تحديث التصميم البصري ليصبح أنيقًا بتأثير مات واضح من خلال إزالة الحواف المتوهجة والتأثيرات النيون من المكونات وشريط التنقل والأزرار.",
+          "تم تحسين موثوقية بوت تيليجرام عبر تحسين معالجة الويب هوك وعمليات الاستدعاء العامة لضمان تنفيذ أسرع وأكثر سلاسة.",
+          "تمت تسهيل مسارات الويب هوك عبر السماح لنقاط تيليجرام الأساسية بالعمل دون تأثر من فحوصات ملفات تعريف تسجيل الدخول."
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.3.5 (Beta)",
     "titleEn": "Aura-OS Ai Updates: Cleaner Interface, Smarter Changelog, and Enhanced Telegram Controls",
     "titleAr": "تحديثات Aura-OS Ai: واجهة أنظف، سجل تغييرات أذكى، وتحكمات محسّنة في تلغرام",

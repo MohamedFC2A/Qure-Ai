@@ -2,6 +2,17 @@
 
 Smart release notes powered by Aura-OS Ai (AOS AI).
 
+## v1.3.6 (Beta) — Aura-OS Ai (AOS AI) Branding Update & Telegram Control Enhancements (2026-08-12)
+
+### New Features & Enhancements
+- Unified the experience with the updated “Aura-OS Ai (AOS AI)” branding across the platform, including badges and release notes.
+- Upgraded the release notes to be more human-friendly, bilingual, and free of technical jargon for clearer updates.
+
+### System Stability & User Experience
+- Refreshed the visual design for a clean, matte executive look by removing glowing borders and neon effects from components, navigation, and buttons.
+- Improved Telegram Bot reliability by optimizing webhook and public callback handling for faster, smoother execution.
+- Secured webhook flows by allowing key Telegram endpoints to run without interruption from standard auth-cookie checks.
+
 ## v1.3.5 (Beta) — Aura-OS Ai Updates: Cleaner Interface, Smarter Changelog, and Enhanced Telegram Controls (2026-08-12)
 
 ### New Features & Enhancements

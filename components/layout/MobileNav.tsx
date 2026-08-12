@@ -1,98 +1,216 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Atom, ScanLine, Clock, Gem, LogIn, UserPlus, Brain, LayoutDashboard } from "lucide-react";
+import { Atom, ScanLine, Clock, Brain, MoreHorizontal, Sparkles } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
+import { MobileHubDrawer } from "./MobileHubDrawer";
 
 export const MobileNav = () => {
     const pathname = usePathname();
     const { user } = useUser();
     const { resultsLanguage } = useSettings();
+    const [isHubOpen, setIsHubOpen] = useState(false);
 
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
-    const navItems = user
-        ? [
-              { name: t("Home", "الرئيسية"), href: "/",                  icon: Atom },
-              { name: t("Scan", "الفحص"),    href: "/scan",              icon: ScanLine },
-              { name: "AOS AI",               href: "/ai",                icon: Brain },
-              { name: t("History", "السجل"), href: "/dashboard/history", icon: Clock },
-              // { name: t("Dashboard", "لوحة التحكم"), href: "/dashboard", icon: LayoutDashboard }, // TODO: unhide
-          ]
-        : [
-              { name: t("Home", "الرئيسية"),    href: "/",        icon: Atom },
-              { name: t("Plans", "الباقات"),    href: "/pricing", icon: Gem },
-              { name: t("Login", "الدخول"),     href: "/login",   icon: LogIn },
-              { name: t("Sign Up", "التسجيل"), href: "/signup",  icon: UserPlus },
-          ];
+    const navItems = [
+        {
+            name: t("Home", "الرئيسية"),
+            href: "/",
+            icon: Atom,
+        },
+        {
+            name: "AOS AI",
+            href: "/ai",
+            icon: Brain,
+        },
+        {
+            name: t("Scan", "فحص"),
+            href: "/scan",
+            icon: ScanLine,
+            isCenter: true,
+        },
+        {
+            name: t("History", "السجل"),
+            href: "/dashboard/history",
+            icon: Clock,
+        },
+    ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-[env(safe-area-inset-bottom)] pointer-events-none" suppressHydrationWarning>
-            <div className="pointer-events-auto relative">
-                {/* Background */}
-                <div
-                    className="absolute inset-0 border-t border-white/[0.07]"
-                    style={{
-                        background: "rgba(5, 7, 12, 0.96)",
-                        boxShadow: "0 -8px 32px rgba(0,0,0,0.6)",
-                        backdropFilter: "blur(24px) saturate(140%)",
-                        WebkitBackdropFilter: "blur(24px) saturate(140%)",
-                    }}
-                />
+        <>
+            <MobileHubDrawer isOpen={isHubOpen} onClose={() => setIsHubOpen(false)} />
 
-                {/* Top accent line — subtle, neutral */}
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+            <nav
+                className="fixed bottom-0 left-0 right-0 z-40 md:hidden pb-[env(safe-area-inset-bottom)] pointer-events-none"
+                suppressHydrationWarning
+                role="navigation"
+                aria-label="Mobile Navigation"
+            >
+                <div className="pointer-events-auto relative px-3 pb-2 pt-1">
+                    {/* Background Dock Frame */}
+                    <div className="relative rounded-2xl border border-white/10 bg-slate-950/92 backdrop-blur-2xl shadow-2xl overflow-hidden">
+                        
+                        {/* Top accent divider */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
 
-                <div className="relative flex items-center justify-around px-2 py-1.5 sm:py-2">
-                    {navItems.map((item) => {
-                        const isActive =
-                            pathname === item.href ||
-                            (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+                        <div className="flex items-center justify-around px-1 py-1.5 sm:py-2">
+                            
+                            {/* Tab 1: Home */}
+                            {(() => {
+                                const item = navItems[0];
+                                const isActive = pathname === item.href;
+                                const Icon = item.icon;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        aria-label={item.name}
+                                        aria-current={isActive ? "page" : undefined}
+                                        className="flex-1 rounded-xl py-1 focus-visible:outline-none"
+                                    >
+                                        <div className="flex flex-col items-center gap-1 group">
+                                            <div className={cn(
+                                                "p-1.5 rounded-xl transition-all duration-150 relative",
+                                                isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
+                                            )}>
+                                                <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                            </div>
+                                            <span className={cn(
+                                                "text-[10px] font-bold tracking-tight leading-none transition-colors",
+                                                isActive ? "text-white" : "text-slate-400"
+                                            )}>
+                                                {item.name}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                );
+                            })()}
 
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                aria-label={item.name}
-                                aria-current={isActive ? "page" : undefined}
-                                className="flex-1 rounded-xl focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 py-1"
+                            {/* Tab 2: AOS AI */}
+                            {(() => {
+                                const item = navItems[1];
+                                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                                const Icon = item.icon;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        aria-label={item.name}
+                                        aria-current={isActive ? "page" : undefined}
+                                        className="flex-1 rounded-xl py-1 focus-visible:outline-none"
+                                    >
+                                        <div className="flex flex-col items-center gap-1 group">
+                                            <div className={cn(
+                                                "p-1.5 rounded-xl transition-all duration-150 relative",
+                                                isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
+                                            )}>
+                                                <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                            </div>
+                                            <span className={cn(
+                                                "text-[10px] font-bold tracking-tight leading-none transition-colors",
+                                                isActive ? "text-white" : "text-slate-400"
+                                            )}>
+                                                {item.name}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                );
+                            })()}
+
+                            {/* Center Action: Scan Button */}
+                            {(() => {
+                                const item = navItems[2];
+                                const isActive = pathname === item.href;
+                                const Icon = item.icon;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        aria-label={item.name}
+                                        aria-current={isActive ? "page" : undefined}
+                                        className="flex-1 flex justify-center -mt-3 focus-visible:outline-none"
+                                    >
+                                        <div className="flex flex-col items-center gap-0.5 group">
+                                            <div className={cn(
+                                                "w-11 h-11 rounded-2xl flex items-center justify-center border shadow-md active:scale-95 transition-all duration-150",
+                                                isActive
+                                                    ? "bg-cyan-600 border-cyan-400 text-white"
+                                                    : "bg-slate-800 border-slate-700 text-cyan-400 hover:border-white/30"
+                                            )}>
+                                                <Icon className="w-5 h-5 shrink-0" />
+                                            </div>
+                                            <span className="text-[10px] font-extrabold text-white tracking-tight">
+                                                {item.name}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                );
+                            })()}
+
+                            {/* Tab 4: History */}
+                            {(() => {
+                                const item = navItems[3];
+                                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                                const Icon = item.icon;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        aria-label={item.name}
+                                        aria-current={isActive ? "page" : undefined}
+                                        className="flex-1 rounded-xl py-1 focus-visible:outline-none"
+                                    >
+                                        <div className="flex flex-col items-center gap-1 group">
+                                            <div className={cn(
+                                                "p-1.5 rounded-xl transition-all duration-150 relative",
+                                                isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
+                                            )}>
+                                                <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                            </div>
+                                            <span className={cn(
+                                                "text-[10px] font-bold tracking-tight leading-none transition-colors",
+                                                isActive ? "text-white" : "text-slate-400"
+                                            )}>
+                                                {item.name}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                );
+                            })()}
+
+                            {/* Tab 5: More Hub Trigger */}
+                            <button
+                                type="button"
+                                onClick={() => setIsHubOpen(true)}
+                                aria-label={t("More options", "المزيد")}
+                                className="flex-1 rounded-xl py-1 focus-visible:outline-none"
                             >
                                 <div className="flex flex-col items-center gap-1 group">
-                                    {/* Icon */}
-                                    <div
-                                        className={cn(
-                                            "relative p-2 rounded-xl transition-all duration-200",
-                                            isActive
-                                                ? "bg-white/[0.10] text-white"
-                                                : "text-slate-600 group-hover:text-slate-400 hover:bg-white/[0.04]"
-                                        )}
-                                    >
-                                        <item.icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                                        {/* Active indicator */}
-                                        {isActive && (
-                                            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/50" />
-                                        )}
+                                    <div className={cn(
+                                        "p-1.5 rounded-xl transition-all duration-150 relative",
+                                        isHubOpen ? "bg-slate-800 text-white border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
+                                    )}>
+                                        <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 border-2 border-slate-950" />
                                     </div>
-
-                                    {/* Label */}
-                                    <span
-                                        className={cn(
-                                            "text-[9px] sm:text-[10px] tracking-tight leading-none font-medium transition-colors",
-                                            isActive ? "text-white" : "text-slate-600 group-hover:text-slate-400"
-                                        )}
-                                    >
-                                        {item.name}
+                                    <span className={cn(
+                                        "text-[10px] font-bold tracking-tight leading-none transition-colors",
+                                        isHubOpen ? "text-white" : "text-slate-400"
+                                    )}>
+                                        {t("More", "المزيد")}
                                     </span>
                                 </div>
-                            </Link>
-                        );
-                    })}
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </nav>
+        </>
     );
 };
