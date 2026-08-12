@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
     X,
+    ScanLine,
     Zap,
     Gem,
     User,
@@ -51,8 +52,15 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
         setResultsLanguage(resultsLanguage === "ar" ? "en" : "ar");
     };
 
-    // Exclusive pages that are NOT present in the bottom dock (Home, Scan, Qure AI, History are already in the bottom bar)
     const exclusiveMenuItems = [
+        {
+            titleEn: "Scan Medication",
+            titleAr: "فحص الدواء والروشتات",
+            descEn: "Capture drug box or prescription",
+            descAr: "التقط صورة لعلبة الدواء أو الوصفة الطبية",
+            href: "/scan",
+            icon: ScanLine,
+        },
         {
             titleEn: "Updates & Changelog",
             titleAr: "التحديثات وسجل الإصدارات",
