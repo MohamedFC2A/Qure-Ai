@@ -31,6 +31,8 @@ function fixInvalidJsonEscapes(jsonText: string): string {
     return jsonText.replace(/\\(?!["\\\/bfnrtu]|u[0-9a-fA-F]{4})/g, "\\\\");
 }
 
+import { getLocalDevUser } from "@/lib/devAuth";
+
 function clampText(value: unknown, maxLen: number): string {
     const s = String(value ?? "").trim();
     if (!s) return "";
@@ -82,7 +84,8 @@ export async function POST(req: NextRequest) {
     const startTime = Date.now();
     try {
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const user = authUser || getLocalDevUser(req);
 
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

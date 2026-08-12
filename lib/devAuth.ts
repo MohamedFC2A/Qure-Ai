@@ -5,13 +5,15 @@ export const LOCAL_DEV_USER_ID = "local-dev-user";
 export const LOCAL_DEV_EMAIL = "local.dev@qurescan.local";
 export const LOCAL_DEV_COOKIE = "qurescan_dev_auth";
 
-export function getLocalDevUser(request: NextRequest) {
-    const host = request.headers.get("host") || "";
-    const isLocalHost = host.startsWith("localhost:") || host.startsWith("127.0.0.1:") || host.startsWith("[::1]:");
-    const hasDevCookie = request.cookies.get(LOCAL_DEV_COOKIE)?.value === "1";
-
-    if (process.env.NODE_ENV !== "development" || !isLocalHost || !hasDevCookie) {
+export function getLocalDevUser(request?: NextRequest | null) {
+    if (process.env.NODE_ENV !== "development") {
         return null;
+    }
+
+    if (request) {
+        const host = request.headers.get("host") || "";
+        const isLocalHost = host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
+        if (!isLocalHost) return null;
     }
 
     return {

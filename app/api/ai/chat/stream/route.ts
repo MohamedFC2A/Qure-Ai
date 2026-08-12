@@ -8,6 +8,8 @@ import { buildSmartMemoryMessages } from "@/lib/ai/memory";
 import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
 import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
 
+import { getLocalDevUser } from "@/lib/devAuth";
+
 const META_SEPARATOR = "\n---METADATA---\n";
 
 function formatMedicationContext(med: any): string {
@@ -44,7 +46,8 @@ function formatMedicationContext(med: any): string {
 export async function POST(req: NextRequest) {
     try {
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const user = authUser || getLocalDevUser(req);
 
         if (!user) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });

@@ -39,6 +39,9 @@ function getAdminClientSafe() {
 }
 
 export async function getUserPlan(userId: string, supabaseClient?: any): Promise<PlanType> {
+    if (process.env.NODE_ENV === "development" && (userId === "local-dev-user" || !userId)) {
+        return "ultra";
+    }
     const primaryClient = supabaseClient;
     const adminClient = getAdminClientSafe();
 

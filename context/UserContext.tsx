@@ -25,8 +25,9 @@ interface UserState {
 const UserContext = createContext<UserState | undefined>(undefined);
 
 const getLocalDevUser = () => {
-    if (process.env.NODE_ENV !== "development" || typeof document === "undefined") return null;
-    if (!document.cookie.split("; ").some((cookie) => cookie === "qurescan_dev_auth=1")) return null;
+    if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return null;
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (!isLocalhost) return null;
 
     return {
         id: "local-dev-user",
@@ -43,8 +44,8 @@ const getLocalDevUser = () => {
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [plan, setPlan] = useState<'free' | 'ultra'>('free');
-    const [credits, setCredits] = useState(0);
+    const [plan, setPlan] = useState<'free' | 'ultra'>('ultra');
+    const [credits, setCredits] = useState(999999);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
 
@@ -52,6 +53,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const localDevUser = getLocalDevUser();
             if (localDevUser) {
+                // In local dev, auto-login as localDevUser with ULTRA plan automatically
                 setUser(localDevUser);
                 setProfile({
                     username: "local_dev",
@@ -61,7 +63,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     weight: "75 kg",
                 });
                 setPlan("ultra");
-                setCredits(999);
+                setCredits(999999);
+                setLoading(false);
                 return;
             }
 
