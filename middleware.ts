@@ -90,7 +90,15 @@ export async function middleware(request: NextRequest) {
     const isApi = pathname.startsWith('/api');
     const isAuthFlow = pathname.startsWith('/auth') || pathname === '/login' || pathname === '/signup';
 
-    const publicApiPrefixes = ['/api/status', '/api/credits/status', '/api/v1/analyze', '/api/dev/login'];
+    const publicApiPrefixes = [
+        '/api/status',
+        '/api/credits/status',
+        '/api/v1/analyze',
+        '/api/dev/login',
+        '/api/telegram',
+        '/api/admin/golden-ceo/activate',
+        '/api/golden-ceo/request'
+    ];
     const isPublicApi = isApi && publicApiPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
     const protectedPagePrefixes = ['/dashboard', '/profile', '/scan', '/ai'];
