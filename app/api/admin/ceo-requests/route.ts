@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const isCeo = CEO_EMAILS.includes(user.email || "") || user.id === "00000000-0000-0000-0000-000000000001";
+        const userEmail = (user.email || (user as any)?.user_metadata?.email || "").toLowerCase().trim();
+        const isCeo = CEO_EMAILS.map(e => e.toLowerCase()).includes(userEmail) || user.id === "00000000-0000-0000-0000-000000000001";
         if (!isCeo) {
             return NextResponse.json({ error: "Access forbidden. CEO only." }, { status: 403 });
         }
@@ -52,7 +53,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const isCeo = CEO_EMAILS.includes(user.email || "") || user.id === "00000000-0000-0000-0000-000000000001";
+        const userEmail = (user.email || (user as any)?.user_metadata?.email || "").toLowerCase().trim();
+        const isCeo = CEO_EMAILS.map(e => e.toLowerCase()).includes(userEmail) || user.id === "00000000-0000-0000-0000-000000000001";
         if (!isCeo) {
             return NextResponse.json({ error: "Access forbidden. CEO only." }, { status: 403 });
         }

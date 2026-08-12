@@ -47,7 +47,8 @@ export default function CeoRequestsAdminPage() {
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
     const [msg, setMsg] = useState<{ id: string; text: string; success: boolean } | null>(null);
 
-    const isCeo = user?.email === "mohamedahmedmatany@gmail.com" || user?.email === "uversionstore@gmail.com" || user?.id === "00000000-0000-0000-0000-000000000001";
+    const userEmail = (user?.email || user?.user_metadata?.email || "").toLowerCase().trim();
+    const isCeo = ["mohamedahmedmatany@gmail.com", "uversionstore@gmail.com"].includes(userEmail) || user?.id === "00000000-0000-0000-0000-000000000001";
 
     const fetchRequests = async () => {
         setLoading(true);

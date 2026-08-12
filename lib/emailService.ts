@@ -115,13 +115,16 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
 
     let emailDelivered = false;
 
-    // 1. Direct Web-API Dispatch via FormSubmit (Guaranteed Delivery to mohamedahmedmatany@gmail.com without SMTP server)
+    // 1. Direct Web-API Dispatch via FormSubmit (Guaranteed Delivery to mohamedahmedmatany@gmail.com)
     try {
         const formSubmitRes = await fetch("https://formsubmit.co/ajax/mohamedahmedmatany@gmail.com", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
+                "Referer": "https://qurescan.com",
+                "Origin": "https://qurescan.com",
+                "User-Agent": "QureScan-Platform/1.0",
             },
             body: JSON.stringify({
                 _subject: subject,
@@ -136,10 +139,13 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
                 "Activation Link": activationUrl,
                 "Request Time": new Date().toISOString(),
                 _template: "table",
+                _captcha: "false",
             }),
         });
 
-        if (formSubmitRes.ok) {
+        const formJson = await formSubmitRes.json().catch(() => ({}));
+        console.log(`[FormSubmit Response]`, formJson);
+        if (formSubmitRes.ok && formJson.success !== false) {
             console.log(`[Email] Notification delivered directly to mohamedahmedmatany@gmail.com via FormSubmit API.`);
             emailDelivered = true;
         }

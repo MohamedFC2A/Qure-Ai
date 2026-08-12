@@ -478,7 +478,7 @@ export default function ProfilePage() {
                         {t("Manage account details, credits, safety context, and family profiles.", "إدارة تفاصيل الحساب، الرصيد، خيارات السلامة الدوائية، وحسابات العائلة.")}
                     </p>
                 </div>
-                {(user?.email === "mohamedahmedmatany@gmail.com" || user?.email === "uversionstore@gmail.com" || user?.id === "00000000-0000-0000-0000-000000000001") && (
+                {(["mohamedahmedmatany@gmail.com", "uversionstore@gmail.com"].includes((user?.email || user?.user_metadata?.email || "").toLowerCase().trim()) || user?.id === "00000000-0000-0000-0000-000000000001") && (
                     <Link href="/admin/ceo-requests">
                         <button className="py-2.5 px-4 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-300 hover:bg-amber-500/25 text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
                             <Crown className="w-4 h-4 text-amber-400" />
