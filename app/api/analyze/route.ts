@@ -371,57 +371,155 @@ export async function POST(req: NextRequest) {
             subjectRelationship: subjectProfile?.relationship ?? null,
         };
 
-        // 2. Save Analysis to Supabase (Protected & Dev)
+        // 2. Save Analysis to Supabase with Smart Deduplication (Protected & Dev)
+        let isMergedRecord = false;
+        let mergedScanCount = 1;
+
         if (analysisWithEnrichment && (analysisWithEnrichment as any).drugName !== "Unknown") {
             try {
                 let db = supabase;
-                const historyPayload: any = {
-                    user_id: user.id,
-                    profile_id: subjectProfileId,
-                    drug_name: (analysisWithEnrichment as any).drugName || "Target Medication",
-                    manufacturer: (analysisWithEnrichment as any).manufacturer || "Generic",
-                    analysis_json: analysisWithEnrichment,
-                };
+                const newDrugName = (analysisWithEnrichment as any).drugName || "Target Medication";
+                const normalizedNew = normalizeMedicationName(newDrugName);
 
-                let historyRes = db ? await db
-                    .from("medication_history")
-                    .insert(historyPayload)
-                    .select("id")
-                    .single() : { data: null, error: new Error("No supabase client") };
+                // Search if this user & profile already has this medication in history
+                let existingRecord: any = null;
+                if (user && normalizedNew && normalizedNew !== "unknown") {
+                    const query = db.from("medication_history").select("*").eq("user_id", user.id);
+                    if (subjectProfileId) query.eq("profile_id", subjectProfileId);
 
-                if (historyRes.error) {
-                    try {
-                        const adminClient = createAdminClient();
-                        historyRes = await adminClient
-                            .from("medication_history")
-                            .insert(historyPayload)
-                            .select("id")
-                            .single();
-                        if (historyRes.data) db = adminClient;
-                    } catch (e) {
-                        console.warn("Admin insert fallback failed:", e);
+                    const { data: recentItems } = await query.order("created_at", { ascending: false }).limit(30);
+
+                    if (recentItems && recentItems.length > 0) {
+                        existingRecord = recentItems.find((item: any) => {
+                            const normItem = normalizeMedicationName(item.drug_name || "");
+                            if (!normItem) return false;
+                            if (normItem === normalizedNew) return true;
+                            // Match if both are long enough containment (e.g. Panadol Extra 500mg vs Panadol Extra)
+                            if (normItem.length >= 4 && normalizedNew.length >= 4) {
+                                if (normItem.includes(normalizedNew) || normalizedNew.includes(normItem)) return true;
+                            }
+                            return false;
+                        });
                     }
                 }
 
-                if (historyRes.error && String(historyRes.error.message || "").toLowerCase().includes("profile_id")) {
-                    const legacyPayload = { ...historyPayload };
-                    delete legacyPayload.profile_id;
-                    historyRes = db ? await db
+                if (existingRecord?.id) {
+                    // MERGE & ENRICH existing history record instead of creating duplicate
+                    const existingAnalysis = existingRecord.analysis_json || {};
+                    mergedScanCount = (existingAnalysis.meta?.scanCount || existingRecord.scan_count || 1) + 1;
+                    isMergedRecord = true;
+
+                    const mergedAnalysis = {
+                        ...existingAnalysis,
+                        ...analysisWithEnrichment,
+                        // Preserve or upgrade dosage instructions
+                        dosage: (analysisWithEnrichment as any).dosage || existingAnalysis.dosage,
+                        dosageEn: (analysisWithEnrichment as any).dosageEn || existingAnalysis.dosageEn,
+                        dosageAr: (analysisWithEnrichment as any).dosageAr || existingAnalysis.dosageAr,
+                        // Combine raw text
+                        raw_text: [existingAnalysis.raw_text, (analysisWithEnrichment as any).raw_text].filter(Boolean).join("\n---\n"),
+                        meta: {
+                            ...((analysisWithEnrichment as any).meta || {}),
+                            historyId: existingRecord.id,
+                            isMergedRecord: true,
+                            scanCount: mergedScanCount,
+                            lastScannedAt: new Date().toISOString(),
+                        },
+                    };
+
+                    const updatePayload: any = {
+                        drug_name: newDrugName,
+                        manufacturer: (analysisWithEnrichment as any).manufacturer || existingRecord.manufacturer || "Generic",
+                        analysis_json: mergedAnalysis,
+                        created_at: new Date().toISOString(), // Bump timestamp to top
+                    };
+
+                    let updateRes = await db
                         .from("medication_history")
-                        .insert(legacyPayload)
+                        .update(updatePayload)
+                        .eq("id", existingRecord.id)
                         .select("id")
-                        .single() : { data: null, error: new Error("No client") };
-                }
+                        .single();
 
-                const historyRow = historyRes.data;
-                const historyError = historyRes.error;
+                    if (updateRes.error) {
+                        try {
+                            const adminClient = createAdminClient();
+                            updateRes = await adminClient
+                                .from("medication_history")
+                                .update(updatePayload)
+                                .eq("id", existingRecord.id)
+                                .select("id")
+                                .single();
+                        } catch (e) {
+                            console.warn("Admin update fallback failed:", e);
+                        }
+                    }
 
-                if (!historyError && historyRow?.id) {
-                    savedToHistory = true;
-                    historyId = historyRow.id;
-                    console.log("Analysis saved to history for user:", user.id);
-                } else if (historyError) {
-                    console.error("History insert failed:", historyError);
+                    if (!updateRes.error) {
+                        savedToHistory = true;
+                        historyId = existingRecord.id;
+                        (analysisWithEnrichment as any).meta = {
+                            ...((analysisWithEnrichment as any).meta || {}),
+                            historyId: existingRecord.id,
+                            isMergedRecord: true,
+                            scanCount: mergedScanCount,
+                        };
+                        console.log(`Updated existing medication history ID ${existingRecord.id} (Scan #${mergedScanCount})`);
+                    }
+                } else {
+                    // INSERT NEW RECORD (First scan of this medication)
+                    (analysisWithEnrichment as any).meta = {
+                        ...((analysisWithEnrichment as any).meta || {}),
+                        isMergedRecord: false,
+                        scanCount: 1,
+                    };
+
+                    const historyPayload: any = {
+                        user_id: user.id,
+                        profile_id: subjectProfileId,
+                        drug_name: newDrugName,
+                        manufacturer: (analysisWithEnrichment as any).manufacturer || "Generic",
+                        analysis_json: analysisWithEnrichment,
+                    };
+
+                    let historyRes = db ? await db
+                        .from("medication_history")
+                        .insert(historyPayload)
+                        .select("id")
+                        .single() : { data: null, error: new Error("No supabase client") };
+
+                    if (historyRes.error) {
+                        try {
+                            const adminClient = createAdminClient();
+                            historyRes = await adminClient
+                                .from("medication_history")
+                                .insert(historyPayload)
+                                .select("id")
+                                .single();
+                            if (historyRes.data) db = adminClient;
+                        } catch (e) {
+                            console.warn("Admin insert fallback failed:", e);
+                        }
+                    }
+
+                    if (historyRes.error && String(historyRes.error.message || "").toLowerCase().includes("profile_id")) {
+                        const legacyPayload = { ...historyPayload };
+                        delete legacyPayload.profile_id;
+                        historyRes = db ? await db
+                            .from("medication_history")
+                            .insert(legacyPayload)
+                            .select("id")
+                            .single() : { data: null, error: new Error("No client") };
+                    }
+
+                    const historyRow = historyRes.data;
+                    const historyError = historyRes.error;
+
+                    if (!historyError && historyRow?.id) {
+                        savedToHistory = true;
+                        historyId = historyRow.id;
+                        console.log("Analysis saved to history for user:", user.id);
+                    }
                 }
 
                 // Ultra-only: record medication memory (used for future interaction checks)

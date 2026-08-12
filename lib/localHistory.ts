@@ -28,24 +28,70 @@ export function saveLocalScan(analysisResult: any, profileId?: string | null): S
         const drugName = analysisResult.drugNameEn || analysisResult.drugName || "Medication";
         if (!drugName || drugName === "Unknown") return null;
 
-        const newItem: StoredScanItem = {
-            id: analysisResult.meta?.historyId || `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            profile_id: profileId || analysisResult.meta?.subjectProfileId || undefined,
-            drug_name: drugName,
-            manufacturer: analysisResult.manufacturer || "Generic",
-            created_at: new Date().toISOString(),
-            analysis_json: analysisResult,
-        };
+        const normDrug = String(drugName).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ");
 
         const existing = getLocalScans();
-        // Remove duplicate entries for same drug within 1 minute
-        const filtered = existing.filter(
-            (item) => item.drug_name !== newItem.drug_name || (Date.now() - new Date(item.created_at).getTime() > 60000)
-        );
+        let isMerged = false;
+        let scanCount = 1;
+        let matchedId = analysisResult.meta?.historyId || `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-        const updated = [newItem, ...filtered].slice(0, 50); // Keep max 50 recent scans
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-        return newItem;
+        const updated = existing.map((item) => {
+            const normExisting = String(item.drug_name || "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ");
+            const isMatch = normExisting === normDrug || (normExisting.length >= 4 && normDrug.length >= 4 && (normExisting.includes(normDrug) || normDrug.includes(normExisting)));
+
+            if (isMatch) {
+                isMerged = true;
+                matchedId = item.id;
+                const prevCount = item.analysis_json?.meta?.scanCount || 1;
+                scanCount = prevCount + 1;
+
+                return {
+                    ...item,
+                    drug_name: drugName, // Update name if refined
+                    created_at: new Date().toISOString(),
+                    analysis_json: {
+                        ...(item.analysis_json || {}),
+                        ...analysisResult,
+                        dosage: analysisResult.dosage || item.analysis_json?.dosage,
+                        meta: {
+                            ...(analysisResult.meta || {}),
+                            historyId: matchedId,
+                            isMergedRecord: true,
+                            scanCount: scanCount,
+                        },
+                    },
+                };
+            }
+            return item;
+        });
+
+        if (!isMerged) {
+            const newItem: StoredScanItem = {
+                id: matchedId,
+                profile_id: profileId || analysisResult.meta?.subjectProfileId || undefined,
+                drug_name: drugName,
+                manufacturer: analysisResult.manufacturer || "Generic",
+                created_at: new Date().toISOString(),
+                analysis_json: {
+                    ...analysisResult,
+                    meta: {
+                        ...(analysisResult.meta || {}),
+                        isMergedRecord: false,
+                        scanCount: 1,
+                    },
+                },
+            };
+            updated.unshift(newItem);
+        } else {
+            // Move merged item to top
+            updated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        }
+
+        const finalItems = updated.slice(0, 50);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalItems));
+
+        const returnItem = finalItems.find((it) => it.id === matchedId) || finalItems[0];
+        return returnItem;
     } catch (e) {
         console.warn("Failed to save local scan:", e);
         return null;

@@ -122,6 +122,8 @@ interface MedicalData {
         usedInteractionGuard?: boolean;
         usedWebVerification?: boolean;
         usedFdaVerification?: boolean;
+        isMergedRecord?: boolean;
+        scanCount?: number;
         memory?: {
             display_name?: string;
             normalized_name?: string;
@@ -1143,6 +1145,30 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
     const renderOverview = () => {
         return (
             <div className="space-y-6 p-3.5 sm:p-8">
+                {/* Smart Merged Record Notification Banner */}
+                {(meta?.isMergedRecord || (meta?.scanCount && meta.scanCount > 1)) && (
+                    <div className="p-4 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-slate-900/90 to-cyan-950/60 backdrop-blur-xl flex items-center justify-between gap-3 shadow-md animate-fade-in">
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shrink-0">
+                                <RotateCcw className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <p className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                                    <span>{isArabic ? "تم التعرّف على الدواء في سجلك — تم تحديث البيانات" : "Recognized Medication — Record Merged & Enhanced!"}</span>
+                                </p>
+                                <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                                    {isArabic
+                                        ? `لم يتم تكرار السجل! تم دمج التفاصيل الجديدة وتحديث هذا الدواء تلقائياً (الفحص رقم ${meta?.scanCount || 2}).`
+                                        : `No duplicates created! Enhanced history record & details merged automatically (Scan #${meta?.scanCount || 2}).`}
+                                </p>
+                            </div>
+                        </div>
+                        <span className="px-3 py-1 rounded-xl bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 text-xs font-mono font-bold shrink-0">
+                            {isArabic ? `فحص ×${meta?.scanCount || 2}` : `Scanned ×${meta?.scanCount || 2}`}
+                        </span>
+                    </div>
+                )}
+
                 {/* Description */}
                 <div className="p-5 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-md hover:border-cyan-500/20 transition-all duration-300 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.3)]">
                     <div className="flex items-start gap-3">
