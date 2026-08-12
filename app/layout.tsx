@@ -9,6 +9,7 @@ import { UserProvider } from "@/context/UserContext";
 import { ScanProvider } from "@/context/ScanContext";
 import { UltraCelebrationProvider } from "@/context/UltraCelebrationContext";
 import { UltraCelebrationModal } from "@/components/ui/UltraCelebrationModal";
+import { CompleteProfileModal } from "@/components/profile/CompleteProfileModal";
 import { GoogleAdsense } from "@/components/GoogleAdsense";
 import { Footer } from "@/components/Footer";
 
@@ -156,6 +157,7 @@ export default function RootLayout({
                             <ScanProvider>
                                 <Navbar />
                                 <UltraCelebrationModal />
+                                <CompleteProfileModal />
                                 <div className="flex-1 w-full pb-16 md:pb-0" suppressHydrationWarning>
                                     {children}
                                 </div>

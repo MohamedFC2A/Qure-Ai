@@ -23,22 +23,45 @@ import {
     RefreshCw,
     UserCheck,
     Crown,
+    Fingerprint,
+    Smartphone,
+    MapPin,
+    RotateCcw,
+    Check,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/context/SettingsContext";
 import { useUltraCelebration } from "@/context/UltraCelebrationContext";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SmartHeightInput, SmartWeightInput } from "@/components/ui/SmartMeasurementInput";
 
 export default function ProfilePage() {
     const { user, profile, plan, credits, loading: userLoading, refreshUser } = useUser();
-    const { resultsLanguage, setResultsLanguage, fdaDrugsEnabled, setFdaDrugsEnabled } = useSettings();
+    const {
+        resultsLanguage,
+        setResultsLanguage,
+        isAutoDetected,
+        resetToAutoDetect,
+        detectedCountry,
+        fdaDrugsEnabled,
+        setFdaDrugsEnabled,
+        requireBiometricOnScan,
+        setRequireBiometricOnScan,
+    } = useSettings();
     const { triggerCelebration } = useUltraCelebration();
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get("tab");
     const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'family' | 'private' | 'memories'>('account');
+
+    useEffect(() => {
+        if (tabParam && ['account', 'credits', 'settings', 'fda', 'family', 'private', 'memories'].includes(tabParam)) {
+            setActiveTab(tabParam as any);
+        }
+    }, [tabParam]);
     const supabase = createClient();
     const router = useRouter();
     const isLocalDevUser = process.env.NODE_ENV === "development" && user?.id === "local-dev-user";
@@ -462,7 +485,7 @@ export default function ProfilePage() {
     const tabs = [
         { id: 'account', label: t('Account', 'الحساب'), icon: User },
         { id: 'credits', label: t('Credits & Plans', 'الرصيد والخطط'), icon: CreditCard },
-        { id: 'settings', label: t('App Settings', 'إعدادات التطبيق'), icon: Settings },
+        { id: 'settings', label: t('Advanced Settings', 'الإعدادات المتقدمة'), icon: Settings },
         { id: 'fda', label: t('FDA Drugs', 'أدوية FDA'), icon: Database, pro: true, beta: true },
         { id: 'family', label: t('Family Care', 'رعاية الأسرة'), icon: Users, pro: true },
         { id: 'private', label: t('Private AI Profile', 'الملف الصحي الخاص'), icon: Shield, pro: true },
@@ -792,56 +815,162 @@ export default function ProfilePage() {
                         </div>
                     )}
 
-                    {/* SETTINGS TAB */}
+                    {/* ADVANCED SETTINGS TAB */}
                     {activeTab === 'settings' && (
-                        <GlassCard className="p-6">
-                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <Settings className="w-5 h-5 text-cyan-400" />
-                                <span>{t("Settings", "الإعدادات")}</span>
-                            </h2>
+                        <div className="space-y-6">
+                            {/* AI Language Card */}
+                            <GlassCard className="p-6">
+                                <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-cyan-400" />
+                                    <span>{t("Advanced Settings", "الإعدادات المتقدمة")}</span>
+                                </h2>
+                                <p className="text-xs sm:text-sm text-slate-400 mb-6">
+                                    {t("Customize security, intelligence, and system behaviors.", "تخصيص مستويات الأمان والذكاء وخيارات النظام المتقدمة.")}
+                                </p>
 
-                            <div className="space-y-6 max-w-lg">
-                                <div>
-                                    <label className="block text-sm font-medium text-white/80 mb-3">
-                                        {t("AI Results Language", "لغة نتائج الذكاء الاصطناعي")}
-                                    </label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => setResultsLanguage("en")}
-                                            className={cn(
-                                                "px-4 py-3 rounded-lg border text-sm transition-all font-semibold",
-                                                resultsLanguage === "en"
-                                                    ? "bg-cyan-500/20 border-cyan-500/50 text-white"
-                                                    : "bg-white/5 border-white/10 text-white/50 hover:border-white/20"
+                                <div className="space-y-4">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="block text-sm font-semibold text-white/90">
+                                                {t("AI Results & App Language", "لغة نتائج الذكاء الاصطناعي والتطبيق")}
+                                            </label>
+                                            {isAutoDetected && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-400/10 border border-cyan-400/25 text-cyan-300 flex items-center gap-1">
+                                                    <Smartphone className="w-3 h-3" />
+                                                    {t("Auto-Detected", "تحديد تلقائي")}
+                                                </span>
                                             )}
-                                        >
-                                            English
-                                        </button>
-                                        <button
-                                            onClick={() => setResultsLanguage("ar")}
-                                            className={cn(
-                                                "px-4 py-3 rounded-lg border text-sm transition-all font-semibold",
-                                                resultsLanguage === "ar"
-                                                    ? "bg-cyan-500/20 border-cyan-500/50 text-white"
-                                                    : "bg-white/5 border-white/10 text-white/50 hover:border-white/20"
-                                            )}
-                                        >
-                                            العربية (Arabic)
-                                        </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setResultsLanguage("en")}
+                                                className={cn(
+                                                    "px-4 py-3 rounded-xl border text-xs sm:text-sm transition-all font-semibold flex items-center justify-center gap-2",
+                                                    resultsLanguage === "en"
+                                                        ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300 font-bold"
+                                                        : "bg-white/5 border-white/10 text-white/60 hover:border-white/20"
+                                                )}
+                                            >
+                                                {resultsLanguage === "en" && <Check className="w-4 h-4" />}
+                                                <span>English</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setResultsLanguage("ar")}
+                                                className={cn(
+                                                    "px-4 py-3 rounded-xl border text-xs sm:text-sm transition-all font-semibold flex items-center justify-center gap-2",
+                                                    resultsLanguage === "ar"
+                                                        ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300 font-bold"
+                                                        : "bg-white/5 border-white/10 text-white/60 hover:border-white/20"
+                                                )}
+                                            >
+                                                {resultsLanguage === "ar" && <Check className="w-4 h-4" />}
+                                                <span>العربية (Arabic)</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-white/40 mt-2">
-                                        {t("Choose the language for your medication analysis results.", "اختر اللغة المعتمدة لنتائج تحليل الأدوية والتقرير الطبي.")}
-                                    </p>
-                                </div>
 
-                                <div className="pt-4 border-t border-white/10">
-                                    <Link href="/settings" className="text-cyan-400 hover:underline text-xs font-semibold flex items-center gap-1">
-                                        <span>{t("Open Full Settings Page", "الانتقال لصفحة الإعدادات الشاملة")}</span>
-                                        <ChevronRight className={cn("w-4 h-4", isArabic && "rotate-180")} />
-                                    </Link>
+                                    {!isAutoDetected && (
+                                        <div className="pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={resetToAutoDetect}
+                                                className="text-cyan-400 hover:text-cyan-300 font-semibold text-xs flex items-center gap-1.5 transition-colors underline underline-offset-4"
+                                            >
+                                                <RotateCcw className="w-3 h-3" />
+                                                <span>{t("Reset to Auto-Detection", "الرجوع للتحديد التلقائي بحسب لغة وموقع الجوال")}</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        </GlassCard>
+                            </GlassCard>
+
+                            {/* Biometric Medication Scan Lock Card */}
+                            <GlassCard className="p-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="space-y-1.5 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                                                <Fingerprint className="w-5 h-5 text-cyan-400 shrink-0" />
+                                                <span>{t("Biometric Lock for Medication Scans", "قفل البصمة و Face ID لفحص الأدوية")}</span>
+                                            </h3>
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                                                {t("iOS & Android Face ID", "Face ID وبصمة الجوال")}
+                                            </span>
+                                        </div>
+                                        <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xl">
+                                            {t(
+                                                "Require biometric confirmation (Face ID, Touch ID, or fingerprint) before scanning any medication to prevent unauthorized drug entry on your device.",
+                                                "طلب بصمة الجوال أو Face ID قبل إجراء فحص لأي دواء لحماية حسابك ومنع أي شخص آخر من إدخال أو فحص أدوية على جهازك دون إذنك."
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={requireBiometricOnScan}
+                                        onClick={() => setRequireBiometricOnScan(!requireBiometricOnScan)}
+                                        className={cn(
+                                            "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border transition-colors focus:outline-none",
+                                            requireBiometricOnScan
+                                                ? "bg-cyan-500/20 border-cyan-500/40"
+                                                : "bg-white/5 border-white/15"
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                "inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform",
+                                                isArabic
+                                                    ? requireBiometricOnScan ? "-translate-x-7" : "-translate-x-1"
+                                                    : requireBiometricOnScan ? "translate-x-7" : "translate-x-1"
+                                            )}
+                                        />
+                                    </button>
+                                </div>
+                            </GlassCard>
+
+                            {/* FDA Drugs Verification Card */}
+                            <GlassCard className="p-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="space-y-1.5 min-w-0">
+                                        <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                                            <Database className="w-5 h-5 text-emerald-400 shrink-0" />
+                                            <span>{t("FDA Drugs Verification", "التحقق من الأدوية عبر هيئة الغذاء والدواء (FDA)")}</span>
+                                        </h3>
+                                        <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xl">
+                                            {t(
+                                                "Cross-check medication scans with official FDA datasets (openFDA) to verify manufacturer details, active ingredients, and exact dosages.",
+                                                "مطابقة فحوصات الأدوية مع قواعد بيانات الغذاء والدواء العالمية (openFDA) للتحقق من جهة التصنيع والمواد الفعالة والجرعات الدقيقة."
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={fdaDrugsEnabled}
+                                        onClick={() => setFdaDrugsEnabled(!fdaDrugsEnabled)}
+                                        className={cn(
+                                            "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border transition-colors focus:outline-none",
+                                            fdaDrugsEnabled
+                                                ? "bg-emerald-500/20 border-emerald-500/40"
+                                                : "bg-white/5 border-white/15"
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                "inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform",
+                                                isArabic
+                                                    ? fdaDrugsEnabled ? "-translate-x-7" : "-translate-x-1"
+                                                    : fdaDrugsEnabled ? "translate-x-7" : "translate-x-1"
+                                            )}
+                                        />
+                                    </button>
+                                </div>
+                            </GlassCard>
+                        </div>
                     )}
 
                     {/* FDA TAB (ULTRA) */}

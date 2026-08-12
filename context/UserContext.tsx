@@ -19,6 +19,7 @@ interface UserState {
     plan: 'free' | 'ultra';
     credits: number;
     loading: boolean;
+    isProfileIncomplete: boolean;
     refreshUser: () => Promise<void>;
 }
 
@@ -134,8 +135,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return () => subscription.unsubscribe();
     }, [refreshUser, supabase]);
 
+    const isProfileIncomplete = Boolean(
+        user &&
+        user.id !== "00000000-0000-0000-0000-000000000001" &&
+        user.id !== "local-dev-user" &&
+        (!profile || !profile.age || !profile.gender || !profile.height || !profile.weight)
+    );
+
     return (
-        <UserContext.Provider value={{ user, profile, plan, credits, loading, refreshUser }}>
+        <UserContext.Provider value={{ user, profile, plan, credits, loading, isProfileIncomplete, refreshUser }}>
             {children}
         </UserContext.Provider>
     );
