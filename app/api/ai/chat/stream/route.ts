@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
             return new Response(
                 JSON.stringify({
                     error: language === "ar"
-                        ? "ميزة Aura-OS Ai (AOS AI) متاحة حصرياً لمشتركي باقة ULTRA. يرجى الترقية لاستخدام المساعد الذكي."
-                        : "Aura-OS Ai (AOS AI) is available exclusively on the ULTRA plan. Please upgrade your plan to access Aura-OS Ai.",
+                        ? "ميزة Qure AI متاحة حصرياً لمشتركي باقة ULTRA. يرجى الترقية لاستخدام المساعد الذكي."
+                        : "Qure AI is available exclusively on the ULTRA plan. Please upgrade your plan to access Qure AI.",
                     requiresUltra: true,
                 }),
                 { status: 402, headers: { "Content-Type": "application/json" } }
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
         let medicationMemories: string[] = [];
         let recentScans: string[] = [];
 
-        // Dev user: inject realistic test profile so Aura-OS Ai (AOS AI) can be tested
+        // Dev user: inject realistic test profile so Qure AI can be tested
         if (isLocalDev) {
             privateProfile = {
                 age: 30,

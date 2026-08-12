@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { AiChatPage } from "@/components/ai/AiChatPage";
 
 export const metadata = {
-    title: "Aura-OS Ai (AOS AI) — QureScan",
-    description: "Your intelligent clinical health & medication assistant powered by Aura-OS Ai (AOS AI).",
+    title: "Qure AI — QureScan",
+    description: "Your intelligent clinical health & medication assistant powered by Qure AI.",
 };
 
 export default function AiPage() {

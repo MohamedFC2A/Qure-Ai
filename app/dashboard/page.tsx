@@ -447,8 +447,8 @@ export default function DashboardPage() {
                                         </div>
                                         <p className="text-xs text-slate-400 leading-relaxed">
                                             {t(
-                                                "Get Aura-OS Ai (AOS AI) assistant, family profiles, PDF exports, and 300 monthly credits.",
-                                                "احصل على مساعد Aura-OS Ai (AOS AI)، ملفات الأسرة، تصدير PDF، و٣٠٠ رصيد شهري."
+                                                "Get Qure AI assistant, family profiles, PDF exports, and 300 monthly credits.",
+                                                "احصل على مساعد Qure AI، ملفات الأسرة، تصدير PDF، و٣٠٠ رصيد شهري."
                                             )}
                                         </p>
                                         <Link href="/pricing" className="mt-3 inline-flex">

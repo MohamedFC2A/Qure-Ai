@@ -1,6 +1,18 @@
 # 🚀 QureScan Changelog (Beta)
 
-Smart release notes powered by Aura-OS Ai (AOS AI).
+Smart release notes powered by Qure AI.
+
+## v1.3.8 (Beta) — Sleeker QureScan Experience Across Web & Mobile (2026-08-12)
+
+### New Features & Enhancements
+- Refreshed the look of QureScan with a sleek metallic “Beta” style in the top bar and footer—no box framing
+- Updated the mobile navigation with a redesigned bottom bar, including an elevated Scan trigger and an interactive “More Hub” that supports all secondary pages
+
+### System Stability & User Experience
+- Replaced MAT AI branding with Aura-OS AI (AOS AI) across the platform for a consistent experience, while keeping Qure AI as your assistant
+- Enhanced Release Notes with a more human-friendly bilingual (English/Arabic) writing approach, using Qure AI to deliver clear updates without technical language
+- Improved overall interface consistency by removing glowing borders and neon shadows across components, navigation, and buttons
+- Removed the “Golden Subscription” label and applied a clean matte executive dark styling throughout the experience
 
 ## v1.3.7 (Beta) — Aura-OS Ai (AOS AI) Update: Cleaner Navigation, Faster Webhooks, and Smarter Release Notes (2026-08-12)
 

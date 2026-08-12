@@ -23,7 +23,7 @@ export const MobileNav = () => {
             icon: Atom,
         },
         {
-            name: "AOS AI",
+            name: "Qure AI",
             href: "/ai",
             icon: Brain,
         },
@@ -90,7 +90,7 @@ export const MobileNav = () => {
                                 );
                             })()}
 
-                            {/* Tab 2: AOS AI */}
+                            {/* Tab 2: Qure AI */}
                             {(() => {
                                 const item = navItems[1];
                                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);

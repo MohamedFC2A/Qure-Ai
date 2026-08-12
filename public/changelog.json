@@ -1,5 +1,44 @@
 [
   {
+    "version": "v1.3.8 (Beta)",
+    "titleEn": "Sleeker QureScan Experience Across Web & Mobile",
+    "titleAr": "تجربة QureScan أكثر أناقة عبر الويب والهاتف",
+    "date": "2026-08-12",
+    "badge": "Beta Release",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "New Features & Enhancements",
+        "categoryAr": "الميزات والتحسينات الجديدة",
+        "itemsEn": [
+          "Refreshed the look of QureScan with a sleek metallic “Beta” style in the top bar and footer—no box framing",
+          "Updated the mobile navigation with a redesigned bottom bar, including an elevated Scan trigger and an interactive “More Hub” that supports all secondary pages"
+        ],
+        "itemsAr": [
+          "تم تحديث مظهر QureScan بستايل “Beta” معدني أنيق في شريط التنقل العلوي وتذييل الصفحة—بدون إطار مربع",
+          "تم تحسين التنقل في الهاتف بتصميم جديد لشريط التنقل السفلي، بما في ذلك زر “مسح” مرتفع بصريًا وواجهة تفاعلية لـ “مركز المزيد” تدعم جميع الصفحات الثانوية"
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "System Stability & User Experience",
+        "categoryAr": "استقرار النظام وسلاسة الاستخدام",
+        "itemsEn": [
+          "Officially powered by Qure AI across the entire platform for a seamless clinical intelligence experience",
+          "Enhanced Release Notes with a more human-friendly bilingual (English/Arabic) writing approach, using Qure AI to deliver clear updates without technical language",
+          "Improved overall interface consistency by removing glowing borders and neon shadows across components, navigation, and buttons",
+          "Applied a clean matte executive dark styling throughout the experience"
+        ],
+        "itemsAr": [
+          "اعتماد Qure AI رسمياً عبر كامل المنصة لتقديم تجربة ذكاء اصطناعي طبي وصيدلاني فائقة الدقة والسرعة",
+          "تم تحسين “ملاحظات الإصدار” بأسلوب أكثر ودّية ومبسطة باللغتين (الإنجليزية/العربية)، باستخدام Qure AI لعرض التحديثات بوضوح دون مصطلحات تقنية",
+          "تم تعزيز الاتساق البصري العام عبر إزالة الإطارات المتوهجة والظلال النيون من جميع المكونات وقوائم التنقل والأزرار",
+          "تطبيق ستايل داكن أنيق بنهاية مطفية (matte) في جميع أنحاء التجربة"
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.3.7 (Beta)",
     "titleEn": "Aura-OS Ai (AOS AI) Update: Cleaner Navigation, Faster Webhooks, and Smarter Release Notes",
     "titleAr": "تحديث Aura-OS Ai (AOS AI): تنقّل أكثر سلاسة، معالجة أسرع للإشعارات، وملاحظات إصدار أذكى",

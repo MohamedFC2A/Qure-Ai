@@ -152,8 +152,19 @@ export async function POST(req: NextRequest) {
 
                 await adminSupabase
                     .from("profiles")
-                    .update({ plan: "free", updated_at: new Date().toISOString() })
+                    .update({ plan: "free", plan_expires_at: null, updated_at: new Date().toISOString() })
                     .eq("id", targetUserId);
+
+                // Reset usage windows so user immediately has clean 30/30 free credits
+                await adminSupabase
+                    .from("usage_windows")
+                    .upsert({
+                        user_id: targetUserId,
+                        daily_used: 0,
+                        monthly_used: 0,
+                        daily_window_start: new Date().toISOString(),
+                        monthly_window_start: new Date().toISOString(),
+                    }, { onConflict: "user_id" });
 
                 // Update request status to revoked
                 await adminSupabase
@@ -161,7 +172,7 @@ export async function POST(req: NextRequest) {
                     .update({ status: "revoked" })
                     .eq("user_id", targetUserId);
 
-                await answerCallbackQuery(cb.id, "🛑 تم إلغاء باقة ألترا وإعادة المستخدم للخطة المجانية!", true);
+                await answerCallbackQuery(cb.id, "🛑 تم إلغاء باقة ألترا وإعادة المستخدم للخطة المجانية (٣٠ رصيد)!", true);
 
                 const userName = userProfile?.full_name || userProfile?.username || targetUserId;
                 const revokedText = `🛑 <b>تم إلغاء باقة ULTRA</b>\n\n` +

@@ -51,13 +51,13 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
         setResultsLanguage(resultsLanguage === "ar" ? "en" : "ar");
     };
 
-    // Exclusive pages that are NOT present in the bottom dock (Home, Scan, AOS AI, History are already in the bottom bar)
+    // Exclusive pages that are NOT present in the bottom dock (Home, Scan, Qure AI, History are already in the bottom bar)
     const exclusiveMenuItems = [
         {
             titleEn: "Updates & Changelog",
             titleAr: "التحديثات وسجل الإصدارات",
             descEn: "Live release notes & AI features",
-            descAr: "سجل التحديثات المدعوم بـ AOS AI",
+            descAr: "سجل التحديثات المدعوم بـ Qure AI",
             href: "/changelog",
             icon: Zap,
             badge: "Beta",

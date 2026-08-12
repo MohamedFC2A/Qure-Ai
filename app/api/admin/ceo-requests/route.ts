@@ -119,21 +119,33 @@ export async function POST(req: NextRequest) {
 
             return NextResponse.json({ success: true, message: "تم تفعيل باقة ألترا للمستخدم بنجاح!" });
         } else if (action === "revoke") {
-            // Downgrade to free
+            // Downgrade to free and reset credits to 30
             await adminSupabase
                 .from("profiles")
                 .update({
                     plan: "free",
+                    plan_expires_at: null,
                     updated_at: new Date().toISOString(),
                 })
                 .eq("id", requestRecord.user_id);
+
+            // Reset usage windows so user gets exactly clean 30/30 free quota
+            await adminSupabase
+                .from("usage_windows")
+                .upsert({
+                    user_id: requestRecord.user_id,
+                    daily_used: 0,
+                    monthly_used: 0,
+                    daily_window_start: new Date().toISOString(),
+                    monthly_window_start: new Date().toISOString(),
+                }, { onConflict: "user_id" });
 
             await adminSupabase
                 .from("ceo_upgrade_requests")
                 .update({ status: "revoked" })
                 .eq("id", requestId);
 
-            return NextResponse.json({ success: true, message: "تم إلغاء الاشتراك الذهبي وإعادة المستخدم للخطة المجانية." });
+            return NextResponse.json({ success: true, message: "تم إلغاء الاشتراك وإعادة المستخدم للخطة المجانية (٣٠ رصيد شهرياً)." });
         } else if (action === "reject") {
             await adminSupabase
                 .from("ceo_upgrade_requests")

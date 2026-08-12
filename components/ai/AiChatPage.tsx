@@ -13,7 +13,7 @@ import { ConversationSidebar, type ConversationSummary } from "./ConversationSid
 import { MedicationSelect } from "./MedicationSelect";
 
 /* ──────────────────────────────────────────────────────────
- *  AiChatPage – Unified Aura-OS Ai (AOS AI) (Smart context, no mode juggling)
+ *  AiChatPage – Unified Qure AI (Smart context, no mode juggling)
  * ────────────────────────────────────────────────────────── */
 
 // Smart intent detection to auto-route mode without user interaction
@@ -172,7 +172,7 @@ export function AiChatPage() {
         if (!text.trim() || isSending) return;
 
         if (!isUltra) {
-            setError(t("Aura-OS Ai (AOS AI) is exclusive to ULTRA plan members.", "ميزة Aura-OS Ai (AOS AI) متاحة حصرياً لمشتركي باقة ULTRA."));
+            setError(t("Qure AI is exclusive to ULTRA plan members.", "ميزة Qure AI متاحة حصرياً لمشتركي باقة ULTRA."));
             return;
         }
 
@@ -239,7 +239,7 @@ export function AiChatPage() {
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-                if (res.status === 402) setError(t("ULTRA plan subscription required to access Aura-OS Ai (AOS AI).", "يلزم الاشتراك في باقة ULTRA لاستخدام مساعد Aura-OS Ai (AOS AI)."));
+                if (res.status === 402) setError(t("ULTRA plan subscription required to access Qure AI.", "يلزم الاشتراك في باقة ULTRA لاستخدام مساعد Qure AI."));
                 else if (res.status === 401) setError(t("Please log in", "يرجى تسجيل الدخول"));
                 else setError(errData.error || t("Failed to get response", "فشل في الحصول على استجابة"));
                 return;
@@ -451,12 +451,12 @@ export function AiChatPage() {
                                     {t("ULTRA EXCLUSIVE FEATURE", "ميزة حصرية لمشتركي ULTRA")}
                                 </span>
                                 <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                                    {t("Unlock Aura-OS Ai (AOS AI) Assistant", "افتح المساعد الطبي الذكي Aura-OS Ai (AOS AI)")}
+                                    {t("Unlock Qure AI Assistant", "افتح المساعد الطبي الذكي Qure AI")}
                                 </h2>
                                 <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
                                     {t(
-                                        "Aura-OS Ai (AOS AI) is available exclusively for ULTRA members. Get personalized clinical insights, comprehensive medication analysis, and health advice.",
-                                        "مساعد Aura-OS Ai (AOS AI) متاح حصرياً لأعضاء باقة ULTRA. احصل على تحليلات سريرية فائقة الدقة، قراءة شفرات الأدوية، واستشارات صحية مخصصة."
+                                        "Qure AI is available exclusively for ULTRA members. Get personalized clinical insights, comprehensive medication analysis, and health advice.",
+                                        "مساعد Qure AI متاح حصرياً لأعضاء باقة ULTRA. احصل على تحليلات سريرية فائقة الدقة، قراءة شفرات الأدوية، واستشارات صحية مخصصة."
                                     )}
                                 </p>
                             </div>
@@ -521,8 +521,8 @@ export function AiChatPage() {
 
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2 justify-center">
-                                                <h2 className="text-2xl font-black tracking-tight text-white">Aura-OS Ai</h2>
-                                                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-cyan-300 font-mono">AOS AI</span>
+                                                <h2 className="text-2xl font-black tracking-tight text-white">Qure AI</h2>
+                                                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-cyan-300 font-mono">INTELLIGENCE</span>
                                             </div>
                                             <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
                                                 {t(
@@ -610,8 +610,8 @@ export function AiChatPage() {
                                                         `اسأل عن ${selectedMedication.drug_name || "هذا الدواء"} أو هل يناسبك…`
                                                     )
                                                     : t(
-                                                        "Ask Aura-OS Ai (AOS AI) anything — health, medications, or your personal profile…",
-                                                        "اسأل Aura-OS Ai (AOS AI) أي شيء — صحة، دواء، أو عن ملفك الشخصي…"
+                                                        "Ask Qure AI anything — health, medications, or your personal profile…",
+                                                        "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الشخصي…"
                                                     )
                                             }
                                             className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder-slate-500 resize-none min-h-[36px] max-h-[140px] text-sm leading-relaxed py-1"

@@ -47,7 +47,7 @@ export const Navbar = () => {
         ? [
               { name: t("Home", "الرئيسية"),   href: "/",                  icon: Atom },
               { name: t("Scan", "فحص الدواء"), href: "/scan",              icon: ScanLine },
-              { name: "AOS AI",              href: "/ai",                icon: Brain },
+              { name: "Qure AI",              href: "/ai",                icon: Brain },
               { name: t("Pricing", "الأسعار"), href: "/pricing",           icon: Gem },
               { name: t("Updates", "التحديثات"), href: "/changelog",       icon: Zap },
               { name: t("History", "السجل"),    href: "/dashboard/history", icon: Clock },
