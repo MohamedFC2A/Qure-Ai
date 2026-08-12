@@ -80,8 +80,8 @@ export function ChangelogView() {
 
                 <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
                     {t(
-                        "Real-time release history automatically generated on every push to GitHub.",
-                        "سجل الإصدارات والتحسينات الذي يتم تحديثه آلياً مع كل عملية رفع على GitHub."
+                        "Real-time platform release notes and intelligent feature updates summarized by Mat AI.",
+                        "سجل الإصدارات والتحسينات المباشرة للمنصة الموثق والملخص بواسطة الذكاء الاصطناعي Mat AI."
                     )}
                 </p>
 
