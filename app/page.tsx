@@ -23,6 +23,8 @@ import { useSettings } from "@/context/SettingsContext";
 import { cn } from "@/lib/utils";
 import { useRef } from "react";
 
+import { InteractiveChatDemo } from "@/components/home/InteractiveChatDemo";
+
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.04 } },
@@ -37,115 +39,6 @@ const fadeUpVariants: Variants = {
     hidden: { y: 24, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 80, damping: 22 } },
 };
-
-/* ── Mock Chat Preview ── */
-function MockChatPreview({ isArabic }: { isArabic: boolean }) {
-    const messages = isArabic ? [
-        { role: "user", text: "ما التداخلات الدوائية للميترفورمين مع الإيبوبروفين؟" },
-        { role: "ai", text: "**تحذير تداخل دوائي** — الاستخدام المتزامن قد يزيد خطر حماض اللاكتيك لدى المرضى الذين يعانون من قصور كلوي. يُنصح بمراقبة وظائف الكلى واستشارة الطبيب." },
-    ] : [
-        { role: "user", text: "What are the interactions between Metformin and Ibuprofen?" },
-        { role: "ai", text: "**Drug Interaction Warning** — Concurrent use may increase lactic acidosis risk in patients with renal impairment. Monitor kidney function and consult your doctor for alternatives." },
-    ];
-
-    return (
-        <div className="w-full max-w-lg mx-auto">
-            <div
-                className="rounded-2xl border overflow-hidden"
-                style={{
-                    background: "rgba(8, 12, 22, 0.96)",
-                    borderColor: "rgba(255,255,255,0.08)",
-                    boxShadow: "0 24px 64px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.05) inset",
-                }}
-            >
-                {/* Chrome bar */}
-                <div
-                    className="flex items-center gap-2 px-4 py-2.5 border-b"
-                    style={{ background: "rgba(6, 9, 16, 0.95)", borderColor: "rgba(255,255,255,0.06)" }}
-                >
-                    <div className="flex gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
-                    </div>
-                    <div className="flex-1 flex justify-center">
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-medium">
-                            <div className="nexus-gold-logo w-4 h-4 rounded-md flex items-center justify-center">
-                                <Sparkles className="w-2.5 h-2.5" style={{ color: "#1c1000" }} />
-                            </div>
-                            Qure AI
-                        </div>
-                    </div>
-                </div>
-
-                {/* Messages */}
-                <div className="p-4 space-y-3" dir={isArabic ? "rtl" : "ltr"}>
-                    {messages.map((msg, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 + i * 0.35, duration: 0.4 }}
-                            className={cn("flex gap-2", msg.role === "user" ? "flex-row-reverse" : "flex-row")}
-                        >
-                            {msg.role === "ai" && (
-                                <div className="nexus-gold-logo w-6 h-6 rounded-lg shrink-0 flex items-center justify-center">
-                                    <Sparkles className="w-3 h-3" style={{ color: "#1c1000" }} />
-                                </div>
-                            )}
-                            <div
-                                className={cn(
-                                    "max-w-[80%] rounded-xl px-3 py-2 text-[11px] leading-relaxed border",
-                                    msg.role === "user"
-                                        ? "bg-cyan-500/10 border-cyan-400/15 text-white/90"
-                                        : "text-slate-300 border-white/[0.06]"
-                                )}
-                                style={msg.role === "ai" ? { background: "rgba(11, 17, 30, 0.95)" } : undefined}
-                            >
-                                <span dangerouslySetInnerHTML={{
-                                    __html: msg.text.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-                                }} />
-                            </div>
-                        </motion.div>
-                    ))}
-
-                    {/* Typing dots */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1.3 }}
-                        className="flex items-center gap-2"
-                    >
-                        <div className="nexus-gold-logo w-6 h-6 rounded-lg shrink-0 flex items-center justify-center">
-                            <Sparkles className="w-3 h-3" style={{ color: "#1c1000" }} />
-                        </div>
-                        <div
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/[0.06]"
-                            style={{ background: "rgba(11, 17, 30, 0.95)" }}
-                        >
-                            <span className="typing-dot" />
-                            <span className="typing-dot" />
-                            <span className="typing-dot" />
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* Input bar preview */}
-                <div className="px-4 pb-4">
-                    <div
-                        className="flex items-center gap-2 rounded-xl border border-white/[0.07] px-3 py-2.5"
-                        style={{ background: "rgba(9, 14, 24, 0.90)" }}
-                    >
-                        <span className="text-[11px] text-white/18 flex-1">{isArabic ? "اسأل Qure AI…" : "Ask Qure AI…"}</span>
-                        <div className="w-6 h-6 rounded-lg gold-send-btn flex items-center justify-center">
-                            <ArrowRight className="w-3 h-3" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 /* ── Stat Item ── */
 function StatItem({ value, label, delay }: { value: string; label: string; delay: number }) {
@@ -217,7 +110,7 @@ export default function Home() {
 
     const stats = [
         { value: "50,000+", label: t("Verified Drug References", "مرجع دوائي معتمد") },
-        { value: "< 2.5s",  label: t("Real-Time Analysis", "سرعة الفحص الفوري") },
+        { value: "3 - 5s",   label: t("Real-Time Analysis Speed", "سرعة الفحص الفوري (ثوانٍ)") },
         { value: "100%",    label: t("Confidential & Encrypted", "أمان وتشفير كامل") },
     ];
 
@@ -233,7 +126,7 @@ export default function Home() {
         {
             icon: Zap,
             title: t("Instant Scan", "فحص فوري"),
-            description: t("Capture any medication label and get full analysis in under 2.5 seconds.", "التقط أي ملصق دواء واحصل على تحليل كامل في أقل من 2.5 ثانية."),
+            description: t("Capture any medication label and get full analysis in 3 to 5 seconds.", "التقط أي ملصق دواء واحصل على تحليل كامل في 3 إلى 5 ثوانٍ."),
             badge: "clinical-eyebrow",
             badgeLabel: t("Fast", "سريع"),
             href: "/scan",
@@ -339,9 +232,9 @@ export default function Home() {
                     </div>
                 </motion.div>
 
-                {/* ── MOCK CHAT PREVIEW ── */}
+                {/* ── INTERACTIVE QURE AI CHAT DEMO ── */}
                 <motion.div variants={itemVariants} className="mt-12 sm:mt-14">
-                    <MockChatPreview isArabic={isArabic} />
+                    <InteractiveChatDemo isArabic={isArabic} />
                 </motion.div>
             </motion.section>
 

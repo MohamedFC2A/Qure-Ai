@@ -56,7 +56,7 @@ export function ChangelogView() {
     });
 
     return (
-        <main className="min-h-screen pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto select-none" dir={isArabic ? "rtl" : "ltr"}>
+        <main className="min-h-screen pt-16 sm:pt-24 pb-16 sm:pb-20 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto select-none" dir={isArabic ? "rtl" : "ltr"}>
             
             {/* ── HEADER ── */}
             <div className="text-center space-y-4 mb-12">

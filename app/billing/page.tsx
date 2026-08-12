@@ -70,7 +70,7 @@ function BillingContent() {
 
     if (success) {
         return (
-            <main className="min-h-screen flex items-center justify-center p-4 sm:p-6 pt-24 sm:pt-28">
+            <main className="min-h-screen flex items-center justify-center p-3 sm:p-6 pt-16 sm:pt-24 pb-16 sm:pb-20">
                 <GlassCard className="max-w-md w-full p-6 sm:p-8 text-center flex flex-col items-center" hoverEffect={false}>
                     <div className="icon-badge icon-badge-amber w-14 h-14 rounded-2xl mb-5">
                         <AlertTriangle className="w-7 h-7" />
@@ -95,7 +95,7 @@ function BillingContent() {
     }
 
     return (
-        <main className="min-h-screen pt-24 sm:pt-28 pb-24 md:pb-14 px-3 sm:px-6 flex items-center justify-center">
+        <main className="min-h-screen pt-16 sm:pt-24 pb-16 sm:pb-20 md:pb-14 px-3 sm:px-6 flex items-center justify-center">
             <GlassCard className="max-w-2xl w-full p-6 sm:p-10" hoverEffect={false}>
                 <div className="mb-6 sm:mb-8 border-b border-white/10 pb-6 sm:pb-8">
                     <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">

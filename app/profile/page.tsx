@@ -464,10 +464,10 @@ export default function ProfilePage() {
         { id: 'memories', label: t('Medication Memories', 'سجل الأدوية'), icon: Activity, pro: true },
     ];
 
-    if (userLoading) return <div className="min-h-screen pt-28 flex justify-center items-center"><div className="animate-spin w-8 h-8 border-2 border-cyan-300 rounded-full border-t-transparent" /></div>;
+    if (userLoading) return <div className="min-h-screen pt-20 flex justify-center items-center"><div className="animate-spin w-8 h-8 border-2 border-cyan-300 rounded-full border-t-transparent" /></div>;
 
     return (
-        <main className="min-h-screen pt-24 sm:pt-28 pb-28 md:pb-14 px-3 sm:px-6 max-w-6xl mx-auto">
+        <main className="min-h-screen pt-16 sm:pt-24 pb-16 sm:pb-20 md:pb-14 px-3 sm:px-6 max-w-6xl mx-auto">
             {/* Page Header */}
             <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>

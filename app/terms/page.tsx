@@ -72,7 +72,7 @@ export default function TermsPage() {
             if (updateError) throw updateError;
 
             await refreshUser();
-            router.replace(nextPath);
+            window.location.href = nextPath;
         } catch (e: any) {
             setError(String(e?.message || t("Failed to save consent", "فشل حفظ الموافقة")));
         } finally {
@@ -81,7 +81,7 @@ export default function TermsPage() {
     };
 
     return (
-        <main className="min-h-screen pt-24 sm:pt-28 pb-24 md:pb-16 px-3 sm:px-6 max-w-5xl mx-auto" dir={isArabic ? "rtl" : "ltr"}>
+        <main className="min-h-screen pt-16 sm:pt-24 pb-16 sm:pb-20 md:pb-16 px-3 sm:px-6 max-w-5xl mx-auto" dir={isArabic ? "rtl" : "ltr"}>
             
             {/* Header */}
             <div className="text-center space-y-3 mb-8">

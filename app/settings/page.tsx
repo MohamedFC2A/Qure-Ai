@@ -32,7 +32,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <main className="min-h-screen pt-24 sm:pt-28 pb-24 md:pb-14 px-3 sm:px-6">
+        <main className="min-h-screen pt-16 sm:pt-24 pb-16 sm:pb-20 md:pb-14 px-3 sm:px-6">
             <div className="clinical-page space-y-6 sm:space-y-8 max-w-4xl mx-auto">
 
                 {/* Header */}

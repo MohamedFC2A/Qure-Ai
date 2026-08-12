@@ -26,8 +26,11 @@ const UserContext = createContext<UserState | undefined>(undefined);
 
 const getLocalDevUser = () => {
     if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return null;
-    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1";
     if (!isLocalhost) return null;
+
+    const hasDevAuthCookie = document.cookie.includes("qurescan_dev_auth=1");
+    if (!hasDevAuthCookie) return null;
 
     return {
         id: "00000000-0000-0000-0000-000000000001",

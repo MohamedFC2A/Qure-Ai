@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Mail, Lock, Github, AlertCircle, Fingerprint, Calendar, User, Ruler, Weight } from "lucide-react";
+import { Mail, Lock, Github, AlertCircle, CheckCircle2, Fingerprint, Calendar, User, Ruler, Weight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useRouter } from "next/navigation";
@@ -49,6 +49,7 @@ interface AuthFormProps {
 export const AuthForm = ({ type }: AuthFormProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [infoMessage, setInfoMessage] = useState<string | null>(null);
     const router = useRouter();
     const supabase = createClient();
     const schema = type === "signup" ? signupSchema : loginSchema;
@@ -67,7 +68,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
     const getCallbackUrl = () => {
         if (typeof window === "undefined") return "";
-        const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+        const origin = window.location.origin || process.env.NEXT_PUBLIC_SITE_URL || "";
         const url = new URL("/auth/callback", origin);
         url.searchParams.set("next", getNextPath());
         return url.toString();
@@ -84,6 +85,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const onSubmit = async (data: AuthFormData) => {
         setIsLoading(true);
         setError(null);
+        setInfoMessage(null);
 
         try {
             let result;
@@ -119,7 +121,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
             }
 
             if (type === "signup" && result.data.user && !result.data.session) {
-                setError(t("Please check your email to confirm your account.", "يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك."));
+                setInfoMessage(t("Account created! Please check your email inbox to confirm your account.", "تم إنشاء الحساب بنجاح! يرجى التحقق من صندوق البريد الإلكتروني لتأكيد حسابك."));
                 setIsLoading(false);
                 return;
             }
@@ -136,6 +138,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const handleOAuthLogin = async (provider: 'google' | 'github') => {
         setIsLoading(true);
         setError(null);
+        setInfoMessage(null);
         try {
             const callbackUrl = getCallbackUrl();
             if (!callbackUrl) throw new Error("Missing callback URL. Please refresh and try again.");
@@ -147,7 +150,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
             });
             if (error) throw error;
         } catch (err: any) {
-            setError(t(`Failed to sign in with ${provider}`, `فشل تسجيل الدخول عبر ${provider === 'google' ? 'جوجل' : 'جيت هاب'}`));
+            setError(t(`Failed to sign in with ${provider}: ${err?.message || ''}`, `فشل تسجيل الدخول عبر ${provider === 'google' ? 'جوجل' : 'جيت هاب'}: ${err?.message || ''}`));
             setIsLoading(false);
             console.error("OAuth error:", err);
         }
@@ -156,6 +159,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     const handleLocalDevLogin = async () => {
         setIsLoading(true);
         setError(null);
+        setInfoMessage(null);
 
         try {
             const response = await fetch("/api/dev/login", { method: "POST" });
@@ -214,6 +218,13 @@ export const AuthForm = ({ type }: AuthFormProps) => {
                             : t("Set up your account for medication analysis and safety review", "أنشئ حسابك لتحليل الأدوية ومراجعة السلامة")}
                     </p>
                 </div>
+
+                {infoMessage && (
+                    <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <p className="text-xs text-emerald-200 leading-relaxed">{infoMessage}</p>
+                    </div>
+                )}
 
                 {error && (
                     <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-start gap-2.5">

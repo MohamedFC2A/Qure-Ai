@@ -181,7 +181,7 @@ const result = await res.json();
 console.log("Analysis Output:", result);`;
 
     return (
-        <main className="min-h-screen pt-24 sm:pt-28 pb-24 md:pb-16 px-3 sm:px-6 max-w-7xl mx-auto" dir={isArabic ? "rtl" : "ltr"}>
+        <main className="min-h-screen pt-16 sm:pt-24 pb-16 sm:pb-20 md:pb-16 px-3 sm:px-6 max-w-7xl mx-auto" dir={isArabic ? "rtl" : "ltr"}>
             
             {/* Top Hero Section */}
             <div className="text-center space-y-4 mb-10">

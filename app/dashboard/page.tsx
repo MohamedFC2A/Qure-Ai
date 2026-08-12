@@ -178,13 +178,13 @@ export default function DashboardPage() {
     /* ── Loading skeleton ── */
     if (loading) {
         return (
-            <main className="min-h-screen pt-24 px-4">
+            <main className="min-h-screen pt-16 sm:pt-24 px-3 sm:px-4">
                 <div className="mx-auto max-w-7xl space-y-5">
                     <div className="h-28 skeleton rounded-2xl" />
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{[1,2,3,4].map(i=><div key={i} className="h-20 skeleton rounded-2xl"/>)}</div>
                     <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-5">
-                        <div className="h-72 skeleton rounded-2xl" />
-                        <div className="h-72 skeleton rounded-2xl" />
+                        <div className="h-64 skeleton rounded-2xl" />
+                        <div className="h-64 skeleton rounded-2xl" />
                     </div>
                 </div>
             </main>

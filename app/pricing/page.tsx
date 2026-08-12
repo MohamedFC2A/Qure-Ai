@@ -271,7 +271,7 @@ export default function PricingPage() {
     };
 
     return (
-        <main className="min-h-screen px-3 sm:px-6 pb-24 sm:pb-28 pt-24 sm:pt-28 md:pb-16 md:pt-28" dir={isArabic ? "rtl" : "ltr"}>
+        <main className="min-h-screen px-3 sm:px-6 pb-16 sm:pb-24 pt-16 sm:pt-24 md:pb-16 md:pt-28" dir={isArabic ? "rtl" : "ltr"}>
             <div className="clinical-page space-y-10 sm:space-y-12 max-w-6xl mx-auto">
 
                 {/* ── HERO SECTION ────────────────────────────────── */}

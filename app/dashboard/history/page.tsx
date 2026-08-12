@@ -127,7 +127,7 @@ export default function HistoryPage() {
     );
 
     return (
-        <main className="min-h-screen w-full pt-24 sm:pt-28 pb-24 md:pb-14 px-3 sm:px-6">
+        <main className="min-h-screen w-full pt-16 sm:pt-24 pb-16 sm:pb-20 md:pb-14 px-3 sm:px-6">
             <div className="clinical-page">
 
                 {/* ── Header Section ── */}

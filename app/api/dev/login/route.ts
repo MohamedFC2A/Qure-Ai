@@ -10,7 +10,7 @@ function isLocalRequest(request: NextRequest) {
     const host = request.headers.get("host") || "";
     return (
         process.env.NODE_ENV === "development" &&
-        (host.startsWith("localhost:") || host.startsWith("127.0.0.1:") || host.startsWith("[::1]:"))
+        (host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]"))
     );
 }
 

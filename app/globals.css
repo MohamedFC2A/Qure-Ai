@@ -214,9 +214,15 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.09);
     background: rgba(10, 16, 26, 0.70);
     padding: 0.75rem 1rem;
-    font-size: 0.875rem;
+    font-size: 1rem; /* 16px on mobile prevents iOS Safari auto-zoom */
     color: #fff;
     transition: border-color 0.2s ease;
+  }
+
+  @media (min-width: 640px) {
+    .clinical-input {
+      font-size: 0.875rem;
+    }
   }
 
   .clinical-input::placeholder { color: rgba(255, 255, 255, 0.28); }
