@@ -141,7 +141,7 @@ export default function RootLayout({
                     <UserProvider>
                         <ScanProvider>
                             <Navbar />
-                            <div className="flex-1 w-full pb-20 md:pb-0">
+                            <div className="flex-1 w-full pb-20 md:pb-0" suppressHydrationWarning>
                                 {children}
                             </div>
                             <Footer />
