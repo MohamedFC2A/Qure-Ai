@@ -514,7 +514,7 @@ export function AiChatPage() {
                             {/* Upgrade CTA Button */}
                             <button
                                 onClick={() => router.push("/pricing")}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-black text-base transition-all shadow-[0_0_25px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2"
+                                className="w-full py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-base transition-all flex items-center justify-center gap-2"
                             >
                                 <Sparkles className="w-5 h-5" />
                                 {t("Upgrade to ULTRA Now", "ترقية إلى باقة ULTRA الآن")}
@@ -535,7 +535,7 @@ export function AiChatPage() {
                                 {/* Welcome section when empty */}
                                 {messages.length === 0 && (
                                     <div className="flex flex-col items-center text-center pt-12 pb-8 animate-fade-in space-y-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.2)]">
+                                        <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
                                             <Sparkles className="w-7 h-7" />
                                         </div>
 
@@ -563,7 +563,7 @@ export function AiChatPage() {
                                                 <button
                                                     key={i}
                                                     onClick={() => sendMessage(isArabic ? s.ar : s.en)}
-                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-cyan-500/20 bg-slate-900/60 text-slate-300 hover:text-white hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all leading-relaxed backdrop-blur-sm"
+                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-slate-800 bg-slate-900/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-slate-800 transition-all leading-relaxed"
                                                 >
                                                     {isArabic ? s.ar : s.en}
                                                 </button>
@@ -586,7 +586,7 @@ export function AiChatPage() {
                                 {/* Error */}
                                 {error && (
                                     <div className="flex items-center justify-center animate-fade-in">
-                                        <div className="rounded-2xl border border-red-400/20 bg-red-400/5 px-5 py-3.5 text-xs text-red-300/90 text-center">
+                                        <div className="rounded-2xl border border-red-500/20 bg-red-950/30 px-5 py-3.5 text-xs text-red-300 text-center">
                                             {error}
                                         </div>
                                     </div>
@@ -598,8 +598,7 @@ export function AiChatPage() {
 
                         {/* ── INPUT BAR ── */}
                         <div
-                            className="shrink-0 px-3 sm:px-6 pt-2 pb-20 sm:pb-4"
-                            style={{ background: "rgba(5, 8, 17, 0.95)", backdropFilter: "blur(24px)" }}
+                            className="shrink-0 px-3 sm:px-6 pt-2 pb-20 sm:pb-4 border-t border-slate-900 bg-slate-950/95 backdrop-blur-md"
                         >
                             <div className="max-w-2xl mx-auto space-y-2">
                                 {/* Medication selector */}
@@ -615,7 +614,7 @@ export function AiChatPage() {
                                 )}
 
                                 {/* Main input container */}
-                                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.08)] focus-within:border-cyan-400/50 transition-all">
+                                <div className="rounded-2xl border border-slate-800 bg-slate-900/90 focus-within:border-cyan-500/50 transition-all shadow-sm">
                                     {/* Mode selector row */}
                                     <div className="flex items-center gap-2 px-4 pt-3 pb-0">
                                         <ModeSelector
@@ -656,7 +655,7 @@ export function AiChatPage() {
                                                     "p-2 rounded-xl transition-all",
                                                     isListening
                                                         ? "bg-red-500/20 text-red-400 animate-pulse"
-                                                        : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                                                        : "text-slate-400 hover:text-white hover:bg-slate-800"
                                                 )}
                                                 title={t("Voice input", "إدخال صوتي")}
                                             >
@@ -671,12 +670,12 @@ export function AiChatPage() {
                                                 className={cn(
                                                     "p-2.5 rounded-xl transition-all",
                                                     input.trim() && !isSending
-                                                        ? "bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow-lg shadow-cyan-950/40"
-                                                        : "bg-white/[0.05] text-white/15 cursor-not-allowed"
+                                                        ? "bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold"
+                                                        : "bg-slate-800 text-slate-600 cursor-not-allowed"
                                                 )}
                                             >
                                                 {isSending
-                                                    ? <div className="w-4 h-4 border-2 border-cyan-800/50 border-t-cyan-400 rounded-full animate-spin" />
+                                                    ? <div className="w-4 h-4 border-2 border-slate-900 border-t-cyan-400 rounded-full animate-spin" />
                                                     : <ArrowUp className="w-4 h-4" />
                                                 }
                                             </button>
