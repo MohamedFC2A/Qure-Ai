@@ -13,13 +13,14 @@ import {
     HeartPulse,
     Lock,
     Shield,
-    Sparkles,
     Users,
     Zap,
     ChevronDown,
     ChevronUp,
-    Star,
     Brain,
+    HelpCircle,
+    CheckCircle2,
+    Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -29,14 +30,14 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const freeFeatures = [
-    { en: "30 monthly credits (scans & AI messages)",   ar: "٣٠ رصيد شهرياً للفحوصات والرسائل"        },
+    { en: "30 monthly credits (scans & AI messages)",   ar: "٣٠ رصيد شهرياً للفحوصات ورسائل AI"       },
     { en: "Medication OCR and core medical analysis",   ar: "OCR الأدوية والتحليل الطبي الأساسي"       },
     { en: "Basic openFDA and web verification",        ar: "التحقق الأساسي من قواعد بيانات FDA والويب" },
     { en: "Saved scan history & deduplication",        ar: "حفظ سجل الفحص والربط الذكي لمنع التكرار" },
 ];
 
 const ultraFeatures = [
-    { en: "300 monthly credits (scans & AI messages)",  ar: "٣٠٠ رصيد شهرياً للفحوصات والرسائل"       },
+    { en: "300 monthly credits (scans & AI messages)",  ar: "٣٠٠ رصيد شهرياً للفحوصات ورسائل AI"      },
     { en: "Full Mat AI medical assistant access",      ar: "المساعد الطبي الذكي Mat AI بلا قيود"     },
     { en: "Private health profile & allergy context",   ar: "سياق الملف الصحي والتفاعلات والحساسية"  },
     { en: "Family and caregiver profiles management",   ar: "إدارة ملفات العائلة ومقدمي الرعاية"      },
@@ -63,52 +64,52 @@ const valueCards = [
         icon:  HeartPulse,
         color: "emerald",
         en:    { title: "Safety context",   text: "Warnings are easier to review when the app knows allergies, conditions, and current medications." },
-        ar:    { title: "سياق الأمان",     text: "التحذيرات أسهل للمراجعة عندما يعرف التطبيق الحساسية والحالات الصحية والأدوية الحالية." },
+        ar:    { title: "سياق الأمان الدوائي", text: "تنبيهات فورية دقيقة عند مطابقة التحذيرات مع الحساسية وحالتك الصحية وأدويتك الحالية." },
     },
     {
         icon:  Users,
         color: "violet",
         en:    { title: "Family profiles",  text: "Keep scans separated for yourself, a parent, or another person you care for." },
-        ar:    { title: "ملفات الأسرة",   text: "احتفظ بفحوصات منفصلة لك، لأحد والديك، أو لشخص تهتم بصحته." },
+        ar:    { title: "ملفات الأسرة الذكية", text: "احتفظ بسجلات منفصلة تماماً لك، لوالديك، أو لأي فرد من أفراد أسرتك دون اختلاط البيانات." },
     },
     {
         icon:  FileText,
         color: "cyan",
-        en:    { title: "Cleaner reports",  text: "Export results for later review with a pharmacist, doctor, or caregiver." },
-        ar:    { title: "تقارير أوضح",    text: "صدّر النتائج لمراجعة لاحقة مع الصيدلي أو الطبيب أو مقدم الرعاية." },
+        en:    { title: "Clinical PDF reports", text: "Export professional medical reports for later review with your doctor or pharmacist." },
+        ar:    { title: "تقارير PDF طبية", text: "صدّر نتائجك في تقارير طبية منسقة بضغطة زر لمراجعتها مع الطبيب أو الصيدلي." },
     },
 ];
 
 const faqs = [
     {
-        q: { en: "Is the free plan sufficient?",    ar: "هل الخطة المجانية كافية؟"        },
-        a: { en: "Yes for trying and basic analysis. Ultra is better if you want health customization, medication memory, and stronger exports.", ar: "نعم للتجربة والتحليل الأساسي. Ultra أفضل إذا كنت تريد تخصيصًا صحيًا، ذاكرة أدوية، وتصديرًا أقوى." },
+        q: { en: "Is the free plan sufficient for daily use?", ar: "هل الخطة المجانية كافية للاستخدام اليومي؟" },
+        a: { en: "The free plan grants 30 credits monthly for basic OCR analysis. ULTRA is recommended for continuous family scanning, Mat AI chat, and comprehensive safety checks.", ar: "تمنحك الخطة المجانية 30 رصيداً شهرياً للفحص الأساسي. باقة ألترا هي الخيار المثالي إذا كنت ترغب في محادثات Mat AI غير المحدودة، ملفات الأسرة، والتقارير الاحترافية." },
     },
     {
-        q: { en: "Are results a replacement for a doctor?", ar: "هل النتائج بديل للطبيب؟" },
-        a: { en: "No. Results help you understand and review, but important medical decisions must be confirmed with a specialist.", ar: "لا. النتائج تساعدك على الفهم والمراجعة، لكن القرارات الطبية المهمة يجب تأكيدها مع مختص." },
+        q: { en: "Are the AI results a replacement for a doctor?", ar: "هل نتائج الذكاء الاصطناعي بديل للطبيب المعالج؟" },
+        a: { en: "No. QureScan is designed for educational guidance and verification. All critical clinical decisions must be confirmed with your physician or pharmacist.", ar: "لا. تم تصميم QureScan كأداة توجيهية وتحقق ذكية للمساعدة والفهم. أي قرارات علاجية هامة يجب استشارة الطبيب أو الصيدلي بشأنها." },
     },
     {
-        q: { en: "Can it be used for the family?",   ar: "هل يمكن استخدامه للعائلة؟"      },
-        a: { en: "Yes in Ultra through separate profiles so medication memory and history don't mix between people.", ar: "نعم في Ultra عبر ملفات منفصلة حتى لا تختلط ذاكرة الأدوية والسجل بين الأشخاص." },
+        q: { en: "How does the monthly credit refill work?", ar: "كيف تعمل آلية التعبئة والتجديد الشهري للرصيد؟" },
+        a: { en: "Your monthly credits automatically refresh every 30 days from your signup date, ensuring you always have active balance ready.", ar: "يتم تجديد رصيدك تلقائياً بذكاء كل 30 يوماً من تاريخ إنشاء حسابك لضمان توفر رصيدك دوماً دون أي انقطاع." },
     },
 ];
 
 /* ── Feature check list ────────────────────────────────────────── */
-function FeatureList({ items, accent, isArabic }: { items: { en: string; ar: string }[]; accent: "cyan" | "amber"; isArabic: boolean }) {
+function FeatureList({ items, isUltra, isArabic }: { items: { en: string; ar: string }[]; isUltra?: boolean; isArabic: boolean }) {
     return (
-        <ul className="space-y-3">
+        <ul className="space-y-3.5 my-2">
             {items.map((item, i) => (
                 <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
                     <span className={cn(
-                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-                        accent === "amber"
-                            ? "border-amber-400/25 bg-amber-400/10 text-amber-300"
-                            : "border-cyan-400/25 bg-cyan-400/10 text-cyan-300"
+                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
+                        isUltra
+                            ? "border-cyan-400/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.2)]"
+                            : "border-slate-700 bg-slate-800/80 text-cyan-400"
                     )}>
-                        <Check className="h-3 w-3" />
+                        <Check className="h-3 w-3 stroke-[2.5]" />
                     </span>
-                    <span className="leading-relaxed">{isArabic ? item.ar : item.en}</span>
+                    <span className="leading-relaxed font-medium">{isArabic ? item.ar : item.en}</span>
                 </li>
             ))}
         </ul>
@@ -119,12 +120,34 @@ function FeatureList({ items, accent, isArabic }: { items: { en: string; ar: str
 function ComparisonValue({ value, highlighted = false }: { value: boolean | string; highlighted?: boolean }) {
     if (typeof value === "boolean") {
         return value ? (
-            <Check className={cn("h-4 w-4", highlighted ? "text-amber-400" : "text-cyan-400")} />
+            <div className="flex items-center justify-center">
+                <span className={cn(
+                    "flex h-6 w-6 items-center justify-center rounded-full",
+                    highlighted ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/30" : "bg-white/5 text-slate-300 border border-white/10"
+                )}>
+                    <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+                </span>
+            </div>
         ) : (
-            <Lock className="h-4 w-4 text-white/20" />
+            <div className="flex items-center justify-center">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.02] text-white/20 border border-white/5">
+                    <Lock className="h-3 w-3" />
+                </span>
+            </div>
         );
     }
-    return <span className={cn("text-xs sm:text-sm font-semibold", highlighted ? "text-amber-300 font-bold" : "text-slate-400")}>{value}</span>;
+    return (
+        <div className="flex items-center justify-center">
+            <span className={cn(
+                "text-xs sm:text-sm px-2.5 py-0.5 rounded-lg border",
+                highlighted
+                    ? "bg-cyan-500/15 border-cyan-400/30 text-cyan-300 font-bold"
+                    : "bg-white/5 border-white/10 text-slate-300 font-medium"
+            )}>
+                {value}
+            </span>
+        </div>
+    );
 }
 
 /* ── FAQ Item ──────────────────────────────────────────────────── */
@@ -132,19 +155,22 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
     const [open, setOpen] = useState(false);
     return (
         <div className={cn(
-            "rounded-2xl border border-white/[0.07] overflow-hidden transition-colors",
-            open ? "border-white/15" : "hover:border-white/10"
-        )}
-            style={{ background: "var(--q-glass-2)" }}>
+            "rounded-2xl border transition-all duration-200 overflow-hidden",
+            open
+                ? "border-cyan-500/30 bg-cyan-950/20 shadow-[0_4px_20px_rgba(0,0,0,0.25)]"
+                : "border-white/[0.08] bg-slate-900/60 hover:border-white/15"
+        )}>
             <button
-                className="w-full flex items-center justify-between gap-4 p-4 sm:p-5 text-start"
+                className="w-full flex items-center justify-between gap-4 p-4 sm:p-5 text-start focus:outline-none"
                 onClick={() => setOpen(!open)}
             >
-                <span className="font-semibold text-white text-xs sm:text-sm">{isArabic ? q.ar : q.en}</span>
-                {open
-                    ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
-                    : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
-                }
+                <span className="font-bold text-white text-xs sm:text-sm">{isArabic ? q.ar : q.en}</span>
+                <span className={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border transition-transform duration-200",
+                    open ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300 rotate-180" : "border-white/10 bg-white/5 text-slate-400"
+                )}>
+                    <ChevronDown className="h-4 w-4" />
+                </span>
             </button>
             <AnimatePresence>
                 {open && (
@@ -152,9 +178,9 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
                     >
-                        <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-xs sm:text-sm text-slate-400 leading-relaxed">
+                        <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
                             {isArabic ? a.ar : a.en}
                         </div>
                     </motion.div>
@@ -182,169 +208,177 @@ export default function PricingPage() {
     };
 
     return (
-        <main className="min-h-screen px-3 sm:px-6 pb-24 sm:pb-28 pt-24 sm:pt-28 md:pb-16 md:pt-28">
-            <div className="clinical-page space-y-8 sm:space-y-10">
+        <main className="min-h-screen px-3 sm:px-6 pb-24 sm:pb-28 pt-24 sm:pt-28 md:pb-16 md:pt-28" dir={isArabic ? "rtl" : "ltr"}>
+            <div className="clinical-page space-y-10 sm:space-y-12 max-w-6xl mx-auto">
 
-                {/* ── HERO ─────────────────────────────────────── */}
-                <section className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+                {/* ── HERO SECTION ────────────────────────────────── */}
+                <section className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
                     <div>
-                        <h1 className="mt-1 text-3xl xs:text-4xl sm:text-5xl font-black leading-tight text-white tracking-tight">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/25 text-cyan-300 text-xs font-bold mb-3 backdrop-blur-md">
+                            <Zap className="h-3.5 w-3.5 text-cyan-400" />
+                            <span>{t("Transparent Clinical Pricing", "خطط مرنة وواضحة بدون تعقيد")}</span>
+                        </div>
+                        <h1 className="text-3xl xs:text-4xl sm:text-5xl font-black leading-tight text-white tracking-tight">
                             {isArabic ? (
                                 <>
                                     اختر الخطة التي{" "}
-                                    <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
+                                    <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300 bg-clip-text text-transparent">
                                         تناسب احتياجاتك.
                                     </span>
                                 </>
                             ) : (
                                 <>
                                     Choose the plan that{" "}
-                                    <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
-                                        fits your scan needs.
+                                    <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300 bg-clip-text text-transparent">
+                                        fits your healthcare needs.
                                     </span>
                                 </>
                             )}
                         </h1>
                         <p className="mt-3 sm:mt-4 text-xs sm:text-sm lg:text-base leading-relaxed text-slate-300 max-w-xl">
                             {t(
-                                "Start with core medication analysis for free. Upgrade when you need personal safety context, family profiles, medication memory, and export-ready reports.",
-                                "ابدأ بتحليل الأدوية الأساسي مجانًا. قم بالترقية عندما تحتاج إلى سياق أمان شخصي وملفات عائلية وذاكرة أدوية وتقارير جاهزة للتصدير."
+                                "Start with core medication analysis for free. Upgrade to ULTRA when you want personal safety context, family profiles, Mat AI chat, and clinical PDF exports.",
+                                "ابدأ بفحص الأدوية مجاناً مع ٣٠ رصيد شهرياً. قم بالترقية إلى ULTRA للوصول الكامل لمساعد Mat AI الطبي، ملفات الأسرة، وسياق الأمان المتقدم."
                             )}
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                    <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
                         {[
-                            { icon: Clock,   labelEn: "Fast setup",       labelAr: "إعداد سريع",          valueEn: "No card for Free",     valueAr: "بدون بطاقة للمجاني", color: "cyan"    },
-                            { icon: Shield,  labelEn: "Medical safety",   labelAr: "أمان طبي",           valueEn: "Review-focused",       valueAr: "مُركّز على المراجعة",  color: "emerald" },
-                            { icon: Globe,   labelEn: "Verification",     labelAr: "التحقق",             valueEn: "FDA + web signals",    valueAr: "FDA + إشارات الويب", color: "cyan"     },
+                            { icon: Clock,   labelEn: "Instant Active",   labelAr: "تفعيل فوري",          valueEn: "No card needed",     valueAr: "بدون بطاقة للمجاني", color: "cyan"    },
+                            { icon: Shield,  labelEn: "Clinical Safety",  labelAr: "حماية سريرية",        valueEn: "FDA verified",       valueAr: "مطابقة FDA والويب",  color: "emerald" },
+                            { icon: Globe,   labelEn: "Smart Refill",     labelAr: "تجديد ذكي",           valueEn: "Monthly refresh",    valueAr: "تعبئة تلقائية شهرياً", color: "violet"   },
                         ].map((item) => (
                             <div
                                 key={item.labelEn}
-                                className="stat-card"
+                                className="stat-card p-4 flex flex-col justify-between rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl"
                             >
-                                <div className={cn("icon-badge w-8 h-8 sm:w-9 sm:h-9 rounded-xl mb-2 sm:mb-3", `icon-badge-${item.color}`)}>
-                                    <item.icon className="h-4 w-4" />
+                                <div className={cn("icon-badge w-9 h-9 rounded-xl mb-2 sm:mb-3 flex items-center justify-center", `icon-badge-${item.color}`)}>
+                                    <item.icon className="h-4.5 w-4.5" />
                                 </div>
-                                <p className="text-xs sm:text-sm font-bold text-white truncate">{isArabic ? item.labelAr : item.labelEn}</p>
-                                <p className="mt-0.5 text-[10px] sm:text-[11px] text-slate-400 truncate">{isArabic ? item.valueAr : item.valueEn}</p>
+                                <div>
+                                    <p className="text-xs sm:text-sm font-bold text-white truncate">{isArabic ? item.labelAr : item.labelEn}</p>
+                                    <p className="mt-0.5 text-[10px] sm:text-[11px] text-slate-400 truncate">{isArabic ? item.valueAr : item.valueEn}</p>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                {/* ── PLAN CARDS ───────────────────────────────── */}
-                <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {/* Free plan */}
-                    <GlassCard accent="cyan" className="flex h-full flex-col p-6 sm:p-8" hoverEffect={false}>
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">
+                {/* ── PLAN CARDS ──────────────────────────────────── */}
+                <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
+                    
+                    {/* Free Plan Card */}
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-200 hover:border-white/20 shadow-xl">
+                        <div>
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800/80 border border-slate-700 text-slate-300">
                                     {t("Free Plan", "الخطة المجانية")}
-                                </p>
-                                <h2 className="mt-2 text-3xl sm:text-4xl font-black text-white">$0</h2>
-                                <p className="mt-1.5 text-xs sm:text-sm text-slate-400">
-                                    {t(
-                                        "For trying QureScan and occasional scans.",
-                                        "لتجربة QureScan والفحوصات العرضية."
-                                    )}
-                                </p>
+                                </span>
+                                <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
+                                    <Brain className="h-6 w-6" />
+                                </div>
                             </div>
-                            <div className="icon-badge icon-badge-cyan w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0">
-                                <Brain className="h-6 w-6 text-cyan-300" />
+
+                            <div className="mt-5 flex items-baseline gap-2">
+                                <h2 className="text-4xl sm:text-5xl font-black text-white">$0</h2>
+                                <span className="text-xs sm:text-sm text-slate-400 font-medium">
+                                    {t("/ forever", "/ مدى الحياة")}
+                                </span>
                             </div>
+                            <p className="mt-2 text-xs sm:text-sm text-slate-400 leading-relaxed">
+                                {t("For trying QureScan and occasional medication scans.", "لتجربة فحص الأدوية والتعرف السريع على الوصفات الطبية.")}
+                            </p>
+
+                            <div className="my-6 h-px bg-white/[0.08]" />
+
+                            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                                {t("What's included:", "المزايا المشمولة:")}
+                            </p>
+                            <FeatureList items={freeFeatures} isArabic={isArabic} />
                         </div>
 
-                        <div className="my-5 sm:my-6 h-px bg-white/[0.08]" />
-                        <FeatureList items={freeFeatures} accent="cyan" isArabic={isArabic} />
-
-                        <div className="mt-auto pt-6 sm:pt-8">
+                        <div className="pt-8 mt-auto">
                             <Button
                                 disabled={plan === "free" || loading}
                                 variant="outline"
-                                className="w-full border-white/15 text-slate-300 font-semibold"
+                                className="w-full py-3.5 rounded-2xl border-white/15 bg-white/5 text-slate-300 font-bold hover:bg-white/10 transition-colors"
                             >
                                 {loading
                                     ? t("Checking plan...", "جاري التحقق...")
                                     : plan === "free"
-                                    ? t("Current plan", "الخطة الحالية")
-                                    : t("Included", "مشمول")}
+                                    ? t("Current Plan", "خطتك الحالية")
+                                    : t("Included by Default", "مشمول مجاناً")}
                             </Button>
                         </div>
-                    </GlassCard>
+                    </div>
 
-                    {/* Ultra plan */}
-                    <GlassCard
-                        accent="cyan"
-                        className="relative flex h-full flex-col p-6 sm:p-8"
-                        hoverEffect={false}
-                        style={{ background: "rgba(15, 23, 42, 0.85)", borderColor: "rgba(34, 211, 238, 0.25)" }}
-                    >
-                        {/* Best value badge */}
-                        <div className="absolute end-5 top-5 flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-black shadow-md">
-                            <Star className="h-3 w-3 fill-current" />
-                            <span>{t("Best value", "أفضل قيمة")}</span>
-                        </div>
+                    {/* Ultra Plan Card */}
+                    <div className="relative rounded-3xl border border-cyan-500/40 bg-gradient-to-b from-slate-900/90 via-slate-900/95 to-slate-950/95 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_0_40px_rgba(6,182,212,0.15)] hover:border-cyan-400/60 transition-all duration-200">
+                        
+                        {/* Top decorative glow */}
+                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-t-3xl" />
 
-                        <div className="flex items-start justify-between gap-4 pe-24">
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-amber-400">
-                                    {t("Ultra Plan", "خطة ألترا")}
-                                </p>
-                                <div className="mt-2 flex items-end gap-2">
-                                    <h2 className="text-3xl sm:text-4xl font-black text-white">$9</h2>
-                                    <span className="pb-1 text-xs sm:text-sm text-slate-400">
-                                        {t("/ month", "/ شهر")}
+                        <div>
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.25)] flex items-center gap-1.5">
+                                        <Zap className="h-3.5 w-3.5 text-cyan-400 fill-cyan-400" />
+                                        {t("Ultra Plan", "خطة ألترا")}
                                     </span>
                                 </div>
-                                <p className="mt-1.5 text-xs sm:text-sm text-amber-200/75">
-                                    {t(
-                                        "For regular scanning, family care, and personal safety checks.",
-                                        "للفحص المنتظم، ورعاية الأسرة، والفحوصات الصحية الشخصية."
-                                    )}
-                                </p>
+                                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-500/15 border border-indigo-400/30 text-indigo-300">
+                                    {t("Most Popular", "الأكثر تميزاً")}
+                                </span>
                             </div>
-                            <div className="icon-badge icon-badge-amber w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0">
-                                <Zap className="h-6 w-6" />
+
+                            <div className="mt-5 flex items-baseline gap-2">
+                                <h2 className="text-4xl sm:text-5xl font-black text-white">$9</h2>
+                                <span className="text-xs sm:text-sm text-cyan-200/80 font-medium">
+                                    {t("/ month", "/ شهرياً")}
+                                </span>
                             </div>
+                            <p className="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                {t("For regular health checks, Mat AI medical chat, and full family care.", "للرعاية المتكاملة، استشارات Mat AI، ومتابعة صحة الأسرة بدون حدود.")}
+                            </p>
+
+                            <div className="my-6 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+
+                            <p className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3">
+                                {t("Everything in Free, plus:", "كل ما في المجاني، بالإضافة إلى:")}
+                            </p>
+                            <FeatureList items={ultraFeatures} isUltra isArabic={isArabic} />
                         </div>
 
-                        <div className="my-5 sm:my-6 h-px bg-amber-400/20" />
-                        <FeatureList items={ultraFeatures} accent="amber" isArabic={isArabic} />
-
-                        <div className="mt-auto pt-6 sm:pt-8">
+                        <div className="pt-8 mt-auto">
                             {loading ? (
-                                <div className="h-11 w-full skeleton rounded-xl" />
+                                <div className="h-12 w-full skeleton rounded-2xl" />
+                            ) : plan === "ultra" ? (
+                                <div className="w-full py-3.5 rounded-2xl bg-cyan-950/60 border border-cyan-500/50 text-cyan-300 font-bold text-center flex items-center justify-center gap-2 shadow-lg">
+                                    <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                                    <span>{t("Ultra is Active", "ألترا مفعّل بحسابك")}</span>
+                                </div>
                             ) : (
-                                <Button
+                                <button
                                     onClick={handlePurchase}
-                                    disabled={plan === "ultra"}
-                                    variant="amber"
-                                    className="w-full gap-2 text-sm font-bold"
-                                    glow
+                                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-cyan-500/25 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
                                 >
-                                    <span>
-                                        {plan === "ultra"
-                                            ? t("Ultra is active", "ألترا مفعّل")
-                                            : t("Upgrade to Ultra", "الترقية إلى ألترا")}
-                                    </span>
-                                    {plan !== "ultra" && (
-                                        <ArrowRight className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
-                                    )}
-                                </Button>
+                                    <span>{t("Upgrade to Ultra ($9/mo)", "الترقية إلى ألترا ($9/شهر)")}</span>
+                                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                                </button>
                             )}
                         </div>
-                    </GlassCard>
+                    </div>
                 </section>
 
-                {/* ── VALUE CARDS ──────────────────────────────── */}
+                {/* ── VALUE CARDS ─────────────────────────────────── */}
                 <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {valueCards.map((item) => (
                         <div
                             key={item.en.title}
-                            className="stat-card p-5 sm:p-6"
+                            className="stat-card p-5 sm:p-6 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-xl hover:border-white/15 transition-colors"
                         >
-                            <div className={cn("icon-badge w-10 h-10 rounded-xl mb-4", iconBadgeMap[item.color] || "icon-badge-cyan")}>
+                            <div className={cn("icon-badge w-10 h-10 rounded-xl mb-4 flex items-center justify-center", iconBadgeMap[item.color] || "icon-badge-cyan")}>
                                 <item.icon className="h-5 w-5" />
                             </div>
                             <h3 className="font-bold text-white text-base">
@@ -357,43 +391,43 @@ export default function PricingPage() {
                     ))}
                 </section>
 
-                {/* ── COMPARISON TABLE ─────────────────────────── */}
+                {/* ── COMPARISON TABLE ────────────────────────────── */}
                 <section>
-                    <GlassCard className="overflow-hidden" hoverEffect={false}>
-                        <div className="border-b border-white/[0.08] p-5 sm:p-6">
-                            <h2 className="text-xl sm:text-2xl font-bold text-white">
-                                {t("Plan comparison", "مقارنة الخطط")}
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-2xl overflow-hidden shadow-xl">
+                        <div className="border-b border-white/[0.08] p-5 sm:p-7">
+                            <h2 className="text-xl sm:text-2xl font-black text-white">
+                                {t("Plan Comparison Matrix", "جدول مقارنة الخطط التفصيلي")}
                             </h2>
                             <p className="mt-1 text-xs sm:text-sm text-slate-400">
-                                {t("A clear view of what changes when you upgrade.", "رؤية واضحة لما يتغير عند الترقية.")}
+                                {t("A comprehensive breakdown of all features between plans.", "نظرة شاملة وواضحة على المزايا والحدود بين الخطة المجانية وباقة ألترا.")}
                             </p>
                         </div>
 
                         <div className="overflow-x-auto relative no-scrollbar">
-                            <table className="w-full min-w-[520px] text-xs sm:text-sm">
+                            <table className="w-full min-w-[560px] text-xs sm:text-sm">
                                 <thead>
                                     <tr className="border-b border-white/[0.08] bg-white/[0.02]">
-                                        <th className="p-3.5 sm:p-4 font-bold text-slate-400 text-start">
+                                        <th className="p-4 sm:p-5 font-bold text-slate-300 text-start">
                                             {t("Feature", "الميزة")}
                                         </th>
-                                        <th className="p-3.5 sm:p-4 font-bold text-cyan-400 text-start">
-                                            {t("Free", "مجاني")}
+                                        <th className="p-4 sm:p-5 font-bold text-slate-300 text-center w-36 sm:w-44">
+                                            {t("Free Plan", "المجاني")}
                                         </th>
-                                        <th className="bg-amber-400/[0.08] p-3.5 sm:p-4 font-bold text-amber-300 text-start">
-                                            {t("Ultra", "ألترا")}
+                                        <th className="bg-cyan-500/10 p-4 sm:p-5 font-black text-cyan-300 text-center w-36 sm:w-44 border-s border-cyan-500/20">
+                                            {t("Ultra Plan", "ألترا")}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {comparisonRows.map((row) => (
                                         <tr key={row.en} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition-colors">
-                                            <td className="p-3.5 sm:p-4 text-slate-300 font-medium text-start">
+                                            <td className="p-4 sm:p-5 text-slate-200 font-medium text-start">
                                                 {isArabic ? row.ar : row.en}
                                             </td>
-                                            <td className="p-3.5 sm:p-4 text-start">
+                                            <td className="p-4 sm:p-5 text-center">
                                                 <ComparisonValue value={row.free} />
                                             </td>
-                                            <td className="bg-amber-400/[0.03] p-3.5 sm:p-4 text-start">
+                                            <td className="bg-cyan-500/[0.04] p-4 sm:p-5 text-center border-s border-cyan-500/20">
                                                 <ComparisonValue value={row.ultra} highlighted />
                                             </td>
                                         </tr>
@@ -401,45 +435,86 @@ export default function PricingPage() {
                                 </tbody>
                             </table>
                         </div>
-                    </GlassCard>
-                </section>
-
-                {/* ── VOUCHER + FAQ ─────────────────────────────── */}
-                <section className="grid grid-cols-1 gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-                    {/* Voucher */}
-                    <GlassCard accent="cyan" hoverEffect={false} className="p-6 sm:p-7 flex flex-col justify-between">
-                        <div>
-                            <div className="icon-badge icon-badge-cyan w-11 h-11 rounded-xl mb-4">
-                                <Gift className="h-5 w-5" />
-                            </div>
-                            <h2 className="text-lg sm:text-xl font-bold text-white">
-                                {t("Have a voucher?", "لديك قسيمة؟")}
-                            </h2>
-                            <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
-                                {t(
-                                    "Redeem a code from your profile to add credits or unlock plan benefits tied to your account.",
-                                    "استبدل رمزًا من ملفك الشخصي لإضافة رصيد أو فتح مزايا الخطة المرتبطة بحسابك."
-                                )}
-                            </p>
-                        </div>
-                        <Link href="/profile" className="mt-6 inline-flex">
-                            <Button variant="outline" className="gap-2 border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10 font-semibold text-xs sm:text-sm">
-                                <span>{t("Redeem code", "استبدال الكود")}</span>
-                                <ArrowRight className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
-                            </Button>
-                        </Link>
-                    </GlassCard>
-
-                    {/* FAQ accordion */}
-                    <div className="space-y-3">
-                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400 mb-3">
-                            {t("Frequently Asked Questions", "الأسئلة الشائعة")}
-                        </p>
-                        {faqs.map((item) => (
-                            <FaqItem key={item.q.en} q={item.q} a={item.a} isArabic={isArabic} />
-                        ))}
                     </div>
                 </section>
+
+                {/* ── VOUCHER + FAQ BALANCED SECTION ─────────────── */}
+                <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
+                    
+                    {/* Voucher Card */}
+                    <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/30 via-slate-900/80 to-slate-950/80 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-xl">
+                        <div>
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                                    <Gift className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">
+                                        {t("Have a Voucher Code?", "هل لديك كود قسيمة؟")}
+                                    </h2>
+                                    <p className="text-xs text-cyan-300/80 mt-0.5">
+                                        {t("Instant Credit Redemption", "شحن رصيد إضافي فوري")}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <p className="text-xs sm:text-sm leading-relaxed text-slate-300">
+                                {t(
+                                    "Redeem your promotional voucher or gift code directly into your account to unlock additional monthly credits or trial access.",
+                                    "استبدل كود القسيمة أو الرمز الترويجي من ملفك الشخصي لإضافة رصيد إضافي فوري أو تفعيل مزايا باقة ألترا المرتبطة بحسابك."
+                                )}
+                            </p>
+
+                            <div className="mt-6 p-4 rounded-2xl bg-black/40 border border-white/10 flex items-center gap-3">
+                                <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0" />
+                                <p className="text-xs text-slate-300">
+                                    {t("Voucher credits never expire and add to your active balance.", "الرصيد المشحون عبر القسائم دائم ولا تنتهي صلاحيته.")}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="pt-6 mt-auto">
+                            <Link href="/profile" className="block w-full">
+                                <button className="w-full py-3.5 px-4 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2">
+                                    <span>{t("Go to Profile & Redeem Code", "انتقل للملف الشخصي واستبدل الكود")}</span>
+                                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* FAQ Accordion */}
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-xl">
+                        <div>
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 flex items-center justify-center shrink-0">
+                                    <HelpCircle className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">
+                                        {t("Frequently Asked Questions", "الأسئلة الشائعة")}
+                                    </h2>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        {t("Common answers about plans & usage", "إجابات على أكثر الاستفسارات تكراراً")}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                {faqs.map((item) => (
+                                    <FaqItem key={item.q.en} q={item.q} a={item.a} isArabic={isArabic} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="pt-6 mt-auto text-center">
+                            <p className="text-xs text-slate-400">
+                                {t("Need further assistance? Contact our support anytime.", "هل تحتاج إلى مساعدة إضافية؟ فريق الدعم جاهز دائماً.")}
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
             </div>
         </main>
     );
