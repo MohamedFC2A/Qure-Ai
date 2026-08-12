@@ -2,6 +2,18 @@
 
 Smart release notes powered by Qure AI.
 
+## v1.3.10 (Beta) — QureScan Updates: Qure AI Anywhere, Smarter Mobile Navigation & Enhanced Credits (2026-08-12)
+
+### New Features & Enhancements
+- New interactive hub for the QureScan user guide to help you find answers quickly
+- Qure AI is now consistently shown across the platform, replacing remaining previous assistant names
+
+### System Stability & User Experience
+- Improved mobile navigation with a streamlined menu, redesigned bottom navigation, and a smoother “More” hub experience for secondary pages
+- Enhanced AI-related access and billing experience, including updates to the AI lock experience and credit handling for subscription changes
+- Refreshed visual styling for a cleaner, modern look across the navbar and footer, including updated “Beta” appearance
+- Upgraded release notes to be more user-friendly in both English and Arabic, without technical language
+
 ## v1.3.9 (Beta) — QureScan Mobile & Qure AI Updates (2026-08-12)
 
 ### New Features & Enhancements

@@ -1,5 +1,44 @@
 [
   {
+    "version": "v1.3.10 (Beta)",
+    "titleEn": "QureScan Updates: Qure AI Anywhere, Smarter Mobile Navigation & Enhanced Credits",
+    "titleAr": "تحديثات QureScan: Qure AI في كل مكان، وتنقّل موبايل أكثر ذكاءً وتحسينات على الرصيد",
+    "date": "2026-08-12",
+    "badge": "Beta Release",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "New Features & Enhancements",
+        "categoryAr": "الميزات والتحسينات الجديدة",
+        "itemsEn": [
+          "New interactive hub for the QureScan user guide to help you find answers quickly",
+          "Qure AI is now consistently shown across the platform, replacing remaining previous assistant names"
+        ],
+        "itemsAr": [
+          "إضافة مركز إرشادي تفاعلي لدليل استخدام QureScan لمساعدتك على العثور على الإجابات بسرعة",
+          "تم توحيد عرض Qure AI في جميع أنحاء المنصة بشكل متّسق، مع استبدال أسماء المساعدين السابقة"
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "System Stability & User Experience",
+        "categoryAr": "استقرار النظام وسلاسة الاستخدام",
+        "itemsEn": [
+          "Improved mobile navigation with a streamlined menu, redesigned bottom navigation, and a smoother “More” hub experience for secondary pages",
+          "Enhanced AI-related access and billing experience, including updates to the AI lock experience and credit handling for subscription changes",
+          "Refreshed visual styling for a cleaner, modern look across the navbar and footer, including updated “Beta” appearance",
+          "Upgraded release notes to be more user-friendly in both English and Arabic, without technical language"
+        ],
+        "itemsAr": [
+          "تحسين تنقّل الموبايل من خلال قائمة أكثر بساطة وتصميم جديد لشريط التنقّل السفلي وتجربة “المزيد” أكثر سلاسة لصفحات الخيارات",
+          "تحسين تجربة الوصول والدفع المتعلقة بالذكاء الاصطناعي، بما في ذلك تحديثات لتجربة قفل الذكاء الاصطناعي وإدارة الرصيد عند تغييرات الاشتراك",
+          "تحديث المظهر البصري ليصبح أكثر نظافة وحداثة عبر شريط التنقّل العلوي والتذييل، بما في ذلك تغيير شكل “Beta”",
+          "تحسين ملاحظات التحديثات لتكون أكثر وضوحًا وسهولة للجميع باللغتين الإنجليزية والعربية دون استخدام مصطلحات تقنية"
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.3.9 (Beta)",
     "titleEn": "QureScan Mobile & Qure AI Updates",
     "titleAr": "تحديثات QureScan للجوال وQure AI",

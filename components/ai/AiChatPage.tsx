@@ -572,10 +572,10 @@ export function AiChatPage() {
                         </div>
 
                         {/* ── INPUT BAR ── */}
-                        <div className="shrink-0 px-3 sm:px-6 pt-2 pb-3 sm:pb-4 border-t border-slate-900 bg-slate-950/95 backdrop-blur-md">
-                            <div className="max-w-2xl mx-auto space-y-2">
+                        <div className="shrink-0 px-3 sm:px-6 pt-3 pb-3 sm:pb-5 border-t border-white/[0.08] bg-slate-950/95 backdrop-blur-2xl">
+                            <div className="max-w-3xl mx-auto space-y-2.5">
 
-                                {/* Medication picker — always visible */}
+                                {/* Medication picker bar */}
                                 <MedicationSelect
                                     isArabic={isArabic}
                                     onSelect={handleSelectMedication}
@@ -583,21 +583,33 @@ export function AiChatPage() {
                                     onNavigateToScan={() => router.push("/scan")}
                                 />
 
-                                {/* Main input container */}
-                                <div className="rounded-2xl border border-slate-800 bg-slate-900/90 focus-within:border-cyan-500/50 transition-all shadow-sm">
-                                    {/* Active mode indicator (subtle, auto) */}
-                                    <div className="flex items-center gap-2 px-4 pt-2.5 pb-0">
-                                        <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold", modeColors[activeMode])}>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                                            <span>{isArabic ? modeLabels[activeMode].ar : modeLabels[activeMode].en}</span>
+                                {/* Premium Main Input Container */}
+                                <div className="rounded-2xl border border-white/10 bg-slate-900/95 focus-within:border-cyan-500/60 focus-within:bg-slate-900 transition-all duration-200 shadow-xl overflow-hidden">
+                                    
+                                    {/* Subtitle / Mode Indicator Header */}
+                                    <div className="flex items-center justify-between px-4 pt-2.5 pb-1 border-b border-white/[0.04]">
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn("flex items-center gap-1.5 text-[11px] font-bold tracking-wide", modeColors[activeMode])}>
+                                                <span className="w-2 h-2 rounded-full bg-current" />
+                                                <span>{isArabic ? modeLabels[activeMode].ar : modeLabels[activeMode].en}</span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-500 font-medium">
+                                                {t("• Smart Intent Engine", "• كشف تلقائي بالذكاء الاصطناعي")}
+                                            </span>
                                         </div>
-                                        <span className="text-[10px] text-slate-600">
-                                            {t("• auto-detected", "• تم اكتشافه تلقائياً")}
-                                        </span>
+
+                                        {selectedMedication && (
+                                            <button
+                                                onClick={() => setSelectedMedication(null)}
+                                                className="text-[10px] text-slate-400 hover:text-rose-400 font-medium transition-colors"
+                                            >
+                                                {t("Clear selected drug", "إلغاء تحديد الدواء")}
+                                            </button>
+                                        )}
                                     </div>
 
-                                    {/* Textarea & Send button */}
-                                    <div className="flex items-end gap-2 px-4 pt-2 pb-3">
+                                    {/* Textarea & Controls */}
+                                    <div className="flex items-end gap-2 px-4 py-2.5">
                                         <textarea
                                             ref={inputRef}
                                             value={input}
@@ -606,32 +618,31 @@ export function AiChatPage() {
                                             placeholder={
                                                 selectedMedication
                                                     ? t(
-                                                        `Ask about ${selectedMedication.drug_name || "this medication"} or if it suits you…`,
+                                                        `Ask about ${selectedMedication.drug_name || "this medication"} or suitability…`,
                                                         `اسأل عن ${selectedMedication.drug_name || "هذا الدواء"} أو هل يناسبك…`
                                                     )
                                                     : t(
-                                                        "Ask Qure AI anything — health, medications, or your personal profile…",
-                                                        "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الشخصي…"
+                                                        "Ask Qure AI anything — health, medications, or allergies…",
+                                                        "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الطبي…"
                                                     )
                                             }
-                                            className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder-slate-500 resize-none min-h-[36px] max-h-[140px] text-sm leading-relaxed py-1"
+                                            className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder:text-slate-400/90 text-sm sm:text-base leading-normal py-1.5 resize-none min-h-[44px] max-h-[160px]"
                                             disabled={isSending}
                                             dir={isArabic ? "rtl" : "ltr"}
                                             rows={1}
-                                            style={{ overflowY: "auto" }}
                                         />
 
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            {/* Voice button */}
+                                        <div className="flex items-center gap-2 shrink-0 pb-1">
+                                            {/* Voice input button */}
                                             <button
                                                 type="button"
                                                 onClick={toggleVoice}
                                                 disabled={isSending}
                                                 className={cn(
-                                                    "p-2 rounded-xl transition-all",
+                                                    "w-9 h-9 rounded-xl border flex items-center justify-center transition-all duration-150 active:scale-95",
                                                     isListening
-                                                        ? "bg-red-500/20 text-red-400 animate-pulse"
-                                                        : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                                        ? "bg-red-950/80 border-red-800 text-red-300 animate-pulse"
+                                                        : "bg-slate-800/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600"
                                                 )}
                                                 title={t("Voice input", "إدخال صوتي")}
                                             >
