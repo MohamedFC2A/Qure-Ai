@@ -333,9 +333,9 @@ export function UltraCelebrationModal() {
             >
                 {/* ── Background Aura Lights ───────────────────────── */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[750px] h-[550px] bg-gradient-to-tr from-cyan-500/20 via-amber-500/15 to-violet-600/20 rounded-full blur-[120px] opacity-70 animate-pulse duration-1000" />
-                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px]" />
-                    <div className="absolute top-10 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px]" />
+                    <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[750px] h-[550px] bg-gradient-to-tr from-cyan-500/8 via-amber-500/5 to-violet-600/8 rounded-full blur-[140px] opacity-50" />
+                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-[120px]" />
+                    <div className="absolute top-10 left-10 w-96 h-96 bg-amber-500/5 rounded-full blur-[120px]" />
                 </div>
 
                 {/* ── Main Modal Container ─────────────────────────── */}
@@ -346,7 +346,7 @@ export function UltraCelebrationModal() {
                     transition={{ type: "spring", stiffness: 300, damping: 28 }}
                     className={cn(
                         "relative w-full max-w-5xl my-auto rounded-3xl sm:rounded-[32px] overflow-hidden",
-                        "bg-slate-900/95 border border-cyan-500/30 shadow-[0_0_80px_rgba(6,182,212,0.25)]",
+                        "bg-slate-900/90 border border-white/[0.08] backdrop-blur-2xl",
                         "flex flex-col max-h-[92vh] text-slate-100"
                     )}
                 >
@@ -408,9 +408,9 @@ export function UltraCelebrationModal() {
                                 
                                 {/* 3D Holographic Crown Badge */}
                                 <div className="relative shrink-0">
-                                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-amber-500/30 via-cyan-500/20 to-violet-500/30 border-2 border-amber-400/50 flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.35)] relative overflow-hidden group">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                        <Crown className="w-12 h-12 sm:w-14 sm:h-14 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" />
+                                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white/[0.06] border border-amber-400/25 flex items-center justify-center relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                        <Crown className="w-12 h-12 sm:w-14 sm:h-14 text-amber-400" />
                                     </div>
                                     <div className="absolute -bottom-2 -right-2 px-2.5 py-0.5 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black tracking-widest uppercase shadow-md flex items-center gap-1">
                                         <Sparkles className="w-3 h-3 fill-slate-950" />
@@ -525,12 +525,12 @@ export function UltraCelebrationModal() {
                                         initial={{ opacity: 0, y: 15 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.25, delay: index * 0.04 }}
-                                        className="relative group rounded-2xl sm:rounded-3xl p-5 sm:p-6 bg-slate-950/70 border border-white/10 hover:border-cyan-500/40 transition-all duration-300 flex flex-col justify-between hover:shadow-[0_4px_25px_rgba(6,182,212,0.12)]"
+                                        className="relative group rounded-2xl sm:rounded-3xl p-5 sm:p-6 bg-white/[0.03] border border-white/[0.07] hover:border-white/15 transition-all duration-300 flex flex-col justify-between backdrop-blur-xl"
                                     >
                                         <div>
                                             <div className="flex items-start justify-between gap-3 mb-4">
-                                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border bg-gradient-to-br shrink-0", item.color)}>
-                                                    <Icon className="w-6 h-6" />
+                                                <div className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/[0.08] bg-white/[0.04] shrink-0">
+                                                    <Icon className={cn("w-6 h-6", item.color.split(" ").find((c: string) => c.startsWith("text-")) || "text-white/70")} />
                                                 </div>
 
                                                 <div className="flex items-center gap-2">
