@@ -80,15 +80,41 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
 
     const combinedText = `${rawText} ${res.drugName || ""} ${res.genericName || ""} ${res.activeIngredients.join(" ")}`.toLowerCase();
 
-    // 2. Clinical Knowledge Fallback Enrichment for Paracetamol / Doliprane / Panadol
+    // 2. Commercial Brand Name Refiner (Prioritize popular trade names over raw scientific formulas)
+    const brandMatches = [
+        { key: "doliprane", name: "Doliprane" },
+        { key: "panadol", name: "Panadol" },
+        { key: "cetal", name: "Cetal" },
+        { key: "abimol", name: "Abimol" },
+        { key: "congestal", name: "Congestal" },
+        { key: "augmentin", name: "Augmentin" },
+        { key: "brufen", name: "Brufen" },
+        { key: "advil", name: "Advil" },
+        { key: "cataflam", name: "Cataflam" },
+        { key: "voltaren", name: "Voltaren" },
+        { key: "otrivin", name: "Otrivin" },
+        { key: "antinal", name: "Antinal" },
+        { key: "strepsils", name: "Strepsils" },
+        { key: "flumox", name: "Flumox" },
+        { key: "amoxil", name: "Amoxil" },
+        { key: "spidifen", name: "Spidifen" },
+        { key: "nurofen", name: "Nurofen" },
+    ];
+
+    const lowerRaw = rawText.toLowerCase();
+    const foundBrand = brandMatches.find((b) => lowerRaw.includes(b.key));
+
     const isParacetamol = combinedText.includes("doliprane") || combinedText.includes("paracetamol") || combinedText.includes("panadol") || combinedText.includes("acetaminophen") || combinedText.includes("cetal") || combinedText.includes("abimol");
     const isIbuprofen = combinedText.includes("ibuprofen") || combinedText.includes("brufen") || combinedText.includes("advil") || combinedText.includes("spidifen") || combinedText.includes("nurofen");
 
     if (isParacetamol) {
-        if (!res.drugName || res.drugName === "Unknown") res.drugName = "Doliprane (Paracetamol)";
-        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = "Doliprane (Paracetamol)";
-        if (!res.genericName || res.genericName === "Unknown") res.genericName = "Paracetamol";
-        if (!res.genericNameEn || res.genericNameEn === "Unknown") res.genericNameEn = "Paracetamol";
+        const defaultBrand = foundBrand ? foundBrand.name : "Panadol / Doliprane";
+        if (!res.drugName || res.drugName === "Unknown" || res.drugName.toLowerCase() === "paracetamol" || res.drugName.toLowerCase() === "acetaminophen") {
+            res.drugName = res.strength ? `${defaultBrand} ${res.strength}` : defaultBrand;
+        }
+        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = res.drugName;
+        if (!res.genericName || res.genericName === "Unknown") res.genericName = "Paracetamol (Acetaminophen)";
+        if (!res.genericNameEn || res.genericNameEn === "Unknown") res.genericNameEn = "Paracetamol (Acetaminophen)";
         if (!res.strength) res.strength = "1000 mg";
         if (!res.form) res.form = isAr ? "أقراص مغلفة" : "Film-coated tablets";
         if (!res.category) res.category = isAr ? "مسكن للآلام وخافض للحرارة" : "Analgesics & Antipyretics";
@@ -176,8 +202,11 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
                 ];
         }
     } else if (isIbuprofen) {
-        if (!res.drugName || res.drugName === "Unknown") res.drugName = "Ibuprofen";
-        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = "Ibuprofen";
+        const defaultBrand = foundBrand ? foundBrand.name : "Brufen / Advil";
+        if (!res.drugName || res.drugName === "Unknown" || res.drugName.toLowerCase() === "ibuprofen") {
+            res.drugName = res.strength ? `${defaultBrand} ${res.strength}` : defaultBrand;
+        }
+        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = res.drugName;
         if (!res.genericName || res.genericName === "Unknown") res.genericName = "Ibuprofen";
         if (!res.genericNameEn || res.genericNameEn === "Unknown") res.genericNameEn = "Ibuprofen";
         if (!res.strength) res.strength = "400 mg";
@@ -247,6 +276,21 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
                 ? ["احفظ الدواء بعيداً عن متناول الأطفال وفي درجة حرارة أقل من 25 درجة مئوية."]
                 : ["Keep out of reach of children and store below 25°C."];
         }
+    }
+
+    // Global Dosage Disclaimer Sanitizer: Replace long OCR/disclaimer texts with concise label
+    const isDisclaimerDosage = typeof res.dosage === "string" && (
+        res.dosage.toLowerCase().includes("ocr") ||
+        res.dosage.includes("شظايا") ||
+        res.dosage.includes("عدم توفر") ||
+        res.dosage.includes("لا يمكن إعطاء") ||
+        res.dosage.includes("كقاعدة استخدام عامة") ||
+        res.dosage.includes("Consult") ||
+        res.dosage.includes("استشر")
+    );
+
+    if (!res.dosage || isDisclaimerDosage) {
+        res.dosage = isAr ? "غير محدد على العبوة" : "Not specified on package";
     }
 
     return res;
@@ -343,7 +387,7 @@ RETURN FORMAT (JSON ONLY):
     "description": "Comprehensive summary of medication and clinical purpose",
     "category": "Therapeutic category e.g. Analgesics & Antipyretics",
     "uses": ["Detailed primary use 1", "Detailed primary use 2", "Detailed primary use 3"],
-    "dosage": "Detailed dosage instructions, frequency, maximum daily limit, and relation to food.",
+    "dosage": "Detailed dosage instructions if clearly printed. IMPORTANT: If exact dosage, concentration, or administration frequency is NOT clearly stated on the package/label or OCR fragments, output ONLY 'غير محدد على العبوة' (in Arabic) or 'Not specified on package' (in English). NEVER output long disclaimers, theoretical explanations about OCR fragments, or general cold medication max doses.",
     "missedDose": "Instructions on what to do if a dose is missed",
     "sideEffects": ["Detailed common side effect 1", "Detailed side effect 2", "Detailed side effect 3"],
     "storage": "Store below 25°C in a cool dry place away from direct sunlight",

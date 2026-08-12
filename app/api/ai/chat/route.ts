@@ -104,7 +104,10 @@ export async function POST(req: NextRequest) {
         const medicationData: any = body?.medicationData || null;
 
         // Check ULTRA plan access
-        const plan = await getUserPlan(user.id, supabase);
+        // In local development, always grant ultra so devs can test without a subscription
+        const plan = process.env.NODE_ENV === "development"
+            ? "ultra"
+            : await getUserPlan(user.id, supabase);
         if (plan !== 'ultra') {
             return NextResponse.json(
                 {
@@ -155,8 +158,6 @@ export async function POST(req: NextRequest) {
         // For context mode, fetch user's health data
         let contextData: any = null;
         if (mode === "context") {
-            const plan = await getUserPlan(user.id, supabase);
-
             // Load private profile (try care_profiles first, then legacy)
             let privateProfile: any = null;
             const careRes = await supabase
@@ -235,6 +236,14 @@ export async function POST(req: NextRequest) {
 
         // Add current question
         deepseekMessages.push({ role: "user", content: question });
+
+        // Add format instruction
+        deepseekMessages.push({
+            role: "system",
+            content: language === "ar"
+                ? `أجب بصيغة Markdown نظيفة ومباشرة. إذا كان السؤال يتطلب إجابة قاطعة (نعم/لا/مناسب/غير مناسب)، ابدأ بالإجابة القاطعة فوراً واجعل الرد مختصراً جداً. عند الانتهاء تماماً، اترك سطرين واكتب:\n---METADATA---\n{"keyPoints":["نقطة 1","نقطة 2"],"suggestedFollowUps":["سؤال 1؟","سؤال 2؟"]}`
+                : `Answer with clean, direct Markdown formatting. If the query calls for a clear Yes/No or suitability verdict, give the bold verdict immediately and keep the response ultra-concise. When completely done, leave 2 blank lines and write:\n---METADATA---\n{"keyPoints":["point 1","point 2"],"suggestedFollowUps":["question 1?","question 2?"]}`,
+        });
 
         let content: string | null = null;
         const pollinations = createPollinationsClient(apiKey);

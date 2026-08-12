@@ -26,6 +26,10 @@ async function findUserIdByEmail(email: string) {
 }
 
 export async function POST(request: NextRequest) {
+    if (process.env.NODE_ENV !== "development") {
+        return NextResponse.json({ error: "Not Found" }, { status: 404 });
+    }
+
     if (!isLocalRequest(request)) {
         return NextResponse.json({ error: "Local dev login is only available on localhost in development." }, { status: 404 });
     }

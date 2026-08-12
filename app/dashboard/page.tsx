@@ -29,6 +29,7 @@ import {
     BarChart3,
     BadgeCheck,
 } from "lucide-react";
+import { getLocalScans, mergeHistoryItems } from "@/lib/localHistory";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useUser } from "@/context/UserContext";
@@ -149,12 +150,9 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const loadRecent = async () => {
-            if (!user?.id) return;
-            if (isLocalDevUser) {
-                setRecent([
-                    { id: "l1", drug_name: "Ibuprofen 200 mg",   manufacturer: "Sample label",   created_at: new Date().toISOString(),                   analysis_json: { warnings: ["NSAID caution"], uses: ["Pain relief"] } },
-                    { id: "l2", drug_name: "Paracetamol 500 mg", manufacturer: "Sample package", created_at: new Date(Date.now() - 86400000).toISOString(), analysis_json: { warnings: [], uses: ["Fever"] } },
-                ]);
+            const localItems = getLocalScans();
+            if (!user?.id) {
+                setRecent(localItems.slice(0, 5));
                 return;
             }
             setRecentLoading(true);
@@ -164,8 +162,12 @@ export default function DashboardPage() {
                     .select("id, drug_name, manufacturer, created_at, analysis_json")
                     .eq("user_id", user.id)
                     .order("created_at", { ascending: false })
-                    .limit(5);
-                if (!error) setRecent(data || []);
+                    .limit(10);
+                const remoteRows = error ? [] : (data || []);
+                const merged = mergeHistoryItems(remoteRows, localItems);
+                setRecent(merged.slice(0, 5));
+            } catch {
+                setRecent(localItems.slice(0, 5));
             } finally {
                 setRecentLoading(false);
             }

@@ -163,7 +163,7 @@ function StatItem({ value, label, delay }: { value: string; label: string; delay
             <p className="text-3xl sm:text-4xl font-black tracking-tight text-white">
                 {value}
             </p>
-            <p className="mt-1.5 text-xs sm:text-sm text-slate-500">{label}</p>
+            <p className="mt-1.5 text-xs sm:text-sm text-slate-400">{label}</p>
         </motion.div>
     );
 }
@@ -316,7 +316,7 @@ export default function Home() {
                     </div>
 
                     {/* Trust Indicators */}
-                    <div className="pt-4 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-500 font-medium">
+                    <div className="pt-4 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-400 font-medium">
                         <div className="flex items-center gap-1.5">
                             <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400/70" />
                             <span>{t("Instant Label OCR", "قراءة فورية للملصقات")}</span>
@@ -372,7 +372,7 @@ export default function Home() {
                     <h2 className="mt-4 text-2xl sm:text-3xl font-black text-white tracking-tight">
                         {t("Built for clinical-grade precision", "مبني لدقة المستوى الطبي")}
                     </h2>
-                    <p className="mt-3 text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">
+                    <p className="mt-3 text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
                         {t(
                             "Every scan passes through a multi-stage AI verification pipeline backed by authoritative pharmaceutical data.",
                             "كل فحص يمر عبر خط تحقق متعدد المراحل مدعوم بالذكاء الاصطناعي وبيانات صيدلانية معتمدة."

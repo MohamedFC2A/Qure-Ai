@@ -3,40 +3,57 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, Sparkles, RotateCcw, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain } from "lucide-react";
+import { Send, Mic, MicOff, Menu, Sparkles, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
 import { type AiChatMode, getModeConfig } from "@/lib/ai/chat";
-import { ModeSelector } from "./ModeSelector";
 import { ChatMessage, type ChatMessageData } from "./ChatMessage";
 import { ConversationSidebar, type ConversationSummary } from "./ConversationSidebar";
 import { MedicationSelect } from "./MedicationSelect";
 
 /* ──────────────────────────────────────────────────────────
- *  AiChatPage – Full-page Mat AI chat (Clinical Cyan UI & Ultra Gated)
+ *  AiChatPage – Unified Mat AI (Smart context, no mode juggling)
  * ────────────────────────────────────────────────────────── */
 
-const QUICK_PROMPTS: Record<AiChatMode, { en: string; ar: string }[]> = {
-    health: [
-        { en: "Best exercises for back pain?", ar: "أفضل تمارين لآلام الظهر؟" },
-        { en: "How to sleep better naturally?", ar: "كيف أحسّن نومي بشكل طبيعي؟" },
-        { en: "Foods that boost immunity", ar: "أطعمة تعزز المناعة" },
-        { en: "How to reduce stress fast?", ar: "كيف أخفف التوتر بسرعة؟" },
-    ],
-    medication: [
-        { en: "Side effects of Ibuprofen?", ar: "ما هي آثار جانبية الإيبوبروفين؟" },
-        { en: "Alternatives to Paracetamol", ar: "بدائل للباراسيتامول" },
-        { en: "Can I take vitamin D with antibiotics?", ar: "هل يمكن أخذ فيتامين د مع مضادات الحيوية؟" },
-        { en: "Foods that interact with Warfarin", ar: "أطعمة تتفاعل مع الوارفارين" },
-    ],
-    context: [
-        { en: "Review my medication safety", ar: "راجع سلامة أدويتي" },
-        { en: "Nutrition advice for my conditions", ar: "نصائح غذائية لحالتي الصحية" },
-        { en: "Exercise plan for my health profile", ar: "خطة رياضية بناءً على ملفي" },
-        { en: "What should I avoid with my allergies?", ar: "ماذا أتجنّب بسبب حساسيتي؟" },
-    ],
-};
+// Smart intent detection to auto-route mode without user interaction
+function detectModeFromText(text: string): AiChatMode {
+    const lower = text.toLowerCase();
+    // Profile / personal context keywords
+    const selfKeywords = [
+        "يناسبني", "يناسب لي", "مناسب لي", "مناسب لحالتي", "حساسيتي", "وضعي", "حالتي",
+        "ملفي", "بيانتي", "suit me", "suits me", "my profile", "my condition",
+        "my allergy", "my health", "for me", "is it safe for me", "can i take",
+        "أخذه أنا", "هل يناسبني", "هل مناسب لي", "bmi", "وزني", "طولي",
+        "مرضي", "أمراضي", "أدويتي الحالية"
+    ];
+    // Medication-specific keywords
+    const medKeywords = [
+        "دواء", "علاج", "جرعة", "تركيز", "مضاد حيوي", "باراسيتامول", "ايبوبروفين",
+        "آثار جانبية", "تداخل", "بديل", "مادة فعالة", "نشرة", "تركيبة",
+        "medication", "drug", "pill", "tablet", "side effect", "dosage", "dose",
+        "antibiotic", "paracetamol", "ibuprofen", "interaction", "active ingredient",
+        "generic", "brand", "prescription", "overdose", "mg", "ml"
+    ];
+    // Check self-reference first (highest priority → context mode)
+    for (const kw of selfKeywords) {
+        if (lower.includes(kw)) return "context";
+    }
+    // Then medication
+    for (const kw of medKeywords) {
+        if (lower.includes(kw)) return "medication";
+    }
+    return "health";
+}
+
+const QUICK_PROMPTS_UNIFIED: { en: string; ar: string }[] = [
+    { en: "Is this medication safe for me?", ar: "هل هذا الدواء مناسب لحالتي الصحية؟" },
+    { en: "What's my BMI and what does it mean?", ar: "ما هو مؤشر كتلة الجسم BMI وما معناه؟" },
+    { en: "Foods that boost immunity", ar: "أطعمة تعزز المناعة وتقوي الجهاز الدفاعي" },
+    { en: "Check drug interactions for me", ar: "افحص تداخلات الأدوية بناءً على ملفي الصحي" },
+    { en: "Side effects of Ibuprofen?", ar: "ما آثار الإيبوبروفين الجانبية؟" },
+    { en: "How to sleep better naturally?", ar: "كيف أحسّن نومي بطريقة طبيعية؟" },
+];
 
 export function AiChatPage() {
     const router = useRouter();
@@ -47,13 +64,9 @@ export function AiChatPage() {
 
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
-
     const isUltra = plan === "ultra";
 
     /* ── State ── */
-    const [mode, setMode] = useState<AiChatMode>(
-        (searchParams.get("mode") as AiChatMode) || "health"
-    );
     const [messages, setMessages] = useState<ChatMessageData[]>([]);
     const [input, setInput] = useState("");
     const [isSending, setIsSending] = useState(false);
@@ -65,6 +78,7 @@ export function AiChatPage() {
     const [selectedMedication, setSelectedMedication] = useState<any>(null);
     const [isListening, setIsListening] = useState(false);
     const [autoScroll, setAutoScroll] = useState(true);
+    const [activeMode, setActiveMode] = useState<AiChatMode>("health");
 
     const chatEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -100,7 +114,7 @@ export function AiChatPage() {
                         created_at: m.created_at,
                     }))
                 );
-                if (data.conversation?.mode) setMode(data.conversation.mode);
+                if (data.conversation?.mode) setActiveMode(data.conversation.mode as AiChatMode);
                 setAutoScroll(true);
                 setTimeout(() => chatEndRef.current?.scrollIntoView(), 100);
             }
@@ -114,7 +128,7 @@ export function AiChatPage() {
             try {
                 const parsed = JSON.parse(decodeURIComponent(medParam));
                 setSelectedMedication(parsed);
-                setMode("medication");
+                setActiveMode("medication");
             } catch { /* ignore */ }
         }
     }, [searchParams]);
@@ -123,13 +137,12 @@ export function AiChatPage() {
     const handleSelectMedication = useCallback((med: any) => {
         setSelectedMedication(med);
         if (med) {
-            setMode("medication");
+            setActiveMode("medication");
             if (!activeConversationId && messages.length === 0) {
                 const medName = med.drug_name || med.drugName || "Medication";
                 const noticeText = isArabic
-                    ? `تم تمكين سياق الدواء: **${medName}**. يمكنك الآن طرح أي سؤال حول جرعاته، آثاره الجانبية، أو تداخلاته.`
-                    : `Medication context attached: **${medName}**. You can now ask questions about its dosage, side effects, or interactions.`;
-
+                    ? `تم ربط الدواء: **${medName}** بالمحادثة. الآن يمكنك سؤالي عن جرعاته، آثاره الجانبية، تداخلاته، أو هل يناسبك شخصياً.`
+                    : `Medication attached: **${medName}**. Ask me about dosage, side effects, interactions, or if it's suitable for you personally.`;
                 setMessages([{
                     id: `notice-${Date.now()}`,
                     role: "assistant",
@@ -162,6 +175,14 @@ export function AiChatPage() {
             setError(t("Mat AI is exclusive to ULTRA plan members.", "ميزة Mat AI متاحة حصرياً لمشتركي باقة ULTRA."));
             return;
         }
+
+        // Smart auto-detect mode from user's message text
+        const detectedMode = detectModeFromText(text);
+        // If a medication is selected, always use medication mode
+        const resolvedMode: AiChatMode = selectedMedication
+            ? (detectedMode === "context" ? "context" : "medication")
+            : detectedMode;
+        setActiveMode(resolvedMode);
 
         const userMessage: ChatMessageData = {
             id: `temp-${Date.now()}`,
@@ -206,7 +227,7 @@ export function AiChatPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    mode,
+                    mode: resolvedMode,
                     question: text.trim(),
                     conversationId: activeConversationId,
                     messageHistory: history.slice(0, -1),
@@ -289,7 +310,7 @@ export function AiChatPage() {
             setIsSending(false);
             setIsStreaming(false);
         }
-    }, [isSending, isUltra, messages, activeConversationId, mode, isArabic, selectedMedication, t, loadConversations]);
+    }, [isSending, isUltra, messages, activeConversationId, activeMode, isArabic, selectedMedication, t, loadConversations]);
 
     /* ── Voice input ── */
     const toggleVoice = useCallback(() => {
@@ -332,17 +353,8 @@ export function AiChatPage() {
         setError(null);
         setSelectedMedication(null);
         setAutoScroll(true);
+        setActiveMode("health");
     }, []);
-
-    const handleModeChange = useCallback((newMode: AiChatMode) => {
-        if (newMode !== mode) {
-            setMode(newMode);
-            if (!activeConversationId) {
-                setMessages([]);
-                setError(null);
-            }
-        }
-    }, [mode, activeConversationId]);
 
     const handleSelectConversation = useCallback((conv: ConversationSummary) => {
         loadConversation(conv.id);
@@ -365,8 +377,17 @@ export function AiChatPage() {
         sendMessage(text);
     }, [sendMessage]);
 
-    const modeConfig = getModeConfig(mode);
-    const accentColor = modeConfig.accentColor;
+    // Active mode indicator color
+    const modeColors: Record<AiChatMode, string> = {
+        health: "text-cyan-400",
+        medication: "text-emerald-400",
+        context: "text-violet-400",
+    };
+    const modeLabels: Record<AiChatMode, { en: string; ar: string }> = {
+        health: { en: "Health AI", ar: "صحي" },
+        medication: { en: "Medication", ar: "دواء" },
+        context: { en: "Your Profile", ar: "ملفك" },
+    };
 
     /* ── Loading ── */
     if (loading) {
@@ -381,8 +402,6 @@ export function AiChatPage() {
         );
     }
     if (!user) return null;
-
-    const quickPrompts = QUICK_PROMPTS[mode];
 
     return (
         <main
@@ -422,7 +441,6 @@ export function AiChatPage() {
                 {!isUltra ? (
                     <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
                         <div className="max-w-xl w-full rounded-3xl border border-cyan-500/30 p-6 sm:p-8 text-center space-y-6 bg-slate-900/80 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-hidden">
-                            {/* Decorative background glow */}
                             <div className="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl" />
                             <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl" />
 
@@ -446,7 +464,6 @@ export function AiChatPage() {
                                 </p>
                             </div>
 
-                            {/* Features list */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start pt-2">
                                 <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
                                     <Pill className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
@@ -478,7 +495,6 @@ export function AiChatPage() {
                                 </div>
                             </div>
 
-                            {/* Upgrade CTA Button */}
                             <button
                                 onClick={() => router.push("/pricing")}
                                 className="w-full py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-base transition-all flex items-center justify-center gap-2"
@@ -501,32 +517,24 @@ export function AiChatPage() {
 
                                 {/* Welcome section when empty */}
                                 {messages.length === 0 && (
-                                    <div className="flex flex-col items-center text-center pt-12 pb-8 animate-fade-in space-y-4">
+                                    <div className="flex flex-col items-center text-center pt-10 pb-6 animate-fade-in space-y-4">
                                         <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
                                             <Sparkles className="w-7 h-7" />
                                         </div>
 
-                                        <h2 className="text-2xl font-black tracking-tight text-white">
-                                            Mat AI
-                                        </h2>
-                                        <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
-                                            {mode === "health" && t(
-                                                "Ask about health, nutrition, exercise, sleep, and clinical wellness.",
-                                                "اسأل عن الصحة، التغذية، الرياضة، النوم، والعافية الطبية."
-                                            )}
-                                            {mode === "medication" && t(
-                                                "Ask about any medication — active ingredients, side effects, alternatives, drug interactions.",
-                                                "اسأل عن أي دواء — المواد الفعالة، الآثار الجانبية، البدائل، والتداخلات الدوائية."
-                                            )}
-                                            {mode === "context" && t(
-                                                "Get personalized health advice cross-checked with your health profile and medication history.",
-                                                "احصل على استشارات مخصصة مطابقة لملفك الصحي وتاريخ أدويتك."
-                                            )}
-                                        </p>
+                                        <div className="space-y-1">
+                                            <h2 className="text-2xl font-black tracking-tight text-white">Mat AI</h2>
+                                            <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
+                                                {t(
+                                                    "Your personal health AI — knows your profile, your medications, and gives you personalized answers. Just ask anything.",
+                                                    "مساعدك الصحي الشخصي — يعرف ملفك الصحي وتاريخ أدويتك ويجيبك بشكل مخصص. فقط اسأل عن أي شيء."
+                                                )}
+                                            </p>
+                                        </div>
 
                                         {/* Quick Prompts */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-2">
-                                            {quickPrompts.map((s, i) => (
+                                            {QUICK_PROMPTS_UNIFIED.map((s, i) => (
                                                 <button
                                                     key={i}
                                                     onClick={() => sendMessage(isArabic ? s.ar : s.en)}
@@ -545,7 +553,7 @@ export function AiChatPage() {
                                         key={msg.id || idx}
                                         message={msg}
                                         isArabic={isArabic}
-                                        accentColor={accentColor}
+                                        accentColor={activeMode === "context" ? "violet" : activeMode === "medication" ? "emerald" : "cyan"}
                                         onSuggestionClick={handleSuggestionClick}
                                     />
                                 ))}
@@ -564,31 +572,28 @@ export function AiChatPage() {
                         </div>
 
                         {/* ── INPUT BAR ── */}
-                        <div
-                            className="shrink-0 px-3 sm:px-6 pt-2 pb-20 sm:pb-4 border-t border-slate-900 bg-slate-950/95 backdrop-blur-md"
-                        >
+                        <div className="shrink-0 px-3 sm:px-6 pt-2 pb-3 sm:pb-4 border-t border-slate-900 bg-slate-950/95 backdrop-blur-md">
                             <div className="max-w-2xl mx-auto space-y-2">
-                                {/* Medication selector */}
-                                {mode === "medication" && (
-                                    <div className="mb-1">
-                                        <MedicationSelect
-                                            isArabic={isArabic}
-                                            onSelect={handleSelectMedication}
-                                            selected={selectedMedication}
-                                            onNavigateToScan={() => router.push("/scan")}
-                                        />
-                                    </div>
-                                )}
+
+                                {/* Medication picker — always visible */}
+                                <MedicationSelect
+                                    isArabic={isArabic}
+                                    onSelect={handleSelectMedication}
+                                    selected={selectedMedication}
+                                    onNavigateToScan={() => router.push("/scan")}
+                                />
 
                                 {/* Main input container */}
                                 <div className="rounded-2xl border border-slate-800 bg-slate-900/90 focus-within:border-cyan-500/50 transition-all shadow-sm">
-                                    {/* Mode selector row */}
-                                    <div className="flex items-center gap-2 px-4 pt-3 pb-0">
-                                        <ModeSelector
-                                            activeMode={mode}
-                                            onModeChange={handleModeChange}
-                                            isArabic={isArabic}
-                                        />
+                                    {/* Active mode indicator (subtle, auto) */}
+                                    <div className="flex items-center gap-2 px-4 pt-2.5 pb-0">
+                                        <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold", modeColors[activeMode])}>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                                            <span>{isArabic ? modeLabels[activeMode].ar : modeLabels[activeMode].en}</span>
+                                        </div>
+                                        <span className="text-[10px] text-slate-600">
+                                            {t("• auto-detected", "• تم اكتشافه تلقائياً")}
+                                        </span>
                                     </div>
 
                                     {/* Textarea & Send button */}
@@ -599,11 +604,15 @@ export function AiChatPage() {
                                             onChange={handleInputChange}
                                             onKeyDown={handleKeyDown}
                                             placeholder={
-                                                mode === "health"
-                                                    ? t("Ask Mat AI about your health…", "اسأل Mat AI أي شيء عن صحتك…")
-                                                    : mode === "medication"
-                                                        ? t("Ask about a medication…", "اسأل عن دواء…")
-                                                        : t("Ask Mat AI — knowing your health profile", "اسأل Mat AI — بالاعتماد على ملفك الصحي")
+                                                selectedMedication
+                                                    ? t(
+                                                        `Ask about ${selectedMedication.drug_name || "this medication"} or if it suits you…`,
+                                                        `اسأل عن ${selectedMedication.drug_name || "هذا الدواء"} أو هل يناسبك…`
+                                                    )
+                                                    : t(
+                                                        "Ask Mat AI anything — health, medications, or your personal profile…",
+                                                        "اسأل Mat AI أي شيء — صحة، دواء، أو عن ملفك الشخصي…"
+                                                    )
                                             }
                                             className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder-slate-500 resize-none min-h-[36px] max-h-[140px] text-sm leading-relaxed py-1"
                                             disabled={isSending}

@@ -1,7 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { searchRxNorm, getRxNormConceptDetails, getRxNormByNDC } from "@/lib/rxnorm";
+import { createClient } from "@/lib/supabase/server";
+import { hasAcceptedTerms } from "@/lib/legal/terms";
+import { getLocalDevUser } from "@/lib/devAuth";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const user = authUser || getLocalDevUser(request);
+
+    if (!user) {
+        return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!getLocalDevUser(request) && !hasAcceptedTerms(user)) {
+        return NextResponse.json({ ok: false, error: "Terms acceptance required" }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action") || "search";
     const term = searchParams.get("term") || searchParams.get("q") || "";

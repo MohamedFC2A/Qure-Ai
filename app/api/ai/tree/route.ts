@@ -88,7 +88,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Missing preset/question" }, { status: 400 });
         }
 
-        const plan = await getUserPlan(user.id, supabase);
+        const plan = process.env.NODE_ENV === "development"
+            ? "ultra"
+            : await getUserPlan(user.id, supabase);
         const isUltra = plan === "ultra";
 
         if (!isUltra) {

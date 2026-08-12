@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Copy, Check, Sparkles, User, CheckCircle2, AlertTriangle, Zap, Info } from "lucide-react";
+import { Copy, Check, Sparkles, User, CheckCircle2, AlertTriangle, Zap, Info, HelpCircle, ArrowRight, XCircle } from "lucide-react";
 import { useState } from "react";
 import { parseAiResponse } from "@/lib/ai/chat";
 
@@ -66,22 +66,22 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         const formatInline = (s: string): string => {
             let formatted = s;
 
-            // 1. Red Critical Threat Warning Badge (No pulse animation): ⚠️ [...] or [⚠️ ...]
+            // 1. Red Critical Threat Warning Badge: ⚠️ [...] or [⚠️ ...]
             formatted = formatted.replace(
                 /(?:⚠️\s*\[|\[⚠️\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/70 border border-red-500/50 text-red-400 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/80 border border-red-500/60 text-red-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
             );
 
             // 2. Amber Caution Badge: ⚡ [...] or [⚡ ...]
             formatted = formatted.replace(
                 /(?:⚡\s*\[|\[⚡\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/80 border border-amber-500/60 text-amber-300 font-bold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
             );
 
             // 3. Green Verified Document Badge: ✓ [...] or [✓ ...]
             formatted = formatted.replace(
                 /(?:✓\s*\[|\[✓\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-400 font-semibold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
+                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-semibold text-xs shrink-0 shadow-sm align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
             );
 
             // Replace raw emojis with clean SVG representations
@@ -105,6 +105,31 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 continue;
             }
 
+            // High-impact Verdict Banner (First non-empty line with bold decision)
+            if (elements.length === 0 && line.startsWith("**")) {
+                const lower = line.toLowerCase();
+                const isYes = lower.includes("نعم") || lower.includes("مناسب") || lower.includes("آمن") || lower.includes("yes") || lower.includes("suitable") || lower.includes("safe");
+                const isNo = lower.includes("لا") || lower.includes("غير مناسب") || lower.includes("غير آمن") || lower.includes("ممنوع") || lower.includes("خطير") || lower.includes("no") || lower.includes("unsuitable") || lower.includes("unsafe");
+
+                if (isNo) {
+                    elements.push(
+                        <div key={`verdict-${i}`} className="my-2 p-3.5 rounded-xl border border-red-500/40 bg-red-950/40 text-red-200 text-sm font-semibold flex items-center gap-3 shadow-md">
+                            <XCircle className="w-5 h-5 text-red-400 shrink-0" />
+                            <div className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                        </div>
+                    );
+                    continue;
+                } else if (isYes) {
+                    elements.push(
+                        <div key={`verdict-${i}`} className="my-2 p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-emerald-100 text-sm font-semibold flex items-center gap-3 shadow-md">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                            <div className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                        </div>
+                    );
+                    continue;
+                }
+            }
+
             // Divider lines (--- or ***)
             if (line.match(/^[-*_]{3,}$/)) {
                 flushList();
@@ -120,7 +145,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                     tableLines.push(lines[i].trim());
                     i++;
                 }
-                i--; // Adjust loop counter
+                i--;
 
                 if (tableLines.length >= 2) {
                     const parseRow = (l: string) => l.split("|").slice(1, -1).map((c) => c.trim());
@@ -261,9 +286,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         ) : (
                             /* Streaming: typing indicator */
                             <div className="flex items-center gap-1.5 py-1">
-                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-100" />
+                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-200" />
                             </div>
                         )}
                     </div>
@@ -277,7 +302,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                             "absolute -bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-200",
                             isArabic ? "left-2" : "right-2",
                             "p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700",
-                            "text-slate-400 hover:text-white"
+                            "text-slate-400 hover:text-white shadow-md"
                         )}
                         title="Copy"
                     >
@@ -290,17 +315,19 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
                 {/* Key Points */}
                 {!isUser && displayKeyPoints && displayKeyPoints.length > 0 && (
-                    <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/70 p-4 space-y-2">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-2 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
-                            {isArabic ? "النقاط الرئيسية" : "Key Points"}
+                    <div className="mt-3.5 rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-2.5 shadow-sm">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                            <span>{isArabic ? "أهم النقاط السريرية" : "Key Clinical Takeaways"}</span>
                         </p>
-                        {displayKeyPoints.map((kp, i) => (
-                            <div key={i} className="flex items-start gap-2.5 text-xs text-slate-300">
-                                <span className="text-cyan-400 shrink-0 mt-0.5">•</span>
-                                <span className="leading-relaxed">{kp}</span>
-                            </div>
-                        ))}
+                        <div className="space-y-2">
+                            {displayKeyPoints.map((kp, i) => (
+                                <div key={i} className="flex items-start gap-2.5 text-xs text-slate-200">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                                    <span className="leading-relaxed">{kp}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -312,12 +339,13 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                 key={i}
                                 onClick={() => onSuggestionClick(s)}
                                 className={cn(
-                                    "px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all",
-                                    "border border-slate-800 bg-slate-900/80",
-                                    "text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 hover:bg-cyan-950/20"
+                                    "px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5",
+                                    "border border-slate-800 bg-slate-900/90 shadow-sm",
+                                    "text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 hover:bg-cyan-950/30"
                                 )}
                             >
-                                {s}
+                                <span>{s}</span>
+                                <ArrowRight className={cn("w-3 h-3 text-cyan-400 shrink-0 transition-transform group-hover:translate-x-0.5", isArabic && "rotate-180")} />
                             </button>
                         ))}
                     </div>

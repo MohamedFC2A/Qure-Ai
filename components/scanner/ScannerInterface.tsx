@@ -24,6 +24,7 @@ import {
     ShieldAlert,
     RefreshCw,
 } from 'lucide-react';
+import { getLocalScans, saveLocalScan, mergeHistoryItems } from "@/lib/localHistory";
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
@@ -117,8 +118,9 @@ export const ScannerInterface = () => {
     }, [setFile]);
 
     const fetchRecentHistory = useCallback(async () => {
+        const localItems = getLocalScans();
         if (!user?.id) {
-            setRecentHistory([]);
+            setRecentHistory(localItems.slice(0, 5));
             return;
         }
 
@@ -127,36 +129,36 @@ export const ScannerInterface = () => {
             const effectiveProfileId = subjectProfileId || user.id;
             let res = await supabase
                 .from("medication_history")
-                .select("id, drug_name, manufacturer, created_at")
+                .select("id, drug_name, manufacturer, created_at, analysis_json")
                 .eq("user_id", user.id)
-                .eq("profile_id", effectiveProfileId)
                 .order("created_at", { ascending: false })
-                .limit(5);
-
-            if (res.error && String(res.error.message || "").toLowerCase().includes("profile_id")) {
-                res = await supabase
-                    .from("medication_history")
-                    .select("id, drug_name, manufacturer, created_at")
-                    .eq("user_id", user.id)
-                    .order("created_at", { ascending: false })
-                    .limit(5);
-            }
+                .limit(10);
 
             if (res.error) {
-                console.warn("History unavailable:", res.error.message || "Unable to fetch recent history");
-                setRecentHistory([]);
+                console.warn("Remote history unavailable, falling back to local history:", res.error.message);
+                setRecentHistory(localItems.slice(0, 5));
                 return;
             }
 
-            setRecentHistory(res.data || []);
+            const merged = mergeHistoryItems(res.data || [], localItems);
+            setRecentHistory(merged.slice(0, 5));
+        } catch {
+            setRecentHistory(localItems.slice(0, 5));
         } finally {
             setHistoryLoading(false);
         }
-    }, [isLocalDevUser, supabase, subjectProfileId, user?.id]);
+    }, [supabase, subjectProfileId, user?.id]);
 
     useEffect(() => {
         fetchRecentHistory();
     }, [fetchRecentHistory]);
+
+    useEffect(() => {
+        if (finalResult) {
+            saveLocalScan(finalResult, subjectProfileId);
+            fetchRecentHistory();
+        }
+    }, [finalResult, fetchRecentHistory, subjectProfileId]);
 
     const fetchCareProfiles = useCallback(async () => {
         if (!user?.id) {

@@ -66,7 +66,11 @@ export async function POST(req: NextRequest) {
         const medicationData: any = body?.medicationData || null;
 
         // Check ULTRA plan access
-        const plan = await getUserPlan(user.id, supabase);
+        // In local development, always grant ultra so devs can test without a subscription
+        const plan = process.env.NODE_ENV === "development"
+            ? "ultra"
+            : await getUserPlan(user.id, supabase);
+        const isLocalDev = process.env.NODE_ENV === "development";
         if (plan !== 'ultra') {
             return new Response(
                 JSON.stringify({
@@ -123,10 +127,26 @@ export async function POST(req: NextRequest) {
             return new Response(JSON.stringify({ error: "Server configuration error: DEEPSEEK_API_KEY is not configured." }), { status: 503, headers: { "Content-Type": "application/json" } });
         }
 
-        /* ── Fetch context data for context mode ── */
-        let contextData: any = null;
-        if (mode === "context") {
-            let privateProfile: any = null;
+        /* ── Always fetch user profile context ── */
+        let privateProfile: any = null;
+        let basicProfile: any = null;
+        let medicationMemories: string[] = [];
+        let recentScans: string[] = [];
+
+        // Dev user: inject realistic test profile so Mat AI can be tested
+        if (isLocalDev) {
+            privateProfile = {
+                age: 30,
+                sex: "male",
+                height: "177",
+                weight: "99",
+                allergies: "Penicillin",
+                chronic_conditions: "None",
+                current_medications: "None",
+                notes: "Test dev user",
+            };
+        } else {
+            // 1. Fetch private AI profile
             const careRes = await supabase
                 .from("care_private_profiles")
                 .select("age, sex, height, weight, allergies, chronic_conditions, current_medications, notes")
@@ -141,7 +161,23 @@ export async function POST(req: NextRequest) {
                     .maybeSingle();
                 privateProfile = legacyRes.data;
             }
-            let medicationMemories: string[] = [];
+
+            // 2. Fetch basic profile (height, weight, age, gender) as fallback
+            const basicRes = await supabase
+                .from("profiles")
+                .select("username, age, gender, height, weight")
+                .eq("id", user.id)
+                .maybeSingle();
+            if (basicRes.data) {
+                basicProfile = {
+                    basic_age: basicRes.data.age,
+                    basic_gender: basicRes.data.gender,
+                    basic_height: basicRes.data.height,
+                    basic_weight: basicRes.data.weight,
+                };
+            }
+
+            // 3. Fetch medication memories
             const memRes = await supabase
                 .from("memories_medications")
                 .select("display_name")
@@ -150,7 +186,7 @@ export async function POST(req: NextRequest) {
                 .limit(25);
             if (memRes.data) medicationMemories = memRes.data.map((m: any) => m.display_name).filter(Boolean);
 
-            let recentScans: string[] = [];
+            // 4. Fetch recent scans
             const histRes = await supabase
                 .from("medication_history")
                 .select("drug_name")
@@ -158,9 +194,20 @@ export async function POST(req: NextRequest) {
                 .order("created_at", { ascending: false })
                 .limit(15);
             if (histRes.data) recentScans = histRes.data.map((h: any) => h.drug_name).filter(Boolean);
-
-            contextData = { privateProfile, medicationMemories, recentScans };
         }
+
+        // Merge: privateProfile takes priority over basicProfile fallback fields
+        const mergedProfile = {
+            ...(basicProfile || {}),
+            ...(privateProfile || {}),
+        };
+
+        const contextData = {
+            privateProfile: Object.keys(mergedProfile).length > 0 ? mergedProfile : null,
+            medicationMemories,
+            recentScans,
+        };
+
 
         // Build 100% static system prompt (hits DeepSeek Prompt Cache every time)
         const systemPrompt = buildSystemPrompt(mode, language);
@@ -169,12 +216,10 @@ export async function POST(req: NextRequest) {
             { role: "system", content: systemPrompt },
         ];
 
-        // Add dynamic context block if in context mode
-        if (mode === "context" && contextData) {
-            const ctxMsg = buildContextMessage(contextData, language);
-            if (ctxMsg) {
-                deepseekMessages.push({ role: "user", content: ctxMsg });
-            }
+        // Always inject user profile context if available
+        const ctxMsg = buildContextMessage(contextData, language);
+        if (ctxMsg) {
+            deepseekMessages.push({ role: "user", content: ctxMsg });
         }
 
         if (medicationData) {
@@ -198,8 +243,8 @@ export async function POST(req: NextRequest) {
         deepseekMessages.push({
             role: "system",
             content: language === "ar"
-                ? `أجب بصيغة Markdown نظيفة ومفصلة. عند الانتهاء تماماً، اترك سطرين واكتب:\n${META_SEPARATOR}\n{"keyPoints":["نقطة 1","نقطة 2"],"suggestedFollowUps":["سؤال 1؟","سؤال 2؟"]}`
-                : `Answer with clean, detailed Markdown formatting. When completely done, leave 2 blank lines and write:\n${META_SEPARATOR}\n{"keyPoints":["point 1","point 2"],"suggestedFollowUps":["question 1?","question 2?"]}`,
+                ? `أجب بصيغة Markdown نظيفة ومباشرة. إذا كان السؤال يتطلب إجابة قاطعة (نعم/لا/مناسب/غير مناسب)، ابدأ بالإجابة القاطعة فوراً واجعل الرد مختصراً جداً. عند الانتهاء تماماً، اترك سطرين واكتب:\n${META_SEPARATOR}\n{"keyPoints":["نقطة 1","نقطة 2"],"suggestedFollowUps":["سؤال 1؟","سؤال 2؟"]}`
+                : `Answer with clean, direct Markdown formatting. If the query calls for a clear Yes/No or suitability verdict, give the bold verdict immediately and keep the response ultra-concise. When completely done, leave 2 blank lines and write:\n${META_SEPARATOR}\n{"keyPoints":["point 1","point 2"],"suggestedFollowUps":["question 1?","question 2?"]}`,
         });
 
         const encoder = new TextEncoder();

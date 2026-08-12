@@ -31,7 +31,7 @@ export const Footer = () => {
     };
 
     return (
-        <footer className="relative z-10 mt-16 border-t mb-24 md:mb-0 border-white/[0.06] bg-slate-950/40 backdrop-blur-xl">
+        <footer className="relative z-10 mt-16 border-t mb-16 md:mb-0 border-white/[0.06] bg-slate-950/40 backdrop-blur-xl">
             {/* Top gradient line */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
 
@@ -102,7 +102,7 @@ export const Footer = () => {
                 </div>
 
                 {/* Bottom bar */}
-                <div className="border-t border-white/[0.06] py-5 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+                <div className="border-t border-white/[0.06] py-5 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
                     <p>
                         {t("Built by ", "تم التطوير بواسطة ")}
                         <span className="text-slate-300 font-medium">Matany Labs</span>

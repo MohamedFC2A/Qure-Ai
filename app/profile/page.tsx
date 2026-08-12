@@ -28,6 +28,7 @@ import { useSettings } from "@/context/SettingsContext";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { SmartHeightInput, SmartWeightInput } from "@/components/ui/SmartMeasurementInput";
 
 export default function ProfilePage() {
     const { user, profile, plan, credits, loading: userLoading, refreshUser } = useUser();
@@ -549,33 +550,6 @@ export default function ProfilePage() {
                                 </div>
                             </GlassCard>
 
-                            {/* PROMINENT ACCOUNT SWITCH & LOGOUT CARD */}
-                            <GlassCard className="p-6 border-rose-500/20 bg-gradient-to-br from-rose-950/20 to-slate-950/80">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                                    <div className="space-y-1 min-w-0">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <LogOut className="w-5 h-5 text-rose-400 shrink-0" />
-                                            <span>{t("Switch Account / Sign Out", "تبديل الحساب / تسجيل الخروج")}</span>
-                                        </h3>
-                                        <p className="text-white/60 text-xs sm:text-sm leading-relaxed max-w-lg">
-                                            {t(
-                                                "Want to log into another account? Click below to sign out smoothly and switch accounts.",
-                                                "هل ترغب في تسجيل الدخول بحساب آخر؟ اضغط أدناه لتسجيل الخروج والتبديل بكل سلاسة وسهولة."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <Button
-                                        onClick={handleSignOut}
-                                        variant="outline"
-                                        className="border-rose-500/40 bg-rose-500/15 text-rose-200 hover:bg-rose-500/25 hover:text-white font-bold shrink-0 shadow-lg shadow-rose-950/40"
-                                    >
-                                        <RefreshCw className="w-4 h-4 me-2 shrink-0 animate-spin-slow" />
-                                        <span>{t("Sign Out & Switch Account", "تسجيل الخروج وتبديل الحساب")}</span>
-                                    </Button>
-                                </div>
-                            </GlassCard>
-
                             {/* Basic Profile Form */}
                             <GlassCard className="p-6">
                                 <h3 className="text-lg font-bold text-white mb-2">{t("Basic Profile", "الملف الشخصي الأساسي")}</h3>
@@ -600,16 +574,21 @@ export default function ProfilePage() {
 
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">{t("Age", "العمر")}</label>
-                                            <input
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                                                type="number"
-                                                inputMode="numeric"
-                                                value={basicProfile.age}
-                                                onChange={(e) => setBasicProfile({ ...basicProfile, age: e.target.value })}
-                                                placeholder="25"
-                                                min={1}
-                                                max={120}
-                                            />
+                                            <div className="relative flex items-center">
+                                                <input
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pe-16 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    value={basicProfile.age}
+                                                    onChange={(e) => setBasicProfile({ ...basicProfile, age: e.target.value })}
+                                                    placeholder="25"
+                                                    min={1}
+                                                    max={120}
+                                                />
+                                                <div className="absolute end-2.5 flex items-center gap-1 bg-violet-500/10 border border-violet-400/25 text-violet-300 text-xs font-bold px-2.5 py-1.5 rounded-lg select-none pointer-events-none">
+                                                    <span>{isArabic ? "سنة" : "yr"}</span>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div>
@@ -626,34 +605,19 @@ export default function ProfilePage() {
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <label className="text-xs text-white/60 mb-1 block">{t("Height (cm)", "الطول (سم)")}</label>
-                                            <input
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                                                type="number"
-                                                inputMode="numeric"
-                                                value={basicProfile.heightCm}
-                                                onChange={(e) => setBasicProfile({ ...basicProfile, heightCm: e.target.value })}
-                                                placeholder="180"
-                                                min={50}
-                                                max={250}
-                                            />
-                                        </div>
+                                        <SmartHeightInput
+                                            label={t("Height", "الطول")}
+                                            value={basicProfile.heightCm}
+                                            onChange={(val) => setBasicProfile({ ...basicProfile, heightCm: val })}
+                                            isArabic={isArabic}
+                                        />
 
-                                        <div>
-                                            <label className="text-xs text-white/60 mb-1 block">{t("Weight (kg)", "الوزن (كجم)")}</label>
-                                            <input
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                                                type="number"
-                                                inputMode="decimal"
-                                                value={basicProfile.weightKg}
-                                                onChange={(e) => setBasicProfile({ ...basicProfile, weightKg: e.target.value })}
-                                                placeholder="75"
-                                                min={10}
-                                                max={500}
-                                                step="0.1"
-                                            />
-                                        </div>
+                                        <SmartWeightInput
+                                            label={t("Weight", "الوزن")}
+                                            value={basicProfile.weightKg}
+                                            onChange={(val) => setBasicProfile({ ...basicProfile, weightKg: val })}
+                                            isArabic={isArabic}
+                                        />
                                     </div>
 
                                     {basicSavedMsg && (
@@ -1060,8 +1024,21 @@ export default function ProfilePage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">{t("Age", "العمر")}</label>
-                                            <input className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 text-white" type="number"
-                                                value={privateProfile.age || ''} onChange={e => setPrivateProfile({ ...privateProfile, age: e.target.value })} />
+                                            <div className="relative flex items-center">
+                                                <input
+                                                    className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 pe-16 text-white"
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    value={privateProfile.age || ''}
+                                                    onChange={e => setPrivateProfile({ ...privateProfile, age: e.target.value })}
+                                                    placeholder="25"
+                                                    min={1}
+                                                    max={120}
+                                                />
+                                                <div className="absolute end-2.5 flex items-center gap-1 bg-violet-500/10 border border-violet-400/25 text-violet-300 text-xs font-bold px-2.5 py-1.5 rounded-lg select-none pointer-events-none">
+                                                    <span>{isArabic ? "سنة" : "yr"}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">{t("Gender", "الجنس")}</label>
@@ -1073,20 +1050,19 @@ export default function ProfilePage() {
                                                 <option value="other">{t("Other", "آخر")}</option>
                                             </select>
                                         </div>
-                                        <div>
-                                            <label className="text-xs text-white/60 mb-1 block">{t("Height", "الطول")}</label>
-                                            <input
-                                                className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 text-white"
-                                                placeholder={t("e.g. 180 cm", "مثال: 180 سم")}
-                                                value={privateProfile.height || ''}
-                                                onChange={e => setPrivateProfile({ ...privateProfile, height: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-white/60 mb-1 block">{t("Weight", "الوزن")}</label>
-                                            <input className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 text-white" placeholder={t("e.g. 75 kg", "مثال: 75 كجم")}
-                                                value={privateProfile.weight || ''} onChange={e => setPrivateProfile({ ...privateProfile, weight: e.target.value })} />
-                                        </div>
+                                        <SmartHeightInput
+                                            label={t("Height", "الطول")}
+                                            value={privateProfile.height || ''}
+                                            onChange={val => setPrivateProfile({ ...privateProfile, height: val })}
+                                            isArabic={isArabic}
+                                        />
+
+                                        <SmartWeightInput
+                                            label={t("Weight", "الوزن")}
+                                            value={privateProfile.weight || ''}
+                                            onChange={val => setPrivateProfile({ ...privateProfile, weight: val })}
+                                            isArabic={isArabic}
+                                        />
                                     </div>
 
                                     <div>

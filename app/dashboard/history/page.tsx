@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
+import { getLocalScans, mergeHistoryItems } from "@/lib/localHistory";
 import { cn } from "@/lib/utils";
 
 export default function HistoryPage() {
@@ -34,37 +35,20 @@ export default function HistoryPage() {
     useEffect(() => {
         const init = async () => {
             try {
+                const localItems = getLocalScans();
                 if (isLocalDevUser) {
                     const localUserId = user?.id || "local-dev-user";
                     setUserId(localUserId);
                     setCareProfiles([{ id: localUserId, display_name: isArabic ? "أنا (المطور)" : "Local Dev" }]);
                     setProfileFilter("all");
-                    setHistory([
-                        {
-                            id: "local-history-1",
-                            user_id: localUserId,
-                            profile_id: localUserId,
-                            drug_name: "Ibuprofen 200 mg",
-                            manufacturer: "Sample label",
-                            created_at: new Date().toISOString(),
-                            analysis_json: {
-                                drugName: "Ibuprofen 200 mg",
-                                manufacturer: "Sample label",
-                                description: isArabic ? "تقرير عينة للمطور." : "Local development sample report.",
-                                uses: ["Pain relief", "Fever reduction"],
-                                warnings: ["NSAID caution"],
-                                sideEffects: ["Stomach upset"],
-                                dosage: "Follow package instructions.",
-                            },
-                        },
-                    ]);
+                    setHistory(localItems);
                     return;
                 }
 
                 const { data: { user: authUser } } = await supabase.auth.getUser();
                 if (!authUser) {
                     setUserId(null);
-                    setHistory([]);
+                    setHistory(localItems);
                     return;
                 }
                 setUserId(authUser.id);
@@ -83,7 +67,7 @@ export default function HistoryPage() {
                 setProfileFilter(preferred || "all");
             } catch (err) {
                 console.error("History init error:", err);
-                setHistory([]);
+                setHistory(getLocalScans());
             } finally {
                 setLoading(false);
             }
@@ -94,7 +78,12 @@ export default function HistoryPage() {
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (!userId) return;
+            const localItems = getLocalScans();
+            if (!userId) {
+                setHistory(localItems);
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             try {
                 let res = await supabase
@@ -120,23 +109,17 @@ export default function HistoryPage() {
                     }
                 }
 
-                if (res.error) {
-                    console.error("Error fetching history:", res.error.message);
-                    setHistory([]);
-                    return;
-                }
-
-                setHistory(res.data || []);
-            } catch (err) {
-                console.error("Unexpected error:", err);
-                setHistory([]);
+                const remoteRows = res.error ? [] : (res.data || []);
+                const merged = mergeHistoryItems(remoteRows, localItems);
+                setHistory(merged);
+            } catch {
+                setHistory(localItems);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchHistory();
-    }, [isLocalDevUser, profileFilter, supabase, userId]);
+    }, [profileFilter, supabase, userId]);
 
     const filteredHistory = history.filter(item =>
         (item.drug_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
