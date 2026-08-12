@@ -44,7 +44,7 @@ const signupSchema = loginSchema.extend({
         .string()
         .min(3, "Username must be at least 3 characters")
         .max(20, "Username must be 20 characters or less")
-        .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
+        .regex(/^[a-zA-Z0-9_]+$/, "English letters, numbers, and _ only (no spaces or Arabic)"),
     age: z.coerce
         .number()
         .int("Age must be a whole number")
@@ -92,6 +92,18 @@ function AuthFormContent({ type }: AuthFormProps) {
     const [resendCooldown, setResendCooldown] = useState<number>(0);
     const [resending, setResending] = useState(false);
 
+    // Live Username availability state
+    const [usernameStatus, setUsernameStatus] = useState<{
+        checking: boolean;
+        available?: boolean;
+        message?: string;
+    } | null>(null);
+
+    // Biometric Face ID / Fingerprint confirmation states
+    const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+    const [isBiometricVerifying, setIsBiometricVerifying] = useState(false);
+    const [isBiometricVerified, setIsBiometricVerified] = useState(false);
+
     const router = useRouter();
     const searchParams = useSearchParams();
     const supabase = createClient();
@@ -125,6 +137,121 @@ function AuthFormContent({ type }: AuthFormProps) {
     });
 
     const watchPassword = watch("password", "");
+    const watchUsername = watch("username", "");
+    const watchAgreeToTerms = watch("agreeToTerms", false);
+
+    // Detect Biometric Authenticator availability (Face ID, Touch ID, Android Biometrics, Windows Hello)
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.PublicKeyCredential) {
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+                .then((available) => setIsBiometricSupported(Boolean(available)))
+                .catch(() => setIsBiometricSupported(false));
+        }
+    }, []);
+
+    // Live Debounced Username Uniqueness Check (strips spaces & Arabic chars)
+    useEffect(() => {
+        if (type !== "signup" || !watchUsername || watchUsername.trim().length < 3) {
+            setUsernameStatus(null);
+            return;
+        }
+
+        // Auto-sanitize: strip spaces and non-English chars
+        const cleaned = watchUsername.replace(/\s+/g, "").replace(/[^a-zA-Z0-9_]/g, "");
+        if (cleaned !== watchUsername) {
+            setValue("username", cleaned, { shouldValidate: true });
+        }
+
+        const timer = setTimeout(async () => {
+            setUsernameStatus({ checking: true });
+            try {
+                const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(cleaned)}`);
+                const data = await res.json();
+                if (data.available) {
+                    setUsernameStatus({
+                        checking: false,
+                        available: true,
+                        message: isArabic ? "اسم المستخدم متاح ✓" : "Username is available ✓",
+                    });
+                } else {
+                    setUsernameStatus({
+                        checking: false,
+                        available: false,
+                        message: isArabic ? (data.errorAr || data.error) : (data.error || "Username is already taken"),
+                    });
+                }
+            } catch {
+                setUsernameStatus(null);
+            }
+        }, 350);
+
+        return () => clearTimeout(timer);
+    }, [watchUsername, type, isArabic, setValue]);
+
+    // Trigger Biometric Verification for Terms Agreement
+    const triggerBiometricAgreement = async () => {
+        setIsBiometricVerifying(true);
+        setError(null);
+        try {
+            if (typeof window === "undefined" || !window.PublicKeyCredential) {
+                throw new Error(
+                    isArabic
+                        ? "المصادقة البيومترية غير مدعومة في هذا المتصفح."
+                        : "Biometric authentication is not supported on this browser."
+                );
+            }
+
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge);
+
+            const emailVal = watch("email") || "user@qurescan.com";
+            const usernameVal = watch("username") || "qure_user";
+
+            // Calls native platform authenticator: Face ID / Touch ID / Fingerprint
+            await navigator.credentials.create({
+                publicKey: {
+                    challenge,
+                    rp: { name: "Qure AI Clinical Safety", id: window.location.hostname },
+                    user: {
+                        id: new Uint8Array(16),
+                        name: emailVal,
+                        displayName: usernameVal,
+                    },
+                    pubKeyCredParams: [
+                        { alg: -7, type: "public-key" },
+                        { alg: -257, type: "public-key" },
+                    ],
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform",
+                        userVerification: "required",
+                    },
+                    timeout: 60000,
+                    attestation: "none",
+                },
+            });
+
+            setIsBiometricVerified(true);
+            setValue("agreeToTerms", true, { shouldValidate: true });
+            setSuccessMessage(
+                isArabic
+                    ? "✓ تم التحقق البيومتري (بصمة الإصبع / Face ID) وتأكيد الشروط بنجاح!"
+                    : "✓ Biometric verification (Face ID / Fingerprint) confirmed successfully!"
+            );
+        } catch (bioErr: any) {
+            console.warn("[Biometric Verification Notice]:", bioErr);
+            // Graceful fallback: Still allow acceptance if user cancels or hardware is unavailable
+            setValue("agreeToTerms", true, { shouldValidate: true });
+            if (bioErr.name !== "NotAllowedError") {
+                setError(
+                    isArabic
+                        ? "تم تفعيل الموافقة الرقمية البديلة للشروط."
+                        : "Digital terms agreement applied."
+                );
+            }
+        } finally {
+            setIsBiometricVerifying(false);
+        }
+    };
 
     // Handle incoming URL parameters (e.g. ?verified=true, ?auth_error=..., ?email=...)
     useEffect(() => {
@@ -709,19 +836,48 @@ function AuthFormContent({ type }: AuthFormProps) {
                         <div className="space-y-3 pt-2 border-t border-slate-800/80">
                             {/* Username */}
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-slate-300 ms-1 block">
-                                    {t("Username", "اسم المستخدم")}
-                                </label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-semibold text-slate-300 ms-1 block">
+                                        {t("Username", "اسم المستخدم")}
+                                    </label>
+                                    <span className="text-[10px] text-slate-400">
+                                        {t("English, numbers, _ only (no spaces/Arabic)", "إنجليزية وأرقام و _ فقط بدون مسافات أو عربي")}
+                                    </span>
+                                </div>
                                 <div className="relative">
-                                    <Fingerprint className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                                    <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                                     <input
                                         {...register("username")}
-                                        className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800"
-                                        placeholder={t("e.g. Alex_99", "مثال: Alex_99")}
+                                        className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800 font-mono"
+                                        placeholder={t("e.g. mohamed or ahmed", "مثال: mohamed أو ahmed")}
                                         autoComplete="username"
+                                        dir="ltr"
                                     />
                                 </div>
-                                {errors.username && (
+
+                                {/* Real-time Live Username Feedback */}
+                                {usernameStatus && (
+                                    <div className="text-xs ms-1 mt-1">
+                                        {usernameStatus.checking ? (
+                                            <p className="text-cyan-400 flex items-center gap-1.5">
+                                                <RotateCw className="w-3.5 h-3.5 animate-spin shrink-0" />
+                                                <span>{t("Checking username availability...", "جارٍ فحص توفر اسم المستخدم...")}</span>
+                                            </p>
+                                        ) : usernameStatus.available ? (
+                                            <p className="text-emerald-400 flex items-center gap-1.5 font-medium">
+                                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                                <span>{usernameStatus.message}</span>
+                                            </p>
+                                        ) : (
+                                            <p className="text-rose-400 flex items-center gap-1.5 font-medium">
+                                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                                <span>{usernameStatus.message}</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {errors.username && !usernameStatus && (
                                     <p className="text-rose-400 text-xs ms-1 mt-1">{errors.username.message}</p>
                                 )}
                             </div>
@@ -826,9 +982,31 @@ function AuthFormContent({ type }: AuthFormProps) {
                                 </div>
                             </div>
 
-                            {/* Terms & Disclaimer Agreement */}
-                            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                                <div className="flex items-start gap-2.5">
+                            {/* Terms & Medical Disclaimer Agreement (with Mobile Face ID / Biometrics) */}
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                                {/* Biometric Button for iOS / Android / Windows Hello */}
+                                <Button
+                                    type="button"
+                                    onClick={triggerBiometricAgreement}
+                                    disabled={isBiometricVerifying}
+                                    variant="outline"
+                                    className={`w-full py-2.5 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all ${
+                                        isBiometricVerified
+                                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                                            : "border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-300"
+                                    }`}
+                                >
+                                    <Fingerprint className={`w-4 h-4 ${isBiometricVerifying ? "animate-pulse" : "text-cyan-400"}`} />
+                                    <span>
+                                        {isBiometricVerifying
+                                            ? t("Scanning Face ID / Fingerprint...", "جارٍ مسح بصمة الجوال أو Face ID...")
+                                            : isBiometricVerified
+                                            ? t("✓ Verified via Face ID / Fingerprint", "✓ تم التحقق البيومتري (Face ID / بصمة الإصبع)")
+                                            : t("Confirm with Face ID / Fingerprint", "الموافقة عبر بصمة الجوال أو Face ID")}
+                                    </span>
+                                </Button>
+
+                                <div className="flex items-start gap-2.5 pt-1">
                                     <input
                                         id="agreeToTerms"
                                         type="checkbox"
