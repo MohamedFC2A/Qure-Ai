@@ -1,5 +1,40 @@
 [
   {
+    "version": "v1.3.7 (Beta)",
+    "titleEn": "Aura-OS Ai (AOS AI) Update: Cleaner Navigation, Faster Webhooks, and Smarter Release Notes",
+    "titleAr": "تحديث Aura-OS Ai (AOS AI): تنقّل أكثر سلاسة، معالجة أسرع للإشعارات، وملاحظات إصدار أذكى",
+    "date": "2026-08-12",
+    "badge": "Beta Release",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "New Features & Enhancements",
+        "categoryAr": "الميزات والتحسينات الجديدة",
+        "itemsEn": [
+          "Redesigned the mobile bottom navigation with an elevated, tap-friendly Scan trigger and an interactive “More Hub” for secondary pages.",
+          "Improved release notes powered by Aura-OS Ai (AOS AI), delivering clear bilingual updates in English and Arabic with no technical jargon."
+        ],
+        "itemsAr": [
+          "تم تحديث التنقّل السفلي في الهاتف مع زر مسح أكثر بروزًا وسهل اللمس، وواجهة “المزيد (More Hub)” تفاعلية لصفحات الخيارات الثانوية.",
+          "تم تحسين ملاحظات الإصدار المدعومة بـ Aura-OS Ai (AOS AI) لتقديم تحديثات واضحة ثنائية اللغة (الإنجليزية والعربية) دون مصطلحات تقنية."
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "System Stability & User Experience",
+        "categoryAr": "استقرار النظام وسلاسة الاستخدام",
+        "itemsEn": [
+          "Faster, more reliable handling of Telegram webhooks and public callbacks by improving request routing.",
+          "Ensured smoother webhook execution by allowing Telegram-related endpoints to bypass the usual authentication-cookie checks."
+        ],
+        "itemsAr": [
+          "تحسين سرعة وموثوقية التعامل مع إشعارات Telegram (webhooks) وعمليات الاستدعاء العامة عبر تسريع مسار الطلبات.",
+          "تسهيل تنفيذ الإشعارات عبر السماح لواجهات Telegram بالعمل دون فحص كعكة التحقق من الهوية المعتاد."
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.3.6 (Beta)",
     "titleEn": "Aura-OS Ai (AOS AI) Branding Update & Telegram Control Enhancements",
     "titleAr": "تحديث علامة Aura-OS Ai (AOS AI) وتحسينات لوحة تحكم بوت تيليجرام",

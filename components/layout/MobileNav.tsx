@@ -4,14 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Atom, ScanLine, Clock, Brain, MoreHorizontal, Sparkles } from "lucide-react";
-import { useUser } from "@/context/UserContext";
+import { Atom, ScanLine, Clock, Brain, MoreHorizontal } from "lucide-react";
 import { useSettings } from "@/context/SettingsContext";
 import { MobileHubDrawer } from "./MobileHubDrawer";
 
 export const MobileNav = () => {
     const pathname = usePathname();
-    const { user } = useUser();
     const { resultsLanguage } = useSettings();
     const [isHubOpen, setIsHubOpen] = useState(false);
 
@@ -47,17 +45,17 @@ export const MobileNav = () => {
             <MobileHubDrawer isOpen={isHubOpen} onClose={() => setIsHubOpen(false)} />
 
             <nav
-                className="fixed bottom-0 left-0 right-0 z-40 md:hidden pb-[env(safe-area-inset-bottom)] pointer-events-none"
+                className="fixed bottom-0 left-0 right-0 z-40 md:hidden pb-[env(safe-area-inset-bottom)] pointer-events-none select-none"
                 suppressHydrationWarning
                 role="navigation"
                 aria-label="Mobile Navigation"
             >
                 <div className="pointer-events-auto relative px-3 pb-2 pt-1">
                     {/* Background Dock Frame */}
-                    <div className="relative rounded-2xl border border-white/10 bg-slate-950/92 backdrop-blur-2xl shadow-2xl overflow-hidden">
+                    <div className="relative rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-2xl shadow-xl overflow-hidden">
                         
-                        {/* Top accent divider */}
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+                        {/* Subtle top divider line */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
 
                         <div className="flex items-center justify-around px-1 py-1.5 sm:py-2">
                             
@@ -76,7 +74,7 @@ export const MobileNav = () => {
                                     >
                                         <div className="flex flex-col items-center gap-1 group">
                                             <div className={cn(
-                                                "p-1.5 rounded-xl transition-all duration-150 relative",
+                                                "p-1.5 rounded-xl transition-all duration-150",
                                                 isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
                                             )}>
                                                 <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -107,7 +105,7 @@ export const MobileNav = () => {
                                     >
                                         <div className="flex flex-col items-center gap-1 group">
                                             <div className={cn(
-                                                "p-1.5 rounded-xl transition-all duration-150 relative",
+                                                "p-1.5 rounded-xl transition-all duration-150",
                                                 isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
                                             )}>
                                                 <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -141,7 +139,7 @@ export const MobileNav = () => {
                                                 "w-11 h-11 rounded-2xl flex items-center justify-center border shadow-md active:scale-95 transition-all duration-150",
                                                 isActive
                                                     ? "bg-cyan-600 border-cyan-400 text-white"
-                                                    : "bg-slate-800 border-slate-700 text-cyan-400 hover:border-white/30"
+                                                    : "bg-slate-800 border-slate-700 text-cyan-300 hover:border-slate-600"
                                             )}>
                                                 <Icon className="w-5 h-5 shrink-0" />
                                             </div>
@@ -168,7 +166,7 @@ export const MobileNav = () => {
                                     >
                                         <div className="flex flex-col items-center gap-1 group">
                                             <div className={cn(
-                                                "p-1.5 rounded-xl transition-all duration-150 relative",
+                                                "p-1.5 rounded-xl transition-all duration-150",
                                                 isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
                                             )}>
                                                 <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -193,11 +191,10 @@ export const MobileNav = () => {
                             >
                                 <div className="flex flex-col items-center gap-1 group">
                                     <div className={cn(
-                                        "p-1.5 rounded-xl transition-all duration-150 relative",
+                                        "p-1.5 rounded-xl transition-all duration-150",
                                         isHubOpen ? "bg-slate-800 text-white border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
                                     )}>
                                         <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 border-2 border-slate-950" />
                                     </div>
                                     <span className={cn(
                                         "text-[10px] font-bold tracking-tight leading-none transition-colors",
