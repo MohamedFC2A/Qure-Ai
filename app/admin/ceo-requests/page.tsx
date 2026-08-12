@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -10,16 +10,20 @@ import {
     Clock,
     User,
     Mail,
-    Calendar,
+    Search,
     ArrowLeft,
     RefreshCw,
     ShieldAlert,
     Check,
+    Copy,
+    Activity,
+    Users,
+    Zap,
+    ExternalLink,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { cn } from "@/lib/utils";
 
 interface CeoRequest {
@@ -46,8 +50,11 @@ export default function CeoRequestsAdminPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
     const [msg, setMsg] = useState<{ id: string; text: string; success: boolean } | null>(null);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
-    const userEmail = (user?.email || user?.user_metadata?.email || "").toLowerCase().trim();
+    const userEmail = (user?.email || (user as any)?.user_metadata?.email || "").toLowerCase().trim();
     const isCeo = ["mohamedahmedmatany@gmail.com", "uversionstore@gmail.com"].includes(userEmail) || user?.id === "00000000-0000-0000-0000-000000000001";
 
     const fetchRequests = async () => {
@@ -87,10 +94,9 @@ export default function CeoRequestsAdminPage() {
             const data = await res.json();
             if (res.ok) {
                 setMsg({ id: requestId, text: data.message || "تمت العملية بنجاح", success: true });
-                // Update local state
                 setRequests((prev) =>
                     prev.map((r) =>
-                        r.id === requestId ? { ...r, status: action === "approve" ? "approved" : "rejected" } : r
+                        r.id === requestId ? { ...r, status: action === "approve" ? "approved" : "rejected", activated_at: new Date().toISOString() } : r
                     )
                 );
             } else {
@@ -102,6 +108,34 @@ export default function CeoRequestsAdminPage() {
             setActionLoadingId(null);
         }
     };
+
+    const copyToClipboard = (text: string, id: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    // Filtered requests
+    const filteredRequests = useMemo(() => {
+        return requests.filter((r) => {
+            const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+            const q = searchQuery.toLowerCase().trim();
+            const matchesQuery =
+                !q ||
+                r.email?.toLowerCase().includes(q) ||
+                r.full_name?.toLowerCase().includes(q) ||
+                r.username?.toLowerCase().includes(q) ||
+                r.user_id?.toLowerCase().includes(q);
+            return matchesStatus && matchesQuery;
+        });
+    }, [requests, statusFilter, searchQuery]);
+
+    const stats = useMemo(() => {
+        const total = requests.length;
+        const pending = requests.filter((r) => r.status === "pending").length;
+        const approved = requests.filter((r) => r.status === "approved").length;
+        return { total, pending, approved };
+    }, [requests]);
 
     if (userLoading) {
         return (
@@ -135,16 +169,16 @@ export default function CeoRequestsAdminPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-white/10 pb-6">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center">
                             <Crown className="w-4 h-4 text-amber-400" />
                         </div>
-                        <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">CEO Executive Portal</span>
+                        <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">CEO Executive Portal • Beta</span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-white">
-                        {t("Golden CEO Subscription Requests", "طلبات الاشتراك الذهبي (نسخة البيتا)")}
+                        {t("Golden CEO Subscription Requests", "لوحة طلبات الاشتراك الذهبي")}
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                        {t("Direct management and one-click activation of VIP user requests.", "إدارة ومراجعة طلبات المستخدمين وتفعيل باقة ULTRA بضغطة واحدة مباشرة.")}
+                        {t("Review requests and activate ULTRA plan with 300 monthly credits with 1-click.", "مراجعة وتفعيل باقة ULTRA مع ٣٠٠ رصيد شهرياً بضغطة زر واحدة مباشرة.")}
                     </p>
                 </div>
 
@@ -154,15 +188,83 @@ export default function CeoRequestsAdminPage() {
                         disabled={loading}
                         className="py-2.5 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-2 transition-colors cursor-pointer"
                     >
-                        <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin text-cyan-400")} />
-                        <span>{t("Refresh Requests", "تحديث الطلبات")}</span>
+                        <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin text-amber-400")} />
+                        <span>{t("Refresh", "تحديث")}</span>
                     </button>
                     <Link href="/profile">
                         <button className="py-2.5 px-4 rounded-xl bg-slate-900 border border-white/10 hover:bg-slate-800 text-slate-300 font-bold text-xs flex items-center gap-2 transition-colors">
                             <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" />
-                            <span>{t("My Profile", "ملفي الشخصي")}</span>
+                            <span>{t("My Profile", "ملفي")}</span>
                         </button>
                     </Link>
+                </div>
+            </div>
+
+            {/* KPI Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 flex items-center justify-between">
+                    <div>
+                        <p className="text-xs text-slate-400 font-semibold">{t("Total Requests", "إجمالي الطلبات")}</p>
+                        <p className="text-2xl font-black text-white mt-1">{stats.total}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                        <Users className="w-5 h-5" />
+                    </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-900/80 border border-amber-500/30 flex items-center justify-between">
+                    <div>
+                        <p className="text-xs text-amber-300 font-semibold">{t("Pending Review", "قيد المراجعة")}</p>
+                        <p className="text-2xl font-black text-amber-400 mt-1">{stats.pending}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-400 flex items-center justify-center">
+                        <Clock className="w-5 h-5" />
+                    </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-900/80 border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                        <p className="text-xs text-emerald-300 font-semibold">{t("Activated Ultra", "تم تفعيلهم (ألترا)")}</p>
+                        <p className="text-2xl font-black text-emerald-400 mt-1">{stats.approved}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                        <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-1.5 p-1 bg-slate-900/80 border border-white/10 rounded-xl w-full sm:w-auto">
+                    {[
+                        { id: "all", labelEn: "All", labelAr: "الكل" },
+                        { id: "pending", labelEn: `Pending (${stats.pending})`, labelAr: `قيد الانتظار (${stats.pending})` },
+                        { id: "approved", labelEn: `Approved (${stats.approved})`, labelAr: `تم التفعيل (${stats.approved})` },
+                    ].map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setStatusFilter(tab.id as any)}
+                            className={cn(
+                                "flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer",
+                                statusFilter === tab.id
+                                    ? "bg-amber-400/20 text-amber-300 border border-amber-400/30"
+                                    : "text-slate-400 hover:text-slate-200"
+                            )}
+                        >
+                            {isArabic ? tab.labelAr : tab.labelEn}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="relative w-full sm:w-72">
+                    <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
+                    <input
+                        type="text"
+                        placeholder={t("Search by email, name, or ID...", "بحث بالاسم، الإيميل، أو المعرف...")}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full py-2 ps-9 pe-4 bg-slate-900/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400/40"
+                    />
                 </div>
             </div>
 
@@ -172,15 +274,17 @@ export default function CeoRequestsAdminPage() {
                     <RefreshCw className="w-6 h-6 animate-spin text-amber-400" />
                     <span>{t("Loading CEO requests...", "جاري تحميل الطلبات...")}</span>
                 </div>
-            ) : requests.length === 0 ? (
+            ) : filteredRequests.length === 0 ? (
                 <div className="py-16 text-center rounded-3xl bg-slate-900/60 border border-white/10 p-8">
                     <Crown className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                    <h3 className="text-base font-bold text-white">{t("No Requests Found", "لا توجد طلبات معلقة حالياً")}</h3>
-                    <p className="text-xs text-slate-400 mt-1">ستظهر هنا أي طلبات اشتراك ذهبي جديدة فور تقديمها من المستخدمين.</p>
+                    <h3 className="text-base font-bold text-white">
+                        {searchQuery ? t("No matching requests", "لا توجد نتائج مطابقة لبحثك") : t("No requests found", "لا توجد طلبات في هذا القسم")}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">ستظهر هنا أي طلبات اشتراك ذهبي فور تقديمها من المستخدمين.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {requests.map((req) => {
+                    {filteredRequests.map((req) => {
                         const isPending = req.status === "pending";
                         const isApproved = req.status === "approved";
                         const isRejected = req.status === "rejected";
@@ -191,11 +295,11 @@ export default function CeoRequestsAdminPage() {
                             <div
                                 key={req.id}
                                 className={cn(
-                                    "p-5 sm:p-6 rounded-3xl border transition-all",
+                                    "p-5 sm:p-6 rounded-3xl border transition-all shadow-sm",
                                     isPending
-                                        ? "bg-slate-900/90 border-amber-500/30"
+                                        ? "bg-slate-900/95 border-amber-500/40"
                                         : isApproved
-                                        ? "bg-slate-900/60 border-emerald-500/20"
+                                        ? "bg-slate-900/70 border-emerald-500/25"
                                         : "bg-slate-900/40 border-slate-800"
                                 )}
                             >
@@ -215,7 +319,7 @@ export default function CeoRequestsAdminPage() {
                                                 {isApproved && <Check className="w-3.5 h-3.5" />}
                                                 {isRejected && <XCircle className="w-3.5 h-3.5" />}
                                                 <span>
-                                                    {isPending ? "قيد المراجعة" : isApproved ? "تم التفعيل (مقبول)" : "مرفوض"}
+                                                    {isPending ? "قيد المراجعة" : isApproved ? "تم التفعيل (ألترا)" : "مرفوض"}
                                                 </span>
                                             </span>
                                             <span className="text-xs text-slate-400">
@@ -231,29 +335,42 @@ export default function CeoRequestsAdminPage() {
                                                     <span className="text-xs text-slate-400 font-normal">(@{req.username})</span>
                                                 )}
                                             </h3>
-                                            <p className="text-xs text-slate-300 flex items-center gap-2 mt-1">
-                                                <Mail className="w-3.5 h-3.5 text-slate-400" />
-                                                <span>{req.email}</span>
+                                            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-slate-300">
+                                                <span className="flex items-center gap-1">
+                                                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                                    <span>{req.email}</span>
+                                                </span>
                                                 <span className="text-slate-600">•</span>
-                                                <span className="font-mono text-slate-400">ID: {req.user_id}</span>
-                                            </p>
+                                                <button
+                                                    onClick={() => copyToClipboard(req.user_id, req.id)}
+                                                    className="font-mono text-slate-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer bg-slate-800/80 px-2 py-0.5 rounded"
+                                                    title="نسخ معرف المستخدم"
+                                                >
+                                                    <span>ID: {req.user_id}</span>
+                                                    {copiedId === req.id ? (
+                                                        <Check className="w-3 h-3 text-emerald-400" />
+                                                    ) : (
+                                                        <Copy className="w-3 h-3 text-slate-400" />
+                                                    )}
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* Profile Stats */}
                                         <div className="flex flex-wrap items-center gap-2 pt-1">
-                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300">
+                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300 font-medium">
                                                 العمر: {details.age || "—"}
                                             </span>
-                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300">
+                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300 font-medium">
                                                 الجنس: {details.gender || "—"}
                                             </span>
-                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300">
+                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300 font-medium">
                                                 الطول: {details.height || "—"}
                                             </span>
-                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300">
+                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-slate-300 font-medium">
                                                 الوزن: {details.weight || "—"}
                                             </span>
-                                            <span className="px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-[11px] text-cyan-300">
+                                            <span className="px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-[11px] text-cyan-300 font-bold">
                                                 الخطة الحالية: {details.currentPlan || "free"}
                                             </span>
                                         </div>
@@ -272,7 +389,7 @@ export default function CeoRequestsAdminPage() {
                                                 <button
                                                     onClick={() => handleAction(req.id, "approve")}
                                                     disabled={isActionLoading}
-                                                    className="flex-1 sm:flex-none py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                                    className="flex-1 sm:flex-none py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm"
                                                 >
                                                     <Crown className="w-4 h-4 fill-current" />
                                                     <span>{isActionLoading ? "جاري التفعيل..." : "⚡ تفعيل الاشتراك الذهبي"}</span>
@@ -286,9 +403,9 @@ export default function CeoRequestsAdminPage() {
                                                 </button>
                                             </div>
                                         ) : isApproved ? (
-                                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                                            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
                                                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                                <span>تم تفعيل ألترا بنجاح</span>
+                                                <span>تم التفعيل (٣٠٠ رصيد شهرياً)</span>
                                             </div>
                                         ) : (
                                             <span className="text-xs text-slate-500">تم رفض هذا الطلب</span>

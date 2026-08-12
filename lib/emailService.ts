@@ -14,6 +14,8 @@ interface GoldenCeoEmailParams {
     siteUrl: string;
 }
 
+const OFFICIAL_PRODUCTION_URL = "https://qure-ai-nexus.vercel.app";
+
 export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParams) {
     const {
         userId,
@@ -29,7 +31,8 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
         siteUrl,
     } = params;
 
-    const activationUrl = `${siteUrl}/api/admin/golden-ceo/activate?token=${activationToken}&userId=${userId}`;
+    const baseSiteUrl = siteUrl && !siteUrl.includes("localhost") ? siteUrl : OFFICIAL_PRODUCTION_URL;
+    const activationUrl = `${baseSiteUrl}/api/admin/golden-ceo/activate?token=${activationToken}&userId=${userId}`;
 
     const subject = `👑 طلب الاشتراك الذهبي (Beta) — المستخدم: ${fullName || username || email}`;
 
@@ -106,7 +109,8 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
         </p>
 
         <div class="footer">
-          QureScan Intelligence Platform • نظام الإدارة والتحكم الداخلي
+          QureScan Intelligence Platform • نظام الإدارة والتحكم الداخلي<br>
+          <a href="${baseSiteUrl}" style="color:#eab308;text-decoration:none;">${baseSiteUrl}</a>
         </div>
       </div>
     </body>
@@ -115,15 +119,15 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
 
     let emailDelivered = false;
 
-    // 1. Direct Web-API Dispatch via FormSubmit (Guaranteed Delivery to mohamedahmedmatany@gmail.com)
+    // 1. Direct Web-API Dispatch via FormSubmit
     try {
         const formSubmitRes = await fetch("https://formsubmit.co/ajax/mohamedahmedmatany@gmail.com", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "Referer": "https://qurescan.com",
-                "Origin": "https://qurescan.com",
+                "Referer": baseSiteUrl,
+                "Origin": baseSiteUrl,
                 "User-Agent": "QureScan-Platform/1.0",
             },
             body: JSON.stringify({
@@ -137,6 +141,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
                 "Height": height || "N/A",
                 "Weight": weight || "N/A",
                 "Activation Link": activationUrl,
+                "Site URL": baseSiteUrl,
                 "Request Time": new Date().toISOString(),
                 _template: "table",
                 _captcha: "false",
@@ -153,7 +158,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
         console.warn("[Email Dispatch Warning] FormSubmit attempt:", apiErr.message);
     }
 
-    // 2. SMTP Nodemailer Delivery (if environment variables are present)
+    // 2. SMTP Nodemailer Delivery (if configured)
     try {
         const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
         const smtpPort = Number(process.env.SMTP_PORT) || 465;

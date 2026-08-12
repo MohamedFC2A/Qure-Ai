@@ -201,8 +201,35 @@ export default function PricingPage() {
     const [ceoLoading, setCeoLoading] = useState(false);
     const [ceoMessage, setCeoMessage] = useState<string | null>(null);
     const [ceoError, setCeoError] = useState<string | null>(null);
+    const [existingRequest, setExistingRequest] = useState<any>(null);
 
     const handlePurchase = () => router.push("/billing");
+
+    React.useEffect(() => {
+        if (user) {
+            fetch("/api/golden-ceo/request")
+                .then((r) => r.json())
+                .then((data) => {
+                    if (data.request) {
+                        setExistingRequest(data.request);
+                        if (data.request.status === "pending") {
+                            setCeoMessage(
+                                isArabic
+                                    ? "تم إرسال طلبك بنجاح، وهو قيد المراجعة لدى الإدارة حالياً."
+                                    : "Your request has been submitted and is currently pending review by the admin."
+                            );
+                        } else if (data.request.status === "approved" || plan === "ultra") {
+                            setCeoMessage(
+                                isArabic
+                                    ? "تم تفعيل اشتراكك الذهبي بنجاح! حسابك مفعّل على باقة ULTRA."
+                                    : "Your Golden CEO subscription is active! You are on ULTRA plan."
+                            );
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [user, isArabic, plan]);
 
     const handleGoldenCeoRequest = async () => {
         if (!user) {
@@ -224,7 +251,7 @@ export default function PricingPage() {
             if (res.ok) {
                 setCeoMessage(
                     isArabic
-                        ? "تم إرسال طلبك بنجاح، سيتم مراجعة معرف المستخدم من قبل الإدارة وتفعيل الحساب."
+                        ? "تم إرسال طلبك بنجاح. سيتم مراجعة معرف المستخدم من قبل الإدارة وتفعيل الحساب فوراً."
                         : "Your request has been sent successfully. Your User ID will be reviewed by admin for instant activation."
                 );
             } else {

@@ -7,6 +7,32 @@ import crypto from "crypto";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kzrcnmxcmrvrahukabjh.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const OFFICIAL_SITE_URL = "https://qure-ai-nexus.vercel.app";
+
+export async function GET(req: NextRequest) {
+    try {
+        const supabase = await createClient();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const user = authUser || getLocalDevUser(req);
+
+        if (!user) {
+            return NextResponse.json({ request: null });
+        }
+
+        const adminSupabase = createAdminClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: request } = await adminSupabase
+            .from("ceo_upgrade_requests")
+            .select("id, status, created_at, activated_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        return NextResponse.json({ request });
+    } catch (err: any) {
+        return NextResponse.json({ request: null });
+    }
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -30,12 +56,20 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
         profile = profileData || {};
 
+        if (profile.plan === "ultra") {
+            return NextResponse.json({
+                success: true,
+                message: "أنت مشترك بالفعل في باقة ألترا الذهبية!",
+                alreadyUltra: true,
+            });
+        }
+
         const activationToken = crypto.randomBytes(24).toString("hex");
         const protocol = req.headers.get("x-forwarded-proto") || "https";
-        const host = req.headers.get("host") || "qurescan.com";
-        const siteUrl = req.nextUrl?.origin && !req.nextUrl.origin.includes("localhost")
-            ? req.nextUrl.origin
-            : `${protocol}://${host}`;
+        const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+        const siteUrl = host && !host.includes("localhost")
+            ? `${protocol}://${host}`
+            : OFFICIAL_SITE_URL;
 
         // Insert into database using admin client
         if (SUPABASE_SERVICE_ROLE_KEY) {
@@ -76,7 +110,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: "تم إرسال طلبك بنجاح. سيتم مراجعة معرف المستخدم من قبل الإدارة وتفعيل الحساب.",
+            message: "تم إرسال طلبك بنجاح. سيتم مراجعة معرف المستخدم من قبل الإدارة وتفعيل الحساب فوراً.",
         });
     } catch (error: any) {
         console.error("Golden CEO Request Error:", error);
