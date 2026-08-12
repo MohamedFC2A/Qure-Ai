@@ -162,27 +162,97 @@ function AuthFormContent({ type }: AuthFormProps) {
         return () => clearTimeout(timer);
     }, [resendCooldown]);
 
+    // Live session detection while waiting for email confirmation
+    useEffect(() => {
+        if (!registeredEmail) return;
+
+        let isMounted = true;
+
+        // 1. Listen for auth state changes from Supabase
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session && isMounted) {
+                setSuccessMessage(
+                    isArabic
+                        ? "✓ تم تفعيل الحساب وتأكيد البريد بنجاح! جاري تحويلك..."
+                        : "✓ Account verified successfully! Redirecting..."
+                );
+                setTimeout(() => {
+                    router.push(getNextPath());
+                    router.refresh();
+                }, 800);
+            }
+        });
+
+        // 2. Poll for session periodically (every 3 seconds) in case link was opened in another window or device
+        const interval = setInterval(async () => {
+            if (!isMounted) return;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && isMounted) {
+                setSuccessMessage(
+                    isArabic
+                        ? "✓ تم تفعيل الحساب بنجاح! جاري تحويلك..."
+                        : "✓ Account verified successfully! Redirecting..."
+                );
+                clearInterval(interval);
+                setTimeout(() => {
+                    router.push(getNextPath());
+                    router.refresh();
+                }, 800);
+            }
+        }, 3000);
+
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+            clearInterval(interval);
+        };
+    }, [registeredEmail, router, isArabic]);
+
     const handleResendEmail = async () => {
         if (!registeredEmail || resendCooldown > 0 || resending) return;
         setResending(true);
         setError(null);
+        setInfoMessage(null);
         try {
             const callbackUrl = getCallbackUrl();
-            const { error: resendErr } = await supabase.auth.resend({
-                type: "signup",
-                email: registeredEmail,
-                options: {
-                    emailRedirectTo: callbackUrl,
-                },
+            
+            // Call server signup endpoint to resend via Resend/SMTP/Supabase
+            const res = await fetch("/api/auth/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: registeredEmail,
+                    password: watchPassword || "TempPassword123!",
+                    redirectTo: callbackUrl,
+                }),
             });
-            if (resendErr) throw resendErr;
-            setInfoMessage(
-                t(
-                    "A new confirmation link has been sent to your email.",
-                    "تم إرسال رابط تأكيد جديد إلى بريدك الإلكتروني بنجاح."
-                )
-            );
-            setResendCooldown(60);
+
+            if (res.ok) {
+                setInfoMessage(
+                    t(
+                        "A new confirmation link has been sent to your email.",
+                        "تم إرسال رابط تأكيد جديد إلى بريدك الإلكتروني بنجاح."
+                    )
+                );
+                setResendCooldown(60);
+            } else {
+                // Fallback to client SDK resend
+                const { error: resendErr } = await supabase.auth.resend({
+                    type: "signup",
+                    email: registeredEmail,
+                    options: {
+                        emailRedirectTo: callbackUrl,
+                    },
+                });
+                if (resendErr) throw resendErr;
+                setInfoMessage(
+                    t(
+                        "A new confirmation link has been sent to your email.",
+                        "تم إرسال رابط تأكيد جديد إلى بريدك الإلكتروني بنجاح."
+                    )
+                );
+                setResendCooldown(60);
+            }
         } catch (err: any) {
             setError(err.message || t("Failed to resend email.", "فشل إعادة إرسال البريد."));
         } finally {
@@ -206,38 +276,92 @@ function AuthFormContent({ type }: AuthFormProps) {
                     throw new Error("Missing callback URL. Please refresh the page and try again.");
                 }
 
-                const result = await supabase.auth.signUp({
-                    email: cleanEmail,
-                    password: cleanPassword,
-                    options: {
-                        emailRedirectTo: callbackUrl,
-                        data: {
+                // 1. Try robust server-side registration route (multi-channel email dispatch)
+                try {
+                    const response = await fetch("/api/auth/signup", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            email: cleanEmail,
+                            password: cleanPassword,
                             username: data.username?.trim(),
-                            age: Number(data.age),
+                            age: data.age,
                             gender: data.gender,
-                            height: `${data.heightCm} cm`,
-                            weight: `${data.weightKg} kg`,
-                            terms_accepted_at: new Date().toISOString(),
-                            terms_version: TERMS_VERSION,
-                        },
-                    },
-                });
+                            heightCm: data.heightCm,
+                            weightKg: data.weightKg,
+                            redirectTo: callbackUrl,
+                        }),
+                    });
 
-                if (result.error) {
-                    throw result.error;
-                }
+                    const payload = await response.json();
 
-                // If email confirmation is required and no session returned
-                if (result.data.user && !result.data.session) {
+                    if (!response.ok) {
+                        throw new Error(payload.error || "Failed to create account.");
+                    }
+
+                    if (payload.alreadyRegistered) {
+                        setError(
+                            t(
+                                "This email is already registered. Please sign in with your password.",
+                                "هذا البريد الإلكتروني مسجل مسبقاً! يرجى تسجيل الدخول مباشرة بكلمة المرور الخاصة بك."
+                            )
+                        );
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    // Hide signup form and show dedicated waiting screen
                     setRegisteredEmail(cleanEmail);
                     setResendCooldown(60);
                     setIsLoading(false);
                     return;
-                }
+                } catch (serverErr: any) {
+                    console.warn("[AuthForm] Server signup route fallback:", serverErr.message);
+                    
+                    // Fallback to direct client SDK signUp
+                    const result = await supabase.auth.signUp({
+                        email: cleanEmail,
+                        password: cleanPassword,
+                        options: {
+                            emailRedirectTo: callbackUrl,
+                            data: {
+                                username: data.username?.trim(),
+                                age: Number(data.age),
+                                gender: data.gender,
+                                height: `${data.heightCm} cm`,
+                                weight: `${data.weightKg} kg`,
+                                terms_accepted_at: new Date().toISOString(),
+                                terms_version: TERMS_VERSION,
+                            },
+                        },
+                    });
 
-                // If user is auto-confirmed or session is already established
-                router.push(getNextPath());
-                router.refresh();
+                    if (result.error) {
+                        throw result.error;
+                    }
+
+                    // Detect already registered with empty identities
+                    if (result.data.user && Array.isArray(result.data.user.identities) && result.data.user.identities.length === 0) {
+                        setError(
+                            t(
+                                "This email is already registered. Please sign in with your password.",
+                                "هذا البريد الإلكتروني مسجل مسبقاً! يرجى تسجيل الدخول مباشرة بكلمة المرور الخاصة بك."
+                            )
+                        );
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    if (result.data.user && !result.data.session) {
+                        setRegisteredEmail(cleanEmail);
+                        setResendCooldown(60);
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    router.push(getNextPath());
+                    router.refresh();
+                }
             } else {
                 const result = await supabase.auth.signInWithPassword({
                     email: cleanEmail,
@@ -363,13 +487,18 @@ function AuthFormContent({ type }: AuthFormProps) {
                 </div>
 
                 <div className="space-y-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[11px] text-cyan-300 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span>{t("Waiting for confirmation...", "بانتظار النقر على الرابط...")}</span>
+                    </div>
+
                     <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                         {t("Check Your Email", "تحقق من بريدك الإلكتروني")}
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                         {t(
-                            "We sent a confirmation link to:",
-                            "تم إرسال رابط تأكيد الحساب إلى:"
+                            "We sent a secure activation link to:",
+                            "تم إرسال رابط التفعيل الآمن إلى:"
                         )}
                     </p>
                     <div className="py-2 px-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-cyan-300 select-all inline-block max-w-full truncate">
@@ -377,13 +506,13 @@ function AuthFormContent({ type }: AuthFormProps) {
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-start space-y-2">
+                <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-start space-y-2.5">
                     <div className="flex items-start gap-2.5 text-xs text-slate-300 leading-relaxed">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                         <span>
                             {t(
-                                "Click the link in the email to activate your account and log in automatically.",
-                                "اضغط على الرابط في الرسالة وسيتم تفعيل حسابك وتسجيل دخولك فوراً وتلقائياً."
+                                "Click the link in the email from ANY phone or browser to activate your account and log in automatically.",
+                                "اضغط على الرابط في الرسالة من أي هاتف (iPhone أو Android) أو كمبيوتر وسيتم تفعيل حسابك وتسجيل دخولك تلقائياً."
                             )}
                         </span>
                     </div>
@@ -397,6 +526,13 @@ function AuthFormContent({ type }: AuthFormProps) {
                         </span>
                     </div>
                 </div>
+
+                {successMessage && (
+                    <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-2.5 text-start">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <p className="text-xs text-emerald-200 leading-relaxed">{successMessage}</p>
+                    </div>
+                )}
 
                 {infoMessage && (
                     <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 text-start">
@@ -425,11 +561,25 @@ function AuthFormContent({ type }: AuthFormProps) {
                         </span>
                     </Button>
 
-                    <Link href={`/login?email=${encodeURIComponent(registeredEmail)}`} className="block w-full">
-                        <Button variant="ghost" className="w-full text-xs text-slate-400 hover:text-white">
-                            <span>{t("Go to Sign In", "الانتقال لتسجيل الدخول")}</span>
-                        </Button>
-                    </Link>
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setRegisteredEmail(null);
+                                setError(null);
+                                setInfoMessage(null);
+                            }}
+                            className="text-xs text-slate-400 hover:text-cyan-400 transition-colors"
+                        >
+                            {t("← Change Email Address", "← تعديل البريد الإلكتروني")}
+                        </button>
+
+                        <Link href={`/login?email=${encodeURIComponent(registeredEmail)}`}>
+                            <span className="text-xs text-cyan-400 hover:underline font-semibold">
+                                {t("Sign In Directly", "الدخول بكلمة المرور")}
+                            </span>
+                        </Link>
+                    </div>
                 </div>
             </div>
         );

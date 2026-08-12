@@ -302,3 +302,120 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
 
     console.log(`[Golden CEO Dispatch Summary] User: ${email}, Activation: ${activationUrl}`);
 }
+
+export interface SignupVerificationEmailParams {
+    email: string;
+    username?: string;
+    confirmationUrl: string;
+    siteUrl?: string;
+}
+
+export async function sendSignupVerificationEmail(params: SignupVerificationEmailParams): Promise<{ success: boolean; method: string }> {
+    const { email, username, confirmationUrl, siteUrl } = params;
+    const displayName = username || email.split("@")[0];
+    const baseSiteUrl = siteUrl && !siteUrl.includes("localhost") ? siteUrl : OFFICIAL_PRODUCTION_URL;
+
+    const subject = `🏥 تفعيل حسابك في منصة Qure AI الطبية`;
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>تأكيد وتفعيل الحساب</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #030712; color: #f9fafb; padding: 16px; margin: 0; }
+        .card { max-width: 520px; margin: 0 auto; background: #0f172a; border: 1px solid #1e293b; border-radius: 20px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .header { text-align: center; border-bottom: 1px solid #1e293b; padding-bottom: 20px; margin-bottom: 24px; }
+        .badge { background: #082f49; color: #38bdf8; border: 1px solid #0284c7; font-weight: 700; font-size: 11px; padding: 4px 12px; border-radius: 12px; display: inline-block; }
+        h1 { color: #ffffff; font-size: 22px; margin: 12px 0 6px; font-weight: 800; }
+        p { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 16px; }
+        .btn-box { text-align: center; margin: 28px 0; }
+        .btn { background: #06b6d4 !important; color: #020617 !important; font-size: 16px; font-weight: 800; padding: 14px 28px; border-radius: 12px; text-decoration: none; display: inline-block; text-align: center; box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4); }
+        .fallback-link { background: #030712; border: 1px solid #1e293b; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 11px; color: #38bdf8; word-break: break-all; margin-top: 16px; }
+        .footer { text-align: center; color: #64748b; font-size: 11px; margin-top: 24px; border-top: 1px solid #1e293b; padding-top: 16px; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="header">
+          <span class="badge">🏥 منصة Qure AI للسلامة الدوائية</span>
+          <h1>مرحباً بك يا ${displayName}!</h1>
+          <p>شكراً لإنشاء حسابك في Qure AI. يرجى الضغط على الزر أدناه لتفعيل حسابك وتسجيل دخولك فوراً إلى مساحة العمل الطبية.</p>
+        </div>
+
+        <div class="btn-box">
+          <a href="${confirmationUrl}" class="btn" target="_blank">
+            ✓ تفعيل الحساب وتسجيل الدخول فوراً
+          </a>
+        </div>
+
+        <p style="font-size: 12px; color: #94a3b8; text-align: center;">
+          يعمل هذا الرابط على جميع الهواتف الذكية (iPhone / Android) وأجهزة الكمبيوتر بشكل آمن وفوري.
+        </p>
+
+        <div class="fallback-link">
+          إذا لم يعمل الزر معك، افتح الرابط التالي مباشرة:<br>
+          <a href="${confirmationUrl}" style="color: #38bdf8; text-decoration: underline;">${confirmationUrl}</a>
+        </div>
+
+        <div class="footer">
+          Qure AI Clinical Intelligence Platform • أمان دوائي ذكي<br>
+          إذا لم تكن أنت من قام بإنشاء هذا الحساب، يمكنك تجاهل هذه الرسالة بأمان.
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    // Try Resend
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+        try {
+            const resend = new Resend(resendApiKey);
+            const sendRes = await resend.emails.send({
+                from: process.env.RESEND_FROM_EMAIL || "Qure AI <onboarding@resend.dev>",
+                to: [email],
+                subject,
+                html: htmlContent,
+            });
+            if (sendRes.data?.id) {
+                console.log(`[Signup Email] Sent via Resend to ${email} (ID: ${sendRes.data.id})`);
+                return { success: true, method: "resend" };
+            }
+        } catch (err: any) {
+            console.warn("[Signup Email] Resend error:", err.message);
+        }
+    }
+
+    // Try SMTP / Nodemailer
+    const smtpUser = process.env.GMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_USER;
+    const smtpPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASS;
+    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+    const smtpPort = Number(process.env.SMTP_PORT) || 465;
+
+    if (smtpUser && smtpPass) {
+        try {
+            const transporter = nodemailer.createTransport({
+                host: smtpHost,
+                port: smtpPort,
+                secure: smtpPort === 465,
+                auth: { user: smtpUser, pass: smtpPass },
+            });
+            await transporter.sendMail({
+                from: `"Qure AI Security" <${smtpUser}>`,
+                to: email,
+                subject,
+                html: htmlContent,
+            });
+            console.log(`[Signup Email] Sent via SMTP to ${email}`);
+            return { success: true, method: "smtp" };
+        } catch (err: any) {
+            console.warn("[Signup Email] SMTP error:", err.message);
+        }
+    }
+
+    return { success: false, method: "none" };
+}
+
