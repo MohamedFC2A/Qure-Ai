@@ -447,8 +447,8 @@ export default function DashboardPage() {
                                         </div>
                                         <p className="text-xs text-slate-400 leading-relaxed">
                                             {t(
-                                                "Get AI interaction guard, family profiles, PDF exports, and 2000 monthly credits.",
-                                                "احصل على حارس التداخل الذكي، ملفات الأسرة، تصدير PDF، و٢٠٠٠ رصيد شهري."
+                                                "Get Mat AI assistant, family profiles, PDF exports, and 300 monthly credits.",
+                                                "احصل على مساعد Mat AI، ملفات الأسرة، تصدير PDF، و٣٠٠ رصيد شهري."
                                             )}
                                         </p>
                                         <Link href="/pricing" className="mt-3 inline-flex">
