@@ -295,10 +295,10 @@ export function UltraCelebrationModal() {
     return (
         <AnimatePresence>
             <div
-                className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-2xl"
+                className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto bg-black/40 backdrop-blur-md transition-all"
                 dir={isArabic ? "rtl" : "ltr"}
             >
-                {/* Main Modal Container */}
+                {/* Main Modal Container - Hyper-Transparent Liquid Glass */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -306,8 +306,8 @@ export function UltraCelebrationModal() {
                     transition={{ duration: 0.2 }}
                     className={cn(
                         "relative w-full max-w-4xl my-auto rounded-3xl overflow-hidden",
-                        "bg-slate-900/80 border border-white/[0.08] backdrop-blur-2xl",
-                        "flex flex-col max-h-[90vh] text-slate-100 shadow-2xl"
+                        "bg-black/35 border border-white/10 backdrop-blur-3xl shadow-2xl",
+                        "flex flex-col max-h-[90vh] text-slate-100"
                     )}
                 >
                     {/* Header Controls */}
@@ -498,7 +498,7 @@ export function UltraCelebrationModal() {
                     </div>
 
                     {/* Modal Footer */}
-                    <div className="p-4 bg-slate-950/90 border-t border-white/[0.06] flex items-center justify-between gap-3 shrink-0">
+                    <div className="p-4 bg-black/30 backdrop-blur-2xl border-t border-white/[0.08] flex items-center justify-between gap-3 shrink-0">
                         <div className="flex items-center gap-1.5 text-xs text-slate-400">
                             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                             <span>{t("All perks are active.", "جميع المميزات مفعّلة في حسابك.")}</span>
