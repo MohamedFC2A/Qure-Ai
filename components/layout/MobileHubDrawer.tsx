@@ -79,14 +79,6 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
             icon: User,
         },
         {
-            titleEn: "Analytics Dashboard",
-            titleAr: "لوحة التحكم والتحليلات",
-            descEn: "Platform insights & overview",
-            descAr: "إحصائيات واستخدام الحساب",
-            href: "/dashboard",
-            icon: LayoutDashboard,
-        },
-        {
             titleEn: "Documentation & Guides",
             titleAr: "الوثائق ودليل الاستخدام",
             descEn: "How to use QureScan effectively",

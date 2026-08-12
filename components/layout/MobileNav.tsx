@@ -23,15 +23,14 @@ export const MobileNav = () => {
             icon: Atom,
         },
         {
+            name: t("Scan", "فحص الدواء"),
+            href: "/scan",
+            icon: ScanLine,
+        },
+        {
             name: "Qure AI",
             href: "/ai",
             icon: Brain,
-        },
-        {
-            name: t("Scan", "فحص"),
-            href: "/scan",
-            icon: ScanLine,
-            isCenter: true,
         },
         {
             name: t("History", "السجل"),
@@ -59,11 +58,11 @@ export const MobileNav = () => {
 
                         <div className="flex items-center justify-around px-1 py-1.5 sm:py-2">
                             
-                            {/* Tab 1: Home */}
-                            {(() => {
-                                const item = navItems[0];
-                                const isActive = pathname === item.href;
+                            {/* Standard Nav Tabs */}
+                            {navItems.map((item) => {
+                                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
                                 const Icon = item.icon;
+
                                 return (
                                     <Link
                                         key={item.href}
@@ -88,101 +87,9 @@ export const MobileNav = () => {
                                         </div>
                                     </Link>
                                 );
-                            })()}
+                            })}
 
-                            {/* Tab 2: Qure AI */}
-                            {(() => {
-                                const item = navItems[1];
-                                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        aria-label={item.name}
-                                        aria-current={isActive ? "page" : undefined}
-                                        className="flex-1 rounded-xl py-1 focus-visible:outline-none"
-                                    >
-                                        <div className="flex flex-col items-center gap-1 group">
-                                            <div className={cn(
-                                                "p-1.5 rounded-xl transition-all duration-150",
-                                                isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
-                                            )}>
-                                                <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                                            </div>
-                                            <span className={cn(
-                                                "text-[10px] font-bold tracking-tight leading-none transition-colors",
-                                                isActive ? "text-white" : "text-slate-400"
-                                            )}>
-                                                {item.name}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                );
-                            })()}
-
-                            {/* Center Action: Scan Button */}
-                            {(() => {
-                                const item = navItems[2];
-                                const isActive = pathname === item.href;
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        aria-label={item.name}
-                                        aria-current={isActive ? "page" : undefined}
-                                        className="flex-1 flex justify-center -mt-3 focus-visible:outline-none"
-                                    >
-                                        <div className="flex flex-col items-center gap-0.5 group">
-                                            <div className={cn(
-                                                "w-11 h-11 rounded-2xl flex items-center justify-center border shadow-md active:scale-95 transition-all duration-150",
-                                                isActive
-                                                    ? "bg-cyan-600 border-cyan-400 text-white"
-                                                    : "bg-slate-800 border-slate-700 text-cyan-300 hover:border-slate-600"
-                                            )}>
-                                                <Icon className="w-5 h-5 shrink-0" />
-                                            </div>
-                                            <span className="text-[10px] font-extrabold text-white tracking-tight">
-                                                {item.name}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                );
-                            })()}
-
-                            {/* Tab 4: History */}
-                            {(() => {
-                                const item = navItems[3];
-                                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        aria-label={item.name}
-                                        aria-current={isActive ? "page" : undefined}
-                                        className="flex-1 rounded-xl py-1 focus-visible:outline-none"
-                                    >
-                                        <div className="flex flex-col items-center gap-1 group">
-                                            <div className={cn(
-                                                "p-1.5 rounded-xl transition-all duration-150",
-                                                isActive ? "bg-slate-800 text-cyan-300 border border-slate-700" : "text-slate-400 group-hover:text-slate-200"
-                                            )}>
-                                                <Icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                                            </div>
-                                            <span className={cn(
-                                                "text-[10px] font-bold tracking-tight leading-none transition-colors",
-                                                isActive ? "text-white" : "text-slate-400"
-                                            )}>
-                                                {item.name}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                );
-                            })()}
-
-                            {/* Tab 5: More Hub Trigger */}
+                            {/* More Hub Trigger */}
                             <button
                                 type="button"
                                 onClick={() => setIsHubOpen(true)}
