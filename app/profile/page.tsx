@@ -28,6 +28,8 @@ import {
     MapPin,
     RotateCcw,
     Check,
+    Zap,
+    Volume2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/context/SettingsContext";
