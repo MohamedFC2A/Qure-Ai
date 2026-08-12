@@ -2,6 +2,20 @@
 
 Smart release notes powered by Qure AI.
 
+## v1.3.9 (Beta) — QureScan Mobile & Qure AI Updates (2026-08-12)
+
+### New Features & Enhancements
+- Simplified mobile navigation with clear, symmetrical tabs and a refreshed “More” hub, making it easier to find secondary pages
+- Redesigned the mobile bottom navigation with a more prominent scan button and an interactive “More” drawer for secondary pages
+- Enhanced your AI experience with Qure AI now fully powering the assistant features across the platform
+- New streamlined release notes experience that keeps updates in clear, human-friendly English and Arabic, without technical wording
+- Upgraded branding and paywall experience for AI access, including improved AI lock handling and refreshed credit availability on subscription revocation
+
+### System Stability & User Experience
+- Improved the overall look and styling across the navigation (including a sleek metallic silver “Beta” appearance) for a cleaner, modern experience
+- Refined the “More” hub design for a more polished, distraction-free feel with consistent icons and styling
+- Strengthened reliability of release note generation for smoother, consistent updates
+
 ## v1.3.8 (Beta) — Sleeker QureScan Experience Across Web & Mobile (2026-08-12)
 
 ### New Features & Enhancements
@@ -9,10 +23,10 @@ Smart release notes powered by Qure AI.
 - Updated the mobile navigation with a redesigned bottom bar, including an elevated Scan trigger and an interactive “More Hub” that supports all secondary pages
 
 ### System Stability & User Experience
-- Replaced MAT AI branding with Aura-OS AI (AOS AI) across the platform for a consistent experience, while keeping Qure AI as your assistant
+- Officially powered by Qure AI across the entire platform for a seamless clinical intelligence experience
 - Enhanced Release Notes with a more human-friendly bilingual (English/Arabic) writing approach, using Qure AI to deliver clear updates without technical language
 - Improved overall interface consistency by removing glowing borders and neon shadows across components, navigation, and buttons
-- Removed the “Golden Subscription” label and applied a clean matte executive dark styling throughout the experience
+- Applied a clean matte executive dark styling throughout the experience
 
 ## v1.3.7 (Beta) — Aura-OS Ai (AOS AI) Update: Cleaner Navigation, Faster Webhooks, and Smarter Release Notes (2026-08-12)
 

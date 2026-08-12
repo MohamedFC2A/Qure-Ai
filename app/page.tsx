@@ -73,7 +73,7 @@ function MockChatPreview({ isArabic }: { isArabic: boolean }) {
                             <div className="nexus-gold-logo w-4 h-4 rounded-md flex items-center justify-center">
                                 <Sparkles className="w-2.5 h-2.5" style={{ color: "#1c1000" }} />
                             </div>
-                            MATANY AI
+                            Qure AI
                         </div>
                     </div>
                 </div>
@@ -136,7 +136,7 @@ function MockChatPreview({ isArabic }: { isArabic: boolean }) {
                         className="flex items-center gap-2 rounded-xl border border-white/[0.07] px-3 py-2.5"
                         style={{ background: "rgba(9, 14, 24, 0.90)" }}
                     >
-                        <span className="text-[11px] text-white/18 flex-1">{isArabic ? "اسأل MATANY AI…" : "Ask MATANY AI…"}</span>
+                        <span className="text-[11px] text-white/18 flex-1">{isArabic ? "اسأل Qure AI…" : "Ask Qure AI…"}</span>
                         <div className="w-6 h-6 rounded-lg gold-send-btn flex items-center justify-center">
                             <ArrowRight className="w-3 h-3" />
                         </div>
@@ -224,7 +224,7 @@ export default function Home() {
     const aiFeatures = [
         {
             icon: Brain,
-            title: "MATANY AI",
+            title: "Qure AI",
             description: t("Ask health and medication questions with full context from your history.", "اسأل أسئلة صحية ودوائية مع كامل سياق تاريخك الطبي."),
             badge: "eyebrow-gold",
             badgeLabel: t("New", "جديد"),
@@ -309,7 +309,7 @@ export default function Home() {
                         <Link href="/ai" className="w-full sm:w-auto">
                             <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-xl border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.07] hover:border-white/[0.18] text-white/80 hover:text-white font-semibold text-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5">
                                 <Sparkles className="h-4 w-4 shrink-0 text-amber-400/80" />
-                                <span>MATANY AI</span>
+                                <span>Qure AI</span>
                                 <ChevronRight className={cn("h-4 w-4 shrink-0 text-white/30", isArabic ? "rotate-180" : "")} />
                             </button>
                         </Link>

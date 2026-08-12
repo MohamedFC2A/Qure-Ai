@@ -242,8 +242,8 @@ export async function POST(req: NextRequest) {
         if (isDeveloperQuestion) {
             const answer =
                 language === "ar"
-                    ? "تم تطويري بواسطة شركة MATANY AI (MatanyLabs)."
-                    : "Developed by MATANY AI (MatanyLabs).";
+                    ? "تم تطويري بواسطة منصة Qure AI."
+                    : "Developed by Qure AI platform.";
             return NextResponse.json({
                 title: language === "ar" ? "من طوّرني؟" : "Who developed me?",
                 summary: answer,
@@ -280,7 +280,7 @@ export async function POST(req: NextRequest) {
         const pathJson = JSON.stringify(compactPath);
 
         // 100% Static System Prompt for DeepSeek Context Caching
-        const staticSystemPrompt = `You are MATANY AI, an expert clinical pharmacist assistant.
+        const staticSystemPrompt = `You are Qure AI, an expert clinical pharmacist assistant.
 Analyze the user's question about the medication using the provided clinical summary and profile.
 
 ${systemLanguageRule}

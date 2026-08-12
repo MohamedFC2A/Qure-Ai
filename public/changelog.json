@@ -1,5 +1,48 @@
 [
   {
+    "version": "v1.3.9 (Beta)",
+    "titleEn": "QureScan Mobile & Qure AI Updates",
+    "titleAr": "تحديثات QureScan للجوال وQure AI",
+    "date": "2026-08-12",
+    "badge": "Beta Release",
+    "changes": [
+      {
+        "type": "feat",
+        "categoryEn": "New Features & Enhancements",
+        "categoryAr": "الميزات والتحسينات الجديدة",
+        "itemsEn": [
+          "Simplified mobile navigation with clear, symmetrical tabs and a refreshed “More” hub, making it easier to find secondary pages",
+          "Redesigned the mobile bottom navigation with a more prominent scan button and an interactive “More” drawer for secondary pages",
+          "Enhanced your AI experience with Qure AI now fully powering the assistant features across the platform",
+          "New streamlined release notes experience that keeps updates in clear, human-friendly English and Arabic, without technical wording",
+          "Upgraded branding and paywall experience for AI access, including improved AI lock handling and refreshed credit availability on subscription revocation"
+        ],
+        "itemsAr": [
+          "تبسيط تنقّل الهاتف المحمول عبر تبويبات واضحة ومتناسقة مع تحديث “المزيد” لتسهيل الوصول إلى الصفحات الثانوية",
+          "إعادة تصميم شريط التنقّل السفلي على الهاتف مع زر “المسح” الأبرز ودرج “المزيد” التفاعلي للصفحات الثانوية",
+          "تحسين تجربة الذكاء الاصطناعي عبر اعتماد Qure AI بالكامل لتشغيل ميزات المساعد داخل المنصة",
+          "تجربة جديدة ومبسّطة لسجلّ الإصدارات تعرض التحديثات بلغة عربية وإنجليزية واضحة ومناسبة للإنسان دون مصطلحات تقنية",
+          "تحديثات على الهوية وتجربة الوصول للذكاء الاصطناعي، بما في ذلك تحسينات في طريقة عمل قفل الذكاء الاصطناعي وتحديث الرصيد المتاح عند إلغاء الاشتراك"
+        ]
+      },
+      {
+        "type": "fix",
+        "categoryEn": "System Stability & User Experience",
+        "categoryAr": "استقرار النظام وسلاسة الاستخدام",
+        "itemsEn": [
+          "Improved the overall look and styling across the navigation (including a sleek metallic silver “Beta” appearance) for a cleaner, modern experience",
+          "Refined the “More” hub design for a more polished, distraction-free feel with consistent icons and styling",
+          "Strengthened reliability of release note generation for smoother, consistent updates"
+        ],
+        "itemsAr": [
+          "تحسين المظهر العام والتنسيق عبر التنقل (ومنها عرض “Beta” بتصميم فضي لامع أنيق) لتجربة أكثر نظافة وحداثة",
+          "تطوير تصميم “المزيد” ليصبح أكثر فخامة وراحة مع أيقونات متناسقة وتنسيق أنيق",
+          "تعزيز الاعتمادية الخاصة بتوليد سجلّ الإصدارات لضمان تحديثات أكثر سلاسة وثباتًا"
+        ]
+      }
+    ]
+  },
+  {
     "version": "v1.3.8 (Beta)",
     "titleEn": "Sleeker QureScan Experience Across Web & Mobile",
     "titleAr": "تجربة QureScan أكثر أناقة عبر الويب والهاتف",

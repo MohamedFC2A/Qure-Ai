@@ -47,8 +47,8 @@ export const metadata: Metadata = {
         "AI Healthcare",
         "QureScan"
     ],
-    authors: [{ name: "MATANY AI", url: "https://qurescan.com" }],
-    creator: "MATANY AI",
+    authors: [{ name: "Qure AI", url: "https://qurescan.com" }],
+    creator: "Qure AI",
     publisher: "QureScan Inc.",
     robots: {
         index: true,

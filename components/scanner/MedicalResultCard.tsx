@@ -2453,7 +2453,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-white/40 text-xs ps-1">
                                     <MessageSquare className="w-3.5 h-3.5" />
-                                    <span>{t("Conversation with MATANY AI", "محادثتك مع MATANY AI")}</span>
+                                    <span>{t("Conversation with Qure AI", "محادثتك مع Qure AI")}</span>
                                     <span>•</span>
                                     <span>{aiNodes.length} {t("exchanges", "تبادلات")}</span>
                                 </div>
