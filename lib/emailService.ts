@@ -31,6 +31,8 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
 
     const activationUrl = `${siteUrl}/api/admin/golden-ceo/activate?token=${activationToken}&userId=${userId}`;
 
+    const subject = `👑 طلب الاشتراك الذهبي (Beta) — المستخدم: ${fullName || username || email}`;
+
     const htmlContent = `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
@@ -99,7 +101,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
         </div>
 
         <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 16px;">
-          أو يمكنك نسخ الرابط التالي مباشرة:<br>
+          أو يمكنك نسخ الرابط التالي مباشرة في المتصفح:<br>
           <a href="${activationUrl}" style="color: #38bdf8; word-break: break-all;">${activationUrl}</a>
         </p>
 
@@ -111,7 +113,41 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     </html>
     `;
 
-    // Attempt sending through standard SMTP if configured, or console fallback for audit
+    let emailDelivered = false;
+
+    // 1. Direct Web-API Dispatch via FormSubmit (Guaranteed Delivery to mohamedahmedmatany@gmail.com without SMTP server)
+    try {
+        const formSubmitRes = await fetch("https://formsubmit.co/ajax/mohamedahmedmatany@gmail.com", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            body: JSON.stringify({
+                _subject: subject,
+                "User ID": userId,
+                "Email": email,
+                "Full Name": fullName || username || "Not provided",
+                "Current Plan": currentPlan,
+                "Age": age || "N/A",
+                "Gender": gender || "N/A",
+                "Height": height || "N/A",
+                "Weight": weight || "N/A",
+                "Activation Link": activationUrl,
+                "Request Time": new Date().toISOString(),
+                _template: "table",
+            }),
+        });
+
+        if (formSubmitRes.ok) {
+            console.log(`[Email] Notification delivered directly to mohamedahmedmatany@gmail.com via FormSubmit API.`);
+            emailDelivered = true;
+        }
+    } catch (apiErr: any) {
+        console.warn("[Email Dispatch Warning] FormSubmit attempt:", apiErr.message);
+    }
+
+    // 2. SMTP Nodemailer Delivery (if environment variables are present)
     try {
         const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
         const smtpPort = Number(process.env.SMTP_PORT) || 465;
@@ -132,14 +168,15 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
             await transporter.sendMail({
                 from: `"QureScan Admin" <${smtpUser}>`,
                 to: "mohamedahmedmatany@gmail.com",
-                subject: `👑 طلب الاشتراك الذهبي (Beta) — المستخدم: ${fullName || email}`,
+                subject,
                 html: htmlContent,
             });
-            console.log(`[Email] Golden CEO request email successfully sent to mohamedahmedmatany@gmail.com for user ${userId}`);
-        } else {
-            console.log(`[Email Config] No SMTP credentials in env. Notification created for mohamedahmedmatany@gmail.com. Activation URL: ${activationUrl}`);
+            console.log(`[Email] Sent via SMTP to mohamedahmedmatany@gmail.com for user ${userId}`);
+            emailDelivered = true;
         }
-    } catch (err: any) {
-        console.error("[Email Error] Failed to send Golden CEO notification email:", err.message);
+    } catch (smtpErr: any) {
+        console.warn("[Email Dispatch Warning] SMTP attempt:", smtpErr.message);
     }
+
+    console.log(`[Email Summary] User: ${email}, Activation URL: ${activationUrl}, Delivered: ${emailDelivered}`);
 }

@@ -31,7 +31,11 @@ export async function POST(req: NextRequest) {
         profile = profileData || {};
 
         const activationToken = crypto.randomBytes(24).toString("hex");
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+        const protocol = req.headers.get("x-forwarded-proto") || "https";
+        const host = req.headers.get("host") || "qurescan.com";
+        const siteUrl = req.nextUrl?.origin && !req.nextUrl.origin.includes("localhost")
+            ? req.nextUrl.origin
+            : `${protocol}://${host}`;
 
         // Insert into database using admin client
         if (SUPABASE_SERVICE_ROLE_KEY) {
