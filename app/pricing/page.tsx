@@ -29,30 +29,33 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const freeFeatures = [
-    { en: "30 credits per month",                      ar: "٣٠ رصيد شهرياً"                         },
-    { en: "Medication OCR and core analysis",          ar: "OCR الأدوية والتحليل الأساسي"            },
-    { en: "Basic openFDA and web verification",        ar: "التحقق الأساسي من FDA والويب"            },
-    { en: "Saved scan history",                        ar: "حفظ سجل الفحص"                          },
+    { en: "30 monthly credits (scans & AI messages)",   ar: "٣٠ رصيد شهرياً للفحوصات والرسائل"        },
+    { en: "Medication OCR and core medical analysis",   ar: "OCR الأدوية والتحليل الطبي الأساسي"       },
+    { en: "Basic openFDA and web verification",        ar: "التحقق الأساسي من قواعد بيانات FDA والويب" },
+    { en: "Saved scan history & deduplication",        ar: "حفظ سجل الفحص والربط الذكي لمنع التكرار" },
 ];
 
 const ultraFeatures = [
-    { en: "500 credits per month",                     ar: "٥٠٠ رصيد شهرياً"                        },
-    { en: "Private health profile and medication memories", ar: "ملف صحي خاص وذاكرة الأدوية"       },
-    { en: "Family and caregiver profiles",             ar: "ملفات الأسرة ومقدمي الرعاية"            },
-    { en: "Advanced safety and interaction guard",     ar: "حارس التداخل والأمان المتقدم"           },
-    { en: "PNG and high-quality PDF exports",          ar: "تصدير PNG وتقارير PDF عالية الجودة"     },
+    { en: "500 monthly credits (scans & AI messages)",  ar: "٥٠٠ رصيد شهرياً للفحوصات والرسائل"       },
+    { en: "Full Mat AI medical assistant access",      ar: "المساعد الطبي الذكي Mat AI بلا قيود"     },
+    { en: "Private health profile & allergy context",   ar: "سياق الملف الصحي والتفاعلات والحساسية"  },
+    { en: "Family and caregiver profiles management",   ar: "إدارة ملفات العائلة ومقدمي الرعاية"      },
+    { en: "Smart interaction guard & medication memory",ar: "حارس التداخلات الدوائية وذاكرة الأدوية"  },
+    { en: "Interactive follow-up question tree",        ar: "شجرة أسئلة المتابعة والتحليلات التفاعلية" },
+    { en: "PNG and high-quality PDF report exports",   ar: "تصدير PNG وتقارير PDF طبية عالية الجودة" },
 ];
 
 const comparisonRows = [
-    { en: "Core medication analysis",             ar: "التحليل الأساسي للأدوية",         free: true,    ultra: true        },
-    { en: "openFDA and web verification",         ar: "التحقق من FDA والويب",            free: true,    ultra: true        },
-    { en: "Medication history",                   ar: "سجل الأدوية",                    free: true,    ultra: true        },
-    { en: "Private health profile",               ar: "الملف الصحي الخاص",              free: false,   ultra: true        },
-    { en: "Family/caregiver mode",                ar: "وضع العائلة/مقدم الرعاية",       free: false,   ultra: true        },
-    { en: "Medication memory and interaction guard", ar: "ذاكرة الأدوية وحارس التداخل", free: false,   ultra: true        },
-    { en: "Smart follow-up question tree",        ar: "شجرة أسئلة المتابعة الذكية",     free: false,   ultra: true        },
-    { en: "Export",                               ar: "التصدير",                        free: "PNG",   ultra: "PNG + PDF" },
-    { en: "Monthly usage",                        ar: "الاستخدام الشهري",               free: "100",   ultra: "2000"      },
+    { en: "Medication OCR analysis & OCR scanning",  ar: "تحليل علب الأدوية والروشتات بالذكاء الاصطناعي", free: true,          ultra: true                },
+    { en: "Mat AI medical assistant chat",           ar: "المساعد الطبي الذكي Mat AI",                    free: false,         ultra: true                },
+    { en: "Private health profile context",          ar: "سياق الملف الصحي والحساسية الشخصية",             free: false,         ultra: true                },
+    { en: "Medication memory & deduplication",       ar: "ذاكرة الأدوية والربط الذكي في السجل",            free: "أساسي",       ultra: "شامل ومتقدم"       },
+    { en: "Drug interaction & safety guard",         ar: "حارس التداخلات الدوائية والتحذيرات",            free: false,         ultra: true                },
+    { en: "Family & caregiver profiles mode",        ar: "إدارة ملفات العائلة والوالدين والأبناء",        free: false,         ultra: true                },
+    { en: "Interactive follow-up question tree",     ar: "شجرة أسئلة المتابعة والتحليلات الذكية",         free: false,         ultra: true                },
+    { en: "FDA label & NDC database checks",         ar: "التحقق الفوري من قواعد بيانات FDA الرسمية",    free: "أساسي",       ultra: "تلقائي وتفصيلي"    },
+    { en: "Report exports",                          ar: "تصدير التقارير والنتائج",                       free: "صورة PNG",    ultra: "PNG + PDF طبي"     },
+    { en: "Monthly credits (scans & chat)",          ar: "الاستخدام الشهري (الفحوصات والرسائل)",          free: "30 رصيد",     ultra: "500 رصيد"          },
 ];
 
 const valueCards = [
@@ -248,7 +251,7 @@ export default function PricingPage() {
                                 </p>
                             </div>
                             <div className="icon-badge icon-badge-cyan w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0">
-                                <Sparkles className="h-6 w-6" />
+                                <Brain className="h-6 w-6 text-cyan-300" />
                             </div>
                         </div>
 
