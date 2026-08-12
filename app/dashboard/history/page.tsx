@@ -95,7 +95,6 @@ export default function HistoryPage() {
     useEffect(() => {
         const fetchHistory = async () => {
             if (!userId) return;
-            if (isLocalDevUser) return;
             setLoading(true);
             try {
                 let res = await supabase

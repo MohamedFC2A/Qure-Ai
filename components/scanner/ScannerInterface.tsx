@@ -117,7 +117,7 @@ export const ScannerInterface = () => {
     }, [setFile]);
 
     const fetchRecentHistory = useCallback(async () => {
-        if (!user?.id || isLocalDevUser) {
+        if (!user?.id) {
             setRecentHistory([]);
             return;
         }

@@ -7,6 +7,7 @@ import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { preflightMedicationEvidence, type ProductClassification } from "@/lib/medicationEnrichment";
 import { generateInteractionGuard } from "@/lib/ai/interactionGuard";
 import { getLocalDevUser } from "@/lib/devAuth";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function normalizeMedicationName(name: string): string {
     return String(name || "")
@@ -60,10 +61,9 @@ export async function POST(req: NextRequest) {
         }
 
         const localDevUser = getLocalDevUser(req);
-        const supabase = localDevUser ? null : await createClient();
-        const { data: { user } } = localDevUser
-            ? { data: { user: localDevUser } }
-            : await supabase!.auth.getUser();
+        const supabase = await createClient();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const user = authUser || localDevUser;
 
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -371,11 +371,10 @@ export async function POST(req: NextRequest) {
             subjectRelationship: subjectProfile?.relationship ?? null,
         };
 
-        // 2. Save Analysis to Supabase (Protected)
-        if (!localDevUser && analysisWithEnrichment && (analysisWithEnrichment as any).drugName !== "Unknown") {
+        // 2. Save Analysis to Supabase (Protected & Dev)
+        if (analysisWithEnrichment && (analysisWithEnrichment as any).drugName !== "Unknown") {
             try {
-                if (!supabase) throw new Error("Supabase client unavailable");
-                const db = supabase;
+                let db = supabase;
                 const historyPayload: any = {
                     user_id: user.id,
                     profile_id: subjectProfileId,
@@ -384,20 +383,34 @@ export async function POST(req: NextRequest) {
                     analysis_json: analysisWithEnrichment,
                 };
 
-                let historyRes = await db
+                let historyRes = db ? await db
                     .from("medication_history")
                     .insert(historyPayload)
                     .select("id")
-                    .single();
+                    .single() : { data: null, error: new Error("No supabase client") };
+
+                if (historyRes.error) {
+                    try {
+                        const adminClient = createAdminClient();
+                        historyRes = await adminClient
+                            .from("medication_history")
+                            .insert(historyPayload)
+                            .select("id")
+                            .single();
+                        if (historyRes.data) db = adminClient;
+                    } catch (e) {
+                        console.warn("Admin insert fallback failed:", e);
+                    }
+                }
 
                 if (historyRes.error && String(historyRes.error.message || "").toLowerCase().includes("profile_id")) {
                     const legacyPayload = { ...historyPayload };
                     delete legacyPayload.profile_id;
-                    historyRes = await db
+                    historyRes = db ? await db
                         .from("medication_history")
                         .insert(legacyPayload)
                         .select("id")
-                        .single();
+                        .single() : { data: null, error: new Error("No client") };
                 }
 
                 const historyRow = historyRes.data;
