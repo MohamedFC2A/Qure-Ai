@@ -501,33 +501,33 @@ export default function PricingPage() {
                 {/* ── VOUCHER & GOLDEN CEO SECTION ────────────────── */}
                 <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
                     
-                    {/* Golden CEO & Voucher Card */}
-                    <div className="rounded-3xl border border-slate-700 bg-slate-900/80 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+                    {/* Executive CEO Upgrade & Voucher Card */}
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
                         <div>
-                            {/* Golden CEO Pass */}
-                            <div className="p-5 rounded-2xl bg-slate-800/80 border border-amber-500/40">
+                            {/* Executive CEO Upgrade */}
+                            <div className="p-5 rounded-2xl bg-slate-950/50 border border-white/10">
                                 <div className="flex items-center justify-between gap-2 mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                                            <Crown className="w-4 h-4 text-amber-400" />
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center">
+                                            <Crown className="w-4 h-4 text-cyan-400" />
                                         </div>
-                                        <h3 className="text-sm font-black text-amber-300">
-                                            {t("Golden CEO Subscription", "الاشتراك الذهبي من قبل CEO")}
+                                        <h3 className="text-sm font-bold text-white">
+                                            {t("Executive Upgrade by CEO", "ترقية الحساب من قبل CEO")}
                                         </h3>
                                     </div>
-                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/15 border border-amber-400/30 text-amber-300">
-                                        {t("Beta Version Only", "متوفر الآن فقط في نسخة البيتا")}
+                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 border border-slate-700 text-slate-300">
+                                        {t("Beta Version Only", "متوفر في نسخة البيتا")}
                                     </span>
                                 </div>
-                                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                                <p className="text-xs text-slate-400 leading-relaxed mb-4">
                                     {t(
-                                        "Direct executive activation authorized by the CEO for beta testers, granting full access and priority privileges.",
-                                        "ترقية تنفيذية معتمدة ومباشرة من الـ CEO لمختبري النسخة التجريبية (Beta) تمنحك وصولاً شاملاً لكافة ميزات المنصة."
+                                        "Direct executive upgrade authorized by the CEO for beta testers, granting full access and priority features.",
+                                        "ترقية مباشرة معتمدة من قبل الـ CEO لمختبري النسخة التجريبية (Beta) تمنحك وصولاً شاملاً لكافة ميزات المنصة."
                                     )}
                                 </p>
 
                                 {ceoMessage ? (
-                                    <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 font-medium">
+                                    <div className="p-3.5 rounded-xl bg-slate-900 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 font-medium">
                                         <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
                                         <span>{ceoMessage}</span>
                                     </div>
@@ -539,17 +539,17 @@ export default function PricingPage() {
                                         <button
                                             onClick={handleGoldenCeoRequest}
                                             disabled={ceoLoading}
-                                            className="w-full py-3 px-4 rounded-xl bg-slate-900 border border-amber-500/50 hover:bg-slate-800 text-amber-300 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                            className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 hover:text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                                         >
                                             {ceoLoading ? (
-                                                <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                                                <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
                                             ) : (
-                                                <Crown className="w-4 h-4 text-amber-400" />
+                                                <Crown className="w-4 h-4 text-cyan-400" />
                                             )}
                                             <span>
                                                 {ceoLoading
                                                     ? t("Sending request...", "جاري إرسال الطلب...")
-                                                    : t("Request Golden CEO Subscription", "طلب الاشتراك الذهبي من قبل CEO")}
+                                                    : t("Request Upgrade from CEO", "طلب الترقية من قبل CEO")}
                                             </span>
                                         </button>
                                     </div>

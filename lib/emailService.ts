@@ -70,13 +70,13 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
             console.warn("[Telegram Auto-discover]", e);
         }
 
-        const telegramHtml = `👑 <b>طلب تفعيل الاشتراك الذهبي (نسخة البيتا)</b>\n\n` +
+        const telegramHtml = `👑 <b>طلب ترقية الحساب (CEO VIP)</b>\n\n` +
             `👤 <b>المستخدم:</b> ${displayName}\n` +
             `📧 <b>البريد:</b> <code>${email}</code>\n` +
             `🆔 <b>User ID:</b> <code>${userId}</code>\n` +
             `📊 <b>الخطة:</b> ${currentPlan.toUpperCase()}\n` +
             `🩺 <b>البيانات:</b> عمر: ${age || "—"} | جنس: ${gender || "—"} | طول: ${height || "—"} | وزن: ${weight || "—"}\n\n` +
-            `⚡ <b>اضغط على الزر أدناه لتفعيل الحساب فوراً بضغطة واحدة:</b>`;
+            `⚡ <b>اضغط على الزر أدناه لتفعيل باقة ألترا فوراً بضغطة واحدة:</b>`;
 
         for (const targetChatId of chatIdsToNotify) {
             await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
@@ -90,7 +90,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
                         inline_keyboard: [
                             [
                                 {
-                                    text: "⚡ تفعيل الاشتراك الذهبي (ULTRA) فوراً",
+                                    text: "⚡ تفعيل باقة ألترا (٣٠٠ رصيد) فوراً",
                                     url: activationUrl,
                                 }
                             ],
@@ -116,15 +116,15 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>تفعيل الاشتراك الذهبي</title>
+      <title>ترقية الحساب من CEO</title>
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #030712; color: #f9fafb; padding: 12px; margin: 0; }
-        .card { max-width: 540px; margin: 0 auto; background: #0f172a; border: 1.5px solid #eab308; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .card { max-width: 540px; margin: 0 auto; background: #0f172a; border: 1px solid #334155; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .header { text-align: center; border-bottom: 1px solid #1e293b; padding-bottom: 16px; margin-bottom: 20px; }
-        .badge { background: #ca8a04; color: #000; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 12px; display: inline-block; }
-        h1 { color: #facc15; font-size: 20px; margin: 10px 0 4px; font-weight: 900; }
+        .badge { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 12px; display: inline-block; }
+        h1 { color: #ffffff; font-size: 20px; margin: 10px 0 4px; font-weight: 900; }
         .btn-box { text-align: center; margin: 24px 0; }
-        .btn { background: #22c55e !important; color: #000000 !important; font-size: 17px; font-weight: 900; padding: 16px 28px; border-radius: 14px; text-decoration: none; display: block; box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4); text-align: center; }
+        .btn { background: #22c55e !important; color: #000000 !important; font-size: 17px; font-weight: 900; padding: 16px 28px; border-radius: 14px; text-decoration: none; display: block; text-align: center; }
         .info-table { width: 100%; border-collapse: collapse; margin-top: 14px; background: #131d31; border-radius: 12px; overflow: hidden; }
         .info-table td { padding: 10px 12px; border-bottom: 1px solid #1e293b; font-size: 13px; }
         .info-table tr:last-child td { border-bottom: none; }
@@ -136,8 +136,8 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     <body>
       <div class="card">
         <div class="header">
-          <span class="badge">👑 طلب تفعيل VIP فوري (نسخة البيتا)</span>
-          <h1>طلب الاشتراك الذهبي من قبل CEO</h1>
+          <span class="badge">👑 طلب ترقية VIP فوري</span>
+          <h1>طلب ترقية الحساب من قبل CEO</h1>
           <p style="color: #cbd5e1; font-size: 13px; margin: 4px 0 0;">المستخدم يطلب ترقية حسابه إلى باقة ألترا (٣٠٠ رصيد شهرياً)</p>
         </div>
 

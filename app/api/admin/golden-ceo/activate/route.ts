@@ -151,7 +151,7 @@ export async function GET(req: NextRequest) {
             <body>
                 <div class="card">
                     <div class="icon">👑</div>
-                    <h1>تم تفعيل الاشتراك الذهبي بنجاح!</h1>
+                    <h1>تمت ترقية الحساب لباقة ULTRA بنجاح!</h1>
                     <p>تم ترقية الحساب فوراً إلى باقة <strong>ULTRA</strong> وتعيين الرصيد الشهري إلى <strong>٣٠٠ رصيد</strong>.</p>
                     
                     <div class="info-box">

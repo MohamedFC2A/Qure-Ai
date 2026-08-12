@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
 
                 await answerCallbackQuery(cb.id, "✅ تم تفعيل باقة ألترا بنجاح!", true);
 
-                const updatedText = `✅ <b>تم تفعيل الاشتراك الذهبي بنجاح!</b>\n\n` +
+                const updatedText = `✅ <b>تمت ترقية الحساب لباقة ULTRA بنجاح!</b>\n\n` +
                     `👤 <b>المستخدم:</b> ${requestRecord.full_name || requestRecord.email}\n` +
                     `📧 <b>البريد:</b> <code>${requestRecord.email}</code>\n` +
                     `📊 <b>الخطة:</b> ULTRA (٣٠٠ رصيد شهرياً)\n` +
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
 
                 await editTelegramMessage(chatId, messageId, updatedText, {
                     inline_keyboard: [
-                        [{ text: "🛑 إلغاء اشتراك هذا المستخدم", callback_data: `revoke_${requestRecord.user_id}` }]
+                        [{ text: "🛑 إلغاء باقة ألترا لهذا المستخدم", callback_data: `revoke_${requestRecord.user_id}` }]
                     ]
                 });
 
@@ -161,10 +161,10 @@ export async function POST(req: NextRequest) {
                     .update({ status: "revoked" })
                     .eq("user_id", targetUserId);
 
-                await answerCallbackQuery(cb.id, "🛑 تم إلغاء الاشتراك وإعادة المستخدم للخطة المجانية!", true);
+                await answerCallbackQuery(cb.id, "🛑 تم إلغاء باقة ألترا وإعادة المستخدم للخطة المجانية!", true);
 
                 const userName = userProfile?.full_name || userProfile?.username || targetUserId;
-                const revokedText = `🛑 <b>تم إلغاء الاشتراك الذهبي</b>\n\n` +
+                const revokedText = `🛑 <b>تم إلغاء باقة ULTRA</b>\n\n` +
                     `👤 <b>المستخدم:</b> ${userName}\n` +
                     `🆔 <b>ID:</b> <code>${targetUserId}</code>\n` +
                     `📊 <b>الخطة الحالية:</b> FREE (٣٠ رصيد شهرياً)\n` +
@@ -373,7 +373,7 @@ async function handleStats(chatId: string | number, adminSupabase: any) {
         `👥 <b>إجمالي المستخدمين:</b> ${totalUsers || 0}\n` +
         `👑 <b>مشتركي باقة ألترا (ULTRA):</b> ${ultraUsers || 0}\n` +
         `🆓 <b>المستخدمين المجانيين (FREE):</b> ${freeUsers || 0}\n` +
-        `⏳ <b>طلبات الاشتراك الذهبي المعلقة:</b> ${pendingRequests || 0}\n\n` +
+        `⏳ <b>طلبات الترقية المعلقة:</b> ${pendingRequests || 0}\n\n` +
         `🚀 <i>المنصة تعمل بكفاءة على Vercel & Supabase.</i>`;
 
     const keyboard = {

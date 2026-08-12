@@ -104,7 +104,7 @@ function BillingContent() {
                     <p className="text-slate-400 text-xs sm:text-sm mt-1">
                         {t("Complete your upgrade to", "أكمل ترقيتك إلى")}{" "}
                         <span className="text-cyan-300 font-bold uppercase">
-                            {plan === "golden_ceo" ? t("Golden CEO Subscription (Beta)", "الاشتراك الذهبي من قبل CEO (نسخة البيتا)") : plan}
+                            {plan === "golden_ceo" ? t("Executive CEO Upgrade (Beta)", "ترقية خاصة من قبل CEO (نسخة البيتا)") : plan}
                         </span>
                     </p>
                 </div>

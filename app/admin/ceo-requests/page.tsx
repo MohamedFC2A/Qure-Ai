@@ -176,13 +176,13 @@ export default function CeoRequestsAdminPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-white/10 pb-6">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center">
-                            <Crown className="w-4 h-4 text-amber-400" />
+                        <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+                            <Crown className="w-4 h-4 text-cyan-400" />
                         </div>
-                        <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">CEO Executive Portal • Beta</span>
+                        <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">CEO Executive Portal</span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-white">
-                        {t("Golden CEO Subscription Control", "لوحة تحكم وإدارة الاشتراكات الذهبية")}
+                        {t("CEO Upgrades & Ultra Control", "لوحة تحكم ترقيات CEO وباقة ألترا")}
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-400 mt-1">
                         {t("Activate or revoke ULTRA plan for any user with 1-click in real time.", "تفعيل باقة ULTRA أو إلغاء الاشتراك عن أي مستخدم بضغطة زر واحدة لحظياً.")}
@@ -194,17 +194,17 @@ export default function CeoRequestsAdminPage() {
                         href="https://t.me/QureScanbot"
                         target="_blank"
                         rel="noreferrer"
-                        className="py-2.5 px-4 rounded-xl bg-sky-500/15 border border-sky-400/30 hover:bg-sky-500/25 text-sky-300 font-bold text-xs flex items-center gap-2 transition-colors shadow-sm"
+                        className="py-2.5 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-750 text-slate-200 hover:text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-sm"
                     >
-                        <MessageSquare className="w-4 h-4 text-sky-400" />
+                        <MessageSquare className="w-4 h-4 text-cyan-400" />
                         <span>{t("Telegram Bot (@QureScanbot)", "بوت تيليجرام (@QureScanbot)")}</span>
                     </a>
                     <button
                         onClick={fetchRequests}
                         disabled={loading}
-                        className="py-2.5 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-2 transition-colors cursor-pointer"
+                        className="py-2.5 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-750 text-slate-300 font-bold text-xs flex items-center gap-2 transition-colors cursor-pointer"
                     >
-                        <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin text-amber-400")} />
+                        <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin text-cyan-400")} />
                         <span>{t("Refresh", "تحديث")}</span>
                     </button>
                     <Link href="/profile">
@@ -223,37 +223,37 @@ export default function CeoRequestsAdminPage() {
                         <p className="text-xs text-slate-400 font-semibold">{t("Total Requests", "إجمالي الطلبات")}</p>
                         <p className="text-2xl font-black text-white mt-1">{stats.total}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center">
                         <Users className="w-5 h-5" />
                     </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900/80 border border-amber-500/30 flex items-center justify-between">
+                <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 flex items-center justify-between">
                     <div>
-                        <p className="text-xs text-amber-300 font-semibold">{t("Pending Review", "قيد المراجعة")}</p>
-                        <p className="text-2xl font-black text-amber-400 mt-1">{stats.pending}</p>
+                        <p className="text-xs text-slate-400 font-semibold">{t("Pending Review", "قيد المراجعة")}</p>
+                        <p className="text-2xl font-black text-slate-200 mt-1">{stats.pending}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-400 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-cyan-400 flex items-center justify-center">
                         <Clock className="w-5 h-5" />
                     </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900/80 border border-emerald-500/30 flex items-center justify-between">
+                <div className="p-5 rounded-2xl bg-slate-900/80 border border-emerald-500/25 flex items-center justify-between">
                     <div>
-                        <p className="text-xs text-emerald-300 font-semibold">{t("Active Ultra Users", "مشتركي ألترا الحاليين")}</p>
-                        <p className="text-2xl font-black text-emerald-400 mt-1">{stats.approved}</p>
+                        <p className="text-xs text-emerald-400 font-semibold">{t("Active Ultra Users", "مشتركي ألترا الحاليين")}</p>
+                        <p className="text-2xl font-black text-emerald-300 mt-1">{stats.approved}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
                         <CheckCircle2 className="w-5 h-5" />
                     </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900/80 border border-rose-500/30 flex items-center justify-between">
+                <div className="p-5 rounded-2xl bg-slate-900/80 border border-rose-500/25 flex items-center justify-between">
                     <div>
-                        <p className="text-xs text-rose-300 font-semibold">{t("Revoked / Rejected", "الملغيين والمرفوضين")}</p>
-                        <p className="text-2xl font-black text-rose-400 mt-1">{stats.revoked}</p>
+                        <p className="text-xs text-rose-400 font-semibold">{t("Revoked / Rejected", "الملغيين والمرفوضين")}</p>
+                        <p className="text-2xl font-black text-rose-300 mt-1">{stats.revoked}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-400 flex items-center justify-center">
                         <Ban className="w-5 h-5" />
                     </div>
                 </div>
@@ -274,7 +274,7 @@ export default function CeoRequestsAdminPage() {
                             className={cn(
                                 "whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer",
                                 statusFilter === tab.id
-                                    ? "bg-amber-400/20 text-amber-300 border border-amber-400/30"
+                                    ? "bg-slate-800 text-white border border-slate-700"
                                     : "text-slate-400 hover:text-slate-200"
                             )}
                         >
@@ -290,7 +290,7 @@ export default function CeoRequestsAdminPage() {
                         placeholder={t("Search by email, name, or ID...", "بحث بالاسم، الإيميل، أو المعرف...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full py-2 ps-9 pe-4 bg-slate-900/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400/40"
+                        className="w-full py-2 ps-9 pe-4 bg-slate-900/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600"
                     />
                 </div>
             </div>
@@ -298,7 +298,7 @@ export default function CeoRequestsAdminPage() {
             {/* Content List */}
             {loading ? (
                 <div className="py-16 text-center text-slate-400 text-sm flex flex-col items-center gap-3">
-                    <RefreshCw className="w-6 h-6 animate-spin text-amber-400" />
+                    <RefreshCw className="w-6 h-6 animate-spin text-cyan-400" />
                     <span>{t("Loading requests...", "جاري تحميل الطلبات...")}</span>
                 </div>
             ) : filteredRequests.length === 0 ? (
@@ -307,7 +307,7 @@ export default function CeoRequestsAdminPage() {
                     <h3 className="text-base font-bold text-white">
                         {searchQuery ? t("No matching requests", "لا توجد نتائج مطابقة لبحثك") : t("No requests in this section", "لا توجد طلبات في هذا القسم")}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1">ستظهر هنا أي طلبات اشتراك ذهبي فور تقديمها من المستخدمين.</p>
+                    <p className="text-xs text-slate-400 mt-1">ستظهر هنا أي طلبات ترقية فور تقديمها من المستخدمين.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -325,7 +325,7 @@ export default function CeoRequestsAdminPage() {
                                 className={cn(
                                     "p-5 sm:p-6 rounded-3xl border transition-all shadow-sm",
                                     isPending
-                                        ? "bg-slate-900/95 border-amber-500/40"
+                                        ? "bg-slate-900/95 border-slate-700"
                                         : isApproved
                                         ? "bg-slate-900/70 border-emerald-500/30"
                                         : isRevoked
@@ -340,7 +340,7 @@ export default function CeoRequestsAdminPage() {
                                             <span className={cn(
                                                 "px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5",
                                                 isPending
-                                                    ? "bg-amber-400/15 border border-amber-400/30 text-amber-300"
+                                                    ? "bg-slate-800 border border-slate-700 text-slate-300"
                                                     : isApproved
                                                     ? "bg-emerald-500/15 border border-emerald-400/30 text-emerald-300"
                                                     : isRevoked

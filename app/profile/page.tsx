@@ -480,9 +480,9 @@ export default function ProfilePage() {
                 </div>
                 {(["mohamedahmedmatany@gmail.com", "uversionstore@gmail.com"].includes((user?.email || user?.user_metadata?.email || "").toLowerCase().trim()) || user?.id === "00000000-0000-0000-0000-000000000001") && (
                     <Link href="/admin/ceo-requests">
-                        <button className="py-2.5 px-4 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-300 hover:bg-amber-500/25 text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
-                            <Crown className="w-4 h-4 text-amber-400" />
-                            <span>{t("CEO Approval Portal", "لوحة طلبات الاشتراك الذهبي (CEO)")}</span>
+                        <button className="py-2.5 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-750 text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
+                            <Crown className="w-4 h-4 text-cyan-400" />
+                            <span>{t("CEO Control Portal", "لوحة تحكم وإدارة CEO")}</span>
                         </button>
                     </Link>
                 )}
