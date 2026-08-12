@@ -517,37 +517,36 @@ export default function ProfilePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Responsive Navigation Tabs */}
-                <GlassCard className="p-2 sm:p-3 md:col-span-1 h-fit flex flex-row md:flex-col overflow-x-auto no-scrollbar gap-1.5 shrink-0" hoverEffect={false}>
+                {/* Responsive Navigation Sidebar */}
+                <div className="p-2 md:col-span-1 h-fit flex flex-row md:flex-col overflow-x-auto no-scrollbar gap-1 shrink-0 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={cn(
-                                "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 md:w-full text-start",
+                                "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap shrink-0 md:w-full text-start",
                                 activeTab === tab.id
-                                    ? "bg-cyan-400/15 text-cyan-300 border border-cyan-400/30 shadow-sm"
-                                    : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                                    ? "bg-white/[0.08] text-white border border-white/[0.12]"
+                                    : "text-slate-400 hover:bg-white/[0.03] hover:text-white"
                             )}
                         >
-                            <tab.icon className={cn("w-4 h-4 shrink-0", tab.pro && plan !== 'ultra' ? "text-slate-600" : "text-cyan-400")} />
+                            <tab.icon className={cn("w-4 h-4 shrink-0", activeTab === tab.id ? "text-cyan-400" : "text-slate-400")} />
                             <span className="flex-1 truncate">{tab.label}</span>
-                            {(tab as any).beta && <span className="text-[9px] font-bold bg-amber-400/20 border border-amber-400/30 px-1.5 py-0.5 rounded text-amber-300 hidden xs:inline">BETA</span>}
-                            {tab.pro && <span className="text-[9px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-slate-400 hidden xs:inline">ULTRA</span>}
+                            {(tab as any).beta && <span className="text-[9px] font-bold text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded border border-cyan-400/20 hidden xs:inline">BETA</span>}
+                            {tab.pro && <span className="text-[9px] font-bold text-slate-400 bg-white/5 px-1.5 py-0.5 rounded border border-white/10 hidden xs:inline">ULTRA</span>}
                         </button>
                     ))}
 
-                    <div className="h-px bg-white/10 my-2 hidden md:block" />
+                    <div className="h-px bg-white/[0.06] my-1 hidden md:block" />
 
-                    {/* Sign Out Button in Sidebar - Available on desktop & mobile */}
                     <button
                         onClick={handleSignOut}
-                        className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors w-full text-start shrink-0"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors w-full text-start shrink-0"
                     >
                         <LogOut className="w-4 h-4 shrink-0" />
                         <span>{t("Sign Out", "تسجيل الخروج")}</span>
                     </button>
-                </GlassCard>
+                </div>
 
                 {/* Main Content Area */}
                 <div className="md:col-span-3">
@@ -556,110 +555,84 @@ export default function ProfilePage() {
                     {activeTab === 'account' && (
                         <div className="space-y-6">
                             {/* User Info Card */}
-                            <GlassCard className="p-6">
-                                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                    <User className="w-5 h-5 text-cyan-400" />
-                                    <span>{t("Account Info", "معلومات الحساب")}</span>
-                                </h2>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-16 h-16 rounded-full bg-white/10 overflow-hidden flex items-center justify-center border border-white/10 shrink-0">
-                                        {user?.user_metadata?.avatar_url ? (
-                                            <img src={user.user_metadata.avatar_url} alt={user.email || "Avatar"} className="w-full h-full object-cover" />
-                                        ) : <User className="w-8 h-8 text-white/50" />}
+                            <div className="p-5 sm:p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl space-y-5">
+                                <div className="flex items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="w-14 h-14 rounded-2xl bg-white/[0.04] overflow-hidden flex items-center justify-center border border-white/[0.08] shrink-0">
+                                            {user?.user_metadata?.avatar_url ? (
+                                                <img src={user.user_metadata.avatar_url} alt={user.email || "Avatar"} className="w-full h-full object-cover" />
+                                            ) : <User className="w-7 h-7 text-slate-400" />}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-base font-bold text-white truncate">{user?.email}</p>
+                                            <p className="text-slate-400 text-xs mt-0.5">
+                                                {t("Joined", "انضم في")}: {user?.created_at ? new Date(user.created_at).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US') : '-'}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-white font-medium truncate">{user?.email}</p>
-                                        <p className="text-white/40 text-xs sm:text-sm mt-0.5">
-                                            {t("Joined", "تاريخ الانضمام")}: {user?.created_at ? new Date(user.created_at).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US') : '-'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                                        <label className="text-xs text-white/40 block mb-1">{t("Current Plan", "الباقة الحالية")}</label>
-                                        <p className="text-lg font-bold text-white uppercase flex items-center gap-2">
-                                            <span>{plan}</span>
-                                            {plan === 'ultra' && <span className="text-xs bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 px-2 py-0.5 rounded-md font-semibold">PRO</span>}
-                                        </p>
-                                    </div>
-                                    <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                                        <label className="text-xs text-white/40 block mb-1">{t("User ID", "معرف المستخدم")}</label>
-                                        <p className="text-xs font-mono text-white/60 truncate">{user?.id}</p>
+
+                                    <div className="text-end shrink-0">
+                                        <span className="px-3 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] text-cyan-400 text-xs font-bold uppercase">
+                                            {plan}
+                                        </span>
                                     </div>
                                 </div>
 
                                 {plan === 'ultra' && (
-                                    <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-cyan-500/15 to-violet-500/15 border border-amber-400/30 flex flex-col sm:flex-row items-center justify-between gap-3">
-                                        <div className="flex items-center gap-3 text-center sm:text-start">
-                                            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-400 flex items-center justify-center shrink-0">
-                                                <Crown className="w-5 h-5" />
-                                            </div>
+                                    <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <Crown className="w-5 h-5 text-amber-400 shrink-0" />
                                             <div>
-                                                <p className="text-sm font-bold text-white flex items-center justify-center sm:justify-start gap-1.5">
-                                                    <span>{t("ULTRA VIP Member", "عضوية باقة ULTRA الماسية")}</span>
-                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                                                </p>
-                                                <p className="text-xs text-slate-300 mt-0.5">
-                                                    {t("All 8 powerhouse features are unlocked and active on your account.", "جميع الـ 8 مميزات الاحترافية مفتوحة ومفعّلة في حسابك.")}
-                                                </p>
+                                                <p className="text-xs font-bold text-white">{t("ULTRA VIP Plan Active", "عضوية ULTRA مفعّلة بالكامل")}</p>
+                                                <p className="text-[11px] text-slate-400">{t("All 8 features active.", "جميع المميزات المتقدمة متاحة.")}</p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => triggerCelebration({ force: true })}
-                                            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition-colors flex items-center gap-1.5 shadow-md shrink-0 cursor-pointer"
+                                            className="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs font-semibold transition-all"
                                         >
-                                            <Crown className="w-3.5 h-3.5" />
-                                            <span>{t("Explore Features 👑", "استعراض المميزات 👑")}</span>
+                                            {t("Showcase 👑", "استعراض 👑")}
                                         </button>
                                     </div>
                                 )}
-                            </GlassCard>
+                            </div>
 
                             {/* Basic Profile Form */}
-                            <GlassCard className="p-6">
-                                <h3 className="text-lg font-bold text-white mb-2">{t("Basic Profile", "الملف الشخصي الأساسي")}</h3>
-                                <p className="text-white/50 text-sm mb-6 leading-relaxed">
-                                    {t(
-                                        "Saved for all users. Used to personalize results and auto-fill your Private AI Profile when you upgrade.",
-                                        "يُحفظ لجميع المستخدمين لتخصيص نتائج الفحص وتلقائية الملء عند الترقية."
-                                    )}
-                                </p>
+                            <div className="p-5 sm:p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl space-y-4">
+                                <div>
+                                    <h3 className="text-base font-bold text-white">{t("Basic Profile", "الملف الأساسي")}</h3>
+                                    <p className="text-slate-400 text-xs mt-1">
+                                        {t("Personalizes scan results and medical context.", "يُستخدم لتخصيص نتائج الفحص والتحليل الطبي.")}
+                                    </p>
+                                </div>
 
-                                <form onSubmit={saveBasicProfile} className="space-y-4 max-w-2xl">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <form onSubmit={saveBasicProfile} className="space-y-4 pt-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                         <div>
-                                            <label className="text-xs text-white/60 mb-1 block">{t("Username", "اسم المستخدم")}</label>
+                                            <label className="text-xs font-medium text-slate-400 mb-1 block">{t("Username", "اسم المستخدم")}</label>
                                             <input
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/20 transition-all"
                                                 value={basicProfile.username}
                                                 onChange={(e) => setBasicProfile({ ...basicProfile, username: e.target.value })}
-                                                placeholder={t("e.g. Alien_X", "مثال: Alien_X")}
+                                                placeholder="mohamed123"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="text-xs text-white/60 mb-1 block">{t("Age", "العمر")}</label>
-                                            <div className="relative flex items-center">
-                                                <input
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pe-16 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                                                    type="number"
-                                                    inputMode="numeric"
-                                                    value={basicProfile.age}
-                                                    onChange={(e) => setBasicProfile({ ...basicProfile, age: e.target.value })}
-                                                    placeholder="25"
-                                                    min={1}
-                                                    max={120}
-                                                />
-                                                <div className="absolute end-2.5 flex items-center gap-1 bg-violet-500/10 border border-violet-400/25 text-violet-300 text-xs font-bold px-2.5 py-1.5 rounded-lg select-none pointer-events-none">
-                                                    <span>{isArabic ? "سنة" : "yr"}</span>
-                                                </div>
-                                            </div>
+                                            <label className="text-xs font-medium text-slate-400 mb-1 block">{t("Age", "العمر")}</label>
+                                            <input
+                                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/20 transition-all"
+                                                type="number"
+                                                value={basicProfile.age}
+                                                onChange={(e) => setBasicProfile({ ...basicProfile, age: e.target.value })}
+                                                placeholder="25"
+                                            />
                                         </div>
 
                                         <div>
-                                            <label className="text-xs text-white/60 mb-1 block">{t("Gender", "الجنس")}</label>
+                                            <label className="text-xs font-medium text-slate-400 mb-1 block">{t("Gender", "الجنس")}</label>
                                             <select
-                                                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                                                className="w-full bg-slate-900 border border-white/[0.06] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/20 transition-all"
                                                 value={basicProfile.gender}
                                                 onChange={(e) => setBasicProfile({ ...basicProfile, gender: e.target.value })}
                                             >
@@ -686,123 +659,104 @@ export default function ProfilePage() {
                                     </div>
 
                                     {basicSavedMsg && (
-                                        <p className={cn("text-sm font-semibold", basicSavedMsg.includes("Saved") || basicSavedMsg.includes("نجاح") ? "text-emerald-400" : "text-rose-400")}>
+                                        <p className={cn("text-xs font-semibold", basicSavedMsg.includes("Saved") || basicSavedMsg.includes("نجاح") ? "text-emerald-400" : "text-rose-400")}>
                                             {basicSavedMsg}
                                         </p>
                                     )}
 
-                                    <div className="pt-2">
-                                        <Button type="submit" disabled={basicSaving} glow>
-                                            {basicSaving ? t("Saving...", "جارٍ الحفظ...") : t("Save Basic Profile", "حفظ البيانات الأساسية")}
-                                        </Button>
-                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={basicSaving}
+                                        className="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] text-white font-semibold text-xs transition-all disabled:opacity-50"
+                                    >
+                                        {basicSaving ? t("Saving...", "جارٍ الحفظ...") : t("Save Profile", "حفظ التغييرات")}
+                                    </button>
                                 </form>
-                            </GlassCard>
+                            </div>
                         </div>
                     )}
 
                     {/* CREDITS TAB */}
                     {activeTab === 'credits' && (
                         <div className="space-y-6">
-                            <GlassCard className="p-6">
-                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                    <CreditCard className="w-5 h-5 text-cyan-400" />
-                                    <span>{t("Credits & Usage", "الرصيد والاستخدام")}</span>
-                                </h2>
-
-                                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-gradient-to-br from-cyan-950/40 to-blue-950/40 p-6 rounded-xl border border-cyan-500/20 mb-8">
+                            <div className="p-5 sm:p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl space-y-6">
+                                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                                     <div>
-                                        <p className="text-sm text-cyan-200 mb-1">{t("Available Balance", "الرصيد المتاح")}</p>
-                                        <p className="text-4xl font-bold text-white text-shadow-glow">
-                                            {credits} <span className="text-lg text-white/50 font-normal">{t("credits", "رصيد")}</span>
+                                        <p className="text-xs text-slate-400 mb-1">{t("Available Credits", "الرصيد المتاح")}</p>
+                                        <p className="text-3xl sm:text-4xl font-bold text-white">
+                                            {credits} <span className="text-sm font-normal text-slate-400">{t("credits", "رصيد")}</span>
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        {plan === 'ultra' && (
-                                            <button
-                                                onClick={() => triggerCelebration({ force: true })}
-                                                className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-cyan-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-                                            >
-                                                <Crown className="w-4 h-4 text-amber-400" />
-                                                <span>{t("Explore Ultra Perks 👑", "استعراض مميزات ألترا 👑")}</span>
-                                            </button>
-                                        )}
-                                        <Link href="/pricing">
-                                            <Button className="bg-white text-cyan-950 hover:bg-cyan-50 font-bold border-none shadow-lg">
-                                                {t("Manage Plan", "إدارة الباقة / الترقية")}
-                                            </Button>
-                                        </Link>
-                                    </div>
+                                    <Link href="/pricing">
+                                        <button className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition-colors">
+                                            {t("Manage Plan", "ترقية / إدارة الباقة")}
+                                        </button>
+                                    </Link>
                                 </div>
 
-                                <div className="max-w-md mx-auto sm:mx-0">
-                                    <h3 className="font-medium text-white mb-3 flex items-center gap-2">
-                                        <Gift className="w-4 h-4 text-purple-400" />
-                                        <span>{t("Redeem Voucher", "استبدال كود القسيمة")}</span>
-                                    </h3>
-                                    <div className="flex gap-2 mb-2">
+                                <div className="space-y-2">
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("Redeem Voucher", "شحن كود القسيمة")}</h3>
+                                    <div className="flex gap-2">
                                         <input
                                             type="text"
                                             value={redeemCode}
                                             onChange={(e) => setRedeemCode(e.target.value)}
-                                            placeholder={t("Enter voucher code (e.g. 01272...)", "أدخل كود القسيمة (مثال: 01272...)")}
-                                            className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-base text-white w-full focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                                            placeholder={t("Voucher code...", "أدخل كود القسيمة...")}
+                                            className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3.5 py-2.5 text-sm text-white w-full focus:outline-none focus:border-white/20 transition-all"
                                         />
-                                        <Button onClick={handleRedeem} disabled={redeemLoading || !redeemCode} className="min-w-[100px]">
-                                            {redeemLoading ? "..." : t("Redeem", "استبدال")}
-                                        </Button>
+                                        <button
+                                            onClick={handleRedeem}
+                                            disabled={redeemLoading || !redeemCode}
+                                            className="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] text-white font-semibold text-xs transition-all disabled:opacity-50 shrink-0"
+                                        >
+                                            {redeemLoading ? "..." : t("Redeem", "شحن")}
+                                        </button>
                                     </div>
                                     {redeemMsg && (
-                                        <p className={cn("text-sm font-semibold", redeemMsg.includes("Success") || redeemMsg.includes("نجاح") ? "text-emerald-400" : "text-rose-400")}>
+                                        <p className={cn("text-xs font-semibold mt-1", redeemMsg.includes("Success") || redeemMsg.includes("نجاح") ? "text-emerald-400" : "text-rose-400")}>
                                             {redeemMsg}
                                         </p>
                                     )}
                                 </div>
-                            </GlassCard>
+                            </div>
 
-                            <GlassCard className="p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="font-bold text-white flex items-center gap-2">
+                            <div className="p-5 sm:p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-cyan-400" />
-                                        <span>{t("Transaction History", "سجل المعاملات والشحن")}</span>
+                                        <span>{t("Transaction History", "سجل المعاملات")}</span>
                                     </h3>
-                                    <button
-                                        onClick={fetchTransactions}
-                                        className="text-xs text-white/40 hover:text-white transition-colors"
-                                    >
+                                    <button onClick={fetchTransactions} className="text-xs text-slate-400 hover:text-white transition-colors">
                                         {t("Refresh", "تحديث")}
                                     </button>
                                 </div>
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-start">
-                                        <thead className="text-xs text-white/40 uppercase bg-white/5">
+                                    <table className="w-full text-xs text-start">
+                                        <thead className="text-slate-400 uppercase border-b border-white/[0.06]">
                                             <tr>
-                                                <th className="px-4 py-3 text-start rounded-s-xl">{t("Date", "التاريخ")}</th>
-                                                <th className="px-4 py-3 text-start">{t("Activity", "نوع المعاملة")}</th>
-                                                <th className="px-4 py-3 text-end rounded-e-xl">{t("Amount", "المبلغ / الرصيد")}</th>
+                                                <th className="py-2.5 text-start font-semibold">{t("Date", "التاريخ")}</th>
+                                                <th className="py-2.5 text-start font-semibold">{t("Activity", "المعاملة")}</th>
+                                                <th className="py-2.5 text-end font-semibold">{t("Amount", "المبلغ")}</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-white/5">
+                                        <tbody className="divide-y divide-white/[0.04]">
                                             {transactions.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={3} className="px-4 py-8 text-center text-white/30">
-                                                        {t("No transactions found.", "لا توجد معاملات مسجلة بعد.")}
+                                                    <td colSpan={3} className="py-6 text-center text-slate-500">
+                                                        {t("No transactions yet.", "لا توجد معاملات.")}
                                                     </td>
                                                 </tr>
                                             ) : (
                                                 transactions.map((tx) => (
-                                                    <tr key={tx.id} className="hover:bg-white/5 transition-colors">
-                                                        <td className="px-4 py-3 text-white/70">
-                                                            {new Date(tx.created_at).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US')}{" "}
-                                                            <span className="text-white/30 text-xs">{new Date(tx.created_at).toLocaleTimeString(isArabic ? 'ar-SA' : 'en-US')}</span>
+                                                    <tr key={tx.id}>
+                                                        <td className="py-2.5 text-slate-400">
+                                                            {new Date(tx.created_at).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US')}
                                                         </td>
-                                                        <td className="px-4 py-3 text-white capitalize">
-                                                            {tx.reason?.replace(/_/g, ' ') || 'Unknown'}
-                                                            {tx.metadata?.code && <span className="ms-2 text-xs font-mono bg-white/10 px-1.5 py-0.5 rounded text-white/60">{tx.metadata.code}</span>}
-                                                            {tx.metadata?.plan && <span className="ms-2 text-xs bg-cyan-500/10 text-cyan-400 px-1.5 py-0.5 rounded">{tx.metadata.plan}</span>}
+                                                        <td className="py-2.5 text-white capitalize">
+                                                            {tx.reason?.replace(/_/g, ' ') || 'Credit'}
                                                         </td>
-                                                        <td className={cn("px-4 py-3 text-end font-medium", tx.delta > 0 ? "text-emerald-400" : "text-white/60")}>
+                                                        <td className={cn("py-2.5 text-end font-bold", tx.delta > 0 ? "text-emerald-400" : "text-slate-400")}>
                                                             {tx.delta > 0 ? '+' : ''}{tx.delta}
                                                         </td>
                                                     </tr>
@@ -811,7 +765,7 @@ export default function ProfilePage() {
                                         </tbody>
                                     </table>
                                 </div>
-                            </GlassCard>
+                            </div>
                         </div>
                     )}
 
