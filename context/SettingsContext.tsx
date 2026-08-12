@@ -9,6 +9,8 @@ interface SettingsContextType {
     setResultsLanguage: (lang: ResultsLanguage) => void;
     fdaDrugsEnabled: boolean;
     setFdaDrugsEnabled: (enabled: boolean) => void;
+    requireBiometricOnScan: boolean;
+    setRequireBiometricOnScan: (enabled: boolean) => void;
     isAutoDetected: boolean;
     resetToAutoDetect: () => void;
     detectedCountry?: string | null;
@@ -59,6 +61,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export const SettingsProvider = ({ children }: { children: React.ReactNode }) => {
     const [resultsLanguage, setResultsLanguage] = useState<ResultsLanguage>("ar");
     const [fdaDrugsEnabled, setFdaDrugsEnabled] = useState<boolean>(true);
+    const [requireBiometricOnScan, setRequireBiometricOnScanState] = useState<boolean>(false);
     const [isAutoDetected, setIsAutoDetected] = useState<boolean>(true);
     const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
 
@@ -79,6 +82,13 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
             setFdaDrugsEnabled(false);
         } else if (savedFda === "1" || savedFda === "true") {
             setFdaDrugsEnabled(true);
+        }
+
+        const savedBioScan = localStorage.getItem("qurescan_require_biometric_scan");
+        if (savedBioScan === "1" || savedBioScan === "true") {
+            setRequireBiometricOnScanState(true);
+        } else if (savedBioScan === "0" || savedBioScan === "false") {
+            setRequireBiometricOnScanState(false);
         }
 
         // Optional: Fast Client GeoIP Check in background
@@ -129,6 +139,13 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
+    const setRequireBiometricOnScan = (enabled: boolean) => {
+        setRequireBiometricOnScanState(Boolean(enabled));
+        if (typeof window !== "undefined") {
+            localStorage.setItem("qurescan_require_biometric_scan", enabled ? "1" : "0");
+        }
+    };
+
     return (
         <SettingsContext.Provider
             value={{
@@ -136,6 +153,8 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                 setResultsLanguage: updateLanguage,
                 fdaDrugsEnabled,
                 setFdaDrugsEnabled: updateFdaDrugsEnabled,
+                requireBiometricOnScan,
+                setRequireBiometricOnScan,
                 isAutoDetected,
                 resetToAutoDetect,
                 detectedCountry,

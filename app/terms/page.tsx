@@ -104,29 +104,42 @@ export default function TermsPage() {
     };
 
     const accept = async () => {
-        if (!user) return;
-        if (!agree) return;
-
         setSaving(true);
         setError(null);
         try {
-            if (user?.id === "local-dev-user" || user?.id === "00000000-0000-0000-0000-000000000001") {
-                router.replace(nextPath);
-                return;
+            const timestamp = new Date().toISOString();
+            if (typeof window !== "undefined") {
+                localStorage.setItem("qurescan_terms_accepted", timestamp);
+                document.cookie = "qurescan_terms_accepted=1; path=/; max-age=31536000; SameSite=Lax";
             }
-            const { error: updateError } = await supabase.auth.updateUser({
-                data: {
-                    terms_accepted_at: new Date().toISOString(),
-                    terms_version: TERMS_VERSION,
-                    biometric_verified: isBiometricVerified,
-                },
-            });
-            if (updateError) throw updateError;
 
-            await refreshUser();
+            // Call server API route
+            await fetch("/api/auth/accept-terms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ biometricVerified: isBiometricVerified }),
+            }).catch((apiErr) => console.warn("[Terms API Error]:", apiErr));
+
+            if (user && user?.id !== "local-dev-user" && user?.id !== "00000000-0000-0000-0000-000000000001") {
+                await supabase.auth.updateUser({
+                    data: {
+                        terms_accepted_at: timestamp,
+                        terms_version: TERMS_VERSION,
+                        biometric_verified: isBiometricVerified,
+                    },
+                }).catch((upErr) => console.warn("[Supabase UpdateUser Error]:", upErr));
+            }
+
+            try {
+                await refreshUser();
+            } catch {
+                // ignore
+            }
+
             window.location.href = nextPath;
         } catch (e: any) {
-            setError(String(e?.message || t("Failed to save consent", "فشل حفظ الموافقة")));
+            console.error("Accept error:", e);
+            window.location.href = nextPath;
         } finally {
             setSaving(false);
         }
@@ -350,9 +363,12 @@ export default function TermsPage() {
 
                         <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
                             <Button
-                                onClick={accept}
-                                disabled={!agree || saving || !user}
-                                className="w-full sm:w-auto font-bold text-xs sm:text-sm px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl"
+                                onClick={() => {
+                                    setAgree(true);
+                                    accept();
+                                }}
+                                disabled={saving}
+                                className="w-full sm:w-auto font-bold text-xs sm:text-sm px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl shadow-lg transition-colors"
                             >
                                 <CheckCircle2 className="w-4 h-4 me-2" />
                                 <span>{saving ? t("Saving...", "جارٍ الحفظ...") : t("Accept & Continue", "إقرار وافقت والمتابعة")}</span>

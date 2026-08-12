@@ -8,13 +8,23 @@ import { useSettings } from "@/context/SettingsContext";
 import { useUser } from "@/context/UserContext";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Globe, Settings as SettingsIcon, MapPin, Smartphone, RotateCcw, Check, Database, LogOut, User } from "lucide-react";
+import { Globe, Settings as SettingsIcon, MapPin, Smartphone, RotateCcw, Check, Database, LogOut, User, Fingerprint, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 export default function SettingsPage() {
-    const { resultsLanguage, setResultsLanguage, isAutoDetected, resetToAutoDetect, detectedCountry, fdaDrugsEnabled, setFdaDrugsEnabled } = useSettings();
+    const {
+        resultsLanguage,
+        setResultsLanguage,
+        isAutoDetected,
+        resetToAutoDetect,
+        detectedCountry,
+        fdaDrugsEnabled,
+        setFdaDrugsEnabled,
+        requireBiometricOnScan,
+        setRequireBiometricOnScan,
+    } = useSettings();
     const { user } = useUser();
     const supabase = createClient();
     const router = useRouter();
@@ -118,6 +128,51 @@ export default function SettingsPage() {
                                 </button>
                             )}
                         </div>
+                    </div>
+                </GlassCard>
+
+                {/* Biometric Face ID / Fingerprint Scan Protection */}
+                <GlassCard className="p-6 sm:p-8" hoverEffect={false}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="space-y-1.5 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                                    <Fingerprint className="w-5 h-5 text-cyan-400 shrink-0" />
+                                    <span>{t("Biometric Lock for Medication Scans", "تأكيد البصمة أو Face ID عند فحص الأدوية")}</span>
+                                </h2>
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                                    {t("iOS & Android Face ID", "Face ID وبصمة الجوال")}
+                                </span>
+                            </div>
+                            <p className="text-slate-400 text-xs sm:text-sm max-w-lg leading-relaxed">
+                                {t(
+                                    "Require biometric confirmation (Face ID, Touch ID, or fingerprint) before scanning any medication to prevent unauthorized drug entry on your device.",
+                                    "طلب بصمة الجوال أو Face ID قبل إجراء فحص لأي دواء لحماية حسابك ومنع أي شخص آخر من إدخال أو فحص أدوية على جهازك دون إذنك."
+                                )}
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={requireBiometricOnScan}
+                            onClick={() => setRequireBiometricOnScan(!requireBiometricOnScan)}
+                            className={cn(
+                                "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border transition-colors focus:outline-none",
+                                requireBiometricOnScan
+                                    ? "bg-cyan-500/20 border-cyan-500/40"
+                                    : "bg-white/5 border-white/15"
+                            )}
+                        >
+                            <span
+                                className={cn(
+                                    "inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform",
+                                    isArabic
+                                        ? requireBiometricOnScan ? "-translate-x-7" : "-translate-x-1"
+                                        : requireBiometricOnScan ? "translate-x-7" : "translate-x-1"
+                                )}
+                            />
+                        </button>
                     </div>
                 </GlassCard>
 

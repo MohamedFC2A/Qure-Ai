@@ -102,7 +102,7 @@ const ScanContext = createContext<ScanContextValue | undefined>(undefined);
 
 export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const { user } = useUser();
-    const { resultsLanguage, fdaDrugsEnabled } = useSettings();
+    const { resultsLanguage, fdaDrugsEnabled, requireBiometricOnScan } = useSettings();
 
     const isArabic = resultsLanguage === "ar";
     const t = useCallback((en: string, ar: string) => (isArabic ? ar : en), [isArabic]);
@@ -313,6 +313,47 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
 
         try {
             throwIfCancelled();
+
+            // BIOMETRIC SCAN GUARD: If user enabled Biometric Lock in Settings
+            if (requireBiometricOnScan && typeof window !== "undefined" && window.PublicKeyCredential) {
+                try {
+                    const challenge = new Uint8Array(32);
+                    window.crypto.getRandomValues(challenge);
+
+                    await navigator.credentials.create({
+                        publicKey: {
+                            challenge,
+                            rp: { name: "Qure AI Medication Guard", id: window.location.hostname },
+                            user: {
+                                id: new Uint8Array(16),
+                                name: user?.email || "qure_scan_user@qurescan.com",
+                                displayName: user?.email || "Medication Scanner",
+                            },
+                            pubKeyCredParams: [
+                                { alg: -7, type: "public-key" },
+                                { alg: -257, type: "public-key" },
+                            ],
+                            authenticatorSelection: {
+                                authenticatorAttachment: "platform",
+                                userVerification: "required",
+                            },
+                            timeout: 60000,
+                            attestation: "none",
+                        },
+                    });
+                } catch (bioErr: any) {
+                    console.warn("[Biometric Scan Security Block]:", bioErr);
+                    setIsScanning(false);
+                    const errMsg = isArabic
+                        ? "تم إيقاف الفحص: يلزم تأكيد بصمة الجوال أو Face ID قبل فحص الدواء لحماية أمان الحساب."
+                        : "Scan cancelled: Face ID / Fingerprint confirmation is required before scanning medications.";
+                    setErrorMsg(errMsg);
+                    return;
+                }
+            }
+
+            throwIfCancelled();
+
             // STEP 1: Preprocessing
             const preprocessStart = Date.now();
             updateStep("preprocess", { status: "running", startTime: preprocessStart });
