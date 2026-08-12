@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeMedicationText } from "@/lib/ai/vision";
 import { createClient } from "@/lib/supabase/server";
-import { getUserPlan } from "@/lib/creditService";
+import { getUserPlan, getCreditsStatus, deductCredit } from "@/lib/creditService";
 import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot } from "@/lib/openfda";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { preflightMedicationEvidence, type ProductClassification } from "@/lib/medicationEnrichment";
@@ -84,6 +84,18 @@ export async function POST(req: NextRequest) {
         // Family/Caregiver Mode is Ultra-only.
         if (!isUltra && subjectProfileId !== user.id) {
             return NextResponse.json({ error: "Ultra plan required for Family/Caregiver Mode." }, { status: 402 });
+        }
+
+        // Check Credit Availability & Deduct 1 Credit for scan analysis
+        if (!localDevUser) {
+            const creditStatus = await getCreditsStatus(user.id, supabase);
+            if (creditStatus.totalAvailable < 1) {
+                return NextResponse.json({
+                    error: "عذراً، لقد استنفدت رصيد النقاط المتاح لك هذا الشهر. يرجى الترقية إلى باقة ULTRA للمزيد من الفحوصات.",
+                    outOfCredits: true,
+                }, { status: 402 });
+            }
+            await deductCredit(user.id, 1, "medication_scan_analysis");
         }
 
         let savedToHistory = false;

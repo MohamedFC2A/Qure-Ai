@@ -78,10 +78,9 @@ begin
   insert into public.usage_windows (user_id)
   values (new.id);
   
-  -- Grant initial credits (Free plan 50) via ledger? Or handled by reset logic?
-  -- Let's give initial 50 credits in ledger as 'welcome_bonus'
+  -- Grant initial credits (Free plan 30) via ledger
   insert into public.credit_ledger (user_id, delta, reason)
-  values (new.id, 50, 'welcome_bonus');
+  values (new.id, 30, 'welcome_bonus');
   
   return new;
 end;

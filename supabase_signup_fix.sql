@@ -179,31 +179,25 @@ begin
   end;
 
   -- B. Create Usage Window logic
-  -- We rely on user_id uniqueness. Whether it's PK or just UNIQUE column, this works.
   begin
     insert into public.usage_windows (user_id)
       values (new.id)
       on conflict (user_id) do nothing;
   exception when others then
-    -- Fallback for weird table states where user_id might not be unique constraint (unlikely but safe)
-    -- If table has 'id' PK and no unique on user_id (very bad schema), this insert would duplicate.
-    -- Assuming schema is correct per above.
     null;
   end;
 
-  -- C. Grant Welcome Bonus (50 Credits) - EXACTLY ONCE
+  -- C. Grant Welcome Bonus (30 Credits) - EXACTLY ONCE
   if not exists (select 1 from public.credit_ledger where user_id = new.id and reason = 'welcome_bonus') then
     insert into public.credit_ledger (user_id, delta, reason)
-    values (new.id, 50, 'welcome_bonus');
+    values (new.id, 30, 'welcome_bonus');
   end if;
 
   return new;
 end;
 $$ language plpgsql security definer;
 
-
 -- 5. RE-BIND THE TRIGGER
--- Drop it first to ensure we use the new function version
 drop trigger if exists on_auth_user_created on auth.users;
 
 create trigger on_auth_user_created

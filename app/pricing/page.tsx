@@ -29,14 +29,14 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const freeFeatures = [
-    { en: "100 credits that do not expire",            ar: "١٠٠ رصيد دائم لا تنتهي صلاحيته"           },
+    { en: "30 credits per month",                      ar: "٣٠ رصيد شهرياً"                         },
     { en: "Medication OCR and core analysis",          ar: "OCR الأدوية والتحليل الأساسي"            },
     { en: "Basic openFDA and web verification",        ar: "التحقق الأساسي من FDA والويب"            },
     { en: "Saved scan history",                        ar: "حفظ سجل الفحص"                          },
 ];
 
 const ultraFeatures = [
-    { en: "Up to 2000 credits per month",              ar: "حتى ٢٠٠٠ رصيد شهريًا"                   },
+    { en: "500 credits per month",                     ar: "٥٠٠ رصيد شهرياً"                        },
     { en: "Private health profile and medication memories", ar: "ملف صحي خاص وذاكرة الأدوية"       },
     { en: "Family and caregiver profiles",             ar: "ملفات الأسرة ومقدمي الرعاية"            },
     { en: "Advanced safety and interaction guard",     ar: "حارس التداخل والأمان المتقدم"           },

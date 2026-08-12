@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
-import { getUserPlan } from "@/lib/creditService";
+import { getUserPlan, getCreditsStatus, deductCredit } from "@/lib/creditService";
 import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
@@ -129,6 +129,21 @@ export async function POST(req: NextRequest) {
         }
         if (question.length > 2000) {
             return NextResponse.json({ error: "Question too long (max 2000 characters)" }, { status: 400 });
+        }
+
+        // Deduct 1 credit per AI message sent
+        const isLocalDevUser = user.id === "00000000-0000-0000-0000-000000000001" || user.id === "local-dev-user";
+        if (!isLocalDevUser) {
+            const creditStatus = await getCreditsStatus(user.id, supabase);
+            if (creditStatus.totalAvailable < 1) {
+                return NextResponse.json({
+                    error: language === "ar"
+                        ? "عذراً، لقد استنفدت رصيد النقاط المتاح لك هذا الشهر. يرجى الترقية إلى باقة ULTRA أو الانتظار للتجديد الشهري."
+                        : "Sorry, you have run out of monthly AI credits. Please upgrade your plan or wait for monthly renewal.",
+                    outOfCredits: true,
+                }, { status: 402 });
+            }
+            await deductCredit(user.id, 1, `mat_ai_chat_message:${mode}`);
         }
 
         // 1. FAST ZERO-TOKEN GUARDRAIL CHECK

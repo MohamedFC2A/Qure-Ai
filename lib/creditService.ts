@@ -9,8 +9,8 @@ interface PlanLimits {
 }
 
 const PLANS: Record<PlanType, PlanLimits> = {
-    free: { dailyLimit: 50, monthlyLimit: 50 },
-    ultra: { dailyLimit: 50, monthlyLimit: 1500 },
+    free: { dailyLimit: 30, monthlyLimit: 30 },
+    ultra: { dailyLimit: 500, monthlyLimit: 500 },
 };
 
 function normalizePlan(plan: unknown): PlanType {
