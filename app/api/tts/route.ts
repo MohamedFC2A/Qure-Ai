@@ -95,7 +95,7 @@ async function condenseToAudioBrief(rawText: string, lang: string = "ar"): Promi
                     max_tokens: 220,
                     temperature: 0.15,
                 }),
-                signal: AbortSignal.timeout(4500),
+                signal: AbortSignal.timeout(2500),
             });
 
             if (res.ok) {

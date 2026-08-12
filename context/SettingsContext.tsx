@@ -155,6 +155,18 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
+    // Pre-warm Web Speech API voices on component load for 0ms speech latency
+    useEffect(() => {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            window.speechSynthesis.getVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    window.speechSynthesis.getVoices();
+                };
+            }
+        }
+    }, []);
+
     const speakVoiceOs = useCallback((phrase: string, options?: { lang?: "ar" | "en"; override?: boolean }) => {
         if (typeof window === "undefined") return;
         const isEnabled = options?.override || (localStorage.getItem("qurescan_voice_os_enabled") !== "0");
@@ -170,11 +182,13 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
 
         try {
             if ("speechSynthesis" in window) {
+                // Immediate cancel of previous speech for zero lag
                 window.speechSynthesis.cancel();
+
                 const utterance = new SpeechSynthesisUtterance(cleaned);
                 utterance.lang = (options?.lang || resultsLanguage) === "en" ? "en-US" : "ar-SA";
-                utterance.pitch = 0.88; // Deep masculine voice pitch
-                utterance.rate = 0.96;  // Natural masculine cadence
+                utterance.pitch = 0.88; // Deep masculine tone
+                utterance.rate = 1.05;  // Fast, crisp masculine cadence
 
                 const voices = window.speechSynthesis.getVoices();
                 const targetLang = utterance.lang.slice(0, 2);
@@ -184,7 +198,11 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                 ) || voices.find((v) => v.lang.startsWith(targetLang));
 
                 if (maleVoice) utterance.voice = maleVoice;
-                window.speechSynthesis.speak(utterance);
+                
+                // Micro-delay to avoid browser audio context throttling
+                requestAnimationFrame(() => {
+                    window.speechSynthesis.speak(utterance);
+                });
             }
         } catch (e) {
             console.warn("VOICE OS Speech Error:", e);
