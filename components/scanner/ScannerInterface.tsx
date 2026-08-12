@@ -81,6 +81,33 @@ export const ScannerInterface = () => {
     const [careTempId, setCareTempId] = useState<string | null>(null);
     const isLocalDevUser = process.env.NODE_ENV === "development" && user?.id === "local-dev-user";
 
+    const cameraInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
+
+    const handleDirectFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) {
+            analyzeImageQuality(selectedFile);
+            setFile(selectedFile);
+        }
+    };
+
+    const triggerCamera = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (cameraInputRef.current) {
+            cameraInputRef.current.value = "";
+            cameraInputRef.current.click();
+        }
+    };
+
+    const triggerGallery = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (galleryInputRef.current) {
+            galleryInputRef.current.value = "";
+            galleryInputRef.current.click();
+        }
+    };
+
     // Analyze image resolution upon selection
     const analyzeImageQuality = (imgFile: File) => {
         const sizeMB = Number((imgFile.size / (1024 * 1024)).toFixed(2));
@@ -452,6 +479,23 @@ export const ScannerInterface = () => {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-6 relative p-2 sm:p-3 lg:p-4 overflow-y-auto">
 
+            {/* Hidden Inputs for Direct Camera & Gallery Trigger */}
+            <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleDirectFileChange}
+            />
+            <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleDirectFileChange}
+            />
+
             {/* Profile Selection Modal */}
             <AnimatePresence>
                 {carePickerOpen && (
@@ -574,10 +618,31 @@ export const ScannerInterface = () => {
 
                                 <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                                     {t(
-                                        "Drag & drop or tap to select a clear, well-lit photo of the box, bottle, or prescription. (JPEG, PNG, WEBP)",
-                                        "اسحب وأفلت أو انقر لالتقاط/اختيار صورة واضحة لعلبة الدواء أو الروشتة في إضاءة جيدة. (JPEG, PNG, WEBP)"
+                                        "Choose camera to snap a photo or gallery to upload an existing photo. (JPEG, PNG, WEBP)",
+                                        "اختر الكاميرا لالتقاط صورة مباشرة أو الاستوديو لاختيار صورة محفوظة. (JPEG, PNG, WEBP)"
                                     )}
                                 </p>
+
+                                {/* Explicit Choice Buttons: Camera vs Gallery */}
+                                <div className="mt-5 flex flex-wrap items-center justify-center gap-3 w-full max-w-md z-20">
+                                    <button
+                                        type="button"
+                                        onClick={triggerCamera}
+                                        className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-950/60 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    >
+                                        <Camera className="w-4.5 h-4.5 shrink-0" />
+                                        <span>{t("Take Photo", "التقاط بالكاميرا")}</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={triggerGallery}
+                                        className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs sm:text-sm backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    >
+                                        <ImageIcon className="w-4.5 h-4.5 shrink-0 text-cyan-300" />
+                                        <span>{t("Choose from Gallery", "اختيار من الاستوديو")}</span>
+                                    </button>
+                                </div>
 
                                 {/* Accepted Medical Formats Guidance */}
                                 <div className="mt-5 grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full max-w-xl">
@@ -731,16 +796,25 @@ export const ScannerInterface = () => {
                                                 <span>{t("Start Medication Scan Now", "ابدأ فحص الدواء الآن")}</span>
                                             </button>
 
-                                            <button
-                                                onClick={() => {
-                                                    resetScan();
-                                                    setTimeout(() => openFileDialog(), 100);
-                                                }}
-                                                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-white/20 bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs sm:text-sm font-semibold transition-all"
-                                            >
-                                                <Camera className="w-4 h-4" />
-                                                <span>{t("Choose Clearer Photo", "اختيار صورة أوضح")}</span>
-                                            </button>
+                                            {/* Camera vs Gallery Re-select Buttons */}
+                                            <div className="flex items-center gap-2 w-full">
+                                                <button
+                                                    type="button"
+                                                    onClick={triggerCamera}
+                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-100 text-xs font-semibold transition-all"
+                                                >
+                                                    <Camera className="w-3.5 h-3.5" />
+                                                    <span>{t("Camera", "الكاميرا")}</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={triggerGallery}
+                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-white/20 bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold transition-all"
+                                                >
+                                                    <ImageIcon className="w-3.5 h-3.5 text-cyan-300" />
+                                                    <span>{t("Gallery", "الاستوديو")}</span>
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <button
