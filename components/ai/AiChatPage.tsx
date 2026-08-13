@@ -19,6 +19,12 @@ import { MedicationSelect } from "./MedicationSelect";
 // Smart intent detection to auto-route mode without user interaction
 function detectModeFromText(text: string): AiChatMode {
     const lower = text.toLowerCase();
+    // Wound & trauma keywords
+    const woundKeywords = [
+        "جرح", "حرق", "نزيف", "خياطة", "تيتانوس", "ضمادة", "سحجة", "غرز", "صدمة", "إسعاف",
+        "wound", "burn", "bleeding", "suture", "stitches", "tetanus", "dressing", "bandage",
+        "laceration", "cut", "scrape", "ulcer", "injury", "trauma", "pus", "infection"
+    ];
     // Profile / personal context keywords
     const selfKeywords = [
         "يناسبني", "يناسب لي", "مناسب لي", "مناسب لحالتي", "حساسيتي", "وضعي", "حالتي",
@@ -35,7 +41,11 @@ function detectModeFromText(text: string): AiChatMode {
         "antibiotic", "paracetamol", "ibuprofen", "interaction", "active ingredient",
         "generic", "brand", "prescription", "overdose", "mg", "ml"
     ];
-    // Check self-reference first (highest priority → context mode)
+    // Check wound first
+    for (const kw of woundKeywords) {
+        if (lower.includes(kw)) return "wound";
+    }
+    // Check self-reference
     for (const kw of selfKeywords) {
         if (lower.includes(kw)) return "context";
     }
@@ -47,12 +57,12 @@ function detectModeFromText(text: string): AiChatMode {
 }
 
 const QUICK_PROMPTS_UNIFIED: { en: string; ar: string }[] = [
-    { en: "Is this medication safe for me?", ar: "هل هذا الدواء مناسب لحالتي الصحية؟" },
-    { en: "What's my BMI and what does it mean?", ar: "ما هو مؤشر كتلة الجسم BMI وما معناه؟" },
-    { en: "Foods that boost immunity", ar: "أطعمة تعزز المناعة وتقوي الجهاز الدفاعي" },
-    { en: "Check drug interactions for me", ar: "افحص تداخلات الأدوية بناءً على ملفي الصحي" },
-    { en: "Side effects of Ibuprofen?", ar: "ما آثار الإيبوبروفين الجانبية؟" },
-    { en: "How to sleep better naturally?", ar: "كيف أحسّن نومي بطريقة طبيعية؟" },
+    { en: "Is this medication safe for my health profile?", ar: "هل هذا الدواء مناسب لملفي الصحي؟" },
+    { en: "First aid for a bleeding laceration", ar: "إسعافات أولية لجرح قطعي ينزف" },
+    { en: "How to properly care for thermal burns?", ar: "كيف أتعامل مع حرق جلدي منزلي بشكل سليم؟" },
+    { en: "Check drug interactions for my medications", ar: "افحص تداخلات الأدوية بناءً على ملفي الصحي" },
+    { en: "When is a tetanus shot strictly required?", ar: "متى يلزم أخذ مصل التيتانوس عند الإصابة؟" },
+    { en: "How to care for surgical sutures & stitches?", ar: "طرق العناية بغرز الخياطة الجراحية والوقاية من التلوث" },
 ];
 
 export function AiChatPage() {
@@ -133,16 +143,21 @@ export function AiChatPage() {
         }
     }, [searchParams]);
 
-    /* ── Handle medication context switch ── */
-    const handleSelectMedication = useCallback((med: any) => {
-        setSelectedMedication(med);
-        if (med) {
-            setActiveMode("medication");
+    /* ── Handle clinical context switch (Medication or Wound) ── */
+    const handleSelectMedication = useCallback((item: any) => {
+        setSelectedMedication(item);
+        if (item) {
+            const isWound = item.type === "wound";
+            setActiveMode(isWound ? "wound" : "medication");
             if (!activeConversationId && messages.length === 0) {
-                const medName = med.drug_name || med.drugName || "Medication";
-                const noticeText = isArabic
-                    ? `تم ربط الدواء: **${medName}** بالمحادثة. الآن يمكنك سؤالي عن جرعاته، آثاره الجانبية، تداخلاته، أو هل يناسبك شخصياً.`
-                    : `Medication attached: **${medName}**. Ask me about dosage, side effects, interactions, or if it's suitable for you personally.`;
+                const itemName = item.title || item.drug_name || item.wound_title || (isWound ? "Wound Scan" : "Medication");
+                const noticeText = isWound
+                    ? (isArabic
+                        ? `تم ربط تقييم الجرح: **${itemName}** بالمحادثة. يمكنك الآن سؤالي عن بروتوكول التضميد، خطوات الإسعاف، أو علامات الخطر والعدوى.`
+                        : `Wound assessment attached: **${itemName}**. Ask me about dressing protocols, first aid steps, suture needs, or infection signs.`)
+                    : (isArabic
+                        ? `تم ربط الدواء: **${itemName}** بالمحادثة. الآن يمكنك سؤالي عن جرعاته، آثاره الجانبية، تداخلاته، أو هل يناسبك شخصياً.`
+                        : `Medication attached: **${itemName}**. Ask me about dosage, side effects, interactions, or if it's suitable for you personally.`);
                 setMessages([{
                     id: `notice-${Date.now()}`,
                     role: "assistant",
@@ -389,13 +404,15 @@ export function AiChatPage() {
     // Active mode indicator color
     const modeColors: Record<AiChatMode, string> = {
         health: "text-cyan-400",
-        medication: "text-emerald-400",
+        medication: "text-cyan-300",
+        wound: "text-emerald-400",
         context: "text-violet-400",
     };
     const modeLabels: Record<AiChatMode, { en: string; ar: string }> = {
-        health: { en: "Health AI", ar: "صحي" },
-        medication: { en: "Medication", ar: "دواء" },
-        context: { en: "Your Profile", ar: "ملفك" },
+        health: { en: "Health AI", ar: "صحي عام" },
+        medication: { en: "Medications & Rx", ar: "أدوية وروشتات" },
+        wound: { en: "Wound & Trauma Care", ar: "طوارئ وجروح" },
+        context: { en: "Private Health Memory", ar: "الملف الصحي الخاص" },
     };
 
     /* ── Loading ── */

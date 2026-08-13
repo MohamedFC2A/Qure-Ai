@@ -181,28 +181,44 @@ export const ScannerInterface = () => {
 
         setHistoryLoading(true);
         try {
-            const effectiveProfileId = subjectProfileId || user.id;
-            let res = await supabase
+            const combined: any[] = [];
+
+            // 1. Medications
+            const { data: medData } = await supabase
                 .from("medication_history")
                 .select("id, drug_name, manufacturer, created_at, analysis_json")
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false })
-                .limit(10);
+                .limit(5);
 
-            if (res.error) {
-                console.warn("Remote history unavailable, falling back to local history:", res.error.message);
-                setRecentHistory(localItems.slice(0, 5));
-                return;
+            if (medData) {
+                combined.push(...medData.map((m: any) => ({ ...m, type: "medication" })));
             }
 
-            const merged = mergeHistoryItems(res.data || [], localItems);
+            // 2. Wounds
+            try {
+                const { data: woundData } = await supabase
+                    .from("wound_scans")
+                    .select("id, wound_title, wound_type, severity, created_at, analysis_json")
+                    .eq("user_id", user.id)
+                    .order("created_at", { ascending: false })
+                    .limit(5);
+
+                if (woundData) {
+                    combined.push(...woundData.map((w: any) => ({ ...w, type: "wound", drug_name: w.wound_title, manufacturer: w.wound_type })));
+                }
+            } catch (wErr) {
+                console.warn("Wound scans history error:", wErr);
+            }
+
+            const merged = mergeHistoryItems(combined, localItems);
             setRecentHistory(merged.slice(0, 5));
         } catch {
             setRecentHistory(localItems.slice(0, 5));
         } finally {
             setHistoryLoading(false);
         }
-    }, [supabase, subjectProfileId, user?.id]);
+    }, [supabase, user?.id]);
 
     useEffect(() => {
         fetchRecentHistory();
@@ -927,23 +943,33 @@ export const ScannerInterface = () => {
                                 <div className="flex flex-col gap-3">
                                     {recentHistory.map((item) => {
                                         const scanCount = item.analysis_json?.meta?.scanCount || item.scan_count || 1;
+                                        const isWound = item.type === "wound" || Boolean(item.wound_title);
+                                        const title = item.wound_title || item.drug_name || (isWound ? "Wound Assessment" : "Medication");
                                         return (
                                             <Link key={item.id} href="/dashboard/history" className="block group">
-                                                <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:border-white/20 transition-all duration-150 shadow-sm">
-                                                    <div className="min-w-0 flex-1 me-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <p className="text-white font-bold text-xs sm:text-sm truncate group-hover:text-cyan-300 transition-colors">{item.drug_name}</p>
-                                                            {scanCount > 1 && (
-                                                                <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-bold shrink-0">
-                                                                    ×{scanCount}
-                                                                </span>
-                                                            )}
+                                                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-150">
+                                                    <div className="flex items-center gap-2.5 min-w-0 flex-1 me-2">
+                                                        <div className={cn(
+                                                            "w-8 h-8 rounded-xl border flex items-center justify-center shrink-0",
+                                                            isWound ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                                                        )}>
+                                                            {isWound ? <Bandage className="w-4 h-4" /> : <Pill className="w-4 h-4" />}
                                                         </div>
-                                                        <p className="text-slate-400 text-[11px] truncate mt-1">
-                                                            {item.manufacturer || t("Generic", "عام")} • {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-SA" : "en-US")}
-                                                        </p>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <p className="text-white font-bold text-xs truncate group-hover:text-cyan-300 transition-colors">{title}</p>
+                                                                {scanCount > 1 && (
+                                                                    <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono text-[9px] font-bold shrink-0">
+                                                                        ×{scanCount}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-slate-400 text-[10px] truncate mt-0.5">
+                                                                {item.manufacturer || (isWound ? (isArabic ? "تقييم سريري" : "Clinical triage") : t("Generic", "عام"))} • {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { month: "short", day: "numeric" })}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <ChevronRight className={cn("w-4 h-4 text-slate-500 group-hover:text-cyan-300 transition-colors shrink-0", isArabic ? "rotate-180" : "")} />
+                                                    <ChevronRight className={cn("w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-300 transition-colors shrink-0", isArabic ? "rotate-180" : "")} />
                                                 </div>
                                             </Link>
                                         );

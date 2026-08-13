@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Trash2, Pill, HeartPulse, Brain, X, MessageSquare, Plus } from "lucide-react";
+import { Trash2, Pill, HeartPulse, Brain, X, MessageSquare, Plus, Bandage } from "lucide-react";
 import type { AiChatMode } from "@/lib/ai/chat";
 
 /* ──────────────────────────────────────────────────────────
@@ -31,12 +31,14 @@ interface ConversationSidebarProps {
 const modeIcons: Record<AiChatMode, React.ElementType> = {
     health: HeartPulse,
     medication: Pill,
+    wound: Bandage,
     context: Brain,
 };
 
 const modeColors: Record<AiChatMode, { icon: string; bg: string; activeBg: string; activeBorder: string }> = {
     health:     { icon: "text-cyan-400",    bg: "bg-cyan-400/10",    activeBg: "bg-cyan-400/12",    activeBorder: "border-cyan-400/25" },
-    medication: { icon: "text-emerald-400", bg: "bg-emerald-400/10", activeBg: "bg-emerald-400/12", activeBorder: "border-emerald-400/25" },
+    medication: { icon: "text-cyan-300",    bg: "bg-cyan-400/10",    activeBg: "bg-cyan-400/12",    activeBorder: "border-cyan-400/25" },
+    wound:      { icon: "text-emerald-400", bg: "bg-emerald-400/10", activeBg: "bg-emerald-400/12", activeBorder: "border-emerald-400/25" },
     context:    { icon: "text-violet-400",  bg: "bg-violet-400/10",  activeBg: "bg-violet-400/12",  activeBorder: "border-violet-400/25" },
 };
 
