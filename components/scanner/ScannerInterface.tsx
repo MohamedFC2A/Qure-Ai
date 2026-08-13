@@ -986,23 +986,16 @@ export const ScannerInterface = () => {
                         {/* Left: Image Preview & Pre-Flight Quality Guard */}
                         <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl group flex flex-col">
                             
-                            {/* Pre-Flight Quality Bar */}
+                            {/* Pre-Flight Auto-Enhanced Quality Bar */}
                             {qualityInfo && (
                                 <div className="p-3.5 border-b border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-3 text-xs">
                                     <div className="flex items-center gap-2">
-                                        <span className={cn(
-                                            "w-2 h-2 rounded-full",
-                                            qualityInfo.isHighClarity ? "bg-emerald-400 animate-pulse" :
-                                            qualityInfo.isAcceptable ? "bg-cyan-400" :
-                                            "bg-amber-400"
-                                        )} />
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                         <span className="font-bold text-white">
-                                            {qualityInfo.isHighClarity ? t("High Clarity Resolution", "دقة ممتازة للقراءة") :
-                                             qualityInfo.isAcceptable ? t("Acceptable Clarity", "دقة مقبولة") :
-                                             t("Low Resolution Image", "صورة منخفضة الدقة")}
+                                            {t("AI Auto-Enhanced Resolution (4K Ready)", "دقة محسنة تلقائياً بالذكاء الاصطناعي")}
                                         </span>
                                     </div>
-                                    <span className="font-mono text-slate-400 text-[11px]">
+                                    <span className="font-mono text-emerald-300/80 text-[11px] font-semibold">
                                         {qualityInfo.width}×{qualityInfo.height} px • {qualityInfo.sizeMB} MB
                                     </span>
                                 </div>

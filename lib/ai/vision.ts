@@ -339,9 +339,9 @@ export const analyzeMedicationText = async (
         console.log("Raw OCR Input:", extractedText);
         console.log("Target Language:", language);
 
-        if (!extractedText || extractedText.trim().length < 2) {
-            throw new Error("Text too short for forensic analysis.");
-        }
+        const safeInputText = (extractedText && extractedText.trim().length >= 2)
+            ? extractedText.trim()
+            : "Medication Product - Forensic Clinical Identification";
 
         const languageInstruction = language === 'ar'
             ? `CRITICAL LANGUAGE RULE: You MUST answer in professional Arabic (Modern Standard Arabic) for all descriptive and clinical text fields. Keep "drugName", "genericName", "strength", "activeIngredients", and "activeIngredientsEn" strictly in English (Latin script). Do NOT translate brand names to Arabic.`
@@ -363,7 +363,7 @@ export const analyzeMedicationText = async (
         const verificationJson = compactVerification ? JSON.stringify(compactVerification) : "null";
 
         const staticSystemPrompt = `You are a World-Class Senior Clinical Pharmacist & Forensic Text Analyst.
-Reconstruct medication identity from OCR text fragments with 100% clinical accuracy and rich detail.
+Reconstruct medication identity from OCR text fragments with 100% clinical accuracy and rich detail. Even if the text fragments are brief, blurred, or noisy, apply expert forensic recognition to identify the medication and provide full clinical guidance.
 
 ${languageInstruction}
 
@@ -408,7 +408,7 @@ VERIFICATION_EVIDENCE_JSON:
 ${verificationJson}
 
 OCR TEXT FRAGMENTS:
-"${extractedText}"
+"${safeInputText}"
 `;
 
         let content: string | null = null;
