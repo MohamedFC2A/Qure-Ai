@@ -20,10 +20,12 @@ import {
     AlertOctagon,
     Crown,
     Check,
+    Database,
+    RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 interface ESOSAISectionProps {
     isUltra: boolean;
@@ -92,6 +94,8 @@ const EMERGENCY_DIRECTORY: Record<string, { country: string; ambulance: string }
 export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArabic }) => {
     const [config, setConfig] = useState<ESOSConfig>(DEFAULT_CONFIG);
     const [savedMsg, setSavedMsg] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [userId, setUserId] = useState<string | null>(null);
 
     // Geolocation state
     const [geoStatus, setGeoStatus] = useState<"idle" | "requesting" | "granted" | "denied">("idle");
@@ -109,21 +113,69 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
     const [fallCountdown, setFallCountdown] = useState<number | null>(null);
     const countdownTimerRef = useRef<any>(null);
 
-    // Load configuration
+    const supabase = createClient();
+
+    // Load configuration & smartly sync with Supabase Care Private Profile
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            try {
-                const saved = localStorage.getItem("qure_esos_config");
-                if (saved) {
-                    setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
+        let isMounted = true;
+
+        const loadAndSyncHealthData = async () => {
+            let initialConfig = { ...DEFAULT_CONFIG };
+
+            // 1. Try local storage first
+            if (typeof window !== "undefined") {
+                try {
+                    const saved = localStorage.getItem("qure_esos_config");
+                    if (saved) {
+                        initialConfig = { ...initialConfig, ...JSON.parse(saved) };
+                    }
+                } catch (e) {
+                    console.error("Failed to load ESOS config:", e);
                 }
-            } catch (e) {
-                console.error("Failed to load ESOS config:", e);
             }
-        }
+
+            // 2. Fetch authenticated user's private health profile
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && isMounted) {
+                    setUserId(user.id);
+                    setIsSyncing(true);
+
+                    const { data: healthProfile } = await supabase
+                        .from('care_private_profiles')
+                        .select('allergies, chronic_conditions, notes')
+                        .eq('profile_id', user.id)
+                        .maybeSingle();
+
+                    if (healthProfile && isMounted) {
+                        // Smart auto-population from private AI health memory
+                        if (healthProfile.allergies && !initialConfig.allergies) {
+                            initialConfig.allergies = healthProfile.allergies;
+                        }
+                        if (healthProfile.chronic_conditions && !initialConfig.chronicConditions) {
+                            initialConfig.chronicConditions = healthProfile.chronic_conditions;
+                        }
+                    }
+                    setIsSyncing(false);
+                }
+            } catch (err) {
+                console.warn("Could not sync with Supabase private profile:", err);
+                setIsSyncing(false);
+            }
+
+            if (isMounted) {
+                setConfig(initialConfig);
+            }
+        };
+
+        loadAndSyncHealthData();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
-    // Request GPS
+    // Request GPS Live coordinates
     const requestLiveLocation = () => {
         if (typeof navigator === "undefined" || !navigator.geolocation) {
             setGeoStatus("denied");
@@ -174,9 +226,23 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
         requestLiveLocation();
     }, []);
 
-    const handleSaveConfig = () => {
+    // Save configuration to both localStorage & Supabase care_private_profiles
+    const handleSaveConfig = async () => {
         try {
             localStorage.setItem("qure_esos_config", JSON.stringify(config));
+
+            // Sync with Supabase Care Private Profile in real-time
+            if (userId) {
+                await supabase
+                    .from('care_private_profiles')
+                    .upsert({
+                        profile_id: userId,
+                        allergies: config.allergies || null,
+                        chronic_conditions: config.chronicConditions || null,
+                        updated_at: new Date().toISOString(),
+                    });
+            }
+
             setSavedMsg(true);
             setTimeout(() => setSavedMsg(false), 2500);
         } catch (e) {
@@ -314,12 +380,20 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                 
                 {/* Header Title */}
                 <div>
-                    <div className="flex items-center gap-2.5">
-                        <Siren className="w-5 h-5 text-rose-400 shrink-0" />
-                        <h2 className="text-xl font-bold text-white tracking-tight">
-                            {t("ESOS AI Emergency System", "نظام الطوارئ والاستغاثة (ESOS AI)")}
-                        </h2>
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2.5">
+                            <Siren className="w-5 h-5 text-rose-400 shrink-0" />
+                            <h2 className="text-xl font-bold text-white tracking-tight">
+                                {t("ESOS AI Emergency System", "نظام الطوارئ والاستغاثة (ESOS AI)")}
+                            </h2>
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+                            <Database className="w-3.5 h-3.5" />
+                            <span>{t("Synchronized with Private AI Health Memory", "مربوط بالملف الصحي الخاص (Care Profile)")}</span>
+                        </div>
                     </div>
+
                     <p className="mt-1.5 text-xs sm:text-sm text-slate-400 leading-relaxed">
                         {t(
                             "Autonomous zero-latency emergency suite. Auto-identifies national ambulance lines, pre-authorizes GPS telemetry, broadcasts medical passes, and monitors fall inactivity.",
@@ -463,7 +537,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                     <span>{t("Medical Pass & Emergency Contacts (ICE)", "بيانات بطاقة المسعف وجهات اتصال الطوارئ")}</span>
                                 </h3>
                                 <p className="text-xs text-slate-400 mt-0.5">
-                                    {t("Pre-filled health details transmitted during emergencies to save crucial time.", "بيانات صحية تُرفق برسالة الاستغاثة لتمكين المسعفين من التدخل السليم.")}
+                                    {t("Pre-filled health details transmitted during emergencies to save crucial time.", "بيانات صحية تُرفق برسالة الاستغاثة ومربوطة بملفك الصحي الخاص لتمكين المسعفين من التدخل السليم.")}
                                 </p>
                             </div>
 
@@ -560,7 +634,12 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                 {savedMsg ? (
                                     <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
                                         <Check className="w-3.5 h-3.5" />
-                                        <span>{t("Settings saved successfully", "تم حفظ الإعدادات بنجاح")}</span>
+                                        <span>{t("Settings & Private Health Profile synced successfully", "تم حفظ وتحديث الملف الصحي بنجاح")}</span>
+                                    </span>
+                                ) : isSyncing ? (
+                                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                        <span>{t("Syncing health memory...", "جاري المزامنة مع الملف الصحي...")}</span>
                                     </span>
                                 ) : <div />}
 
