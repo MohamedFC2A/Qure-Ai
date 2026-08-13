@@ -545,9 +545,9 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
 
             {/* ── MEDICAL DISCLAIMER FOOTER ── */}
             <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-center">
-                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
-                    ⚖️ <strong className="text-slate-300">{isAr ? "إخلاء مسؤولية سريري: " : "Clinical Disclaimer: "}</strong>
-                    {result.disclaimer}
+                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span><strong className="text-slate-300">{isAr ? "إخلاء مسؤولية سريري: " : "Clinical Disclaimer: "}</strong>{result.disclaimer}</span>
                 </p>
             </div>
 

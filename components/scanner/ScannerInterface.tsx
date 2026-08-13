@@ -27,6 +27,16 @@ import {
     Sun,
     SlidersHorizontal,
     Layers,
+    Pill,
+    Package,
+    FlaskConical,
+    Droplets,
+    Flame,
+    Scissors,
+    HeartPulse,
+    Stethoscope,
+    Activity,
+    Bandage,
 } from 'lucide-react';
 import { getLocalScans, saveLocalScan, mergeHistoryItems } from "@/lib/localHistory";
 import { Button } from '@/components/ui/Button';
@@ -41,7 +51,6 @@ import Link from 'next/link';
 import { useUser } from '@/context/UserContext';
 import { AI_DISPLAY_NAME } from '@/lib/ai/branding';
 import { useScan } from '@/context/ScanContext';
-import { Bandage } from 'lucide-react';
 
 interface ImageQualityInfo {
     width: number;
@@ -644,7 +653,7 @@ export const ScannerInterface = () => {
                 )}
             </AnimatePresence>
 
-            {/* ── Mode Switcher Tab ── */}
+            {/* ── Mode Switcher Tab (Emoji-Free & Modern Icons) ── */}
             <div className="w-full flex items-center justify-center">
                 <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-lg">
                     <button
@@ -658,7 +667,7 @@ export const ScannerInterface = () => {
                         )}
                     >
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>{t("Auto Detect", "الوضع التلقائي الذكي ✨")}</span>
+                        <span>{t("Auto Detect", "الوضع التلقائي الذكي")}</span>
                     </button>
                     <button
                         type="button"
@@ -670,8 +679,8 @@ export const ScannerInterface = () => {
                                 : "text-slate-400 hover:text-white"
                         )}
                     >
-                        <ScanLine className="w-3.5 h-3.5" />
-                        <span>{t("Medications", "أدوية وروشتات 💊")}</span>
+                        <Pill className="w-3.5 h-3.5" />
+                        <span>{t("Medications", "أدوية وروشتات")}</span>
                     </button>
                     <button
                         type="button"
@@ -684,7 +693,7 @@ export const ScannerInterface = () => {
                         )}
                     >
                         <Bandage className="w-3.5 h-3.5" />
-                        <span>{t("Wound Care", "فحص الجروح 🩹")}</span>
+                        <span>{t("Wound Care", "فحص الجروح")}</span>
                     </button>
                 </div>
             </div>
@@ -719,6 +728,8 @@ export const ScannerInterface = () => {
                                 <h3 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight">
                                     {detectedScanType === "wound"
                                         ? t("Capture or upload clear wound / burn photo", "التقط صورة واضحة ومباشرة للجرح أو الإصابة الجلدية")
+                                        : detectedScanType === "medication"
+                                        ? t("Upload medication box or prescription photo", "ارفع صورة ملصق علبة الدواء أو الروشتة")
                                         : t("Upload medication, prescription, or wound photo", "ارفع صورة ملصق الدواء أو الروشتة أو الجرح")}
                                 </h3>
 
@@ -727,6 +738,11 @@ export const ScannerInterface = () => {
                                         ? t(
                                             "High-clarity mode: ensure good lighting and steady focus. Biometric verification will be required to protect your privacy.",
                                             "وضع الدقة الفائقة: يرجى التأكد من الإضاءة الجيدة وثبات اليد. سيتم تفعيل البصمة الإجبارية لحماية خصوصيتك."
+                                        )
+                                        : detectedScanType === "medication"
+                                        ? t(
+                                            "Clear focus on medication brand name, strength (mg/ml), and instructions for high precision.",
+                                            "تأكد من تركيز الكاميرا على اسم الدواء التجاري، تركيز المادة الفعالة، والتعليمات الطبية بدقة."
                                         )
                                         : t(
                                             "AI automatically identifies medications, prescriptions, or wounds. (High-Res JPEG, PNG, WEBP)",
@@ -758,35 +774,103 @@ export const ScannerInterface = () => {
                                     </button>
                                 </div>
 
-                                {/* Accepted Medical Formats Guidance */}
+                                {/* Dynamic Accepted Medical Formats Guidance Cards (Per Mode) */}
                                 <div className="mt-5 grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full max-w-xl">
-                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
-                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Boxes", "علب الأدوية")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clear Name", "الاسم والتركيز")}</p>
-                                    </div>
-                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
-                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Prescriptions", "الروشتات")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Legible Text", "خط مقروء")}</p>
-                                    </div>
-                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
-                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Bottles", "العبوات والقطرات")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Label Visible", "الملصق الرئيسي")}</p>
-                                    </div>
-                                    <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center">
-                                        <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Blisters", "شرائط الأقراص")}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Printed Side", "الجانب المطبوع")}</p>
-                                    </div>
+                                    {detectedScanType === "wound" ? (
+                                        <>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Cuts & Lacerations", "الجروح والقطوع")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Superficial & Deep", "سطحية وعميقة")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Flame className="w-4 h-4 text-amber-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Burns & Ulcers", "الحروق والقرح")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Tissue Viability", "تقييم الأنسجة")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Scissors className="w-4 h-4 text-teal-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Sutures & Surgery", "الغرز والعمليات")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Healing Follow-up", "متابعة الالتئام")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <HeartPulse className="w-4 h-4 text-rose-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Bruises & Scratches", "الكدمات والسحجات")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Bleeding & Edema", "النزيف والالتهاب")}</p>
+                                            </div>
+                                        </>
+                                    ) : detectedScanType === "medication" ? (
+                                        <>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Package className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Boxes", "علب الأدوية")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clear Name & Dose", "الاسم والتركيز")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <FileText className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Prescriptions", "الروشتات الطبية")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Legible Text", "خط مقروء")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <FlaskConical className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Bottles & Drops", "العبوات والقطرات")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Label Visible", "الملصق الرئيسي")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Layers className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Blisters", "شرائط الأقراص")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Printed Side", "الجانب المطبوع")}</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Pill className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Medication Boxes", "علب وأشرطة الأدوية")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Instant Match", "تعرف فوري")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <FileText className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Medical Rx", "الروشتات والتقارير")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Prescription OCR", "تحليل الجرعات")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Wounds & Burns", "الجروح والحروق")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clinical Triage", "تقييم سريري وإسعافي")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Activity className="w-4 h-4 text-amber-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Skin Injuries", "الإصابات والقرح")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Tissue Analysis", "تحليل الأنسجة")}</p>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Helpful Photography Guidance Banner */}
-                            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-3.5 flex items-center gap-3">
-                                <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                            <div className={cn(
+                                "rounded-2xl border p-3.5 flex items-center gap-3 transition-all",
+                                detectedScanType === "wound"
+                                    ? "border-emerald-500/30 bg-emerald-500/[0.06]"
+                                    : "border-amber-400/20 bg-amber-400/[0.04]"
+                            )}>
+                                {detectedScanType === "wound" ? (
+                                    <Bandage className="w-5 h-5 text-emerald-400 shrink-0" />
+                                ) : (
+                                    <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                                )}
                                 <p className="text-xs text-slate-300 leading-relaxed">
-                                    {t(
-                                        "For high accuracy: Ensure good lighting, avoid glare, and keep the drug name and strength centered.",
-                                        "لضمان دقة القراءة: صوّر الدواء في إضاءة كافية بدون انعكاسات قوية وتأكد من وضوح اسم الدواء وتركيزه."
-                                    )}
+                                    {detectedScanType === "wound"
+                                        ? t(
+                                            "For high clinical accuracy: Ensure direct lighting, steady camera focus on wound margins, and keep the injury centered.",
+                                            "لضمان أعلى دقة سريرية: صوّر الجرح في إضاءة مباشرة وثبات تام لليد مع إظهار حواف الإصابة ونوع الأنسجة بوضوح."
+                                        )
+                                        : t(
+                                            "For high accuracy: Ensure good lighting, avoid glare, and keep the drug name and strength centered.",
+                                            "لضمان دقة القراءة: صوّر الدواء في إضاءة كافية بدون انعكاسات قوية وتأكد من وضوح اسم الدواء وتركيزه."
+                                        )}
                                 </p>
                             </div>
                         </div>

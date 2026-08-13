@@ -126,7 +126,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
                                 onClick={onSuccess}
                                 className="block mt-1.5 text-xs text-emerald-400 font-bold underline hover:text-emerald-300"
                             >
-                                {isAr ? "المتابعة بتأكيد الأمان اليدوي 🔐" : "Proceed with Manual Security Confirmation 🔐"}
+                                {isAr ? "المتابعة بتأكيد الأمان المباشر" : "Proceed with Direct Security Confirmation"}
                             </button>
                         </div>
                     </div>

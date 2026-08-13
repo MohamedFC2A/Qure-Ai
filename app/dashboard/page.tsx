@@ -472,7 +472,7 @@ export default function DashboardPage() {
                                         </div>
                                         <div>
                                             <p className="font-bold text-amber-300 text-sm flex items-center gap-1.5">
-                                                <span>{t("Ultra Active 👑", "باقة ألترا مفعّلة 👑")}</span>
+                                                <span>{t("Ultra Active", "باقة ألترا مفعّلة")}</span>
                                             </p>
                                             <p className="text-xs text-slate-400">
                                                 {t("All 8 premium features unlocked.", "جميع الـ 8 مميزات الاحترافية متاحة.")}

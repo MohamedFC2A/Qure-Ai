@@ -277,8 +277,9 @@ export function InteractiveChatDemo({ isArabic }: { isArabic: boolean }) {
                                         )}
                                         <span>{isArabic ? scenario.severityText.ar : scenario.severityText.en}</span>
                                     </div>
-                                    <span className="text-[10px] font-mono opacity-75">
-                                        ⚡ {scenario.aiResponse.executionTimeSec}s
+                                    <span className="text-[10px] font-mono opacity-75 flex items-center gap-1">
+                                        <Zap className="w-2.5 h-2.5 text-amber-400" />
+                                        <span>{scenario.aiResponse.executionTimeSec}s</span>
                                     </span>
                                 </div>
 

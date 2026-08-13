@@ -141,8 +141,8 @@ export function VoiceReaderButton({
             title={
                 !isUltra
                     ? lang === "ar"
-                        ? "الاستماع الصوتي الذكي (ميزة حصرية لباقة Ultra ⚡)"
-                        : "Smart Neural Audio (Exclusive Ultra Feature ⚡)"
+                        ? "الاستماع الصوتي الذكي (ميزة حصرية لباقة Ultra)"
+                        : "Smart Neural Audio (Exclusive Ultra Feature)"
                     : isSpeaking
                     ? lang === "ar"
                         ? "إيقاف القراءة"

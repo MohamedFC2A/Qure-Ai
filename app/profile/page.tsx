@@ -595,7 +595,7 @@ export default function ProfilePage() {
                                             onClick={() => triggerCelebration({ force: true })}
                                             className="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs font-semibold transition-all"
                                         >
-                                            {t("Showcase 👑", "استعراض 👑")}
+                                            {t("Showcase", "استعراض المميزات")}
                                         </button>
                                     </div>
                                 )}

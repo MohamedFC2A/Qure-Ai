@@ -438,7 +438,7 @@ export function UltraCelebrationModal() {
                             onClick={closeCelebration}
                             className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition-colors flex items-center gap-2"
                         >
-                            <span>ابدأ الاستخدام الآن 🚀</span>
+                            <span>ابدأ الاستخدام الآن</span>
                         </button>
                     </div>
 

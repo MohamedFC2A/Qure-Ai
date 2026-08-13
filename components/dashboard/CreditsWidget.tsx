@@ -143,7 +143,7 @@ export const CreditsWidget = () => {
                         className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-cyan-500/20 to-violet-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                     >
                         <Crown className="w-4 h-4 text-amber-400" />
-                        <span>Explore Ultra VIP Perks 👑</span>
+                        <span>Explore Ultra VIP Perks</span>
                     </button>
                 )}
 

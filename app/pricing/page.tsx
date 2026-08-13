@@ -427,7 +427,7 @@ export default function PricingPage() {
                                         className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-cyan-500/20 to-violet-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-400/40 text-amber-300 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                                     >
                                         <Crown className="w-4 h-4 text-amber-400" />
-                                        <span>{t("Explore All ULTRA Perks 👑", "استعراض كافة مميزات ألترا المفتوحة 👑")}</span>
+                                        <span>{t("Explore All ULTRA Perks", "استعراض كافة مميزات ألترا المفتوحة")}</span>
                                     </button>
                                 </>
                             ) : (
