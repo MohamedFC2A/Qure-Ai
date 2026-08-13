@@ -80,18 +80,26 @@ export async function POST(req: NextRequest) {
         // Clean base64 string (remove data:image/jpeg;base64, prefix if present)
         const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
 
-        const prompt = `You are a high-accuracy medical OCR and pharmaceutical image verification system.
-Carefully examine the image:
-1. Extract ALL visible text from the image exactly as it appears.
-2. Determine if this image appears to be a pharmaceutical product, medication box, prescription, blister pack, syrup bottle, medical device, vitamin/supplement, or healthcare document.
-3. Assess if the image text is readable or if it is too blurry, dark, unreadable, or unrelated.
+        const prompt = `You are a high-accuracy medical AI triage and OCR verification engine.
+Carefully examine the image and perform rigorous classification:
+1. Determine the EXACT scanType:
+   - "medication": pharmaceutical product box, blister pack, medication bottle, vial, syrup, medical device, supplement bottle, or pill.
+   - "prescription": doctor's paper prescription, lab report, or handwritten medical rx document.
+   - "wound": skin injury, cut, burn, laceration, ulcer, abrasion, surgical suture/wound, bruise, or dermatological trauma.
+   - "unclear_or_unrelated": dark, excessively blurry, food, animal, scenery, or completely non-medical object.
+
+2. If medication or prescription, extract ALL visible text accurately.
+3. If wound, provide a brief description in extractedText (e.g., "Wound / Skin injury: [brief note]").
 
 Return ONLY a JSON object in this exact schema without any markdown formatting or commentary:
 {
-  "extractedText": "all extracted text found in the image",
+  "scanType": "medication" | "prescription" | "wound" | "unclear_or_unrelated",
+  "extractedText": "all extracted text or clinical summary",
   "isMedication": true or false,
+  "isWound": true or false,
   "isReadable": true or false,
-  "qualityNote": "brief quality note (e.g. clear, blurry, low_light, non_medical)"
+  "confidence": 0.0 to 1.0,
+  "qualityNote": "brief quality note (e.g. clear, high_clarity, blurry, low_light)"
 }`;
 
         let text = "";
@@ -102,7 +110,7 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
 
         for (const modelCandidate of visionModelsToTry) {
             try {
-                console.log(`[OCR API] Calling Pollinations Vision API (${modelCandidate})...`);
+                console.log(`[Triage/OCR API] Calling Vision Model (${modelCandidate})...`);
                 const res = await pollinations.chat.completions.create({
                     model: modelCandidate,
                     messages: [
@@ -119,11 +127,11 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
 
                 text = res.choices[0]?.message?.content || "";
                 if (text && text.trim().length > 0) {
-                    console.log(`[OCR API] Pollinations Vision (${modelCandidate}) response received, length:`, text.length);
+                    console.log(`[Triage/OCR API] Vision (${modelCandidate}) response received, length:`, text.length);
                     break;
                 }
             } catch (polErr: any) {
-                console.warn(`[OCR API] Vision model ${modelCandidate} failed:`, polErr?.message || polErr);
+                console.warn(`[Triage/OCR API] Vision model ${modelCandidate} failed:`, polErr?.message || polErr);
                 if (modelCandidate === visionModelsToTry[visionModelsToTry.length - 1]) {
                     throw polErr;
                 }
@@ -137,11 +145,11 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
         // Strategy 1: Direct JSON parse
         try {
             data = JSON.parse(text);
-            if (data && (data.extractedText !== undefined || typeof data === "object")) {
+            if (data && (data.extractedText !== undefined || data.scanType !== undefined || typeof data === "object")) {
                 parseSuccess = true;
             }
         } catch (e) {
-            console.log("[OCR API] Strategy 1 (Direct parse) failed");
+            console.log("[Triage/OCR API] Strategy 1 (Direct parse) failed");
         }
 
         // Strategy 2: Extract from markdown code block
@@ -150,12 +158,12 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
                 const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch && jsonMatch[1]) {
                     data = JSON.parse(jsonMatch[1]);
-                    if (data && data.extractedText !== undefined) {
+                    if (data && (data.extractedText !== undefined || data.scanType !== undefined)) {
                         parseSuccess = true;
                     }
                 }
             } catch (e) {
-                console.log("[OCR API] Strategy 2 (Markdown block) failed");
+                console.log("[Triage/OCR API] Strategy 2 (Markdown block) failed");
             }
         }
 
@@ -165,32 +173,40 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
                 const jsonMatch = text.match(/{[\s\S]*}/);
                 if (jsonMatch && jsonMatch[0]) {
                     data = JSON.parse(jsonMatch[0]);
-                    if (data && data.extractedText !== undefined) {
+                    if (data && (data.extractedText !== undefined || data.scanType !== undefined)) {
                         parseSuccess = true;
                     }
                 }
             } catch (e) {
-                console.log("[OCR API] Strategy 3 (JSON extraction) failed");
+                console.log("[Triage/OCR API] Strategy 3 (JSON extraction) failed");
             }
         }
 
         // Fallback if data is null
         if (!parseSuccess || !data) {
-            data = { extractedText: text.trim(), isMedication: true, isReadable: text.trim().length >= 5 };
+            data = {
+                scanType: "medication",
+                extractedText: text.trim(),
+                isMedication: true,
+                isWound: false,
+                isReadable: text.trim().length >= 5
+            };
         }
 
+        const isWoundDetected = data.scanType === "wound" || data.isWound === true;
         const extractedTextClean = String(data.extractedText || "").trim();
 
         // Quality and Relevance Validation Check
-        const isTooShort = extractedTextClean.length < 3;
-        const isExplicitlyNonMedical = data.isMedication === false && isTooShort;
-        const isExplicitlyUnreadable = data.isReadable === false && isTooShort;
+        const isUnrelatedOrUnclear = data.scanType === "unclear_or_unrelated";
+        const isTooShort = !isWoundDetected && extractedTextClean.length < 3;
+        const isExplicitlyNonMedical = !isWoundDetected && data.isMedication === false && isTooShort;
+        const isExplicitlyUnreadable = !isWoundDetected && data.isReadable === false && isTooShort;
 
-        if (isTooShort || isExplicitlyNonMedical || isExplicitlyUnreadable) {
+        if (isUnrelatedOrUnclear || isExplicitlyNonMedical || isExplicitlyUnreadable || isTooShort) {
             return NextResponse.json(
                 {
-                    error: "الصورة المرفوعة غير واضحة أو لا تحتوي على ملصق دواء مقروء. يرجى التقاط صورة واضحة ومباشرة لعلبة الدواء أو الروشتة في إضاءة جيدة.",
-                    errorEn: "The uploaded image is blurry or does not appear to contain a readable medication label. Please upload a clear, well-lit photo directly showing the medicine box, prescription, or bottle.",
+                    error: "الصورة المرفوعة غير واضحة أو غير مطابقة لمعايير الفحص الطبي (دواء، روشتة، أو جرح). يرجى التأكد من نظافة العدسة، والتقاط صورة قريبة في إضاءة جيدة وثبات اليد.",
+                    errorEn: "The uploaded image is blurry, dark, or does not clearly show a medical item (medication, prescription, or wound). Please ensure good lighting and clear camera focus.",
                     isUnclearOrNonMedication: true,
                     extractedText: extractedTextClean,
                 },
@@ -201,7 +217,7 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
             );
         }
 
-        // Deduct credit only for valid, readable medication images
+        // Deduct credit only for valid scans
         if (!localDevUser) {
             const charged = await deductCredit(user.id, 1, 'scan_pipeline');
             if (!charged) {
@@ -212,10 +228,17 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
             }
         }
 
+        const finalScanType = isWoundDetected
+            ? "wound"
+            : (data.scanType === "prescription" ? "prescription" : "medication");
+
         return NextResponse.json({
-            extractedText: extractedTextClean,
-            isMedication: data.isMedication ?? true,
+            scanType: finalScanType,
+            isWound: isWoundDetected,
+            isMedication: !isWoundDetected,
+            extractedText: extractedTextClean || (isWoundDetected ? "تم التعرف على جرح / إصابة جلدية" : ""),
             isReadable: true,
+            confidence: data.confidence ?? 0.98,
             serverDurationMs: Date.now() - startTime
         }, {
             headers: { 'Content-Type': 'application/json' }

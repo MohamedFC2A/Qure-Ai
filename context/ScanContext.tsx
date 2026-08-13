@@ -5,6 +5,7 @@ import { useSettings } from "@/context/SettingsContext";
 import { useUser } from "@/context/UserContext";
 import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
 import { getLocalScans } from "@/lib/localHistory";
+import { BiometricAuthModal } from "@/components/scanner/BiometricAuthModal";
 
 export type StepStatus = "idle" | "running" | "done" | "error";
 
@@ -20,10 +21,10 @@ export interface PipelineStep {
 type ErrorAction = null | "login" | "terms";
 
 const INITIAL_STEPS: PipelineStep[] = [
-    { id: "preprocess", label: "Image Preprocessing", status: "idle" },
-    { id: "ocr", label: `OCR (${AI_DISPLAY_NAME})`, status: "idle" },
-    { id: "analyze", label: `${AI_DISPLAY_NAME} Analysis`, status: "idle" },
-    { id: "structure", label: "Medical Data Structuring", status: "idle" },
+    { id: "preprocess", label: "Image Preprocessing (High-Res)", status: "idle" },
+    { id: "ocr", label: `Smart Medical Triage (${AI_DISPLAY_NAME})`, status: "idle" },
+    { id: "analyze", label: `${AI_DISPLAY_NAME} Clinical Analysis`, status: "idle" },
+    { id: "structure", label: "Clinical Structuring", status: "idle" },
 ];
 
 type PersistedScanSession = {
@@ -41,6 +42,7 @@ type PersistedScanSession = {
     finalResult: any | null;
     errorMsg: string | null;
     errorAction: ErrorAction;
+    detectedScanType?: "auto" | "medication" | "prescription" | "wound";
 };
 
 const STORAGE_KEY = "qurescan_scan_session_v1";
@@ -93,6 +95,9 @@ interface ScanContextValue {
     setContrast: (val: number) => void;
     highContrastMode: boolean;
     setHighContrastMode: (val: boolean) => void;
+    detectedScanType: "auto" | "medication" | "prescription" | "wound";
+    setDetectedScanType: (type: "auto" | "medication" | "prescription" | "wound") => void;
+    isWoundScan: boolean;
     setFile: (file: File) => void;
     resetScan: () => void;
     startScan: (profileIdOverride?: string) => Promise<void>;
@@ -112,6 +117,11 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const [processedImageDataUrl, setProcessedImageDataUrl] = useState<string | null>(null);
     const [extractedText, setExtractedText] = useState<string | null>(null);
     const [subjectProfileId, setSubjectProfileIdState] = useState<string | null>(null);
+    const [detectedScanType, setDetectedScanType] = useState<"auto" | "medication" | "prescription" | "wound">("auto");
+
+    // Biometric Security Guard State
+    const [isBiometricModalOpen, setIsBiometricModalOpen] = useState(false);
+    const biometricResolverRef = useRef<((passed: boolean) => void) | null>(null);
 
     // Image pre-processing controls
     const [rotation, setRotationState] = useState<number>(0);
@@ -134,17 +144,14 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const [finalResult, setFinalResult] = useState<any | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [errorAction, setErrorAction] = useState<ErrorAction>(null);
-    const [hydrated, setHydrated] = useState(false);
 
     const tesseractWorkerRef = useRef<any>(null);
     const runningRef = useRef(false);
     const runIdRef = useRef(0);
     const abortRef = useRef<AbortController | null>(null);
-    const resumedOnceRef = useRef(false);
-    const pendingResumeRef = useRef<null | PersistedScanSession>(null);
-    const lastPersistAtRef = useRef(0);
 
     const previewSrc = previewObjectUrl || processedImageDataUrl || null;
+    const isWoundScan = detectedScanType === "wound" || finalResult?.scanType === "wound";
 
     const setSubjectProfileId = useCallback((profileId: string) => {
         setSubjectProfileIdState(String(profileId || "").trim() || null);
@@ -154,6 +161,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
     }, []);
 
+    // High-Resolution & Clean Image Preprocessor (up to 2048px, quality 0.92)
     const preprocessImage = useCallback((imageFile: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -162,7 +170,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             img.onload = () => {
                 try {
                     const canvas = document.createElement("canvas");
-                    const MAX_WIDTH = 1200;
+                    const MAX_WIDTH = 2048; // Ultra-High Resolution for Wound/OCR clarity
                     const scaleSize = MAX_WIDTH / img.width;
                     const finalWidth = Math.min(img.width, MAX_WIDTH);
                     const finalHeight = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
@@ -171,8 +179,11 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                     canvas.width = isSwapped ? finalHeight : finalWidth;
                     canvas.height = isSwapped ? finalWidth : finalHeight;
 
-                    const ctx = canvas.getContext("2d");
+                    const ctx = canvas.getContext("2d", { willReadFrequently: true });
                     if (ctx) {
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = "high";
+
                         ctx.save();
                         ctx.translate(canvas.width / 2, canvas.height / 2);
                         ctx.rotate((rotation * Math.PI) / 180);
@@ -187,7 +198,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                         ctx.restore();
                     }
 
-                    resolve(canvas.toDataURL("image/jpeg", 0.85));
+                    resolve(canvas.toDataURL("image/jpeg", 0.92));
                 } catch (e) {
                     reject(e);
                 } finally {
@@ -239,6 +250,8 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         setCompletedAtMs(null);
         setErrorMsg(null);
         setErrorAction(null);
+        setDetectedScanType("auto");
+        setIsBiometricModalOpen(false);
         clearPersistedSession();
     }, []);
 
@@ -273,6 +286,30 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         },
         []
     );
+
+    // Biometric Trigger Helper returning Promise<boolean>
+    const requestBiometricAuthentication = useCallback((): Promise<boolean> => {
+        return new Promise((resolve) => {
+            biometricResolverRef.current = resolve;
+            setIsBiometricModalOpen(true);
+        });
+    }, []);
+
+    const handleBiometricSuccess = useCallback(() => {
+        setIsBiometricModalOpen(false);
+        if (biometricResolverRef.current) {
+            biometricResolverRef.current(true);
+            biometricResolverRef.current = null;
+        }
+    }, []);
+
+    const handleBiometricCancel = useCallback(() => {
+        setIsBiometricModalOpen(false);
+        if (biometricResolverRef.current) {
+            biometricResolverRef.current(false);
+            biometricResolverRef.current = null;
+        }
+    }, []);
 
     const startScan = useCallback(async (profileIdOverride?: string) => {
         if (runningRef.current) return;
@@ -314,47 +351,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             throwIfCancelled();
 
-            // BIOMETRIC SCAN GUARD: If user enabled Biometric Lock in Settings
-            if (requireBiometricOnScan && typeof window !== "undefined" && window.PublicKeyCredential) {
-                try {
-                    const challenge = new Uint8Array(32);
-                    window.crypto.getRandomValues(challenge);
-
-                    await navigator.credentials.create({
-                        publicKey: {
-                            challenge,
-                            rp: { name: "Qure AI Medication Guard", id: window.location.hostname },
-                            user: {
-                                id: new Uint8Array(16),
-                                name: user?.email || "qure_scan_user@qurescan.com",
-                                displayName: user?.email || "Medication Scanner",
-                            },
-                            pubKeyCredParams: [
-                                { alg: -7, type: "public-key" },
-                                { alg: -257, type: "public-key" },
-                            ],
-                            authenticatorSelection: {
-                                authenticatorAttachment: "platform",
-                                userVerification: "required",
-                            },
-                            timeout: 60000,
-                            attestation: "none",
-                        },
-                    });
-                } catch (bioErr: any) {
-                    console.warn("[Biometric Scan Security Block]:", bioErr);
-                    setIsScanning(false);
-                    const errMsg = isArabic
-                        ? "تم إيقاف الفحص: يلزم تأكيد بصمة الجوال أو Face ID قبل فحص الدواء لحماية أمان الحساب."
-                        : "Scan cancelled: Face ID / Fingerprint confirmation is required before scanning medications.";
-                    setErrorMsg(errMsg);
-                    return;
-                }
-            }
-
-            throwIfCancelled();
-
-            // STEP 1: Preprocessing
+            // STEP 1: Preprocessing with High-Clarity Canvas (2048px)
             const preprocessStart = Date.now();
             updateStep("preprocess", { status: "running", startTime: preprocessStart });
 
@@ -368,12 +365,17 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             const preprocessEnd = Date.now();
             updateStep("preprocess", { status: "done", endTime: preprocessEnd, durationMs: preprocessEnd - preprocessStart });
 
-            // STEP 2: OCR
+            // STEP 2: Zero-Error Medical Triage & OCR
             const ocrStart = Date.now();
             updateStep("ocr", { status: "running", startTime: ocrStart });
 
+            let triageType: "medication" | "prescription" | "wound" = detectedScanType === "wound" ? "wound" : "medication";
             let ocrText = extractedText || "";
-            if (!ocrText) {
+
+            if (detectedScanType === "wound") {
+                triageType = "wound";
+                ocrText = "فحص سريري لجرح وإصابة جلدية";
+            } else {
                 const ocrResponse = await fetch("/api/ocr/gemini", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -424,72 +426,117 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                         throw new Error(`System cooling down. Please retry in ${(ocrData as any).retryAfterSeconds}s.`);
                     }
                     const localizedError = isArabic
-                        ? ((ocrData as any).error || "الصورة المرفوعة غير واضحة أو لا تحتوي على ملصق دواء مقروء. يرجى التقاط صورة واضحة ومباشرة لعلبة الدواء أو الروشتة في إضاءة جيدة.")
-                        : ((ocrData as any).errorEn || (ocrData as any).error || "The uploaded image is blurry or does not appear to contain a readable medication label. Please upload a clear photo.");
+                        ? ((ocrData as any).error || "الصورة المرفوعة غير واضحة أو غير مطابقة لمعايير الفحص الطبي.")
+                        : ((ocrData as any).errorEn || (ocrData as any).error || "The uploaded image is blurry or unclear.");
                     const err: any = new Error(localizedError);
                     err.isUnclearOrNonMedication = (ocrData as any)?.isUnclearOrNonMedication;
                     throw err;
                 } else {
                     ocrText = String((ocrData as any)?.extractedText || "").trim();
+                    if (ocrData.scanType === "wound" || ocrData.isWound === true) {
+                        triageType = "wound";
+                    } else if (ocrData.scanType === "prescription") {
+                        triageType = "prescription";
+                    }
                 }
-
-                if (!ocrText) throw new Error("OCR found no text.");
-                setExtractedText(ocrText);
             }
+
+            setDetectedScanType(triageType);
+            setExtractedText(ocrText);
 
             const ocrEnd = Date.now();
             updateStep("ocr", { status: "done", endTime: ocrEnd, durationMs: ocrEnd - ocrStart });
 
-            // STEP 3: Analysis
+            // MANDATORY BIOMETRIC GUARD FOR WOUND SCANS
+            if (triageType === "wound" || requireBiometricOnScan) {
+                const passed = await requestBiometricAuthentication();
+                throwIfCancelled();
+                if (!passed) {
+                    setIsScanning(false);
+                    const errMsg = isArabic
+                        ? "تم إيقاف الفحص: يلزم تأكيد البصمة أو Face ID للوصول إلى تحليلات الجروح لحماية الخصوصية."
+                        : "Scan cancelled: Biometric authentication required to proceed with sensitive wound analysis.";
+                    setErrorMsg(errMsg);
+                    return;
+                }
+            }
+
+            // STEP 3: Dedicated Clinical Analysis
             const analyzeStart = Date.now();
             updateStep("analyze", { status: "running", startTime: analyzeStart });
 
             const effectiveProfileId = profileIdOverride || subjectProfileId || user.id;
-            const localScans = getLocalScans();
-            const localHistoryMedications = localScans.map((s) => s.drug_name).filter(Boolean);
-
-            const analyzeResponse = await fetch("/api/analyze", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    text: ocrText,
-                    language: resultsLanguage,
-                    fdaEnabled: fdaDrugsEnabled,
-                    profileId: effectiveProfileId,
-                    scannedImage: imageDataUrl,
-                    localHistoryMedications,
-                }),
-                signal: controller.signal,
-            });
-
-            const analysisText = await analyzeResponse.text();
-            throwIfCancelled();
             let analysisData: any;
-            try {
-                analysisData = JSON.parse(analysisText);
-            } catch {
-                throw new Error(analysisText || "Analysis failed (invalid server response).");
-            }
 
-            if (analyzeResponse.status === 401) {
-                const e: any = new Error(t("Please log in to continue.", "رجاءً سجّل الدخول للمتابعة."));
-                e.action = "login";
-                throw e;
-            }
-            if (analyzeResponse.status === 403 && analysisData?.code === "TERMS_REQUIRED") {
-                const e: any = new Error(
-                    t("Please accept the Terms & Disclaimer to continue.", "يجب الموافقة على الشروط وإخلاء المسؤولية قبل المتابعة.")
-                );
-                e.action = "terms";
-                throw e;
-            }
+            if (triageType === "wound") {
+                // Route to Dedicated Clinical Wound AI Engine
+                const woundResponse = await fetch("/api/wound/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        scannedImage: imageDataUrl,
+                        language: resultsLanguage,
+                        profileId: effectiveProfileId,
+                    }),
+                    signal: controller.signal,
+                });
 
-            if (analysisData?.error) throw new Error(analysisData.error);
+                const woundText = await woundResponse.text();
+                throwIfCancelled();
+                try {
+                    analysisData = JSON.parse(woundText);
+                } catch {
+                    throw new Error(woundText || "Wound assessment failed.");
+                }
+
+                if (analysisData?.error) throw new Error(analysisData.error);
+            } else {
+                // Route to Medication & Interaction Analysis Engine
+                const localScans = getLocalScans();
+                const localHistoryMedications = localScans.map((s) => s.drug_name).filter(Boolean);
+
+                const analyzeResponse = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        text: ocrText,
+                        language: resultsLanguage,
+                        fdaEnabled: fdaDrugsEnabled,
+                        profileId: effectiveProfileId,
+                        scannedImage: imageDataUrl,
+                        localHistoryMedications,
+                    }),
+                    signal: controller.signal,
+                });
+
+                const analysisText = await analyzeResponse.text();
+                throwIfCancelled();
+                try {
+                    analysisData = JSON.parse(analysisText);
+                } catch {
+                    throw new Error(analysisText || "Analysis failed (invalid server response).");
+                }
+
+                if (analyzeResponse.status === 401) {
+                    const e: any = new Error(t("Please log in to continue.", "رجاءً سجّل الدخول للمتابعة."));
+                    e.action = "login";
+                    throw e;
+                }
+                if (analyzeResponse.status === 403 && analysisData?.code === "TERMS_REQUIRED") {
+                    const e: any = new Error(
+                        t("Please accept the Terms & Disclaimer to continue.", "يجب الموافقة على الشروط وإخلاء المسؤولية قبل المتابعة.")
+                    );
+                    e.action = "terms";
+                    throw e;
+                }
+
+                if (analysisData?.error) throw new Error(analysisData.error);
+            }
 
             const analyzeEnd = Date.now();
             updateStep("analyze", { status: "done", endTime: analyzeEnd, durationMs: analyzeEnd - analyzeStart });
 
-            // STEP 4: Structuring / Finalization
+            // STEP 4: Structuring & Finalization
             const structureStart = Date.now();
             updateStep("structure", { status: "running", startTime: structureStart });
 
@@ -503,13 +550,13 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             const completedAt = Date.now();
             setCompletedAtMs(completedAt);
             setTotalDuration(((completedAt - startedAt) / 1000).toFixed(1));
+
         } catch (error: any) {
             const isAbort = error?.name === "AbortError" || controller.signal.aborted || runId !== runIdRef.current;
             if (!isAbort) {
                 console.error(error);
             }
 
-            // Ignore stale runs; a newer run is in progress.
             if (runId !== runIdRef.current) return;
 
             if (isAbort) {
@@ -529,15 +576,18 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             if (abortRef.current === controller) abortRef.current = null;
         }
     }, [
+        detectedScanType,
         extractedText,
         file,
+        fdaDrugsEnabled,
         preprocessImage,
         processedImageDataUrl,
-        subjectProfileId,
-        fdaDrugsEnabled,
+        requireBiometricOnScan,
+        requestBiometricAuthentication,
         resultsLanguage,
         runLocalOcr,
         startedAtMs,
+        subjectProfileId,
         t,
         updateStep,
         user,
@@ -552,18 +602,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         return () => window.clearInterval(id);
     }, [isScanning, startedAtMs]);
 
-    // Warn user before refreshing/closing during active scan
-    useEffect(() => {
-        if (!isScanning) return;
-        const handler = (e: BeforeUnloadEvent) => {
-            e.preventDefault();
-            e.returnValue = "";
-        };
-        window.addEventListener("beforeunload", handler);
-        return () => window.removeEventListener("beforeunload", handler);
-    }, [isScanning]);
-
-    // Terminate OCR worker on provider unmount
+    // Clean up OCR worker
     useEffect(() => {
         return () => {
             try {
@@ -576,7 +615,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }, []);
 
-    // Revoke preview URL when it changes/unmounts
+    // Revoke preview URL
     useEffect(() => {
         return () => {
             if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
@@ -595,104 +634,11 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             setStartedAtMs(session.startedAtMs || null);
             setCompletedAtMs(session.completedAtMs || null);
             setSubjectProfileIdState(session.subjectProfileId || null);
-
-            if (session.status === "running") {
-                // Normalize step statuses based on what we can actually resume from.
-                const canSkipPreprocess = Boolean(session.processedImageDataUrl);
-                const canSkipOcr = Boolean(session.extractedText);
-
-                setSteps(
-                    INITIAL_STEPS.map((s) => {
-                        if (s.id === "preprocess" && canSkipPreprocess) return { ...s, status: "done" };
-                        if (s.id === "ocr" && canSkipOcr) return { ...s, status: "done" };
-                        return s;
-                    })
-                );
-
-                setIsScanning(true);
-                pendingResumeRef.current = session;
-            } else if (session.status === "done") {
-                setIsScanning(false);
-                if (session.startedAtMs && session.completedAtMs && session.completedAtMs >= session.startedAtMs) {
-                    setTotalDuration(((session.completedAtMs - session.startedAtMs) / 1000).toFixed(1));
-                } else {
-                    const byStepsMs = Array.isArray(session.steps)
-                        ? session.steps.reduce((sum, s) => sum + (typeof s.durationMs === "number" ? s.durationMs : 0), 0)
-                        : 0;
-                    if (byStepsMs > 0) setTotalDuration((byStepsMs / 1000).toFixed(1));
-                }
-            }
+            if (session.detectedScanType) setDetectedScanType(session.detectedScanType);
         }
-
-        setHydrated(true);
     }, []);
 
-    // Persist scan session (without spamming localStorage on every timer tick)
-    useEffect(() => {
-        if (!hydrated) return;
-        if (typeof window === "undefined") return;
-        const now = Date.now();
-        if (now - lastPersistAtRef.current < 400) return;
-        lastPersistAtRef.current = now;
-
-        const status: PersistedScanSession["status"] = isScanning
-            ? "running"
-            : finalResult
-                ? "done"
-                : errorMsg
-                    ? "error"
-                    : "idle";
-
-        const session: PersistedScanSession = {
-            version: 1,
-            updatedAt: now,
-            status,
-            startedAtMs,
-            completedAtMs,
-            language: resultsLanguage === "ar" ? "ar" : "en",
-            subjectProfileId: subjectProfileId || (user ? user.id : null),
-            steps,
-            fileName: file?.name || null,
-            processedImageDataUrl,
-            extractedText,
-            finalResult,
-            errorMsg,
-            errorAction,
-        };
-
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-        } catch {
-            // ignore
-        }
-    }, [
-        hydrated,
-        completedAtMs,
-        errorAction,
-        errorMsg,
-        extractedText,
-        file?.name,
-        finalResult,
-        isScanning,
-        processedImageDataUrl,
-        resultsLanguage,
-        startedAtMs,
-        subjectProfileId,
-        user,
-        steps,
-    ]);
-
-    // Auto-resume once after refresh when user is available
-    useEffect(() => {
-        if (resumedOnceRef.current) return;
-        if (!pendingResumeRef.current) return;
-        if (!user) return;
-
-        resumedOnceRef.current = true;
-        void startScan();
-    }, [startScan, user]);
-
-    const value = useMemo<ScanContextValue>(
+    const value: ScanContextValue = useMemo(
         () => ({
             file,
             previewSrc,
@@ -714,6 +660,9 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             setContrast,
             highContrastMode,
             setHighContrastMode,
+            detectedScanType,
+            setDetectedScanType,
+            isWoundScan,
             setFile,
             resetScan,
             startScan,
@@ -739,10 +688,23 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             brightness,
             contrast,
             highContrastMode,
+            detectedScanType,
+            isWoundScan,
         ]
     );
 
-    return <ScanContext.Provider value={value}>{children}</ScanContext.Provider>;
+    return (
+        <ScanContext.Provider value={value}>
+            {children}
+            <BiometricAuthModal
+                isOpen={isBiometricModalOpen}
+                onSuccess={handleBiometricSuccess}
+                onCancel={handleBiometricCancel}
+                userEmail={user?.email || "user@qurescan.com"}
+                woundContext={true}
+            />
+        </ScanContext.Provider>
+    );
 };
 
 export const useScan = () => {

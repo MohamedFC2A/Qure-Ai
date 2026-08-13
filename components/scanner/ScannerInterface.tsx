@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
 import { MedicalResultCard } from './MedicalResultCard';
+import { WoundResultCard } from './WoundResultCard';
 import { InteractionMatrixModal } from './InteractionMatrixModal';
 import { useSettings } from '@/context/SettingsContext';
 import { createClient } from '@/lib/supabase/client';
@@ -40,6 +41,7 @@ import Link from 'next/link';
 import { useUser } from '@/context/UserContext';
 import { AI_DISPLAY_NAME } from '@/lib/ai/branding';
 import { useScan } from '@/context/ScanContext';
+import { Bandage } from 'lucide-react';
 
 interface ImageQualityInfo {
     width: number;
@@ -74,6 +76,9 @@ export const ScannerInterface = () => {
         setFile,
         resetScan,
         startScan,
+        detectedScanType,
+        setDetectedScanType,
+        isWoundScan,
     } = useScan();
     const { resultsLanguage } = useSettings();
 
@@ -457,6 +462,35 @@ export const ScannerInterface = () => {
     };
 
     if (finalResult && !isScanning) {
+        if (finalResult.scanType === "wound") {
+            return (
+                <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
+                    <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                                <CheckCircle className="w-6 h-6 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">
+                                    {t("Clinical Wound Assessment Complete", "اكتمل فحص وتقييم الجرح السريري")}
+                                </h2>
+                                <p className="text-white/50 text-sm">
+                                    {t("Processed in", "استغرق الفحص")} {totalDuration}s
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
+                            <Button onClick={resetScan} variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+                                {t("Scan Another", "فحص جديد")}
+                            </Button>
+                        </div>
+                    </div>
+                    <WoundResultCard result={finalResult} scannedImage={previewSrc} onResetScan={resetScan} />
+                </div>
+            );
+        }
+
         return (
             <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
                 <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
@@ -610,6 +644,51 @@ export const ScannerInterface = () => {
                 )}
             </AnimatePresence>
 
+            {/* ── Mode Switcher Tab ── */}
+            <div className="w-full flex items-center justify-center">
+                <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-lg">
+                    <button
+                        type="button"
+                        onClick={() => setDetectedScanType("auto")}
+                        className={cn(
+                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            detectedScanType === "auto"
+                                ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
+                                : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{t("Auto Detect", "الوضع التلقائي الذكي ✨")}</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDetectedScanType("medication")}
+                        className={cn(
+                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            detectedScanType === "medication"
+                                ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
+                                : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <ScanLine className="w-3.5 h-3.5" />
+                        <span>{t("Medications", "أدوية وروشتات 💊")}</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDetectedScanType("wound")}
+                        className={cn(
+                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            detectedScanType === "wound"
+                                ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
+                                : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <Bandage className="w-3.5 h-3.5" />
+                        <span>{t("Wound Care", "فحص الجروح 🩹")}</span>
+                    </button>
+                </div>
+            </div>
+
             <AnimatePresence mode="wait">
                 {!previewSrc && (
                     <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
@@ -618,23 +697,41 @@ export const ScannerInterface = () => {
                         <div className="flex flex-col gap-4">
                             <div {...getRootProps()} className={cn(
                                 "relative min-h-[320px] sm:min-h-[350px] border-2 border-dashed rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group overflow-hidden flex-1",
-                                isDragActive ? "border-cyan-400 bg-slate-900" : "border-white/15 hover:border-white/30 hover:bg-slate-900/50 bg-slate-950/40 backdrop-blur-2xl"
+                                isDragActive
+                                    ? (detectedScanType === "wound" ? "border-emerald-400 bg-slate-900" : "border-cyan-400 bg-slate-900")
+                                    : (detectedScanType === "wound" ? "border-emerald-500/30 hover:border-emerald-400 hover:bg-slate-900/50 bg-slate-950/40 backdrop-blur-2xl" : "border-white/15 hover:border-white/30 hover:bg-slate-900/50 bg-slate-950/40 backdrop-blur-2xl")
                             )}>
                                 <input {...getInputProps()} />
 
-                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-4 text-cyan-300 shadow-sm">
-                                    <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
+                                <div className={cn(
+                                    "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm border",
+                                    detectedScanType === "wound"
+                                        ? "bg-emerald-950/60 border-emerald-500/30 text-emerald-400"
+                                        : "bg-slate-800 border-slate-700 text-cyan-300"
+                                )}>
+                                    {detectedScanType === "wound" ? (
+                                        <Bandage className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400" />
+                                    ) : (
+                                        <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
+                                    )}
                                 </div>
 
                                 <h3 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight">
-                                    {t("Upload medication or prescription photo", "ارفع صورة ملصق الدواء أو الروشتة")}
+                                    {detectedScanType === "wound"
+                                        ? t("Capture or upload clear wound / burn photo", "التقط صورة واضحة ومباشرة للجرح أو الإصابة الجلدية")
+                                        : t("Upload medication, prescription, or wound photo", "ارفع صورة ملصق الدواء أو الروشتة أو الجرح")}
                                 </h3>
 
                                 <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
-                                    {t(
-                                        "Choose camera to snap a photo or gallery to upload an existing photo. (JPEG, PNG, WEBP)",
-                                        "اختر الكاميرا لالتقاط صورة مباشرة أو الاستوديو لاختيار صورة محفوظة. (JPEG, PNG, WEBP)"
-                                    )}
+                                    {detectedScanType === "wound"
+                                        ? t(
+                                            "High-clarity mode: ensure good lighting and steady focus. Biometric verification will be required to protect your privacy.",
+                                            "وضع الدقة الفائقة: يرجى التأكد من الإضاءة الجيدة وثبات اليد. سيتم تفعيل البصمة الإجبارية لحماية خصوصيتك."
+                                        )
+                                        : t(
+                                            "AI automatically identifies medications, prescriptions, or wounds. (High-Res JPEG, PNG, WEBP)",
+                                            "يتعرف النظام تلقائياً على نوع الصورة (دواء، روشتة، أو جرح) ويوجه الفحص سريرياً بدقة."
+                                        )}
                                 </p>
 
                                 {/* Explicit Choice Buttons: Camera vs Gallery */}
@@ -642,7 +739,10 @@ export const ScannerInterface = () => {
                                     <button
                                         type="button"
                                         onClick={triggerCamera}
-                                        className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-sm shadow-sm active:scale-[0.98] transition-all duration-150"
+                                        className={cn(
+                                            "flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl text-white font-bold text-xs sm:text-sm shadow-sm active:scale-[0.98] transition-all duration-150",
+                                            detectedScanType === "wound" ? "bg-emerald-600 hover:bg-emerald-500" : "bg-cyan-600 hover:bg-cyan-500"
+                                        )}
                                     >
                                         <Camera className="w-4.5 h-4.5 shrink-0" />
                                         <span>{t("Take Photo", "التقاط بالكاميرا")}</span>
@@ -820,10 +920,22 @@ export const ScannerInterface = () => {
                                             {/* Glowing Ultra-Shiny Start Analysis Button */}
                                             <button
                                                 onClick={openCarePickerAndStart}
-                                                className="shiny-cta-btn w-full gap-3.5 px-10 sm:px-14 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide"
+                                                className={cn(
+                                                    "shiny-cta-btn w-full gap-3.5 px-10 sm:px-14 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide",
+                                                    detectedScanType === "wound" ? "from-emerald-400 via-teal-300 to-emerald-400" : ""
+                                                )}
                                             >
-                                                <ScanLine className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
-                                                <span>{t("Start Medication Scan Now", "ابدأ فحص الدواء الآن")}</span>
+                                                {detectedScanType === "wound" ? (
+                                                    <>
+                                                        <Bandage className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                        <span>{t("Start Wound Assessment", "ابدأ تقييم الجرح سريرياً")}</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <ScanLine className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                        <span>{t("Start Medication Scan Now", "ابدأ فحص الدواء الآن")}</span>
+                                                    </>
+                                                )}
                                             </button>
 
                                             {/* Camera vs Gallery Re-select Buttons */}
