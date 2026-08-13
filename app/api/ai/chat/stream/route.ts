@@ -6,38 +6,11 @@ import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
 import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
-import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
+import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse, formatClinicalContext } from "@/lib/ai/chat";
 
 import { getLocalDevUser } from "@/lib/devAuth";
 
 const META_SEPARATOR = "\n---METADATA---\n";
-
-function formatMedicationContext(med: any): string {
-    if (!med) return "";
-    const name = med.drug_name || med.drugName || med.drugNameEn || "Medication";
-    const mfg = med.manufacturer || med.manufacturerName || "";
-    const summary = med.summary || med.summaryAr || med.summaryEn || "";
-    const analysis = med.analysis_json || med;
-
-    const lines = [
-        `[TARGET MEDICATION DETAILS]`,
-        `Drug Name: ${name}`,
-        mfg ? `Manufacturer: ${mfg}` : "",
-        summary ? `Summary: ${summary}` : "",
-    ];
-
-    if (analysis && typeof analysis === "object") {
-        if (analysis.activeIngredients) lines.push(`Active Ingredients: ${JSON.stringify(analysis.activeIngredients)}`);
-        if (analysis.dosage) lines.push(`Dosage & Administration: ${JSON.stringify(analysis.dosage)}`);
-        if (analysis.warnings) lines.push(`Warnings & Precautions: ${JSON.stringify(analysis.warnings)}`);
-        if (analysis.sideEffects) lines.push(`Side Effects: ${JSON.stringify(analysis.sideEffects)}`);
-        if (analysis.interactions) lines.push(`Interactions: ${JSON.stringify(analysis.interactions)}`);
-        if (analysis.fdaData) lines.push(`FDA Verification Data: ${JSON.stringify(analysis.fdaData)}`);
-        if (analysis.raw_text || analysis.ocrText) lines.push(`Package Text: ${analysis.raw_text || analysis.ocrText}`);
-    }
-
-    return lines.filter(Boolean).join("\n");
-}
 
 /* ──────────────────────────────────────────────────────────
  *  POST /api/ai/chat/stream  —  SSE streaming chat
@@ -241,7 +214,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (medicationData) {
-            const medFormatted = formatMedicationContext(medicationData);
+            const medFormatted = formatClinicalContext(medicationData, language);
             if (medFormatted) {
                 deepseekMessages.push({
                     role: "user",

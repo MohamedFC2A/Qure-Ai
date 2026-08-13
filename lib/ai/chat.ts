@@ -446,6 +446,134 @@ export function buildContextMessage(
 }
 
 /**
+ * Build rich, conscious clinical context for attached medications OR wounds.
+ * Ensures Qure AI has full, deep pre-awareness of all diagnostic metrics.
+ */
+export function formatClinicalContext(item: any, language: "en" | "ar" = "ar"): string {
+    if (!item) return "";
+    const isAr = language === "ar";
+    const data = item.analysis_json || item;
+
+    const isWound = Boolean(
+        item.scanType === "wound" ||
+        item.scan_type === "wound" ||
+        data.scanType === "wound" ||
+        data.woundTitle ||
+        data.wound_title ||
+        data.woundType ||
+        item.wound_title
+    );
+
+    if (isWound) {
+        const title = data.woundTitle || data.wound_title || item.wound_title || data.woundTypeLocalized || "إصابة / جرح جلدي";
+        const titleEn = data.woundTitleEn || data.wound_title_en || "Clinical Wound";
+        const typeLoc = data.woundTypeLocalized || data.wound_type_localized || data.woundType || "جرح";
+        const severity = data.severity || "minor";
+        const healingStage = data.healingStageLocalized || data.healingStage || "مرحلة الالتئام الأولية";
+        const healingDays = data.estimatedHealingDays || data.estimated_healing_days || "غير محدد";
+
+        const lines = [
+            isAr
+                ? `[سجل الفحص السريري المرفق للجرح والإصابة الجلدية (QURE AI WOUND CONTEXT)]`
+                : `[ATTACHED CLINICAL WOUND & LESION ASSESSMENT RECORD]`,
+            `• التشخيص السريري / Clinical Title: ${title} (${titleEn})`,
+            `• تصنيف الإصابة / Wound Classification: ${typeLoc}`,
+            `• درجة الخطورة / Clinical Severity: ${severity.toUpperCase()}`,
+            `• مرحلة الالتئام / Healing Stage: ${healingStage}`,
+            `• المدة المتوقعة للتعافي / Est. Healing Duration: ${healingDays}`,
+        ];
+
+        // Tissue Bed
+        if (data.tissueComposition) {
+            const tc = data.tissueComposition;
+            lines.push(
+                `• تركيبة الأنسجة السريرية (Tissue Bed): أنسجة حبيبية سليمة (Granulation): ${tc.granulation ?? 0}% | أنسجة ميتة رخوة (Slough): ${tc.slough ?? 0}% | تنخر متفحم (Necrotic): ${tc.necrotic ?? 0}% | تجدد الظهارة (Epithelial): ${tc.epithelial ?? 0}%`
+            );
+        }
+
+        // Infection
+        if (data.infectionAssessment) {
+            const inf = data.infectionAssessment;
+            lines.push(
+                `• تقييم العدوى (Infection): مستوى الخطر: ${inf.riskLevel || "low"} | علامات عدوى نشطة: ${inf.hasActiveSigns ? "نعم" : "لا"} | الاحمرار: ${inf.erythemaNote || "طبيعي"} | الإفرازات: ${inf.exudateNote || "لا يوجد"} | الخلاصة: ${inf.clinicalSummary || ""}`
+            );
+        }
+
+        // Suture
+        if (data.sutureAssessment) {
+            const sut = data.sutureAssessment;
+            lines.push(
+                `• تقييم الخياطة الجراحية (Sutures): هل يستلزم غرز؟ ${sut.requiresSutures ? "نعم يستلزم" : "لا يستلزم"} | النافذة الزمنية: ${sut.urgencyWindowHours || 8} ساعات | التعليل: ${sut.rationale || ""}`
+            );
+        }
+
+        // Tetanus
+        if (data.tetanusAssessment) {
+            const tet = data.tetanusAssessment;
+            lines.push(
+                `• تقييم مصل التيتانوس (Tetanus): هل يوجد خطر؟ ${tet.riskIdentified ? "نعم يوجد خطر" : "منخفض"} | التوصية: ${tet.recommendation || ""} | التعليل: ${tet.rationale || ""}`
+            );
+        }
+
+        // Dressing & Care Protocol
+        if (data.dressingProtocol) {
+            const dp = data.dressingProtocol;
+            lines.push(
+                `• بروتوكول التضميد والغيار (Dressing): الضمادة الموصى بها: ${dp.recommendedDressing || ""} | محلول الغسيل: ${dp.cleaningSolution || "Normal Saline 0.9%"} | تكرار الغيار: ${dp.changeFrequency || "يومياً"} | إرشادات: ${dp.applicationInstructions || ""} | مواد ممنوعة: ${Array.isArray(dp.avoidSubstances) ? dp.avoidSubstances.join(" ، ") : ""}`
+            );
+        }
+
+        // First Aid
+        if (Array.isArray(data.firstAidSteps) && data.firstAidSteps.length > 0) {
+            lines.push(`• خطوات الإسعافات الأولية المقترحة:`);
+            data.firstAidSteps.forEach((s: any) => {
+                lines.push(`  - خطوة ${s.stepNumber || 1} (${s.title}): ${s.action} ${s.caution ? `[تحذير: ${s.caution}]` : ""}`);
+            });
+        }
+
+        // Red Flags & ER
+        if (Array.isArray(data.urgentRedFlags) && data.urgentRedFlags.length > 0) {
+            lines.push(`• علامات الخطر الحرجة (Red Flags): ${data.urgentRedFlags.join(" | ")}`);
+        }
+        if (Array.isArray(data.whenToSeekImmediateER) && data.whenToSeekImmediateER.length > 0) {
+            lines.push(`• دواعي الطوارئ الفورية (Immediate ER): ${data.whenToSeekImmediateER.join(" | ")}`);
+        }
+        if (data.recommendedMedicalSpecialty) {
+            lines.push(`• التخصص الطبي الموصى به: ${data.recommendedMedicalSpecialty}`);
+        }
+
+        return lines.join("\n");
+    }
+
+    // Medication / Prescription Context
+    const name = data.drugName || data.drug_name || item.drug_name || "Medication";
+    const genericName = data.genericName || data.generic_name || "";
+    const strength = data.strength || "";
+    const mfg = data.manufacturer || data.manufacturerName || item.manufacturer || "";
+    const summary = data.summary || data.summaryAr || data.summaryEn || "";
+
+    const lines = [
+        isAr ? `[سجل الفحص الدوائي المرفق (QURE AI MEDICATION CONTEXT)]` : `[TARGET MEDICATION DETAILS]`,
+        `• Drug Name: ${name} ${genericName ? `(${genericName})` : ""}`,
+        strength ? `• Strength: ${strength}` : "",
+        mfg ? `• Manufacturer: ${mfg}` : "",
+        summary ? `• Summary: ${summary}` : "",
+    ];
+
+    if (data.activeIngredients) lines.push(`• Active Ingredients: ${JSON.stringify(data.activeIngredients)}`);
+    if (data.indications) lines.push(`• Indications / الاستخدامات: ${JSON.stringify(data.indications)}`);
+    if (data.dosage) lines.push(`• Dosage & Admin: ${JSON.stringify(data.dosage)}`);
+    if (data.warnings) lines.push(`• Warnings & Precautions: ${JSON.stringify(data.warnings)}`);
+    if (data.contraindications) lines.push(`• Contraindications / موانع الاستعمال: ${JSON.stringify(data.contraindications)}`);
+    if (data.sideEffects) lines.push(`• Side Effects: ${JSON.stringify(data.sideEffects)}`);
+    if (data.interactions) lines.push(`• Interactions: ${JSON.stringify(data.interactions)}`);
+    if (data.fdaData) lines.push(`• FDA Verification: ${JSON.stringify(data.fdaData)}`);
+    if (data.raw_text || data.ocrText) lines.push(`• Package Raw Text: ${data.raw_text || data.ocrText}`);
+
+    return lines.filter(Boolean).join("\n");
+}
+
+/**
  * Auto-generate a conversation title from the first user message
  */
 export function generateConversationTitle(question: string, language: "en" | "ar"): string {

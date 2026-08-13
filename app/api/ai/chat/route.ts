@@ -6,31 +6,7 @@ import { hasAcceptedTerms } from "@/lib/legal/terms";
 import { checkGuardrails } from "@/lib/ai/guardrails";
 import { buildSmartMemoryMessages } from "@/lib/ai/memory";
 import { DEEPSEEK_BASE_URL, createPollinationsClient, getDeepSeekApiKey, getDeepSeekModel, getTextModelsToTry } from "@/lib/ai/deepseek";
-import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse } from "@/lib/ai/chat";
-
-/* ──────────────────────────────────────────────────────────
- *  Helper: extract & fix JSON from AI response
- * ────────────────────────────────────────────────────────── */
-function extractJsonCandidate(raw: string): string {
-    const text = String(raw || "").trim();
-    if (!text) return text;
-    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-    const unwrapped = (fenced?.[1] ?? text).trim();
-    if ((unwrapped.startsWith("{") && unwrapped.endsWith("}")) || (unwrapped.startsWith("[") && unwrapped.endsWith("]"))) {
-        return unwrapped;
-    }
-    const firstBrace = unwrapped.indexOf("{");
-    const lastBrace = unwrapped.lastIndexOf("}");
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        return unwrapped.slice(firstBrace, lastBrace + 1);
-    }
-    return unwrapped;
-}
-
-function fixInvalidJsonEscapes(jsonText: string): string {
-    return jsonText.replace(/\\(?!["\\\/bfnrtu]|u[0-9a-fA-F]{4})/g, "\\\\");
-}
-
+import { type AiChatMode, buildContextMessage, buildSystemPrompt, generateConversationTitle, parseAiResponse, formatClinicalContext } from "@/lib/ai/chat";
 import { getLocalDevUser } from "@/lib/devAuth";
 
 function clampText(value: unknown, maxLen: number): string {
@@ -40,41 +16,6 @@ function clampText(value: unknown, maxLen: number): string {
     const cut = s.slice(0, maxLen);
     const lastStop = Math.max(cut.lastIndexOf("."), cut.lastIndexOf("؟"), cut.lastIndexOf("?"), cut.lastIndexOf("!"));
     return (lastStop > maxLen * 0.7 ? cut.slice(0, lastStop + 1) : cut).trim() + "…";
-}
-
-/* ──────────────────────────────────────────────────────────
- *  Simple in-memory rate limiter (per user, per process)
- *  Prevents abusive callers from running up AI API costs.
- * ────────────────────────────────────────────────────────── */
-const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
-const RATE_LIMIT_MAX = 20;      // max requests
-const RATE_LIMIT_WINDOW = 60_000; // per 60 seconds
-
-function formatMedicationContext(med: any): string {
-    if (!med) return "";
-    const name = med.drug_name || med.drugName || med.drugNameEn || "Medication";
-    const mfg = med.manufacturer || med.manufacturerName || "";
-    const summary = med.summary || med.summaryAr || med.summaryEn || "";
-    const analysis = med.analysis_json || med;
-
-    const lines = [
-        `[TARGET MEDICATION DETAILS]`,
-        `Drug Name: ${name}`,
-        mfg ? `Manufacturer: ${mfg}` : "",
-        summary ? `Summary: ${summary}` : "",
-    ];
-
-    if (analysis && typeof analysis === "object") {
-        if (analysis.activeIngredients) lines.push(`Active Ingredients: ${JSON.stringify(analysis.activeIngredients)}`);
-        if (analysis.dosage) lines.push(`Dosage & Administration: ${JSON.stringify(analysis.dosage)}`);
-        if (analysis.warnings) lines.push(`Warnings & Precautions: ${JSON.stringify(analysis.warnings)}`);
-        if (analysis.sideEffects) lines.push(`Side Effects: ${JSON.stringify(analysis.sideEffects)}`);
-        if (analysis.interactions) lines.push(`Interactions: ${JSON.stringify(analysis.interactions)}`);
-        if (analysis.fdaData) lines.push(`FDA Verification Data: ${JSON.stringify(analysis.fdaData)}`);
-        if (analysis.raw_text || analysis.ocrText) lines.push(`Package Text: ${analysis.raw_text || analysis.ocrText}`);
-    }
-
-    return lines.filter(Boolean).join("\n");
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -234,7 +175,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (medicationData) {
-            const medFormatted = formatMedicationContext(medicationData);
+            const medFormatted = formatClinicalContext(medicationData, language);
             if (medFormatted) {
                 deepseekMessages.push({
                     role: "user",

@@ -103,44 +103,32 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
 }`;
 
         let text = "";
-        const primaryVisionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
-        const visionModelsToTry = [
-            "google/gemini-2.0-flash-lite-001",
-            "qwen-vision",
-            "openai",
-            primaryVisionModel
-        ];
-
+        const visionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
         const pollinations = createPollinationsClient();
 
-        for (const modelCandidate of visionModelsToTry) {
-            try {
-                console.log(`[Triage/OCR API] Calling Vision Model (${modelCandidate})...`);
-                const res = await pollinations.chat.completions.create({
-                    model: modelCandidate,
-                    messages: [
-                        {
-                            role: "user",
-                            content: [
-                                { type: "text", text: prompt },
-                                { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
-                            ]
-                        }
-                    ],
-                    temperature: 0.1,
-                });
+        try {
+            console.log(`[Triage/OCR API] Calling Vision Model (${visionModel})...`);
+            const res = await pollinations.chat.completions.create({
+                model: visionModel,
+                messages: [
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: prompt },
+                            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
+                        ]
+                    }
+                ],
+                temperature: 0.1,
+            });
 
-                text = res.choices[0]?.message?.content || "";
-                if (text && text.trim().length > 0) {
-                    console.log(`[Triage/OCR API] Vision (${modelCandidate}) response received, length:`, text.length);
-                    break;
-                }
-            } catch (polErr: any) {
-                console.warn(`[Triage/OCR API] Vision model ${modelCandidate} failed:`, polErr?.message || polErr);
-                if (modelCandidate === visionModelsToTry[visionModelsToTry.length - 1]) {
-                    throw polErr;
-                }
+            text = res.choices[0]?.message?.content || "";
+            if (text && text.trim().length > 0) {
+                console.log(`[Triage/OCR API] Vision (${visionModel}) response received, length:`, text.length);
             }
+        } catch (polErr: any) {
+            console.warn(`[Triage/OCR API] Vision model failed:`, polErr?.message || polErr);
+            text = "";
         }
 
         // Multiple parsing strategies

@@ -283,50 +283,34 @@ export async function analyzeWoundImage(
     const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
     const pollinations = createPollinationsClient();
 
-    const primaryVisionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
-    const visionModelsToTry = [
-        "google/gemini-2.0-flash-lite-001",
-        "qwen-vision",
-        "openai",
-        primaryVisionModel
-    ];
-
+    const visionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
     let rawText = "";
 
     const userPrompt = language === "ar"
         ? `قم بفحص هذه الصورة الطبية للجرح والإصابة الجلدية بدقة سريرية قصوى، وحدد اسم الجرح المشهور بدقة (مثل: عين السمكة، مسمار القدم، خراج، حرق، جرح قطعي، سحجة)، واستخرج كافة التفاصيل المطلوبة وفق الـ JSON Schema المحدد.`
         : `Examine this wound/skin injury image with maximum clinical precision, identify the exact famous medical condition (e.g., Plantar Wart, Corn, Abscess, Burn, Laceration, Abrasion), and output in JSON Schema.`;
 
-    for (const modelCandidate of visionModelsToTry) {
-        try {
-            console.log(`[Wound Engine] Calling Vision Model (${modelCandidate})...`);
-            const res = await pollinations.chat.completions.create({
-                model: modelCandidate,
-                messages: [
-                    { role: "system", content: WOUND_SYSTEM_PROMPT },
-                    {
-                        role: "user",
-                        content: [
-                            { type: "text", text: userPrompt },
-                            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
-                        ]
-                    }
-                ],
-                temperature: 0.1,
-            });
+    try {
+        console.log(`[Wound Engine] Calling Vision Model (${visionModel})...`);
+        const res = await pollinations.chat.completions.create({
+            model: visionModel,
+            messages: [
+                { role: "system", content: WOUND_SYSTEM_PROMPT },
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: userPrompt },
+                        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
+                    ]
+                }
+            ],
+            temperature: 0.1,
+        });
 
-            rawText = res.choices[0]?.message?.content || "";
-            if (rawText && rawText.trim().length > 50) {
-                console.log(`[Wound Engine] Model ${modelCandidate} returned response length: ${rawText.length}`);
-                break;
-            }
-        } catch (err: any) {
-            console.warn(`[Wound Engine] Vision model ${modelCandidate} failed:`, err?.message || err);
-            if (modelCandidate === visionModelsToTry[visionModelsToTry.length - 1]) {
-                // Return gracefully via resilient fallback
-                rawText = "";
-            }
-        }
+        rawText = res.choices[0]?.message?.content || "";
+    } catch (err: any) {
+        console.warn(`[Wound Engine] Vision model failed:`, err?.message || err);
+        rawText = "";
     }
 
     const parsed = robustParseJson<Partial<WoundAnalysisResult>>(rawText, {});
