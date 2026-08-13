@@ -85,26 +85,31 @@ Carefully examine the image and perform rigorous classification:
 1. Determine the EXACT scanType:
    - "medication": pharmaceutical product box, blister pack, medication bottle, vial, syrup, medical device, supplement bottle, or pill.
    - "prescription": doctor's paper prescription, lab report, or handwritten medical rx document.
-   - "wound": skin injury, cut, burn, laceration, ulcer, abrasion, surgical suture/wound, bruise, or dermatological trauma.
-   - "unclear_or_unrelated": dark, excessively blurry, food, animal, scenery, or completely non-medical object.
+   - "wound": skin injury, cut, burn, laceration, ulcer, abrasion, wart / verruca (عين السمكة / سنط), foot corn (مسمار القدم / كالو), abscess / boil (خراج / دمل), surgical suture/wound, bruise, cellulitis, or dermatological trauma.
+   - "unclear_or_unrelated": food, animal, scenery, or completely non-medical object.
 
 2. If medication or prescription, extract ALL visible text accurately.
-3. If wound, provide a brief description in extractedText (e.g., "Wound / Skin injury: [brief note]").
+3. If wound or skin lesion, identify the exact condition name in extractedText (e.g., "عين السمكة (سنط جلدي)" or "جرح قطعي سطحي" or "مسمار القدم").
 
 Return ONLY a JSON object in this exact schema without any markdown formatting or commentary:
 {
   "scanType": "medication" | "prescription" | "wound" | "unclear_or_unrelated",
-  "extractedText": "all extracted text or clinical summary",
+  "extractedText": "all extracted text or clinical condition name",
   "isMedication": true or false,
   "isWound": true or false,
   "isReadable": true or false,
   "confidence": 0.0 to 1.0,
-  "qualityNote": "brief quality note (e.g. clear, high_clarity, blurry, low_light)"
+  "qualityNote": "brief quality note (e.g. clear, high_clarity, auto_enhanced)"
 }`;
 
         let text = "";
         const primaryVisionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
-        const visionModelsToTry = [primaryVisionModel, "qwen-vision", "openai"];
+        const visionModelsToTry = [
+            "google/gemini-2.0-flash-lite-001",
+            "qwen-vision",
+            "openai",
+            primaryVisionModel
+        ];
 
         const pollinations = createPollinationsClient();
 
