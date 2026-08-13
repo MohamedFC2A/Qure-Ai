@@ -188,7 +188,11 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                         ctx.translate(canvas.width / 2, canvas.height / 2);
                         ctx.rotate((rotation * Math.PI) / 180);
 
-                        let filterStr = `brightness(${100 + brightness}%) contrast(${100 + contrast}%)`;
+                        // Adaptive Auto-Enhancement for optimal clinical clarity and OCR read accuracy
+                        const autoBrightness = brightness !== 0 ? 100 + brightness : 102;
+                        const autoContrast = contrast !== 0 ? 100 + contrast : 108;
+
+                        let filterStr = `brightness(${autoBrightness}%) contrast(${autoContrast}%)`;
                         if (highContrastMode) {
                             filterStr += " grayscale(100%) contrast(220%)";
                         }
@@ -198,7 +202,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                         ctx.restore();
                     }
 
-                    resolve(canvas.toDataURL("image/jpeg", 0.92));
+                    resolve(canvas.toDataURL("image/jpeg", 0.95));
                 } catch (e) {
                     reject(e);
                 } finally {

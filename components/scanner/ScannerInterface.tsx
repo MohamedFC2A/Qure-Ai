@@ -1031,19 +1031,24 @@ export const ScannerInterface = () => {
                                             <button
                                                 onClick={openCarePickerAndStart}
                                                 className={cn(
-                                                    "shiny-cta-btn w-full gap-3.5 px-10 sm:px-14 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide",
+                                                    "shiny-cta-btn w-full gap-3.5 px-8 sm:px-12 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide",
                                                     detectedScanType === "wound" ? "from-emerald-400 via-teal-300 to-emerald-400" : ""
                                                 )}
                                             >
                                                 {detectedScanType === "wound" ? (
                                                     <>
                                                         <Bandage className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
-                                                        <span>{t("Start Wound Assessment", "ابدأ تقييم الجرح سريرياً")}</span>
+                                                        <span>{t("Analyze Wound Now", "فحص الجرح الآن")}</span>
+                                                    </>
+                                                ) : detectedScanType === "medication" ? (
+                                                    <>
+                                                        <Pill className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                        <span>{t("Analyze Medication Now", "فحص الدواء الآن")}</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <ScanLine className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
-                                                        <span>{t("Start Medication Scan Now", "ابدأ فحص الدواء الآن")}</span>
+                                                        <Sparkles className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                        <span>{t("Analyze Now", "الفحص الآن")}</span>
                                                     </>
                                                 )}
                                             </button>
@@ -1080,44 +1085,16 @@ export const ScannerInterface = () => {
                                 )}
                             </div>
 
-                            {/* Image Pre-Processing Control Toolbar */}
+                            {/* Automatic Image Quality Pre-Processing (Auto 4K & Contrast) */}
                             {!isScanning && (
-                                <div className="p-3 border-t border-white/10 bg-slate-950/90 backdrop-blur-md flex flex-wrap items-center justify-between gap-2 text-xs">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setRotation((r) => r + 90)}
-                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all"
-                                            title={t("Rotate 90°", "تدوير 90 درجة")}
-                                        >
-                                            <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
-                                            <span>{t("Rotate", "تدوير")}</span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setHighContrastMode(!highContrastMode)}
-                                            className={cn(
-                                                "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-medium transition-all",
-                                                highContrastMode
-                                                    ? "bg-cyan-500/20 text-cyan-200 border-cyan-500/40"
-                                                    : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
-                                            )}
-                                            title={t("High Contrast OCR Filter", "فلتر تباين عالي لقراءة النصوص")}
-                                        >
-                                            <SlidersHorizontal className="w-3.5 h-3.5" />
-                                            <span>{t("B&W OCR Filter", "تباين عالي")}</span>
-                                        </button>
+                                <div className="p-3 border-t border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-2 text-xs">
+                                    <div className="flex items-center gap-2 text-slate-300">
+                                        <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                                        <span className="text-xs font-semibold">{t("AI Auto-Enhance & 4K Clarity Active", "التحسين التلقائي لجودة المستند والتباين نشط")}</span>
                                     </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsMatrixOpen(true)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all font-semibold"
-                                    >
-                                        <ShieldAlert className="w-3.5 h-3.5" />
-                                        <span>{t("Interaction Matrix", "مصفوفة التداخلات")}</span>
-                                    </button>
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                                        AUTO 4K
+                                    </span>
                                 </div>
                             )}
                         </div>

@@ -753,19 +753,6 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
                     <span><strong className="text-slate-300">{isAr ? "إخلاء مسؤولية سريري: " : "Clinical Disclaimer: "}</strong>{result.disclaimer}</span>
                 </p>
             </div>
-
-            {/* ── BOTTOM ACTIONS ── */}
-            <div className="flex items-center justify-center gap-3 pt-2">
-                <Button
-                    onClick={onResetScan}
-                    variant="primary"
-                    size="md"
-                    className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 gap-2 transition-colors"
-                >
-                    <RotateCcw className="h-4 w-4" />
-                    <span>{isAr ? "بدء فحص جديد" : "Start New Scan"}</span>
-                </Button>
-            </div>
         </div>
     );
 };
