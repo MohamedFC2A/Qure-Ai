@@ -21,6 +21,8 @@ import {
     Stethoscope,
     Syringe,
     Zap,
+    Siren,
+    PhoneCall,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSettings } from "@/context/SettingsContext";
@@ -532,13 +534,22 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
                             <strong className="text-white">{isAr ? "التخصص الموصى به: " : "Recommended Specialty: "}</strong>
                             {result.recommendedMedicalSpecialty}
                         </div>
-                        <a
-                            href="tel:123"
-                            className="inline-flex items-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white transition-all shadow-lg shadow-rose-600/30"
-                        >
-                            <Stethoscope className="h-3.5 w-3.5" />
-                            <span>{isAr ? "اتصال بالطوارئ (123 / 997)" : "Call Emergency"}</span>
-                        </a>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <a
+                                href="tel:123"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white transition-all shadow-lg shadow-rose-600/30"
+                            >
+                                <PhoneCall className="h-3.5 w-3.5" />
+                                <span>{isAr ? "اتصال فوري بالإسعاف" : "Call Ambulance"}</span>
+                            </a>
+                            <a
+                                href="/profile?tab=esos"
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-2 text-xs font-bold text-rose-300 transition-all"
+                            >
+                                <Siren className="h-3.5 w-3.5" />
+                                <span>{isAr ? "طوارئ ESOS AI" : "ESOS AI Suite"}</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             )}

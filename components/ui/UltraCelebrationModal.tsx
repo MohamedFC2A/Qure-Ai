@@ -22,6 +22,7 @@ import {
     Flame,
     Award,
     Check,
+    Siren,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -131,6 +132,16 @@ const featuresList: UltraFeatureItem[] = [
         descAr: "ربط أوتوماتيكي لكل فحص مع تاريخك الصحي الخاص والحساسية.",
         actionAr: "تحديث الملف",
         actionHref: "/profile?tab=private",
+    },
+    {
+        id: "esos-ai",
+        category: "safety",
+        icon: Siren,
+        badgeAr: "طوارئ ذكية فائقة",
+        titleAr: "نظام الطوارئ والاستغاثة ESOS AI",
+        descAr: "توجيه إسعاف الدولة تلقائياً، بث إحداثيات GPS، ومراقبة السقوط والغيبوبة.",
+        actionAr: "ضبط ESOS",
+        actionHref: "/profile?tab=esos",
     },
     {
         id: "pdf-reports",

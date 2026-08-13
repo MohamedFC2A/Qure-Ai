@@ -30,6 +30,7 @@ import {
     Check,
     Zap,
     Volume2,
+    Siren,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/context/SettingsContext";
@@ -38,6 +39,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SmartHeightInput, SmartWeightInput } from "@/components/ui/SmartMeasurementInput";
+import { ESOSAISection } from "@/components/profile/ESOSAISection";
 
 export default function ProfilePage() {
     const { user, profile, plan, credits, loading: userLoading, refreshUser } = useUser();
@@ -59,10 +61,10 @@ export default function ProfilePage() {
     const t = (en: string, ar: string) => (isArabic ? ar : en);
     const searchParams = useSearchParams();
     const tabParam = searchParams.get("tab");
-    const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'fda' | 'family' | 'private' | 'memories'>('account');
+    const [activeTab, setActiveTab] = useState<'account' | 'credits' | 'settings' | 'esos' | 'fda' | 'family' | 'private' | 'memories'>('account');
 
     useEffect(() => {
-        if (tabParam && ['account', 'credits', 'settings', 'fda', 'family', 'private', 'memories'].includes(tabParam)) {
+        if (tabParam && ['account', 'credits', 'settings', 'esos', 'fda', 'family', 'private', 'memories'].includes(tabParam)) {
             setActiveTab(tabParam as any);
         }
     }, [tabParam]);
@@ -490,6 +492,7 @@ export default function ProfilePage() {
         { id: 'account', label: t('Account', 'الحساب'), icon: User },
         { id: 'credits', label: t('Credits & Plans', 'الرصيد والخطط'), icon: CreditCard },
         { id: 'settings', label: t('Advanced Settings', 'الإعدادات المتقدمة'), icon: Settings },
+        { id: 'esos', label: t('ESOS AI', 'طوارئ ESOS AI'), icon: Siren, pro: true },
         { id: 'fda', label: t('FDA Drugs', 'أدوية FDA'), icon: Database, pro: true, beta: true },
         { id: 'family', label: t('Family Care', 'رعاية الأسرة'), icon: Users, pro: true },
         { id: 'private', label: t('Private AI Profile', 'الملف الصحي الخاص'), icon: Shield, pro: true },
@@ -963,6 +966,11 @@ export default function ProfilePage() {
                             </div>
 
                         </div>
+                    )}
+
+                    {/* ESOS AI EMERGENCY SUITE (ULTRA) */}
+                    {activeTab === 'esos' && (
+                        <ESOSAISection isUltra={plan === 'ultra'} t={t} isArabic={isArabic} />
                     )}
 
                     {/* FDA TAB (ULTRA) */}
