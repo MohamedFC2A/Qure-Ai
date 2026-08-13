@@ -970,7 +970,31 @@ export default function ProfilePage() {
 
                     {/* ESOS AI EMERGENCY SUITE (ULTRA) */}
                     {activeTab === 'esos' && (
-                        <ESOSAISection isUltra={plan === 'ultra'} t={t} isArabic={isArabic} />
+                        <div className="relative">
+                            {plan !== 'ultra' && (
+                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/60 flex flex-col items-center justify-center rounded-2xl border border-white/10 p-8 text-center">
+                                    <div className="w-12 h-12 rounded-xl bg-white/[0.05] flex items-center justify-center mb-4 border border-white/10">
+                                        <Lock className="w-6 h-6 text-slate-300" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">{t("Ultra Feature", "ميزة Ultra")}</h3>
+                                    <p className="text-white/60 mb-6 max-w-sm text-sm leading-relaxed">
+                                        {t(
+                                            "Automate emergency medical dispatch, country-smart ambulance routing, GPS medical beacon, and fall inactivity guardian.",
+                                            "تفعيل الربط التلقائي بالطوارئ، توجيه إسعاف الدولة ذكياً، بث إحداثيات وبطاقة المسعف، ومراقبة السقوط."
+                                        )}
+                                    </p>
+                                    <Link href="/pricing">
+                                        <Button variant="primary" className="bg-slate-800 hover:bg-slate-700 text-white border border-white/15 font-bold px-6">
+                                            {t("Upgrade to Ultra", "الترقية إلى Ultra")}
+                                        </Button>
+                                    </Link>
+                                </div>
+                            )}
+
+                            <div className={cn(plan !== 'ultra' && "opacity-20 pointer-events-none")}>
+                                <ESOSAISection isUltra={plan === 'ultra'} t={t} isArabic={isArabic} />
+                            </div>
+                        </div>
                     )}
 
                     {/* FDA TAB (ULTRA) */}
