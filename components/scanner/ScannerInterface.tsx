@@ -662,7 +662,7 @@ export const ScannerInterface = () => {
                         className={cn(
                             "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
                             detectedScanType === "auto"
-                                ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
+                                ? "bg-white text-slate-950"
                                 : "text-slate-400 hover:text-white"
                         )}
                     >
@@ -675,7 +675,7 @@ export const ScannerInterface = () => {
                         className={cn(
                             "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
                             detectedScanType === "medication"
-                                ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
+                                ? "bg-cyan-500 text-slate-950"
                                 : "text-slate-400 hover:text-white"
                         )}
                     >
@@ -688,7 +688,7 @@ export const ScannerInterface = () => {
                         className={cn(
                             "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
                             detectedScanType === "wound"
-                                ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20"
+                                ? "bg-emerald-500 text-slate-950"
                                 : "text-slate-400 hover:text-white"
                         )}
                     >

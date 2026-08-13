@@ -87,30 +87,26 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="relative w-full max-w-md rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-slate-900 via-slate-950 to-black p-6 sm:p-8 shadow-2xl shadow-emerald-950/50 text-center overflow-hidden">
-                {/* Background glow */}
-                <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+            <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-7 text-center overflow-hidden shadow-xl">
                 {/* Shield Icon Badge */}
-                <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 shadow-inner">
-                    <Fingerprint className={`h-10 w-10 text-emerald-400 ${authenticating ? "animate-pulse" : ""}`} />
-                    <div className="absolute -top-1.5 -right-1.5 rounded-full bg-emerald-500 p-1 text-black shadow-lg">
-                        <Lock className="h-3.5 w-3.5" />
+                <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-emerald-500/10">
+                    <Fingerprint className={`h-8 w-8 text-emerald-400 ${authenticating ? "animate-pulse" : ""}`} />
+                    <div className="absolute -top-1 -right-1 rounded-full bg-emerald-500 p-1 text-slate-950">
+                        <Lock className="h-3 w-3" />
                     </div>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-400 mb-3">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] border border-white/10 px-3 py-1 text-xs font-medium text-emerald-400 mb-3">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     <span>{isAr ? "حماية الخصوصية الطبية البيومترية" : "Biometric Medical Privacy Guard"}</span>
                 </div>
 
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 tracking-tight">
                     {isAr ? "تأكيد البصمة أو Face ID إجباري" : "Biometric Verification Required"}
                 </h3>
 
-                <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 mb-5 leading-relaxed">
                     {isAr
                         ? "نظراً لخصوصية صور الجروح والإصابات الجسدية، يفرض نظام Qure AI المصادقة البيومترية لتشفير وحماية سجلك الصحي وسريرية التحليل."
                         : "Due to the sensitive nature of bodily wound images, Qure AI strictly enforces biometric authentication to safeguard your clinical data."
@@ -118,7 +114,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
                 </p>
 
                 {errorMsg && (
-                    <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-start flex items-start gap-2.5">
+                    <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-start flex items-start gap-2.5">
                         <AlertCircle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                         <div className="text-[12px] text-amber-200 leading-snug flex-1">
                             {errorMsg}
@@ -132,11 +128,11 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
                     </div>
                 )}
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2.5">
                     <Button
                         onClick={triggerBiometricScan}
                         disabled={authenticating}
-                        className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                        className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors"
                     >
                         {authenticating ? (
                             <>

@@ -145,7 +145,6 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                 setCoords({ lat: latitude, lng: longitude, accuracy });
                 setGeoStatus("granted");
 
-                // Infer country code from timezone / locale as zero-latency resolver
                 try {
                     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                     let detected = "EG";
@@ -297,14 +296,14 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
     const generateSosMessage = () => {
         const mapsLink = coords ? `https://maps.google.com/?q=${coords.lat},${coords.lng}` : "غير متاح بدقة";
         return (
-            `🚨 *استغاثة طارئة ذكية - ESOS AI*\n` +
+            `استغاثة طارئة - ESOS AI\n` +
             `أنا في حالة طارئة وأحتاج للمساعدة الفورية!\n\n` +
-            `📍 *موقعي الجغرافي المباشر:*\n${mapsLink}\n\n` +
-            `🩸 *فصيلة الدم:* ${config.bloodType}\n` +
-            `⚠️ *الحساسية الحرجة:* ${config.allergies || "لا توجد"}\n` +
-            `🩺 *الأمراض المزمنة:* ${config.chronicConditions || "لا توجد"}\n` +
-            `🚑 *رقم الإسعاف المحلي المعتمد:* ${effectiveAmbulanceNumber}\n\n` +
-            `تم الإرسال تلقائياً عبر نظام Qure ESOS AI للطوارئ الطبية.`
+            `موقعي الجغرافي المباشر:\n${mapsLink}\n\n` +
+            `فصيلة الدم: ${config.bloodType}\n` +
+            `الحساسية الحرجة: ${config.allergies || "لا توجد"}\n` +
+            `الأمراض المزمنة: ${config.chronicConditions || "لا توجد"}\n` +
+            `رقم الإسعاف المحلي المعتمد: ${effectiveAmbulanceNumber}\n\n` +
+            `تم الإرسال عبر نظام Qure ESOS AI للطوارئ الطبية.`
         );
     };
 
@@ -316,7 +315,6 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
     };
 
     const triggerAutoDispatch = () => {
-        // Dial ambulance
         if (typeof window !== "undefined") {
             window.location.href = `tel:${effectiveAmbulanceNumber}`;
         }
@@ -324,26 +322,23 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
 
     return (
         <div className="space-y-6">
-            {/* ── Top Header Banner ── */}
-            <div className="relative overflow-hidden p-6 sm:p-7 rounded-3xl border border-rose-500/30 bg-gradient-to-b from-rose-950/40 via-slate-950/70 to-black/80 backdrop-blur-2xl shadow-2xl">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-5">
-                    <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0 shadow-lg shadow-rose-500/20">
-                            <Siren className="w-7 h-7 animate-pulse" />
+            {/* ── Top Header Banner (Matte & Clean, No Glowing) ── */}
+            <div className="p-5 sm:p-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                        <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-white/10 flex items-center justify-center text-rose-400 shrink-0">
+                            <Siren className="w-6 h-6" />
                         </div>
                         <div>
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
                                     {t("ESOS AI - Smart Emergency Operating System", "ESOS AI - نظام الطوارئ والاستغاثة الذكي")}
                                 </h2>
-                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-rose-400 text-slate-950">
-                                    ULTRA EXCLUSIVE
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white border border-white/10">
+                                    ULTRA
                                 </span>
                             </div>
-                            <p className="mt-1.5 text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                            <p className="mt-1 text-xs text-slate-400 max-w-2xl leading-relaxed">
                                 {t(
                                     "Pre-authorized emergency suite with zero-latency GPS auto-routing, country-smart ambulance dispatch, digital medical beacon, and inactivity guardian.",
                                     "منظومة طوارئ فائقة الاستجابة مفوضة مسبقاً: تحدد موقعك الحي بدقة، ترتبط برقم إسعاف دولتك فورياً، تبث موجزك الطبي للمسعفين، وتراقب السقوط والغيبوبة تلقائياً."
@@ -355,7 +350,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                     {!isUltra && (
                         <div className="shrink-0">
                             <Link href="/pricing">
-                                <Button variant="primary" className="bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 font-black px-6 gap-2">
+                                <Button variant="primary" className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 gap-2">
                                     <Crown className="w-4 h-4" />
                                     <span>{t("Upgrade to Unlock ESOS", "ترقية لتفعيل ESOS")}</span>
                                 </Button>
@@ -365,14 +360,14 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                 </div>
             </div>
 
-            {/* ── PRE-AUTHORIZATION READINESS MATRIX ── */}
+            {/* ── PRE-AUTHORIZATION READINESS MATRIX (Matte Flat Style) ── */}
             <div className="p-5 sm:p-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-3 mb-4">
                     <div className="flex items-center gap-2 text-white font-bold text-sm sm:text-base">
                         <ShieldAlert className="w-5 h-5 text-cyan-400" />
                         <h3>{t("Pre-Authorization Readiness Matrix", "لوحة الجاهزية والتفويض المسبق (قبل حدوث أي طارئ)")}</h3>
                     </div>
-                    <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                    <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>{t("100% Prepared", "مفوّض وجاهز")}</span>
                     </span>
@@ -380,7 +375,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {/* Matrix 1: GPS Permission */}
-                    <div className="p-3.5 rounded-xl border border-white/10 bg-black/20 flex flex-col justify-between">
+                    <div className="p-3.5 rounded-xl border border-white/10 bg-slate-900/50 flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <MapPin className="w-4 h-4 text-cyan-400" />
@@ -388,7 +383,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                             </div>
                             <span className={cn(
                                 "w-2 h-2 rounded-full",
-                                geoStatus === "granted" ? "bg-emerald-400 animate-ping" : "bg-amber-400"
+                                geoStatus === "granted" ? "bg-emerald-400" : "bg-amber-400"
                             )} />
                         </div>
                         <p className="text-[11px] text-slate-400 mt-2">
@@ -409,13 +404,13 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                     </div>
 
                     {/* Matrix 2: Smart Ambulance Routing */}
-                    <div className="p-3.5 rounded-xl border border-white/10 bg-black/20 flex flex-col justify-between">
+                    <div className="p-3.5 rounded-xl border border-white/10 bg-slate-900/50 flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <PhoneCall className="w-4 h-4 text-rose-400" />
                                 <span className="text-xs font-bold text-white">{t("Country Ambulance", "إسعاف الدولة")}</span>
                             </div>
-                            <span className="text-xs font-black text-rose-300 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">
+                            <span className="text-xs font-bold text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded border border-rose-500/20">
                                 {effectiveAmbulanceNumber}
                             </span>
                         </div>
@@ -426,7 +421,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                     </div>
 
                     {/* Matrix 3: Encrypted Medical Pass */}
-                    <div className="p-3.5 rounded-xl border border-white/10 bg-black/20 flex flex-col justify-between">
+                    <div className="p-3.5 rounded-xl border border-white/10 bg-slate-900/50 flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <HeartPulse className="w-4 h-4 text-emerald-400" />
@@ -441,7 +436,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                     </div>
 
                     {/* Matrix 4: Fall & Shock Guardian */}
-                    <div className="p-3.5 rounded-xl border border-white/10 bg-black/20 flex flex-col justify-between">
+                    <div className="p-3.5 rounded-xl border border-white/10 bg-slate-900/50 flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Activity className="w-4 h-4 text-amber-400" />
@@ -464,42 +459,42 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                 </div>
             </div>
 
-            {/* ── LIVE COUNTDOWN MODAL IF FALL DETECTED ── */}
+            {/* ── LIVE COUNTDOWN MODAL (Clean Crisp Flat Minimalist - NO GLOWING) ── */}
             {fallCountdown !== null && (
-                <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4">
-                    <div className="w-full max-w-md rounded-3xl border-2 border-rose-500 bg-slate-950 p-6 sm:p-8 text-center shadow-2xl shadow-rose-600/50 animate-in zoom-in-95 duration-200">
-                        <div className="w-16 h-16 rounded-full bg-rose-500/20 border-2 border-rose-500 text-rose-400 mx-auto flex items-center justify-center mb-4 animate-bounce">
-                            <AlertOctagon className="w-8 h-8" />
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 sm:p-7 text-center shadow-xl animate-in zoom-in-95 duration-150">
+                        <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-white/10 text-rose-400 mx-auto flex items-center justify-center mb-4">
+                            <AlertOctagon className="w-7 h-7" />
                         </div>
-                        <h3 className="text-xl sm:text-2xl font-black text-white">
+                        <h3 className="text-lg sm:text-xl font-bold text-white">
                             {t("Potential Fall / Shock Detected!", "تم رصد سقوط أو صدمة قوية!")}
                         </h3>
-                        <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                        <p className="text-xs text-slate-300 mt-2 leading-relaxed">
                             {t(
                                 "ESOS AI is preparing to dial emergency services and broadcast your GPS medical pass in:",
                                 "سيقوم نظام ESOS AI بالاتصال التلقائي بالإسعاف وبث إحداثياتك الطبية خلال:"
                             )}
                         </p>
 
-                        <div className="my-6">
-                            <span className="text-6xl font-black text-rose-400 font-mono tracking-tighter animate-pulse">
+                        <div className="my-5">
+                            <span className="text-5xl font-bold text-white font-mono tracking-tight">
                                 {fallCountdown}s
                             </span>
                         </div>
 
-                        <div className="flex flex-col gap-3">
-                            <Button
+                        <div className="flex flex-col gap-2.5">
+                            <button
+                                type="button"
                                 onClick={cancelFallSimulation}
-                                variant="primary"
-                                className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-base rounded-2xl"
+                                className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2"
                             >
-                                <CheckCircle2 className="w-5 h-5 me-2" />
+                                <CheckCircle2 className="w-4 h-4" />
                                 <span>{t("I AM SAFE - CANCEL SOS", "أنا بخير - إلغاء الاستغاثة")}</span>
-                            </Button>
+                            </button>
 
                             <a
                                 href={`tel:${effectiveAmbulanceNumber}`}
-                                className="w-full h-12 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30"
+                                className="w-full h-11 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors"
                             >
                                 <PhoneCall className="w-4 h-4" />
                                 <span>{t("CALL AMBULANCE NOW", "الاتصال بالإسعاف فوراً")} ({effectiveAmbulanceNumber})</span>
@@ -525,7 +520,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                             )}
                         </p>
 
-                        <div className="mt-4 p-4 rounded-xl bg-black/30 border border-white/10 space-y-3">
+                        <div className="mt-4 p-4 rounded-xl bg-slate-900/50 border border-white/10 space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs text-slate-300 font-medium">{t("Detected Country:", "الدولة المكتشفة:")}</span>
                                 <span className="text-xs font-bold text-white bg-white/10 px-2.5 py-1 rounded-lg">
@@ -535,7 +530,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
 
                             <div className="flex items-center justify-between">
                                 <span className="text-xs text-slate-300 font-medium">{t("Local Ambulance Number:", "رقم الإسعاف الرسمي:")}</span>
-                                <span className="text-lg font-black text-rose-400 font-mono tracking-wider">
+                                <span className="text-base font-bold text-rose-400 font-mono">
                                     {effectiveAmbulanceNumber}
                                 </span>
                             </div>
@@ -547,7 +542,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                     placeholder={currentEmergencyInfo.ambulance}
                                     value={customAmbulanceNumber}
                                     onChange={(e) => setCustomAmbulanceNumber(e.target.value)}
-                                    className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-rose-500 w-full"
+                                    className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-white/30 w-full"
                                 />
                             </div>
                         </div>
@@ -556,18 +551,18 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                     <div className="space-y-2 pt-2">
                         <a
                             href={`tel:${effectiveAmbulanceNumber}`}
-                            className="w-full h-12 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-black text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-rose-600/30 active:scale-[0.98] transition-all"
+                            className="w-full h-11 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors"
                         >
-                            <PhoneCall className="w-5 h-5 animate-pulse" />
+                            <PhoneCall className="w-4 h-4" />
                             <span>{t("CALL AMBULANCE NOW", "الاتصال بالإسعاف فوراً")} ({effectiveAmbulanceNumber})</span>
                         </a>
 
                         <button
                             type="button"
                             onClick={handleShareSosWhatsApp}
-                            className="w-full h-11 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                            className="w-full h-11 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
                         >
-                            <Share2 className="w-4 h-4" />
+                            <Share2 className="w-4 h-4 text-emerald-400" />
                             <span>{t("Send SOS Medical Beacon via WhatsApp", "بث استغاثة وبياناتك عبر واتساب لجهات الطوارئ")}</span>
                         </button>
                     </div>
@@ -592,35 +587,35 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                 type="button"
                                 onClick={toggleSiren}
                                 className={cn(
-                                    "p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 text-center transition-all cursor-pointer",
+                                    "p-4 rounded-xl border flex flex-col items-center justify-center gap-2 text-center transition-colors cursor-pointer",
                                     isSirenActive
-                                        ? "border-rose-500 bg-rose-500/20 text-rose-300 animate-pulse shadow-lg shadow-rose-500/30"
-                                        : "border-white/10 bg-black/30 text-slate-300 hover:bg-white/[0.06]"
+                                        ? "border-rose-500/40 bg-rose-500/10 text-rose-400 font-bold"
+                                        : "border-white/10 bg-slate-900/50 text-slate-300 hover:bg-white/[0.04]"
                                 )}
                             >
-                                {isSirenActive ? <Volume2 className="w-6 h-6 text-rose-400" /> : <VolumeX className="w-6 h-6 text-slate-400" />}
-                                <span className="text-xs font-bold">{isSirenActive ? t("Stop Siren", "إيقاف الصافرة") : t("Start Acoustic Siren", "تشغيل صافرة الإنقاذ")}</span>
+                                {isSirenActive ? <Volume2 className="w-5 h-5 text-rose-400" /> : <VolumeX className="w-5 h-5 text-slate-400" />}
+                                <span className="text-xs">{isSirenActive ? t("Stop Siren", "إيقاف الصافرة") : t("Start Acoustic Siren", "تشغيل صافرة الإنقاذ")}</span>
                             </button>
 
                             <button
                                 type="button"
                                 onClick={toggleStrobe}
                                 className={cn(
-                                    "p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 text-center transition-all cursor-pointer",
+                                    "p-4 rounded-xl border flex flex-col items-center justify-center gap-2 text-center transition-colors cursor-pointer",
                                     isStrobeActive
-                                        ? "border-amber-400 bg-amber-400/20 text-amber-300 animate-pulse shadow-lg shadow-amber-500/30"
-                                        : "border-white/10 bg-black/30 text-slate-300 hover:bg-white/[0.06]"
+                                        ? "border-amber-400/40 bg-amber-400/10 text-amber-400 font-bold"
+                                        : "border-white/10 bg-slate-900/50 text-slate-300 hover:bg-white/[0.04]"
                                 )}
                             >
-                                <Zap className={cn("w-6 h-6", isStrobeActive ? "text-amber-400" : "text-slate-400")} />
-                                <span className="text-xs font-bold">{isStrobeActive ? t("Stop Strobe", "إيقاف الوميض") : t("Screen Strobe Flash", "تشغيل وميض الإنقاذ")}</span>
+                                <Zap className={cn("w-5 h-5", isStrobeActive ? "text-amber-400" : "text-slate-400")} />
+                                <span className="text-xs">{isStrobeActive ? t("Stop Strobe", "إيقاف الوميض") : t("Screen Strobe Flash", "تشغيل وميض الإنقاذ")}</span>
                             </button>
                         </div>
                     </div>
 
                     {isStrobeActive && (
-                        <div className="p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-center animate-pulse">
-                            <p className="text-xs font-black text-amber-300">{t("Visual Strobe Active", "الوميض البصري قيد العمل لجذب فرق الإنقاذ")}</p>
+                        <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/10 text-center">
+                            <p className="text-xs font-bold text-amber-300">{t("Visual Strobe Active", "الوميض البصري قيد العمل لجذب فرق الإنقاذ")}</p>
                         </div>
                     )}
                 </div>
@@ -638,7 +633,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                     </div>
 
                     {savedSuccessfully && (
-                        <span className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+                        <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
                             <CheckCircle2 className="w-4 h-4" />
                             <span>{t("Saved Successfully", "تم الحفظ بنجاح")}</span>
                         </span>
@@ -651,7 +646,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                         <select
                             value={config.bloodType}
                             onChange={(e) => setConfig({ ...config, bloodType: e.target.value })}
-                            className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-400"
+                            className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
                         >
                             {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"].map((bt) => (
                                 <option key={bt} value={bt}>{bt}</option>
@@ -666,7 +661,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                             placeholder="بنسلين، أسبرين، سلفا..."
                             value={config.allergies}
                             onChange={(e) => setConfig({ ...config, allergies: e.target.value })}
-                            className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-400"
+                            className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
                         />
                     </div>
 
@@ -677,7 +672,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                             placeholder="سكري، ضغط، ربو، قلب..."
                             value={config.chronicConditions}
                             onChange={(e) => setConfig({ ...config, chronicConditions: e.target.value })}
-                            className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-400"
+                            className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
                         />
                     </div>
                 </div>
@@ -691,8 +686,8 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Contact 1 */}
-                        <div className="p-3.5 rounded-xl border border-white/10 bg-black/20 space-y-2.5">
-                            <span className="text-[11px] font-bold text-cyan-300">{t("Primary Emergency Contact (1)", "جهة الاتصال الأساسية (1)")}</span>
+                        <div className="p-3.5 rounded-xl border border-white/10 bg-slate-900/50 space-y-2.5">
+                            <span className="text-[11px] font-bold text-slate-200">{t("Primary Emergency Contact (1)", "جهة الاتصال الأساسية (1)")}</span>
                             <input
                                 type="text"
                                 placeholder="اسم جهة الاتصال (مثال: الوالد / الزوجة)"
@@ -701,7 +696,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                     ...config,
                                     primaryContact: { ...config.primaryContact, name: e.target.value }
                                 })}
-                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/30"
                             />
                             <input
                                 type="tel"
@@ -711,13 +706,13 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                     ...config,
                                     primaryContact: { ...config.primaryContact, phone: e.target.value }
                                 })}
-                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/30"
                             />
                         </div>
 
                         {/* Contact 2 */}
-                        <div className="p-3.5 rounded-xl border border-white/10 bg-black/20 space-y-2.5">
-                            <span className="text-[11px] font-bold text-slate-300">{t("Secondary Emergency Contact (2)", "جهة الاتصال الاحتياطية (2)")}</span>
+                        <div className="p-3.5 rounded-xl border border-white/10 bg-slate-900/50 space-y-2.5">
+                            <span className="text-[11px] font-bold text-slate-200">{t("Secondary Emergency Contact (2)", "جهة الاتصال الاحتياطية (2)")}</span>
                             <input
                                 type="text"
                                 placeholder="اسم جهة الاتصال (مثال: الأخ / الطبيب)"
@@ -726,7 +721,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                     ...config,
                                     secondaryContact: { ...config.secondaryContact, name: e.target.value }
                                 })}
-                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/30"
                             />
                             <input
                                 type="tel"
@@ -736,7 +731,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                                     ...config,
                                     secondaryContact: { ...config.secondaryContact, phone: e.target.value }
                                 })}
-                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-white/30"
                             />
                         </div>
                     </div>
@@ -747,7 +742,7 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
                     <Button
                         onClick={handleSaveConfig}
                         variant="primary"
-                        className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8"
+                        className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-7"
                     >
                         {t("Save Emergency Settings", "حفظ إعدادات وتفويض ESOS")}
                     </Button>

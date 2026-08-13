@@ -96,11 +96,8 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
     return (
         <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* ── TOP HERO HEADER & TRIAGE BANNER ── */}
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/90 via-slate-950/90 to-black/90 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-white/10">
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/90 p-5 sm:p-6 backdrop-blur-xl">
+                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-white/10">
                     <div className="flex items-center gap-3.5">
                         <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 shadow-inner shrink-0">
                             <Bandage className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -537,16 +534,16 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
                         <div className="flex items-center gap-2 flex-wrap">
                             <a
                                 href="tel:123"
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white transition-all shadow-lg shadow-rose-600/30"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white transition-colors"
                             >
                                 <PhoneCall className="h-3.5 w-3.5" />
                                 <span>{isAr ? "اتصال فوري بالإسعاف" : "Call Ambulance"}</span>
                             </a>
                             <a
                                 href="/profile?tab=esos"
-                                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-2 text-xs font-bold text-rose-300 transition-all"
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] px-3 py-2 text-xs font-bold text-white transition-colors"
                             >
-                                <Siren className="h-3.5 w-3.5" />
+                                <Siren className="h-3.5 w-3.5 text-rose-400" />
                                 <span>{isAr ? "طوارئ ESOS AI" : "ESOS AI Suite"}</span>
                             </a>
                         </div>
@@ -568,7 +565,7 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
                     onClick={onResetScan}
                     variant="primary"
                     size="md"
-                    className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold px-8 gap-2 shadow-lg shadow-emerald-500/20"
+                    className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 gap-2 transition-colors"
                 >
                     <RotateCcw className="h-4 w-4" />
                     <span>{isAr ? "بدء فحص جديد" : "Start New Scan"}</span>
