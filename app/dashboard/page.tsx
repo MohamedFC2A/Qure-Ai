@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
     Activity,
+    AlertTriangle,
     ArrowRight,
     Brain,
     CheckCircle2,
@@ -276,10 +277,7 @@ export default function DashboardPage() {
             <div className="clinical-page space-y-6">
 
                 {/* ── HERO HEADER ──────────────────────────────── */}
-                <section
-                    className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6 sm:p-8 backdrop-blur-xl"
-                    style={{ background: "rgba(15, 23, 42, 0.70)" }}
-                >
+                <section className="relative overflow-hidden rounded-2xl glass-card p-6 sm:p-8 border border-white/[0.06]">
                     <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                         <div>
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
@@ -299,7 +297,7 @@ export default function DashboardPage() {
 
                         {/* Quick scan CTA */}
                         <Link href="/scan" className="w-full sm:w-auto">
-                            <Button size="lg" glow className="w-full sm:w-auto font-bold px-7">
+                            <Button size="lg" className="w-full sm:w-auto font-bold px-7">
                                 <ScanLine className="w-4 h-4 mr-2" />
                                 <span>{t("Scan Medication", "افحص دواءك الآن")}</span>
                             </Button>
@@ -393,7 +391,7 @@ export default function DashboardPage() {
                                             {t("Upload a medication to get started.", "ارفع صورة دواء للبدء.")}
                                         </p>
                                         <Link href="/scan" className="mt-4">
-                                            <Button size="sm" glow>
+                                            <Button size="sm">
                                                 <ScanLine className="w-4 h-4 mr-2" />
                                                 <span>{t("Scan now", "افحص الآن")}</span>
                                             </Button>
@@ -420,8 +418,9 @@ export default function DashboardPage() {
                                                             </p>
                                                         </div>
                                                         {warnCount > 0 && (
-                                                            <span className="shrink-0 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-bold text-amber-300">
-                                                                {warnCount}⚠
+                                                            <span className="shrink-0 flex items-center gap-1 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-bold text-amber-300">
+                                                                <AlertTriangle className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                                                <span>{warnCount}</span>
                                                             </span>
                                                         )}
                                                         <FileText className="w-3.5 h-3.5 shrink-0 text-slate-600 group-hover:text-cyan-400 transition-colors" />

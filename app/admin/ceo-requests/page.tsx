@@ -431,7 +431,7 @@ export default function CeoRequestsAdminPage() {
                                                     className="flex-1 sm:flex-none py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm"
                                                 >
                                                     <Crown className="w-4 h-4 fill-current" />
-                                                    <span>{isActionLoading ? "جاري التفعيل..." : "⚡ تفعيل ألترا (٣٠٠ رصيد)"}</span>
+                                                    <span>{isActionLoading ? "جاري التفعيل..." : "تفعيل ألترا (٣٠٠ رصيد)"}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleAction(req.id, "reject")}
@@ -453,7 +453,7 @@ export default function CeoRequestsAdminPage() {
                                                     className="py-2 px-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 text-rose-300 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                                                 >
                                                     <Ban className="w-3.5 h-3.5 text-rose-400" />
-                                                    <span>{isActionLoading ? "جاري الإلغاء..." : "🛑 إلغاء الاشتراك"}</span>
+                                                    <span>{isActionLoading ? "جاري الإلغاء..." : "إلغاء الاشتراك"}</span>
                                                 </button>
                                             </div>
                                         ) : (

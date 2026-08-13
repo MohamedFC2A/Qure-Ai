@@ -46,7 +46,7 @@ export const MobileNav = () => {
             >
                 <div className="pointer-events-auto relative px-3.5 pb-2.5 pt-1.5">
                     {/* Background Dock Frame */}
-                    <div className="relative rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
+                    <div className="relative rounded-2xl border border-white/[0.08] bg-[#080c16]/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden">
                         
                         {/* Subtle top divider line */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />

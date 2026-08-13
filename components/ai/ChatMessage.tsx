@@ -67,29 +67,32 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         const formatInline = (s: string): string => {
             let formatted = s;
 
-            // 1. Red Critical Threat Warning Badge: ⚠️ [...] or [⚠️ ...]
+            // 1. Red Critical Threat Warning Badge: [CRITICAL_THREAT: text] or [CRITICAL_THREAT]
             formatted = formatted.replace(
-                /(?:⚠️\s*\[|\[⚠️\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 font-bold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>$1</span></span>'
+                /(?:\[CRITICAL_THREAT(?::\s*|\s+)?([^\]]*)\]|(?:\u26A0\uFE0F?\s*\[|\[\u26A0\uFE0F?\s*)([^\]]+)\])/gi,
+                (_, text1, text2) => {
+                    const text = (text1 || text2 || "").trim() || "Critical Clinical Threat";
+                    return `<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 font-bold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>${text}</span></span>`;
+                }
             );
 
-            // 2. Amber Caution Badge: ⚡ [...] or [⚡ ...]
+            // 2. Amber Caution Badge: [MEDICAL_CAUTION: text] or [MEDICAL_CAUTION]
             formatted = formatted.replace(
-                /(?:⚡\s*\[|\[⚡\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-bold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>$1</span></span>'
+                /(?:\[MEDICAL_CAUTION(?::\s*|\s+)?([^\]]*)\]|(?:\u26A1\s*\[|\[\u26A1\s*)([^\]]+)\])/gi,
+                (_, text1, text2) => {
+                    const text = (text1 || text2 || "").trim() || "Medical Caution";
+                    return `<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-bold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>${text}</span></span>`;
+                }
             );
 
-            // 3. Green Verified Document Badge: ✓ [...] or [✓ ...]
+            // 3. Green Verified Document Badge: [VERIFIED_DOC: text] or [VERIFIED_DOC]
             formatted = formatted.replace(
-                /(?:✓\s*\[|\[✓\s*)([^\]]+)\]/gi,
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 font-semibold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
+                /(?:\[VERIFIED_DOC(?::\s*|\s+)?([^\]]*)\]|(?:\u2713\s*\[|\[\u2713\s*)([^\]]+)\])/gi,
+                (_, text1, text2) => {
+                    const text = (text1 || text2 || "").trim() || "Verified Document";
+                    return `<span class="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 font-semibold text-xs shrink-0 align-middle"><svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>${text}</span></span>`;
+                }
             );
-
-            // Replace raw emojis with clean SVG representations
-            formatted = formatted
-                .replace(/✅/g, '<svg class="w-3.5 h-3.5 text-emerald-400 inline-block align-middle mx-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>')
-                .replace(/⚠️/g, '<svg class="w-3.5 h-3.5 text-amber-400 inline-block align-middle mx-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>')
-                .replace(/❌/g, '<svg class="w-3.5 h-3.5 text-red-400 inline-block align-middle mx-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>');
 
             // Bold, italic, code formatting
             return formatted

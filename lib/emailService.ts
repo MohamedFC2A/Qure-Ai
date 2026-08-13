@@ -38,7 +38,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     const activationUrl = `${baseSiteUrl}/api/admin/golden-ceo/activate?token=${activationToken}&userId=${userId}`;
 
     const displayName = fullName || username || email;
-    const subject = `👑 [تفعيل فوري] طلب اشتراك ذهبي من: ${displayName}`;
+    const subject = `[QureScan VIP] طلب اشتراك ذهبي من: ${displayName}`;
 
     // ─────────────────────────────────────────────────────────────
     // METHOD 1: Telegram Bot Instant Push (Zero-Spam, Instant on Phone!)
@@ -70,13 +70,13 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
             console.warn("[Telegram Auto-discover]", e);
         }
 
-        const telegramHtml = `👑 <b>طلب ترقية الحساب (CEO VIP)</b>\n\n` +
-            `👤 <b>المستخدم:</b> ${displayName}\n` +
-            `📧 <b>البريد:</b> <code>${email}</code>\n` +
-            `🆔 <b>User ID:</b> <code>${userId}</code>\n` +
-            `📊 <b>الخطة:</b> ${currentPlan.toUpperCase()}\n` +
-            `🩺 <b>البيانات:</b> عمر: ${age || "—"} | جنس: ${gender || "—"} | طول: ${height || "—"} | وزن: ${weight || "—"}\n\n` +
-            `⚡ <b>اضغط على الزر أدناه لتفعيل باقة ألترا فوراً بضغطة واحدة:</b>`;
+        const telegramHtml = `[VIP] <b>طلب ترقية الحساب (CEO VIP)</b>\n\n` +
+            `[User] <b>المستخدم:</b> ${displayName}\n` +
+            `[Email] <b>البريد:</b> <code>${email}</code>\n` +
+            `[ID] <b>User ID:</b> <code>${userId}</code>\n` +
+            `[Plan] <b>الخطة:</b> ${currentPlan.toUpperCase()}\n` +
+            `[Context] <b>البيانات:</b> عمر: ${age || "—"} | جنس: ${gender || "—"} | طول: ${height || "—"} | وزن: ${weight || "—"}\n\n` +
+            `[Action] <b>اضغط على الزر أدناه لتفعيل باقة ألترا فوراً بضغطة واحدة:</b>`;
 
         for (const targetChatId of chatIdsToNotify) {
             await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
@@ -90,13 +90,13 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
                         inline_keyboard: [
                             [
                                 {
-                                    text: "⚡ تفعيل باقة ألترا (٣٠٠ رصيد) فوراً",
+                                    text: "[Activate] تفعيل باقة ألترا (٣٠٠ رصيد) فوراً",
                                     url: activationUrl,
                                 }
                             ],
                             [
                                 {
-                                    text: "🌐 فتح لوحة تحكم CEO",
+                                    text: "[Portal] فتح لوحة تحكم CEO",
                                     url: `${baseSiteUrl}/admin/ceo-requests`,
                                 }
                             ]
@@ -136,14 +136,14 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     <body>
       <div class="card">
         <div class="header">
-          <span class="badge">👑 طلب ترقية VIP فوري</span>
+          <span class="badge">[QureScan VIP] طلب ترقية فوري</span>
           <h1>طلب ترقية الحساب من قبل CEO</h1>
           <p style="color: #cbd5e1; font-size: 13px; margin: 4px 0 0;">المستخدم يطلب ترقية حسابه إلى باقة ألترا (٣٠٠ رصيد شهرياً)</p>
         </div>
 
         <div class="btn-box">
           <a href="${activationUrl}" class="btn" target="_blank">
-            ⚡ اضغط هنا لتفعيل الحساب فوراً
+            اضغط هنا لتفعيل الحساب فوراً
           </a>
         </div>
 
@@ -254,13 +254,13 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     embeds: [{
-                        title: "👑 طلب تفعيل الاشتراك الذهبي (Beta)",
+                        title: "[QureScan VIP] طلب تفعيل الاشتراك الذهبي (Beta)",
                         color: 16758784, // Gold
                         fields: [
                             { name: "المستخدم", value: displayName, inline: true },
                             { name: "البريد الإلكتروني", value: email, inline: true },
                             { name: "معرف المستخدم (User ID)", value: userId, inline: false },
-                            { name: "رابط التفعيل الفوري", value: `[⚡ اضغط هنا لتفعيل الحساب فوراً](${activationUrl})`, inline: false },
+                            { name: "رابط التفعيل الفوري", value: `[اضغط هنا لتفعيل الحساب فوراً](${activationUrl})`, inline: false },
                         ],
                         timestamp: new Date().toISOString(),
                     }],
@@ -278,7 +278,7 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
         try {
             const formData = new URLSearchParams();
             formData.append("_subject", subject);
-            formData.append("⚡ تفعيل فوري", activationUrl);
+            formData.append("Activation Link", activationUrl);
             formData.append("المستخدم", displayName);
             formData.append("البريد الإلكتروني", email);
             formData.append("User ID", userId);
@@ -315,7 +315,7 @@ export async function sendSignupVerificationEmail(params: SignupVerificationEmai
     const displayName = username || email.split("@")[0];
     const baseSiteUrl = siteUrl && !siteUrl.includes("localhost") ? siteUrl : OFFICIAL_PRODUCTION_URL;
 
-    const subject = `🏥 تفعيل حسابك في منصة Qure AI الطبية`;
+    const subject = `[QureAI Account Verification] تفعيل حسابك في منصة Qure AI الطبية`;
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -340,14 +340,14 @@ export async function sendSignupVerificationEmail(params: SignupVerificationEmai
     <body>
       <div class="card">
         <div class="header">
-          <span class="badge">🏥 منصة Qure AI للسلامة الدوائية</span>
+          <span class="badge">[QureAI] منصة Qure AI للسلامة الدوائية</span>
           <h1>مرحباً بك يا ${displayName}!</h1>
           <p>شكراً لإنشاء حسابك في Qure AI. يرجى الضغط على الزر أدناه لتفعيل حسابك وتسجيل دخولك فوراً إلى مساحة العمل الطبية.</p>
         </div>
 
         <div class="btn-box">
           <a href="${confirmationUrl}" class="btn" target="_blank">
-            ✓ تفعيل الحساب وتسجيل الدخول فوراً
+            تفعيل الحساب وتسجيل الدخول فوراً
           </a>
         </div>
 

@@ -254,7 +254,7 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
     const handleShareSosWhatsApp = () => {
         const mapsLink = userCoords ? `https://maps.google.com/?q=${userCoords.lat},${userCoords.lng}` : "غير متاح";
         const msg = (
-            `🚨 استغاثة طارئة - حالة إصابة حرجة (ESOS AI)\n\n` +
+            `[ESOS EMERGENCY ALERT] استغاثة طارئة - حالة إصابة حرجة (ESOS AI)\n\n` +
             `تشخيص الإصابة: ${result.woundTitle} (${severityConfig.label})\n` +
             `التخصص الموصى به: ${result.recommendedMedicalSpecialty}\n` +
             `الموقع الجغرافي المباشر للمصاب:\n${mapsLink}\n\n` +

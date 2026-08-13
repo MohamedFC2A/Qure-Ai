@@ -58,7 +58,7 @@ export default function DocsPage() {
             descAr: "قم بالتقاط صورة واضحة لعلبة الدواء، النشرة الطبية، أو الروشتة عبر الكاميرا أو رفع ملف مباشر.",
             icon: ScanLine,
             badge: t("Step 1", "الخطوة الأولى"),
-            color: "text-cyan-400 bg-slate-900 border-slate-800",
+            color: "text-cyan-400 bg-q-surface-2 border-white/10",
         },
         {
             number: "02",
@@ -68,7 +68,7 @@ export default function DocsPage() {
             descAr: "تقوم المنصة باستخراج المادة الفعالة، اسم الدواء، التركيز، والمكونات من ملصق الصورة بدقة متناهية.",
             icon: Cpu,
             badge: t("Step 2", "الخطوة الثانية"),
-            color: "text-emerald-400 bg-slate-900 border-slate-800",
+            color: "text-emerald-400 bg-q-surface-2 border-white/10",
         },
         {
             number: "03",
@@ -78,7 +78,7 @@ export default function DocsPage() {
             descAr: "مطابقة المكونات الفعالة فورياً مع أكثر من 50,000 دواء مسجل في قواعد openFDA والروشتات المعتمدة.",
             icon: Database,
             badge: t("Step 3", "الخطوة الثالثة"),
-            color: "text-blue-400 bg-slate-900 border-slate-800",
+            color: "text-blue-400 bg-q-surface-2 border-white/10",
         },
         {
             number: "04",
@@ -88,7 +88,7 @@ export default function DocsPage() {
             descAr: "مطابقة التداخلات مع ملفك الصحي الشخصي (الأمراض المزمنة، الحساسية المسجلة، والعمر) لمنع المخاطر.",
             icon: UserCheck,
             badge: t("Step 4", "الخطوة الرابعة"),
-            color: "text-purple-400 bg-slate-900 border-slate-800",
+            color: "text-purple-400 bg-q-surface-2 border-white/10",
         },
         {
             number: "05",
@@ -98,7 +98,7 @@ export default function DocsPage() {
             descAr: "إصدار تقرير شامل بدرجة السلامة الطبية وتنبيهات الجرعات مع إمكانية استشارة Qure AI فوراً.",
             icon: ShieldCheck,
             badge: t("Step 5", "الخطوة الخامسة"),
-            color: "text-cyan-300 bg-slate-900 border-slate-800",
+            color: "text-cyan-300 bg-q-surface-2 border-white/10",
         },
     ];
 
@@ -185,7 +185,7 @@ console.log("Analysis Output:", result);`;
             
             {/* Top Hero Section */}
             <div className="text-center space-y-4 mb-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-q-surface-2 border border-white/10 text-slate-300 text-xs font-bold">
                     <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
                     <span>{t("Complete User Guide & Knowledge Base", "دليل الاستخدام الشامل والمصادر الطبية")}</span>
                 </div>
@@ -221,8 +221,8 @@ console.log("Analysis Output:", result);`;
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-150 active:scale-95 border",
                                 isActive
-                                    ? "bg-slate-800 text-cyan-300 border-slate-700 shadow-md"
-                                    : "bg-slate-950/60 text-slate-400 border-white/[0.06] hover:bg-slate-900 hover:text-slate-200"
+                                    ? "bg-q-surface-2 text-cyan-300 border-white/10 shadow-md"
+                                    : "bg-q-base/60 text-slate-400 border-white/[0.06] hover:bg-q-surface hover:text-slate-200"
                             )}
                         >
                             <Icon className="w-4 h-4 shrink-0" />
@@ -246,8 +246,8 @@ console.log("Analysis Output:", result);`;
                     >
                         {/* Quick Feature Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400">
+                            <div className="p-5 rounded-2xl glass-card space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-cyan-400">
                                     <ScanLine className="w-5 h-5" />
                                 </div>
                                 <h3 className="text-base font-bold text-white">
@@ -265,8 +265,8 @@ console.log("Analysis Output:", result);`;
                                 </Link>
                             </div>
 
-                            <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400">
+                            <div className="p-5 rounded-2xl glass-card space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-emerald-400">
                                     <Brain className="w-5 h-5" />
                                 </div>
                                 <h3 className="text-base font-bold text-white">
@@ -284,8 +284,8 @@ console.log("Analysis Output:", result);`;
                                 </Link>
                             </div>
 
-                            <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-purple-400">
+                            <div className="p-5 rounded-2xl glass-card space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-purple-400">
                                     <ShieldCheck className="w-5 h-5" />
                                 </div>
                                 <h3 className="text-base font-bold text-white">
@@ -313,9 +313,9 @@ console.log("Analysis Output:", result);`;
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {guideFaqs.map((faq, i) => (
-                                    <div key={i} className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.07] space-y-2">
+                                    <div key={i} className="p-4 rounded-2xl bg-q-surface/60 border border-white/[0.07] space-y-2">
                                         <h4 className="text-xs font-bold text-white flex items-start gap-2">
-                                            <span className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-cyan-300 flex items-center justify-center shrink-0 text-[10px]">Q</span>
+                                            <span className="w-5 h-5 rounded-lg bg-q-surface-2 border border-white/10 text-cyan-300 flex items-center justify-center shrink-0 text-[10px]">Q</span>
                                             <span className="leading-snug">{isArabic ? faq.qAr : faq.qEn}</span>
                                         </h4>
                                         <p className="text-xs text-slate-400 leading-relaxed ps-7">
@@ -337,7 +337,7 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-8"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl glass-card space-y-6">
                             <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div>
                                     <h2 className="text-xl font-extrabold text-white">
@@ -361,11 +361,11 @@ console.log("Analysis Output:", result);`;
                                         className={cn(
                                             "p-3 rounded-xl border text-center transition-all duration-150 flex flex-col items-center gap-1.5 active:scale-95",
                                             activeStep === idx
-                                                ? "bg-slate-800 border-white/20 text-white"
-                                                : "bg-slate-950/60 border-white/[0.06] text-slate-400 hover:text-white"
+                                                ? "bg-q-surface-2 border-white/20 text-white"
+                                                : "bg-q-base/60 border-white/[0.06] text-slate-400 hover:text-white"
                                         )}
                                     >
-                                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-900 text-cyan-300">
+                                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-q-surface text-cyan-300">
                                             {step.number}
                                         </span>
                                         <span className="text-xs font-bold truncate w-full">
@@ -376,7 +376,7 @@ console.log("Analysis Output:", result);`;
                             </div>
 
                             {/* Step Detail Card */}
-                            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col md:flex-row items-start md:items-center gap-5">
+                            <div className="p-5 rounded-2xl glass-inset flex flex-col md:flex-row items-start md:items-center gap-5">
                                 {(() => {
                                     const current = scannerSteps[activeStep];
                                     const Icon = current.icon;
@@ -411,9 +411,9 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl glass-card space-y-6">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
+                                <div className="w-12 h-12 rounded-2xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-cyan-400 shrink-0">
                                     <Brain className="w-6 h-6" />
                                 </div>
                                 <div>
@@ -427,7 +427,7 @@ console.log("Analysis Output:", result);`;
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                                <div className="p-4 rounded-2xl glass-inset space-y-2">
                                     <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs">
                                         <UserCheck className="w-4 h-4" />
                                         <span>{t("Profile Awareness", "الإلمام بالملف الشخصي")}</span>
@@ -440,7 +440,7 @@ console.log("Analysis Output:", result);`;
                                     </p>
                                 </div>
 
-                                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                                <div className="p-4 rounded-2xl glass-inset space-y-2">
                                     <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
                                         <Pill className="w-4 h-4" />
                                         <span>{t("Medication Memory", "ذاكرة الأدوية والروشتات")}</span>
@@ -454,7 +454,7 @@ console.log("Analysis Output:", result);`;
                                 </div>
                             </div>
 
-                            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4">
+                            <div className="p-4 rounded-2xl glass-inset flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-xs font-bold text-white">{t("Ready to test Qure AI?", "جاهز لتجربة Qure AI؟")}</p>
                                     <p className="text-[11px] text-slate-400 mt-0.5">{t("Available for ULTRA plan members with unlimited context.", "متاح لمشتركي ألترا مع إمكانية الربط بالملف الصحي الكامل.")}</p>
@@ -478,9 +478,9 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl glass-card space-y-6">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-purple-400 shrink-0">
+                                <div className="w-12 h-12 rounded-2xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-purple-400 shrink-0">
                                     <ShieldCheck className="w-6 h-6" />
                                 </div>
                                 <div>
@@ -546,10 +546,10 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl glass-card space-y-6">
                             <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 shrink-0">
+                                    <div className="w-12 h-12 rounded-2xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-blue-400 shrink-0">
                                         <Database className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -565,11 +565,11 @@ console.log("Analysis Output:", result);`;
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {clinicalSources.map((source, i) => (
-                                    <div key={i} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 flex flex-col justify-between">
+                                    <div key={i} className="p-4 rounded-2xl glass-inset space-y-3 flex flex-col justify-between">
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between gap-2">
                                                 <h3 className="text-sm font-bold text-white">{isArabic ? source.nameAr : source.name}</h3>
-                                                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-900 text-cyan-300 border border-slate-700">
+                                                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-q-surface-2 text-cyan-300 border border-white/10">
                                                     {source.tag}
                                                 </span>
                                             </div>
@@ -603,10 +603,10 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl glass-card space-y-6">
                             <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 shrink-0">
+                                    <div className="w-12 h-12 rounded-2xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-slate-200 shrink-0">
                                         <Terminal className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -621,7 +621,7 @@ console.log("Analysis Output:", result);`;
                             </div>
 
                             {/* Code Snippet Box */}
-                            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                            <div className="p-4 rounded-2xl glass-inset space-y-3">
                                 <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
                                     <span>POST /api/analyze</span>
                                     <button
@@ -632,7 +632,7 @@ console.log("Analysis Output:", result);`;
                                         <span>{copiedCode ? t("Copied!", "تم النسخ!") : t("Copy Code", "نسخ الكود")}</span>
                                     </button>
                                 </div>
-                                <pre className="p-4 rounded-xl bg-slate-900 text-slate-200 font-mono text-xs overflow-x-auto leading-relaxed dir-ltr">
+                                <pre className="p-4 rounded-xl bg-q-surface-2 text-slate-200 font-mono text-xs overflow-x-auto leading-relaxed dir-ltr">
                                     {apiCodeSnippet}
                                 </pre>
                             </div>

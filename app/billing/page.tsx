@@ -192,7 +192,6 @@ function BillingContent() {
                                 onClick={handleRedeemVoucher}
                                 disabled={redeemLoading || !voucherCode}
                                 className="font-bold whitespace-nowrap text-xs sm:text-sm"
-                                glow
                             >
                                 {redeemLoading ? t("Processing...", "جارٍ المعالجة...") : t("Redeem", "استبدال")}
                             </Button>

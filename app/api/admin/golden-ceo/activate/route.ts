@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
             </head>
             <body>
                 <div class="card">
-                    <h2 style="margin:0 0 8px;">❌ رابط التفعيل غير صالح</h2>
+                    <h2 style="margin:0 0 8px; display: flex; align-items: center; justify-content: center; gap: 8px;"><svg style="width:24px;height:24px;" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>رابط التفعيل غير صالح</span></h2>
                     <p style="color:#94a3b8; font-size:14px; margin:0;">يرجى التأكد من الضغط على الرابط الصحيح من البريد الإلكتروني.</p>
                 </div>
             </body>
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
                 </head>
                 <body>
                     <div class="card">
-                        <h2 style="color:#60a5fa; margin:0 0 8px;">ℹ️ تم تفعيل هذا الحساب بالفعل سابقاً</h2>
+                        <h2 style="color:#60a5fa; margin:0 0 8px; display: flex; align-items: center; justify-content: center; gap: 8px;"><svg style="width:24px;height:24px;" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span>تم تفعيل هذا الحساب بالفعل سابقاً</span></h2>
                         <p style="color:#94a3b8; font-size:14px; margin:0;">هذا الطلب قد تم تفعيله مسبقاً، والمستخدم يتمتع بباقة ألترا حالياً.</p>
                         <a href="${OFFICIAL_SITE_URL}/admin/ceo-requests" class="btn">الانتقال إلى لوحة تحكم CEO</a>
                     </div>
@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
                 <style>
                     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #030712; color: #ffffff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; box-sizing: border-box; }
                     .card { background: #0f172a; border: 1.5px solid #22c55e; border-radius: 24px; padding: 32px 24px; text-align: center; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
-                    .icon { width: 70px; height: 70px; background: rgba(34, 197, 94, 0.15); border: 2px solid #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 36px; }
+                    .icon { width: 70px; height: 70px; background: rgba(34, 197, 94, 0.15); border: 2px solid #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
                     h1 { color: #4ade80; font-size: 22px; font-weight: 900; margin: 0 0 8px; }
                     p { color: #94a3b8; font-size: 13px; line-height: 1.5; margin: 0 0 20px; }
                     .info-box { background: #131d31; border: 1px solid #1e293b; border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: right; }
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
             </head>
             <body>
                 <div class="card">
-                    <div class="icon">👑</div>
+                    <div class="icon"><svg style="width:36px;height:36px;" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg></div>
                     <h1>تمت ترقية الحساب لباقة ULTRA بنجاح!</h1>
                     <p>تم ترقية الحساب فوراً إلى باقة <strong>ULTRA</strong> وتعيين الرصيد الشهري إلى <strong>٣٠٠ رصيد</strong>.</p>
                     

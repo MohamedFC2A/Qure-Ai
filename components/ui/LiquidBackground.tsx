@@ -6,7 +6,7 @@ import React from "react";
 export const LiquidBackground = () => {
     const prefersReducedMotion = useReducedMotion();
     return (
-        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#050A10]" suppressHydrationWarning>
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#060911]" suppressHydrationWarning>
             <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.035)_1px,transparent_1px)] bg-[size:64px_64px]" />
             <div className="absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-cyan-950/35 via-teal-950/10 to-transparent" />
             <motion.div
@@ -49,7 +49,7 @@ export const LiquidBackground = () => {
                 }
                 className="absolute bottom-[-24%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-emerald-500/10 blur-[130px] will-change-transform"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050A10]/45 to-[#050A10]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#060911]/45 to-[#060911]" />
         </div>
     );
 };

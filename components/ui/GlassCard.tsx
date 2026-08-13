@@ -26,7 +26,7 @@ const variantClasses: Record<GlassVariant, string> = {
     default:  "glass-card",
     elevated: "glass-elevated",
     inset:    "glass-inset",
-    bordered: "glass-card border-white/12",
+    bordered: "glass-card border-white/[0.08]",
 };
 
 export const GlassCard = ({
@@ -50,7 +50,7 @@ export const GlassCard = ({
             {...props}
         >
             {/* Top shimmer line */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent pointer-events-none" />
 
             {children}
         </div>

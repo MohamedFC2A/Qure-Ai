@@ -40,3 +40,10 @@ next-env.d.ts
 
 # playwright-cli
 .playwright-cli/
+.agents/
+*.log
+build_out.txt
+GATE_STATUS.md
+PROJECT.md
+ORIGINAL_REQUEST.md
+progress.md

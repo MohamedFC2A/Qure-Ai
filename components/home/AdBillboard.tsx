@@ -160,7 +160,7 @@ export function AdBillboard({
                                     <div className={cn("max-w-3xl", isRtl && "ml-auto text-right")} dir={isRtl ? "rtl" : "ltr"}>
                                         {slide.badge && (
                                             <div className={cn(
-                                                "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 border border-white/15 backdrop-blur-md text-white/80 text-[11px] sm:text-xs font-semibold",
+                                                "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-q-surface/60 border border-white/15 backdrop-blur-md text-white/80 text-[11px] sm:text-xs font-semibold",
                                                 isRtl && "flex-row-reverse"
                                             )}>
                                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
@@ -183,7 +183,7 @@ export function AdBillboard({
 
                             {slide.href && (
                                 <div className="absolute top-4 right-4">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 border border-white/15 backdrop-blur-md text-white/85 text-xs font-semibold">
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-q-surface/60 border border-white/15 backdrop-blur-md text-white/85 text-xs font-semibold">
                                         <ExternalLink className="w-3.5 h-3.5" />
                                         <span className="hidden sm:inline">{isRtl ? "فتح" : "Open"}</span>
                                     </div>
@@ -218,7 +218,7 @@ export function AdBillboard({
                         className={cn(
                             "hidden sm:flex items-center justify-center",
                             "absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full",
-                            "bg-black/40 border border-white/10 text-white/80 hover:text-white hover:bg-black/55",
+                            "bg-q-surface/60 border border-white/10 text-white/80 hover:text-white hover:bg-q-surface-2/80",
                             "backdrop-blur-md shadow-lg shadow-black/30 transition-all"
                         )}
                     >
@@ -231,7 +231,7 @@ export function AdBillboard({
                         className={cn(
                             "hidden sm:flex items-center justify-center",
                             "absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full",
-                            "bg-black/40 border border-white/10 text-white/80 hover:text-white hover:bg-black/55",
+                            "bg-q-surface/60 border border-white/10 text-white/80 hover:text-white hover:bg-q-surface-2/80",
                             "backdrop-blur-md shadow-lg shadow-black/30 transition-all"
                         )}
                     >

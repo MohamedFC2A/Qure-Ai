@@ -629,7 +629,7 @@ function AuthFormContent({ type }: AuthFormProps) {
     // If registered and awaiting email confirmation: Show dedicated clean confirmation state
     if (registeredEmail) {
         return (
-            <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl text-center space-y-6">
+            <div className="w-full max-w-md glass-card rounded-2xl p-6 sm:p-8 shadow-xl text-center space-y-6">
                 <div className="w-14 h-14 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto text-cyan-400">
                     <Mail className="w-7 h-7" />
                 </div>
@@ -649,12 +649,12 @@ function AuthFormContent({ type }: AuthFormProps) {
                             "تم إرسال رابط التفعيل الآمن إلى:"
                         )}
                     </p>
-                    <div className="py-2 px-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-cyan-300 select-all inline-block max-w-full truncate">
+                    <div className="py-2 px-3 glass-inset rounded-xl font-mono text-xs text-cyan-300 select-all inline-block max-w-full truncate">
                         {registeredEmail}
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-start space-y-2.5">
+                <div className="p-4 rounded-xl glass-inset text-start space-y-2.5">
                     <div className="flex items-start gap-2.5 text-xs text-slate-300 leading-relaxed">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                         <span>
@@ -734,7 +734,7 @@ function AuthFormContent({ type }: AuthFormProps) {
     }
 
     return (
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+        <div className="w-full max-w-md glass-card rounded-2xl p-6 sm:p-8 shadow-xl">
             <div className="space-y-6">
                 {/* Header */}
                 <div className="text-center space-y-1.5">
@@ -794,7 +794,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                     {...register("email")}
                                     type="email"
                                     autoComplete="email"
-                                    className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800"
+                                    className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-q-base border-white/10"
                                     placeholder={t("user@example.com", "name@example.com")}
                                 />
                             </div>
@@ -830,7 +830,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                     {...register("password")}
                                     type={showPassword ? "text" : "password"}
                                     autoComplete={type === "signup" ? "new-password" : "current-password"}
-                                    className="clinical-input ps-9 pe-10 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800"
+                                    className="clinical-input ps-9 pe-10 py-2.5 text-xs sm:text-sm bg-q-base border-white/10"
                                     placeholder={t("Enter your password", "أدخل كلمة المرور")}
                                 />
                                 <button
@@ -854,7 +854,7 @@ function AuthFormContent({ type }: AuthFormProps) {
 
                     {/* SECTION 2: SIGNUP PROFILE FIELDS */}
                     {type === "signup" && (
-                        <div className="space-y-3 pt-2 border-t border-slate-800/80">
+                        <div className="space-y-3 pt-2 border-t border-white/10">
                             {/* Username */}
                             <div className="space-y-1">
                                 <div className="flex items-center justify-between">
@@ -869,7 +869,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                     <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                                     <input
                                         {...register("username")}
-                                        className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800 font-mono"
+                                        className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-q-base border-white/10 font-mono"
                                         placeholder={t("e.g. mohamed or ahmed", "مثال: mohamed أو ahmed")}
                                         autoComplete="username"
                                         dir="ltr"
@@ -915,7 +915,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                             {...register("age")}
                                             type="number"
                                             inputMode="numeric"
-                                            className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800"
+                                            className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-q-base border-white/10"
                                             placeholder="25"
                                             min={1}
                                             max={120}
@@ -934,19 +934,19 @@ function AuthFormContent({ type }: AuthFormProps) {
                                         <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                                         <select
                                             {...register("gender")}
-                                            className="clinical-input ps-9 pe-8 py-2.5 text-xs sm:text-sm appearance-none bg-slate-950 border-slate-800"
+                                            className="clinical-input ps-9 pe-8 py-2.5 text-xs sm:text-sm appearance-none bg-q-base border-white/10"
                                             defaultValue=""
                                         >
-                                            <option value="" disabled className="bg-slate-900 text-slate-500">
+                                            <option value="" disabled className="bg-q-surface text-slate-500">
                                                 {t("Select...", "اختر...")}
                                             </option>
-                                            <option value="male" className="bg-slate-900 text-white">
+                                            <option value="male" className="bg-q-surface text-white">
                                                 {t("Male", "ذكر")}
                                             </option>
-                                            <option value="female" className="bg-slate-900 text-white">
+                                            <option value="female" className="bg-q-surface text-white">
                                                 {t("Female", "أنثى")}
                                             </option>
-                                            <option value="other" className="bg-slate-900 text-white">
+                                            <option value="other" className="bg-q-surface text-white">
                                                 {t("Other", "آخر")}
                                             </option>
                                         </select>
@@ -969,7 +969,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                             {...register("heightCm")}
                                             type="number"
                                             inputMode="numeric"
-                                            className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800"
+                                            className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-q-base border-white/10"
                                             placeholder="175"
                                             min={50}
                                             max={250}
@@ -991,7 +991,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                             type="number"
                                             inputMode="decimal"
                                             step="0.1"
-                                            className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-slate-950 border-slate-800"
+                                            className="clinical-input ps-9 pe-4 py-2.5 text-xs sm:text-sm bg-q-base border-white/10"
                                             placeholder="70"
                                             min={10}
                                             max={500}
@@ -1004,7 +1004,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                             </div>
 
                             {/* Terms & Medical Disclaimer Agreement (Mandatory Mobile Face ID / Biometrics) */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+                            <div className="p-3.5 rounded-xl glass-inset space-y-2.5">
                                 {/* Hidden form registration field */}
                                 <input type="hidden" {...register("agreeToTerms")} />
 
@@ -1016,7 +1016,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                     className={`w-full py-3 px-4 text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2.5 transition-all ${
                                         isBiometricVerified
                                             ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400"
-                                            : "border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-200"
+                                            : "border-white/10 bg-q-surface-2 hover:bg-q-surface-3 text-slate-200"
                                     }`}
                                 >
                                     <Fingerprint className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -1057,7 +1057,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                 </form>
 
                 {/* Social Login & Local Dev */}
-                <div className="pt-5 border-t border-slate-800 space-y-3">
+                <div className="pt-5 border-t border-white/10 space-y-3">
                     {isLocalDev && (
                         <Button
                             variant="outline"
@@ -1072,7 +1072,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <Button
                             variant="outline"
-                            className="w-full text-xs font-medium border-slate-800 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl"
+                            className="w-full text-xs font-medium border-white/10 bg-q-base hover:bg-q-surface-2 text-slate-300 hover:text-white rounded-xl"
                             onClick={() => handleOAuthLogin("github")}
                             disabled={isLoading}
                         >
@@ -1081,7 +1081,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full text-xs font-medium border-slate-800 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl"
+                            className="w-full text-xs font-medium border-white/10 bg-q-base hover:bg-q-surface-2 text-slate-300 hover:text-white rounded-xl"
                             onClick={() => handleOAuthLogin("google")}
                             disabled={isLoading}
                         >
@@ -1135,7 +1135,7 @@ export const AuthForm = (props: AuthFormProps) => {
     return (
         <Suspense
             fallback={
-                <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-400 text-sm">
+                <div className="w-full max-w-md glass-card rounded-2xl p-8 text-center text-slate-400 text-sm">
                     Loading authentication...
                 </div>
             }

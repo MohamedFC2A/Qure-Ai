@@ -515,7 +515,7 @@ export default function ProfilePage() {
                 </div>
                 {(["mohamedahmedmatany@gmail.com", "uversionstore@gmail.com"].includes((user?.email || user?.user_metadata?.email || "").toLowerCase().trim()) || user?.id === "00000000-0000-0000-0000-000000000001") && (
                     <Link href="/admin/ceo-requests">
-                        <button className="py-2.5 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-750 text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
+                        <button className="py-2.5 px-4 rounded-xl bg-q-surface-2 border border-white/10 hover:bg-q-surface-3 text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
                             <Crown className="w-4 h-4 text-cyan-400" />
                             <span>{t("CEO Control Portal", "لوحة تحكم وإدارة CEO")}</span>
                         </button>
@@ -639,7 +639,7 @@ export default function ProfilePage() {
                                         <div>
                                             <label className="text-xs font-medium text-slate-400 mb-1 block">{t("Gender", "الجنس")}</label>
                                             <select
-                                                className="w-full bg-slate-900 border border-white/[0.06] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/20 transition-all"
+                                                className="w-full bg-q-surface border border-white/[0.06] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-white/20 transition-all"
                                                 value={basicProfile.gender}
                                                 onChange={(e) => setBasicProfile({ ...basicProfile, gender: e.target.value })}
                                             >
@@ -972,7 +972,7 @@ export default function ProfilePage() {
                     {activeTab === 'esos' && (
                         <div className="relative">
                             {plan !== 'ultra' && (
-                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/60 flex flex-col items-center justify-center rounded-2xl border border-white/10 p-8 text-center">
+                                <div className="absolute inset-0 z-10 bg-q-base/80 backdrop-blur-md flex flex-col items-center justify-center rounded-2xl border border-white/10 p-8 text-center">
                                     <div className="w-12 h-12 rounded-xl bg-white/[0.05] flex items-center justify-center mb-4 border border-white/10">
                                         <Lock className="w-6 h-6 text-slate-300" />
                                     </div>
@@ -984,7 +984,7 @@ export default function ProfilePage() {
                                         )}
                                     </p>
                                     <Link href="/pricing">
-                                        <Button variant="primary" className="bg-slate-800 hover:bg-slate-700 text-white border border-white/15 font-bold px-6">
+                                        <Button variant="primary" className="bg-q-surface-2 hover:bg-q-surface-3 text-white border border-white/15 font-bold px-6">
                                             {t("Upgrade to Ultra", "الترقية إلى Ultra")}
                                         </Button>
                                     </Link>
@@ -1001,7 +1001,7 @@ export default function ProfilePage() {
                     {activeTab === 'fda' && (
                         <div className="relative">
                             {plan !== 'ultra' && (
-                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/60 flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
+                                <div className="absolute inset-0 z-10 bg-q-base/80 backdrop-blur-md flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
                                     <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 border border-amber-500/30">
                                         <Lock className="w-6 h-6 text-amber-400" />
                                     </div>
@@ -1063,7 +1063,7 @@ export default function ProfilePage() {
                     {activeTab === 'family' && (
                         <div className="relative">
                             {plan !== 'ultra' && (
-                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/60 flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
+                                <div className="absolute inset-0 z-10 bg-q-base/80 backdrop-blur-md flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
                                     <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 border border-amber-500/30">
                                         <Lock className="w-6 h-6 text-amber-400" />
                                     </div>
@@ -1157,13 +1157,13 @@ export default function ProfilePage() {
                                             value={careName}
                                             onChange={(e) => setCareName(e.target.value)}
                                             placeholder={t("Name (e.g. Dad)", "الاسم (مثال: الوالد)")}
-                                            className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-cyan-500/50"
+                                            className="glass-inset rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-cyan-500/50"
                                         />
                                         <input
                                             value={careRelation}
                                             onChange={(e) => setCareRelation(e.target.value)}
                                             placeholder={t("Relationship (optional)", "صلة القرابة (اختياري)")}
-                                            className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-cyan-500/50"
+                                            className="glass-inset rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-cyan-500/50"
                                         />
                                     </div>
                                     <div className="mt-3">
@@ -1184,7 +1184,7 @@ export default function ProfilePage() {
                     {activeTab === 'private' && (
                         <div className="relative">
                             {plan !== 'ultra' && (
-                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/60 flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
+                                <div className="absolute inset-0 z-10 bg-q-base/80 backdrop-blur-md flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
                                     <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 border border-amber-500/30">
                                         <Lock className="w-6 h-6 text-amber-400" />
                                     </div>
@@ -1212,7 +1212,7 @@ export default function ProfilePage() {
                                         <div className="shrink-0 min-w-[180px]">
                                             <label className="text-[11px] text-white/50 block mb-1">{t("Active profile", "الملف النشط")}</label>
                                             <select
-                                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                                className="w-full bg-q-surface border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                                                 value={activeCareProfileId || ""}
                                                 onChange={(e) => setActiveCareProfileId(e.target.value)}
                                             >
@@ -1232,7 +1232,7 @@ export default function ProfilePage() {
                                             <label className="text-xs text-white/60 mb-1 block">{t("Age", "العمر")}</label>
                                             <div className="relative flex items-center">
                                                 <input
-                                                    className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 pe-16 text-white"
+                                                    className="w-full glass-inset rounded-xl p-2.5 pe-16 text-white"
                                                     type="number"
                                                     inputMode="numeric"
                                                     value={privateProfile.age || ''}
@@ -1248,7 +1248,7 @@ export default function ProfilePage() {
                                         </div>
                                         <div>
                                             <label className="text-xs text-white/60 mb-1 block">{t("Gender", "الجنس")}</label>
-                                            <select className="w-full bg-slate-900 border border-white/10 rounded-xl p-2.5 text-white"
+                                            <select className="w-full bg-q-surface border border-white/10 rounded-xl p-2.5 text-white"
                                                 value={privateProfile.sex || ''} onChange={e => setPrivateProfile({ ...privateProfile, sex: e.target.value })}>
                                                 <option value="">{t("Select...", "اختر...")}</option>
                                                 <option value="male">{t("Male", "ذكر")}</option>
@@ -1274,7 +1274,7 @@ export default function ProfilePage() {
                                     <div>
                                         <label className="text-xs text-white/60 mb-1 block">{t("Current medications", "الأدوية التي تتناولها حالياً")}</label>
                                         <textarea
-                                            className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 text-white h-24"
+                                            className="w-full glass-inset rounded-xl p-2.5 text-white h-24"
                                             placeholder={t("Separate items by comma or new line (e.g. Metformin, Warfarin...)", "افصل بين الأدوية بفصلة أو سطر جديد (مثال: ميتفورمين، فارفرين...)")}
                                             value={privateProfile.current_medications || ''}
                                             onChange={e => setPrivateProfile({ ...privateProfile, current_medications: e.target.value })}
@@ -1282,25 +1282,25 @@ export default function ProfilePage() {
                                     </div>
                                     <div>
                                         <label className="text-xs text-white/60 mb-1 block">{t("Known Allergies", "الحساسية المعروفة")}</label>
-                                        <textarea className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 text-white h-20" placeholder={t("e.g. Penicillin, Peanuts", "مثال: بنسلين، مكسرات")}
+                                        <textarea className="w-full glass-inset rounded-xl p-2.5 text-white h-20" placeholder={t("e.g. Penicillin, Peanuts", "مثال: بنسلين، مكسرات")}
                                             value={privateProfile.allergies || ''} onChange={e => setPrivateProfile({ ...privateProfile, allergies: e.target.value })} />
                                     </div>
                                     <div>
                                         <label className="text-xs text-white/60 mb-1 block">{t("Chronic Conditions", "الأمراض المزمنة")}</label>
-                                        <textarea className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 text-white h-20" placeholder={t("e.g. Diabetes, Hypertension", "مثال: السكري، ضغط الدم")}
+                                        <textarea className="w-full glass-inset rounded-xl p-2.5 text-white h-20" placeholder={t("e.g. Diabetes, Hypertension", "مثال: السكري، ضغط الدم")}
                                             value={privateProfile.chronic_conditions || ''} onChange={e => setPrivateProfile({ ...privateProfile, chronic_conditions: e.target.value })} />
                                     </div>
                                     <div>
                                         <label className="text-xs text-white/60 mb-1 block">{t("Notes (optional)", "ملاحظات إضافية (اختياري)")}</label>
                                         <textarea
-                                            className="w-full bg-black/20 border border-white/10 rounded-xl p-2.5 text-white h-20"
+                                            className="w-full glass-inset rounded-xl p-2.5 text-white h-20"
                                             placeholder={t("Anything important for the AI to know (e.g. pregnancy, kidney issues...)", "أي معلومات هامة يرجي إعلام الذكاء الاصطناعي بها (مثل الحمل، كفاءة الكلى...)")}
                                             value={privateProfile.notes || ''}
                                             onChange={e => setPrivateProfile({ ...privateProfile, notes: e.target.value })}
                                         />
                                     </div>
                                     <div className="pt-4">
-                                        <Button type="submit" disabled={profileSaving} glow>
+                                        <Button type="submit" disabled={profileSaving}>
                                             {profileSaving ? t("Saving...", "جارٍ الحفظ...") : t("Save Private Profile", "حفظ الملف الصحي الخاص")}
                                         </Button>
                                     </div>
@@ -1313,7 +1313,7 @@ export default function ProfilePage() {
                     {activeTab === 'memories' && (
                         <div className="relative">
                             {plan !== 'ultra' && (
-                                <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/60 flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
+                                <div className="absolute inset-0 z-10 bg-q-base/80 backdrop-blur-md flex flex-col items-center justify-center rounded-xl border border-white/10 p-8 text-center">
                                     <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 border border-amber-500/30">
                                         <Activity className="w-6 h-6 text-amber-400" />
                                     </div>
@@ -1341,7 +1341,7 @@ export default function ProfilePage() {
                                         <div className="shrink-0 min-w-[180px]">
                                             <label className="text-[11px] text-white/50 block mb-1">{t("Active profile", "الملف النشط")}</label>
                                             <select
-                                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                                className="w-full bg-q-surface border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                                                 value={activeCareProfileId || ""}
                                                 onChange={(e) => setActiveCareProfileId(e.target.value)}
                                             >

@@ -30,7 +30,7 @@ export const viewport: Viewport = {
     width: "device-width",
     initialScale: 1,
     maximumScale: 5,
-    themeColor: "#030712",
+    themeColor: "#060911",
     colorScheme: "dark",
 };
 
@@ -145,7 +145,7 @@ export default function RootLayout({
             <body
                 className={clsx(
                     cairo.className,
-                    "min-h-screen relative flex flex-col justify-between overflow-x-hidden bg-[#030712] text-slate-100 antialiased selection:bg-[#06b6d4]/30 selection:text-white"
+                    "min-h-screen relative flex flex-col justify-between overflow-x-hidden bg-[#060911] text-slate-100 antialiased selection:bg-[#06b6d4]/30 selection:text-white"
                 )}
                 suppressHydrationWarning
             >

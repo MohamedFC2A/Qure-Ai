@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
                     .maybeSingle();
 
                 if (!requestRecord) {
-                    await answerCallbackQuery(cb.id, "❌ لم يتم العثور على هذا الطلب", true);
+                    await answerCallbackQuery(cb.id, "[Error] لم يتم العثور على هذا الطلب", true);
                     return NextResponse.json({ ok: true });
                 }
 
@@ -109,17 +109,17 @@ export async function POST(req: NextRequest) {
                     .update({ status: "approved", activated_at: new Date().toISOString() })
                     .eq("id", reqId);
 
-                await answerCallbackQuery(cb.id, "✅ تم تفعيل باقة ألترا بنجاح!", true);
+                await answerCallbackQuery(cb.id, "[Approved] تم تفعيل باقة ألترا بنجاح!", true);
 
-                const updatedText = `✅ <b>تمت ترقية الحساب لباقة ULTRA بنجاح!</b>\n\n` +
-                    `👤 <b>المستخدم:</b> ${requestRecord.full_name || requestRecord.email}\n` +
-                    `📧 <b>البريد:</b> <code>${requestRecord.email}</code>\n` +
-                    `📊 <b>الخطة:</b> ULTRA (٣٠٠ رصيد شهرياً)\n` +
-                    `⏰ <b>تاريخ التفعيل:</b> ${new Date().toLocaleString("ar-EG")}`;
+                const updatedText = `[Approved] <b>تمت ترقية الحساب لباقة ULTRA بنجاح!</b>\n\n` +
+                    `[User] <b>المستخدم:</b> ${requestRecord.full_name || requestRecord.email}\n` +
+                    `[Email] <b>البريد:</b> <code>${requestRecord.email}</code>\n` +
+                    `[Plan] <b>الخطة:</b> ULTRA (٣٠٠ رصيد شهرياً)\n` +
+                    `[Timestamp] <b>تاريخ التفعيل:</b> ${new Date().toLocaleString("ar-EG")}`;
 
                 await editTelegramMessage(chatId, messageId, updatedText, {
                     inline_keyboard: [
-                        [{ text: "🛑 إلغاء باقة ألترا لهذا المستخدم", callback_data: `revoke_${requestRecord.user_id}` }]
+                        [{ text: "[Revoke] إلغاء باقة ألترا لهذا المستخدم", callback_data: `revoke_${requestRecord.user_id}` }]
                     ]
                 });
 
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
                     .eq("id", reqId);
 
                 await answerCallbackQuery(cb.id, "تم رفض الطلب.", true);
-                await editTelegramMessage(chatId, messageId, "❌ <b>تم رفض هذا الطلب.</b>");
+                await editTelegramMessage(chatId, messageId, "[Rejected] <b>تم رفض هذا الطلب.</b>");
                 return NextResponse.json({ ok: true });
             }
 
@@ -172,18 +172,18 @@ export async function POST(req: NextRequest) {
                     .update({ status: "revoked" })
                     .eq("user_id", targetUserId);
 
-                await answerCallbackQuery(cb.id, "🛑 تم إلغاء باقة ألترا وإعادة المستخدم للخطة المجانية (٣٠ رصيد)!", true);
+                await answerCallbackQuery(cb.id, "[Revoked] تم إلغاء باقة ألترا وإعادة المستخدم للخطة المجانية (٣٠ رصيد)!", true);
 
                 const userName = userProfile?.full_name || userProfile?.username || targetUserId;
-                const revokedText = `🛑 <b>تم إلغاء باقة ULTRA</b>\n\n` +
-                    `👤 <b>المستخدم:</b> ${userName}\n` +
-                    `🆔 <b>ID:</b> <code>${targetUserId}</code>\n` +
-                    `📊 <b>الخطة الحالية:</b> FREE (٣٠ رصيد شهرياً)\n` +
-                    `⏰ <b>وقت الإلغاء:</b> ${new Date().toLocaleString("ar-EG")}`;
+                const revokedText = `[Revoked] <b>تم إلغاء باقة ULTRA</b>\n\n` +
+                    `[User] <b>المستخدم:</b> ${userName}\n` +
+                    `[ID] <b>ID:</b> <code>${targetUserId}</code>\n` +
+                    `[Plan] <b>الخطة الحالية:</b> FREE (٣٠ رصيد شهرياً)\n` +
+                    `[Timestamp] <b>وقت الإلغاء:</b> ${new Date().toLocaleString("ar-EG")}`;
 
                 await editTelegramMessage(chatId, messageId, revokedText, {
                     inline_keyboard: [
-                        [{ text: "⚡ إعادة التفعيل لألترا", callback_data: `reactivate_${targetUserId}` }]
+                        [{ text: "[Reactivate] إعادة التفعيل لألترا", callback_data: `reactivate_${targetUserId}` }]
                     ]
                 });
 
@@ -212,11 +212,11 @@ export async function POST(req: NextRequest) {
                     .update({ status: "approved", activated_at: new Date().toISOString() })
                     .eq("user_id", targetUserId);
 
-                await answerCallbackQuery(cb.id, "⚡ تمت إعادة التفعيل لباقة ULTRA بنجاح!", true);
+                await answerCallbackQuery(cb.id, "[Active] تمت إعادة التفعيل لباقة ULTRA بنجاح!", true);
 
-                await editTelegramMessage(chatId, messageId, `👑 <b>تمت إعادة تفعيل باقة ألترا بنجاح للمستخدم:</b> <code>${targetUserId}</code>`, {
+                await editTelegramMessage(chatId, messageId, `[VIP] <b>تمت إعادة تفعيل باقة ألترا بنجاح للمستخدم:</b> <code>${targetUserId}</code>`, {
                     inline_keyboard: [
-                        [{ text: "🛑 إلغاء الاشتراك مجدداً", callback_data: `revoke_${targetUserId}` }]
+                        [{ text: "[Revoke] إلغاء الاشتراك مجدداً", callback_data: `revoke_${targetUserId}` }]
                     ]
                 });
 
@@ -251,21 +251,21 @@ export async function POST(req: NextRequest) {
             const text: string = update.message.text.trim();
 
             if (text === "/start" || text === "/help" || text === "/menu") {
-                const welcomeText = `👑 <b>أهلاً بك يا فندم في لوحة تحكم QureScan CEO</b>\n\n` +
-                    `أنا مساعدك التنفيذي لإدارة المشتركين، طلبات التفعيل، وإلغاء الاشتراكات بضغطة زر واحدة.\n\n` +
+                const welcomeText = `[VIP] <b>أهلاً بك في لوحة تحكم QureScan CEO Gateway</b>\n\n` +
+                    `المساعد التنفيذي لإدارة المشتركين، طلبات التفعيل، وإلغاء الاشتراكات.\n\n` +
                     `اختر من القائمة أدناه:`;
 
                 const keyboard = {
                     inline_keyboard: [
                         [
-                            { text: "👑 المشتركين الحاليين (باقة ألترا)", callback_data: "cmd_subscribers" },
+                            { text: "[Subscribers] المشتركين الحاليين (باقة ألترا)", callback_data: "cmd_subscribers" },
                         ],
                         [
-                            { text: "⏳ الطلبات المعلقة (قيد المراجعة)", callback_data: "cmd_pending" },
-                            { text: "📊 إحصائيات المنصة الحية", callback_data: "cmd_stats" },
+                            { text: "[Pending] الطلبات المعلقة (قيد المراجعة)", callback_data: "cmd_pending" },
+                            { text: "[Stats] إحصائيات المنصة الحية", callback_data: "cmd_stats" },
                         ],
                         [
-                            { text: "🌐 فتح لوحة التحكم على الموقع", url: `${OFFICIAL_SITE_URL}/admin/ceo-requests` },
+                            { text: "[Portal] فتح لوحة التحكم على الموقع", url: `${OFFICIAL_SITE_URL}/admin/ceo-requests` },
                         ]
                     ]
                 };
@@ -290,7 +290,7 @@ export async function POST(req: NextRequest) {
             }
 
             // Fallback: search or direct command
-            await sendTelegramMessage(chatId, `💡 أرسل /menu لفتح القائمة الرئيسية أو /subscribers لعرض كل المشتركين وإلغاء أي اشتراك.`);
+            await sendTelegramMessage(chatId, `[Info] أرسل /menu لفتح القائمة الرئيسية أو /subscribers لعرض كل المشتركين وإلغاء أي اشتراك.`);
         }
 
         return NextResponse.json({ ok: true });
@@ -310,23 +310,23 @@ async function handleListSubscribers(chatId: string | number, adminSupabase: any
         .limit(20);
 
     if (error || !subscribers || subscribers.length === 0) {
-        await sendTelegramMessage(chatId, "ℹ️ لا يوجد أي مشتركين حاليين في باقة ULTRA.");
+        await sendTelegramMessage(chatId, "[Info] لا يوجد أي مشتركين حاليين في باقة ULTRA.");
         return;
     }
 
-    await sendTelegramMessage(chatId, `👑 <b>قائمة المشتركين الحاليين في باقة ألترا (${subscribers.length}):</b>`);
+    await sendTelegramMessage(chatId, `[VIP] <b>قائمة المشتركين الحاليين في باقة ألترا (${subscribers.length}):</b>`);
 
     for (const sub of subscribers) {
         const name = sub.full_name || sub.username || "مستخدم بدون اسم";
-        const msg = `👤 <b>${name}</b>\n` +
-            `🆔 <b>ID:</b> <code>${sub.id}</code>\n` +
-            `📊 <b>الخطة:</b> ULTRA (مفعلة)\n` +
-            `⏰ <b>تاريخ التحديث:</b> ${new Date(sub.updated_at || sub.created_at).toLocaleString("ar-EG")}`;
+        const msg = `[User] <b>${name}</b>\n` +
+            `[ID] <b>ID:</b> <code>${sub.id}</code>\n` +
+            `[Plan] <b>الخطة:</b> ULTRA (مفعلة)\n` +
+            `[Timestamp] <b>تاريخ التحديث:</b> ${new Date(sub.updated_at || sub.created_at).toLocaleString("ar-EG")}`;
 
         const buttons = {
             inline_keyboard: [
                 [
-                    { text: "🛑 إلغاء اشتراك ألترا فوراً", callback_data: `revoke_${sub.id}` }
+                    { text: "[Revoke] إلغاء اشتراك ألترا فوراً", callback_data: `revoke_${sub.id}` }
                 ]
             ]
         };
@@ -345,26 +345,26 @@ async function handleListPending(chatId: string | number, adminSupabase: any) {
         .limit(10);
 
     if (error || !pendingRequests || pendingRequests.length === 0) {
-        await sendTelegramMessage(chatId, "✅ <b>رائع! لا توجد أي طلبات معلقة حالياً.</b>\nكل الطلبات تمت معالجتها.");
+        await sendTelegramMessage(chatId, "[Approved] <b>رائع! لا توجد أي طلبات معلقة حالياً.</b>\nكل الطلبات تمت معالجتها.");
         return;
     }
 
-    await sendTelegramMessage(chatId, `⏳ <b>الطلبات المعلقة قيد المراجعة (${pendingRequests.length}):</b>`);
+    await sendTelegramMessage(chatId, `[Pending] <b>الطلبات المعلقة قيد المراجعة (${pendingRequests.length}):</b>`);
 
     for (const req of pendingRequests) {
         const name = req.full_name || req.username || "بدون اسم";
         const details = req.profile_details || {};
-        const msg = `👑 <b>طلب تفعيل من:</b> ${name}\n` +
-            `📧 <b>البريد:</b> <code>${req.email}</code>\n` +
-            `🆔 <b>User ID:</b> <code>${req.user_id}</code>\n` +
-            `🩺 <b>البيانات:</b> عمر: ${details.age || "—"} | جنس: ${details.gender || "—"} | وزن: ${details.weight || "—"} | طول: ${details.height || "—"}\n` +
-            `⏰ <b>وقت الطلب:</b> ${new Date(req.created_at).toLocaleString("ar-EG")}`;
+        const msg = `[VIP] <b>طلب تفعيل من:</b> ${name}\n` +
+            `[Email] <b>البريد:</b> <code>${req.email}</code>\n` +
+            `[ID] <b>User ID:</b> <code>${req.user_id}</code>\n` +
+            `[Context] <b>البيانات:</b> عمر: ${details.age || "—"} | جنس: ${details.gender || "—"} | وزن: ${details.weight || "—"} | طول: ${details.height || "—"}\n` +
+            `[Timestamp] <b>وقت الطلب:</b> ${new Date(req.created_at).toLocaleString("ar-EG")}`;
 
         const buttons = {
             inline_keyboard: [
                 [
-                    { text: "⚡ تفعيل ألترا (٣٠٠ رصيد)", callback_data: `approve_${req.id}` },
-                    { text: "❌ رفض", callback_data: `reject_${req.id}` }
+                    { text: "[Activate] تفعيل ألترا (٣٠٠ رصيد)", callback_data: `approve_${req.id}` },
+                    { text: "[Reject] رفض", callback_data: `reject_${req.id}` }
                 ]
             ]
         };
@@ -380,21 +380,21 @@ async function handleStats(chatId: string | number, adminSupabase: any) {
     const { count: freeUsers } = await adminSupabase.from("profiles").select("*", { count: "exact", head: true }).eq("plan", "free");
     const { count: pendingRequests } = await adminSupabase.from("ceo_upgrade_requests").select("*", { count: "exact", head: true }).eq("status", "pending");
 
-    const statsText = `📊 <b>إحصائيات منصة QureScan الحية:</b>\n\n` +
-        `👥 <b>إجمالي المستخدمين:</b> ${totalUsers || 0}\n` +
-        `👑 <b>مشتركي باقة ألترا (ULTRA):</b> ${ultraUsers || 0}\n` +
-        `🆓 <b>المستخدمين المجانيين (FREE):</b> ${freeUsers || 0}\n` +
-        `⏳ <b>طلبات الترقية المعلقة:</b> ${pendingRequests || 0}\n\n` +
-        `🚀 <i>المنصة تعمل بكفاءة على Vercel & Supabase.</i>`;
+    const statsText = `[Stats] <b>إحصائيات منصة QureScan الحية:</b>\n\n` +
+        `[Total] <b>إجمالي المستخدمين:</b> ${totalUsers || 0}\n` +
+        `[VIP] <b>مشتركي باقة ألترا (ULTRA):</b> ${ultraUsers || 0}\n` +
+        `[Free] <b>المستخدمين المجانيين (FREE):</b> ${freeUsers || 0}\n` +
+        `[Pending] <b>طلبات الترقية المعلقة:</b> ${pendingRequests || 0}\n\n` +
+        `[Status: Active] <i>المنصة تعمل بكفاءة على Vercel & Supabase.</i>`;
 
     const keyboard = {
         inline_keyboard: [
             [
-                { text: "👑 عرض المشتركين", callback_data: "cmd_subscribers" },
-                { text: "⏳ الطلبات المعلقة", callback_data: "cmd_pending" },
+                { text: "[Subscribers] عرض المشتركين", callback_data: "cmd_subscribers" },
+                { text: "[Pending] الطلبات المعلقة", callback_data: "cmd_pending" },
             ],
             [
-                { text: "🌐 فتح لوحة التحكم", url: `${OFFICIAL_SITE_URL}/admin/ceo-requests` }
+                { text: "[Portal] فتح لوحة التحكم", url: `${OFFICIAL_SITE_URL}/admin/ceo-requests` }
             ]
         ]
     };

@@ -152,7 +152,7 @@ export default function TermsPage() {
             
             {/* Header */}
             <div className="text-center space-y-3 mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-q-surface-2 border border-white/10 text-slate-300 text-xs font-bold">
                     <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
                     <span>{t("Legal & Clinical Governance", "الشروط القانونية والسياسات الطبية")}</span>
                 </div>
@@ -191,9 +191,9 @@ export default function TermsPage() {
             <div className="space-y-6">
 
                 {/* SECTION 1: MEDICAL DISCLAIMER */}
-                <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-4">
+                <div className="p-6 rounded-3xl glass-card space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-amber-400 shrink-0">
                             <HeartPulse className="w-5 h-5" />
                         </div>
                         <h2 className="text-lg font-bold text-white">
@@ -224,9 +224,9 @@ export default function TermsPage() {
                 </div>
 
                 {/* SECTION 2: LIMITATION OF LIABILITY */}
-                <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-4">
+                <div className="p-6 rounded-3xl glass-card space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-rose-400 shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-rose-400 shrink-0">
                             <Scale className="w-5 h-5" />
                         </div>
                         <h2 className="text-lg font-bold text-white">
@@ -257,9 +257,9 @@ export default function TermsPage() {
                 </div>
 
                 {/* SECTION 3: PRIVACY & DATA SECURITY */}
-                <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-4">
+                <div className="p-6 rounded-3xl glass-card space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-cyan-400 shrink-0">
                             <Lock className="w-5 h-5" />
                         </div>
                         <h2 className="text-lg font-bold text-white">
@@ -284,9 +284,9 @@ export default function TermsPage() {
                 </div>
 
                 {/* SECTION 4: PROHIBITED USES */}
-                <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-4">
+                <div className="p-6 rounded-3xl glass-card space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-purple-400 shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-q-surface-2 border border-white/10 flex items-center justify-center text-purple-400 shrink-0">
                             <FileText className="w-5 h-5" />
                         </div>
                         <h2 className="text-lg font-bold text-white">
@@ -305,7 +305,7 @@ export default function TermsPage() {
             </div>
 
             {/* Interactive User Consent / Acceptance Box */}
-            <div className="mt-8 p-6 rounded-3xl bg-slate-900 border border-white/15 space-y-4">
+            <div className="mt-8 p-6 rounded-3xl glass-card space-y-4">
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-white">
                         {t("User Agreement Confirmation", "إقرار الموافقة والالتزام بالشروط")}
@@ -349,7 +349,7 @@ export default function TermsPage() {
                                 type="checkbox"
                                 checked={agree}
                                 onChange={(e) => setAgree(e.target.checked)}
-                                className="mt-1 h-4 w-4 rounded border-white/20 bg-slate-950 text-cyan-500 focus:ring-0 cursor-pointer"
+                                className="mt-1 h-4 w-4 rounded border-white/20 bg-q-base text-cyan-500 focus:ring-0 cursor-pointer"
                             />
                             <span className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                                 {t(

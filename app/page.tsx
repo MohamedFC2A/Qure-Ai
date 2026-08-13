@@ -240,10 +240,7 @@ export default function Home() {
 
             {/* ── STATS ── */}
             <section className="clinical-page max-w-4xl mx-auto mt-14 sm:mt-16">
-                <div
-                    className="rounded-2xl border p-8 sm:p-10"
-                    style={{ background: "rgba(9, 14, 24, 0.85)", borderColor: "rgba(255,255,255,0.07)" }}
-                >
+                <div className="glass-card rounded-2xl p-8 sm:p-10 border border-white/[0.07]">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-white/[0.05]">
                         {stats.map((item, i) => (
                             <StatItem key={item.label} value={item.value} label={item.label} delay={i * 0.1} />

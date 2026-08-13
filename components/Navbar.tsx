@@ -75,8 +75,8 @@ export const Navbar = () => {
                     className={cn(
                         "relative overflow-hidden rounded-2xl px-3.5 py-2 sm:px-5 sm:py-2.5",
                         "flex items-center justify-between gap-3 sm:gap-6",
-                        "backdrop-blur-2xl border shadow-2xl transition-all duration-300",
-                        "bg-black/35 border-white/10 shadow-2xl backdrop-blur-3xl"
+                        "transition-all duration-300",
+                        "bg-[#080c16]/80 border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl"
                     )}
                 >
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />

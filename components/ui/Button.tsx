@@ -9,11 +9,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: ButtonVariant;
     size?: ButtonSize;
     isLoading?: boolean;
-    glow?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = "primary", size = "md", isLoading, glow = false, children, ...props }, ref) => {
+    ({ className, variant = "primary", size = "md", isLoading, children, ...props }, ref) => {
         const variants: Record<ButtonVariant, string> = {
             primary:
                 "bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold border border-cyan-400/40 shadow-sm",

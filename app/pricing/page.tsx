@@ -106,7 +106,7 @@ function FeatureList({ items, isUltra, isArabic }: { items: { en: string; ar: st
                         "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
                         isUltra
                             ? "border-cyan-400/40 bg-cyan-500/10 text-cyan-300"
-                            : "border-slate-700 bg-slate-800/80 text-cyan-400"
+                            : "border-white/10 bg-q-surface-2/80 text-cyan-400"
                     )}>
                         <Check className="h-3 w-3 stroke-[2.5]" />
                     </span>
@@ -158,8 +158,8 @@ function FaqItem({ q, a, isArabic }: { q: { en: string; ar: string }; a: { en: s
         <div className={cn(
             "rounded-2xl border transition-colors duration-150 overflow-hidden",
             open
-                ? "border-cyan-500/30 bg-slate-900/90"
-                : "border-white/[0.08] bg-slate-900/60 hover:border-white/15"
+                ? "border-cyan-500/30 bg-q-surface-2/90"
+                : "border-white/[0.08] bg-q-surface/60 hover:border-white/15"
         )}>
             <button
                 className="w-full flex items-center justify-between gap-4 p-4 sm:p-5 text-start focus:outline-none"
@@ -280,7 +280,7 @@ export default function PricingPage() {
                 {/* ── HERO SECTION ────────────────────────────────── */}
                 <section className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-cyan-300 text-xs font-bold mb-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-q-surface-2/80 border border-white/10 text-cyan-300 text-xs font-bold mb-3">
                             <Zap className="h-3.5 w-3.5 text-cyan-400" />
                             <span>{t("Transparent Clinical Pricing", "خطط مرنة وواضحة بدون تعقيد")}</span>
                         </div>
@@ -317,7 +317,7 @@ export default function PricingPage() {
                         ].map((item) => (
                             <div
                                 key={item.labelEn}
-                                className="stat-card p-4 flex flex-col justify-between rounded-2xl bg-slate-900/60 border border-white/[0.08]"
+                                className="stat-card p-4 flex flex-col justify-between rounded-2xl bg-q-surface/60 border border-white/[0.08]"
                             >
                                 <div className={cn("icon-badge w-9 h-9 rounded-xl mb-2 sm:mb-3 flex items-center justify-center", `icon-badge-${item.color}`)}>
                                     <item.icon className="h-4.5 w-4.5" />
@@ -335,10 +335,10 @@ export default function PricingPage() {
                 <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
                     
                     {/* Free Plan Card */}
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+                    <div className="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
                         <div>
                             <div className="flex items-center justify-between gap-4">
-                                <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800/80 border border-slate-700 text-slate-300">
+                                <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-q-surface-2/80 border border-white/10 text-slate-300">
                                     {t("Free Plan", "الخطة المجانية")}
                                 </span>
                                 <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
@@ -380,17 +380,17 @@ export default function PricingPage() {
                     </div>
 
                     {/* Ultra Plan Card */}
-                    <div className="relative rounded-3xl border border-cyan-500/30 bg-slate-900/90 p-6 sm:p-8 flex flex-col justify-between shadow-md">
+                    <div className="relative glass-elevated rounded-3xl border border-cyan-500/30 p-6 sm:p-8 flex flex-col justify-between shadow-md">
                         
                         <div>
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-800 border border-slate-700 text-cyan-300 flex items-center gap-1.5">
+                                    <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-q-surface-2 border border-white/10 text-cyan-300 flex items-center gap-1.5">
                                         <Zap className="h-3.5 w-3.5 text-cyan-400" />
                                         {t("Ultra Plan", "خطة ألترا")}
                                     </span>
                                 </div>
-                                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-800 border border-slate-700 text-slate-300">
+                                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-q-surface-2 border border-white/10 text-slate-300">
                                     {t("Most Popular", "الأكثر تميزاً")}
                                 </span>
                             </div>
@@ -405,7 +405,7 @@ export default function PricingPage() {
                                 {t("For regular health checks, Qure AI medical chat, and full family care.", "للرعاية المتكاملة، استشارات Qure AI، ومتابعة صحة الأسرة بدون حدود.")}
                             </p>
 
-                            <div className="my-6 h-px bg-slate-800" />
+                            <div className="my-6 h-px bg-white/10" />
 
                             <p className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3">
                                 {t("Everything in Free, plus:", "كل ما في المجاني، بالإضافة إلى:")}
@@ -418,7 +418,7 @@ export default function PricingPage() {
                                 <div className="h-12 w-full skeleton rounded-2xl" />
                             ) : plan === "ultra" ? (
                                 <>
-                                    <div className="w-full py-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-cyan-300 font-bold text-center flex items-center justify-center gap-2">
+                                    <div className="w-full py-3.5 rounded-2xl bg-q-surface-2/90 border border-white/10 text-cyan-300 font-bold text-center flex items-center justify-center gap-2">
                                         <CheckCircle2 className="w-4 h-4 text-cyan-400" />
                                         <span>{t("Ultra is Active", "ألترا مفعّل بحسابك")}</span>
                                     </div>
@@ -448,7 +448,7 @@ export default function PricingPage() {
                     {valueCards.map((item) => (
                         <div
                             key={item.en.title}
-                            className="stat-card p-5 sm:p-6 rounded-2xl bg-slate-900/60 border border-white/[0.08]"
+                            className="stat-card p-5 sm:p-6 rounded-2xl bg-q-surface/60 border border-white/[0.08]"
                         >
                             <div className={cn("icon-badge w-10 h-10 rounded-xl mb-4 flex items-center justify-center", iconBadgeMap[item.color] || "icon-badge-cyan")}>
                                 <item.icon className="h-5 w-5" />
@@ -465,7 +465,7 @@ export default function PricingPage() {
 
                 {/* ── COMPARISON TABLE ────────────────────────────── */}
                 <section>
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 overflow-hidden shadow-sm">
+                    <div className="glass-card rounded-3xl overflow-hidden shadow-sm">
                         <div className="border-b border-white/[0.08] p-5 sm:p-7">
                             <h2 className="text-xl sm:text-2xl font-black text-white">
                                 {t("Plan Comparison Matrix", "جدول مقارنة الخطط التفصيلي")}
@@ -485,7 +485,7 @@ export default function PricingPage() {
                                         <th className="p-4 sm:p-5 font-bold text-slate-300 text-center w-36 sm:w-44">
                                             {t("Free Plan", "المجاني")}
                                         </th>
-                                        <th className="bg-slate-800/40 p-4 sm:p-5 font-black text-cyan-300 text-center w-36 sm:w-44 border-s border-slate-800">
+                                        <th className="bg-q-surface-2/40 p-4 sm:p-5 font-black text-cyan-300 text-center w-36 sm:w-44 border-s border-white/10">
                                             {t("Ultra Plan", "ألترا")}
                                         </th>
                                     </tr>
@@ -499,7 +499,7 @@ export default function PricingPage() {
                                             <td className="p-4 sm:p-5 text-center">
                                                 <ComparisonValue value={row.free} />
                                             </td>
-                                            <td className="bg-slate-800/20 p-4 sm:p-5 text-center border-s border-slate-800">
+                                            <td className="bg-q-surface-2/20 p-4 sm:p-5 text-center border-s border-white/10">
                                                 <ComparisonValue value={row.ultra} highlighted />
                                             </td>
                                         </tr>
@@ -514,20 +514,20 @@ export default function PricingPage() {
                 <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
                     
                     {/* Executive CEO Upgrade & Voucher Card */}
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+                    <div className="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
                         <div>
                             {/* Executive CEO Upgrade */}
-                            <div className="p-5 rounded-2xl bg-slate-950/50 border border-white/10">
+                            <div className="p-5 rounded-2xl glass-inset">
                                 <div className="flex items-center justify-between gap-2 mb-3">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-xl bg-q-surface-2 border border-white/10 text-slate-200 flex items-center justify-center">
                                             <Crown className="w-4 h-4 text-cyan-400" />
                                         </div>
                                         <h3 className="text-sm font-bold text-white">
                                             {t("Executive Upgrade by CEO", "ترقية الحساب من قبل CEO")}
                                         </h3>
                                     </div>
-                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 border border-slate-700 text-slate-300">
+                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-q-surface-2 border border-white/10 text-slate-300">
                                         {t("Beta Version Only", "متوفر في نسخة البيتا")}
                                     </span>
                                 </div>
@@ -539,7 +539,7 @@ export default function PricingPage() {
                                 </p>
 
                                 {ceoMessage ? (
-                                    <div className="p-3.5 rounded-xl bg-slate-900 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 font-medium">
+                                    <div className="p-3.5 rounded-xl bg-q-surface border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 font-medium">
                                         <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
                                         <span>{ceoMessage}</span>
                                     </div>
@@ -551,7 +551,7 @@ export default function PricingPage() {
                                         <button
                                             onClick={handleGoldenCeoRequest}
                                             disabled={ceoLoading}
-                                            className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 hover:text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                            className="w-full py-3 px-4 rounded-xl bg-q-surface-2 hover:bg-q-surface-3 border border-white/10 text-slate-200 hover:text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                                         >
                                             {ceoLoading ? (
                                                 <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
@@ -569,7 +569,7 @@ export default function PricingPage() {
                             </div>
 
                             {/* Standard Voucher Redeem Link */}
-                            <div className="mt-5 p-4 rounded-2xl bg-slate-800/40 border border-white/5 flex items-center justify-between gap-3">
+                            <div className="mt-5 p-4 rounded-2xl glass-inset flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                     <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
                                         <Gift className="h-4.5 w-4.5" />
@@ -600,7 +600,7 @@ export default function PricingPage() {
                     </div>
 
                     {/* FAQ Accordion */}
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+                    <div className="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
                         <div>
                             <div className="flex items-center gap-3 mb-5">
                                 <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0">

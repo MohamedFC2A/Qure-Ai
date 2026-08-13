@@ -10,10 +10,10 @@ const config: Config = {
             colors: {
                 // ── QureScan Design System ──
                 q: {
-                    base:    "#050709",
-                    surface: "#080C12",
-                    "surface-2": "#0D1420",
-                    "surface-3": "#111828",
+                    base:    "#060911",
+                    surface: "#080C16",
+                    "surface-2": "#0B101D",
+                    "surface-3": "#0F172A",
                     cyan:    "#22D3EE",
                     emerald: "#10B981",
                     amber:   "#F59E0B",
@@ -22,11 +22,11 @@ const config: Config = {
                 },
                 // ── Legacy clinical tokens ──
                 clinical: {
-                    ink:        "#EEF6F7",
+                    ink:        "#F8FAFC",
                     muted:      "#94A3B8",
-                    panel:      "rgba(8, 14, 22, 0.82)",
-                    panelSolid: "#080C12",
-                    border:     "rgba(255, 255, 255, 0.07)",
+                    panel:      "rgba(11, 16, 29, 0.85)",
+                    panelSolid: "#080C16",
+                    border:     "rgba(255, 255, 255, 0.08)",
                     cyan:       "#22D3EE",
                     emerald:    "#10B981",
                     amber:      "#F59E0B",
@@ -37,7 +37,7 @@ const config: Config = {
                     100: "rgba(255, 255, 255, 0.04)",
                     200: "rgba(255, 255, 255, 0.08)",
                     300: "rgba(255, 255, 255, 0.14)",
-                    border: "rgba(255, 255, 255, 0.07)",
+                    border: "rgba(255, 255, 255, 0.08)",
                 },
                 liquid: {
                     primary:   "#0891B2",
@@ -55,7 +55,7 @@ const config: Config = {
             },
             backgroundImage: {
                 "gradient-radial":    "radial-gradient(var(--tw-gradient-stops))",
-                "liquid-mesh":        "linear-gradient(135deg, rgba(34,211,238,0.08), rgba(16,185,129,0.06))",
+                "liquid-mesh":        "linear-gradient(135deg, rgba(34,211,238,0.05), rgba(16,185,129,0.04))",
                 "gradient-conic":     "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
                 "glass-highlight":    "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 100%)",
             },
@@ -63,7 +63,6 @@ const config: Config = {
                 "blob":         "blob 8s infinite",
                 "tilt":         "tilt 12s infinite linear",
                 "float":        "float-y 4s ease-in-out infinite",
-                "glow-pulse":   "glow-pulse 3s ease-in-out infinite",
                 "spin-slow":    "spin-slow 12s linear infinite",
                 "shimmer":      "skeleton-shimmer 1.8s ease-in-out infinite",
                 "fade-up":      "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
@@ -85,10 +84,6 @@ const config: Config = {
                     "0%, 100%": { transform: "translateY(0px)" },
                     "50%":      { transform: "translateY(-12px)" },
                 },
-                "glow-pulse": {
-                    "0%, 100%": { opacity: "0.5" },
-                    "50%":      { opacity: "1" },
-                },
                 "spin-slow": {
                     from: { transform: "rotate(0deg)" },
                     to:   { transform: "rotate(360deg)" },
@@ -107,12 +102,11 @@ const config: Config = {
                 },
             },
             boxShadow: {
-                "glass":        "0 20px 60px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.06) inset",
-                "glass-lg":     "0 32px 80px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.08) inset",
-                "glow-cyan":    "0 4px 16px rgba(0,0,0,0.3)",
-                "glow-emerald": "0 4px 16px rgba(0,0,0,0.3)",
-                "glow-amber":   "0 4px 16px rgba(0,0,0,0.3)",
-                "glow-violet":  "0 4px 16px rgba(0,0,0,0.3)",
+                "glass":          "0 20px 48px -8px rgba(0, 0, 0, 0.65)",
+                "glass-specular": "0 20px 48px -8px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.08) inset",
+                "glass-lg":       "0 32px 80px rgba(0, 0, 0, 0.75), 0 1px 0 rgba(255, 255, 255, 0.08) inset",
+                "depth-sm":       "0 4px 16px rgba(0, 0, 0, 0.4)",
+                "depth-md":       "0 10px 30px rgba(0, 0, 0, 0.55)",
             },
             borderRadius: {
                 "2xl": "1rem",
