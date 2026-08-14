@@ -497,7 +497,7 @@ export const ScannerInterface = () => {
                             </div>
                             <div>
                                 <h2 className="text-2xl font-bold text-white">
-                                    {t("Clinical Wound Assessment Complete", "اكتمل فحص وتقييم الجرح السريري")}
+                                    {t("Clinical Skin & Health Assessment Complete", "اكتمل الفحص السريري للجلد والإصابة")}
                                 </h2>
                                 <p className="text-white/50 text-sm">
                                     {t("Processed in", "استغرق الفحص")} {totalDuration}s
@@ -704,12 +704,12 @@ export const ScannerInterface = () => {
                         className={cn(
                             "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
                             detectedScanType === "wound"
-                                ? "bg-emerald-500 text-slate-950"
+                                ? "bg-cyan-500 text-slate-950"
                                 : "text-slate-400 hover:text-white"
                         )}
                     >
-                        <Bandage className="w-3.5 h-3.5" />
-                        <span>{t("Wound Care", "فحص الجروح")}</span>
+                        <Stethoscope className="w-3.5 h-3.5" />
+                        <span>{t("Skin & Lesions", "فحص الجلد والإصابات")}</span>
                     </button>
                 </div>
             </div>
@@ -723,19 +723,14 @@ export const ScannerInterface = () => {
                             <div {...getRootProps()} className={cn(
                                 "relative min-h-[320px] sm:min-h-[350px] border-2 border-dashed rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group overflow-hidden flex-1",
                                 isDragActive
-                                    ? (detectedScanType === "wound" ? "border-emerald-400 bg-slate-900" : "border-cyan-400 bg-slate-900")
-                                    : (detectedScanType === "wound" ? "border-emerald-500/30 hover:border-emerald-400 hover:bg-slate-900/50 bg-slate-950/40 backdrop-blur-2xl" : "border-white/15 hover:border-white/30 hover:bg-slate-900/50 bg-slate-950/40 backdrop-blur-2xl")
+                                    ? "border-cyan-400 bg-[#080D1A]"
+                                    : "border-white/15 hover:border-cyan-400/50 hover:bg-[#080D1A]/50 bg-[#080D1A]/75 backdrop-blur-2xl"
                             )}>
                                 <input {...getInputProps()} />
 
-                                <div className={cn(
-                                    "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm border",
-                                    detectedScanType === "wound"
-                                        ? "bg-emerald-950/60 border-emerald-500/30 text-emerald-400"
-                                        : "bg-slate-800 border-slate-700 text-cyan-300"
-                                )}>
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm border bg-[#0C1324] border-white/[0.08] text-cyan-300">
                                     {detectedScanType === "wound" ? (
-                                        <Bandage className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400" />
+                                        <Stethoscope className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-400" />
                                     ) : (
                                         <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
                                     )}
@@ -743,17 +738,17 @@ export const ScannerInterface = () => {
 
                                 <h3 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight">
                                     {detectedScanType === "wound"
-                                        ? t("Capture or upload clear wound / burn photo", "التقط صورة واضحة ومباشرة للجرح أو الإصابة الجلدية")
+                                        ? t("Capture skin, facial photo, lesion, or wound", "التقط صورة للوجه، الجلد، الحبوب، أو الإصابات")
                                         : detectedScanType === "medication"
                                         ? t("Upload medication box or prescription photo", "ارفع صورة ملصق علبة الدواء أو الروشتة")
-                                        : t("Upload medication, prescription, or wound photo", "ارفع صورة ملصق الدواء أو الروشتة أو الجرح")}
+                                        : t("Upload medication, prescription, skin, or wound photo", "ارفع صورة الدواء، الروشتة، أو فحص الجلد والإصابات")}
                                 </h3>
 
                                 <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                                     {detectedScanType === "wound"
                                         ? t(
-                                            "High-clarity mode: ensure good lighting and steady focus. Biometric verification will be required to protect your privacy.",
-                                            "وضع الدقة الفائقة: يرجى التأكد من الإضاءة الجيدة وثبات اليد. سيتم تفعيل البصمة الإجبارية لحماية خصوصيتك."
+                                            "Clinical AI diagnosis: Skin types, acne, warts, corns, burns, eczema, and bodily trauma with step-by-step care.",
+                                            "تشخيص سريري متكامل: تحليل نوع البشرة، حب الشباب، عين السمكة، الكالو، الحروق، الإكزيما، والجروح مع بروتوكول عناية مفصل."
                                         )
                                         : detectedScanType === "medication"
                                         ? t(
@@ -761,8 +756,8 @@ export const ScannerInterface = () => {
                                             "تأكد من تركيز الكاميرا على اسم الدواء التجاري، تركيز المادة الفعالة، والتعليمات الطبية بدقة."
                                         )
                                         : t(
-                                            "AI automatically identifies medications, prescriptions, or wounds. (High-Res JPEG, PNG, WEBP)",
-                                            "يتعرف النظام تلقائياً على نوع الصورة (دواء، روشتة، أو جرح) ويوجه الفحص سريرياً بدقة."
+                                            "AI automatically identifies medications, prescriptions, or skin conditions. (High-Res JPEG, PNG, WEBP)",
+                                            "يتعرف النظام تلقائياً على نوع الصورة (دواء، روشتة، أو فحص جلدي وسريري) ويوجه الفحص بدقة فائقة."
                                         )}
                                 </p>
 
@@ -795,24 +790,24 @@ export const ScannerInterface = () => {
                                     {detectedScanType === "wound" ? (
                                         <>
                                             <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Skin & Face Profile", "نوع البشرة والوجه")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Oily, Dry, Pores", "دهنية، جافة، مسام")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Activity className="w-4 h-4 text-amber-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Acne, Warts & Corns", "حب الشباب وعين السمكة")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Lesions & Calluses", "سنط، كالو، دمامل")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
+                                                <Flame className="w-4 h-4 text-rose-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Burns & Eczema", "الحروق والإكزيما")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Rash & Irritation", "طفح جلدي وتهيج")}</p>
+                                            </div>
+                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
                                                 <Bandage className="w-4 h-4 text-emerald-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Cuts & Lacerations", "الجروح والقطوع")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Superficial & Deep", "سطحية وعميقة")}</p>
-                                            </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Flame className="w-4 h-4 text-amber-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Burns & Ulcers", "الحروق والقرح")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Tissue Viability", "تقييم الأنسجة")}</p>
-                                            </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Scissors className="w-4 h-4 text-teal-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Sutures & Surgery", "الغرز والعمليات")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Healing Follow-up", "متابعة الالتئام")}</p>
-                                            </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <HeartPulse className="w-4 h-4 text-rose-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Bruises & Scratches", "الكدمات والسحجات")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Bleeding & Edema", "النزيف والالتهاب")}</p>
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Cuts & Injuries", "الجروح والقطوع")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Sutures & First Aid", "الخياطة والإسعاف")}</p>
                                             </div>
                                         </>
                                     ) : detectedScanType === "medication" ? (
@@ -851,13 +846,13 @@ export const ScannerInterface = () => {
                                                 <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Prescription OCR", "تحليل الجرعات")}</p>
                                             </div>
                                             <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Wounds & Burns", "الجروح والحروق")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clinical Triage", "تقييم سريري وإسعافي")}</p>
+                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Skin & Face", "الجلد والبشرة")}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clinical Diagnosis", "تشخيص سريري")}</p>
                                             </div>
                                             <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Activity className="w-4 h-4 text-amber-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Skin Injuries", "الإصابات والقرح")}</p>
+                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1" />
+                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Wounds & Burns", "الجروح والحروق")}</p>
                                                 <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Tissue Analysis", "تحليل الأنسجة")}</p>
                                             </div>
                                         </>
@@ -869,19 +864,19 @@ export const ScannerInterface = () => {
                             <div className={cn(
                                 "rounded-2xl border p-3.5 flex items-center gap-3 transition-all",
                                 detectedScanType === "wound"
-                                    ? "border-emerald-500/30 bg-emerald-500/[0.06]"
+                                    ? "border-cyan-500/30 bg-cyan-500/[0.06]"
                                     : "border-amber-400/20 bg-amber-400/[0.04]"
                             )}>
                                 {detectedScanType === "wound" ? (
-                                    <Bandage className="w-5 h-5 text-emerald-400 shrink-0" />
+                                    <Stethoscope className="w-5 h-5 text-cyan-400 shrink-0" />
                                 ) : (
                                     <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
                                 )}
                                 <p className="text-xs text-slate-300 leading-relaxed">
                                     {detectedScanType === "wound"
                                         ? t(
-                                            "For high clinical accuracy: Ensure direct lighting, steady camera focus on wound margins, and keep the injury centered.",
-                                            "لضمان أعلى دقة سريرية: صوّر الجرح في إضاءة مباشرة وثبات تام لليد مع إظهار حواف الإصابة ونوع الأنسجة بوضوح."
+                                            "For high clinical accuracy: Ensure direct lighting, steady camera focus on skin/lesion margins, and keep the area centered.",
+                                            "لضمان أعلى دقة سريرية: صوّر المنطقة في إضاءة مباشرة وثبات تام لليد مع إظهار حواف المنطقة أو الآفة ونوع البشرة بوضوح."
                                         )
                                         : t(
                                             "For high accuracy: Ensure good lighting, avoid glare, and keep the drug name and strength centered.",

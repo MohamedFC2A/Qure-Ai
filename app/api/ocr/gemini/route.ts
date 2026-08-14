@@ -80,16 +80,16 @@ export async function POST(req: NextRequest) {
         // Clean base64 string (remove data:image/jpeg;base64, prefix if present)
         const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
 
-        const prompt = `You are a high-accuracy medical AI triage and OCR verification engine.
+        const prompt = `You are a high-accuracy medical AI triage and clinical OCR engine.
 Carefully examine the image and perform rigorous classification:
 1. Determine the EXACT scanType:
    - "medication": pharmaceutical product box, blister pack, medication bottle, vial, syrup, medical device, supplement bottle, or pill.
    - "prescription": doctor's paper prescription, lab report, or handwritten medical rx document.
-   - "wound": skin injury, cut, burn, laceration, ulcer, abrasion, wart / verruca (عين السمكة / سنط), foot corn (مسمار القدم / كالو), abscess / boil (خراج / دمل), surgical suture/wound, bruise, cellulitis, or dermatological trauma.
+   - "wound": any human skin photograph, facial skin typing (oily/dry/combination/sensitive), acne/pimples (حب شباب/بثور), wart/verruca (عين السمكة/سنط), corn/callus (مسمار القدم/كالو), boil/abscess (خراج/دمل), rash/eczema/psoriasis, burn, cut/laceration, abrasion, puncture, bruise, insect bite, or physical dermatological condition.
    - "unclear_or_unrelated": food, animal, scenery, or completely non-medical object.
 
 2. If medication or prescription, extract ALL visible text accurately.
-3. If wound or skin lesion, identify the exact condition name in extractedText (e.g., "عين السمكة (سنط جلدي)" or "جرح قطعي سطحي" or "مسمار القدم").
+3. If skin, face, lesion, or wound, identify the exact clinical condition or skin type in extractedText (e.g., "تحليل نوع البشرة (مختلطة)", "حب شباب التهابي (Acne)", "عين السمكة (سنط جلدي)", "مسمار القدم (كالو)", "خراج / دمل جلدي", "حرق جلدي من الدرجة الثانية", "جرح قطعي سطحي").
 
 Return ONLY a JSON object in this exact schema without any markdown formatting or commentary:
 {

@@ -97,9 +97,9 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
                     </div>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-300 mb-3">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 px-3 py-1 text-xs font-bold text-cyan-300 mb-3">
                     <ShieldCheck className="h-3.5 w-3.5" />
-                    <span>{isAr ? "تم الكشف: تم تصنيف الفحص كـ (جرح / إصابة سريرية)" : "Detected: Classified as (Wound / Physical Trauma)"}</span>
+                    <span>{isAr ? "تم الكشف: فحص جلدي وسريري حساس" : "Detected: Sensitive Clinical Skin / Body Scan"}</span>
                 </div>
 
                 <h3 className="text-lg sm:text-xl font-bold text-white mb-2 tracking-tight">
@@ -108,8 +108,8 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
 
                 <p className="text-xs sm:text-sm text-slate-300 mb-5 leading-relaxed">
                     {isAr
-                        ? "تعرف النظام على الصورة كإصابة أو جرح سريري. ونظراً لخصوصية وحساسية البيانات الطبية والجسدية، يفرض نظام Qure AI التحقق البيومتري للمتابعة في التحليل وحفظ التقرير."
-                        : "The AI classified this image as a wound or physical injury. Due to strict medical privacy standards for bodily scans, biometric verification is mandatory to proceed."
+                        ? "تعرف النظام على الصورة كفحص جلدي أو إصابة سريرية خاصة. ونظراً لخصوصية وحساسية البيانات الطبية والجسدية، يفرض نظام Qure AI التحقق البيومتري لحماية خصوصيتك التامة قبل عرض التقرير."
+                        : "The AI classified this image as a private skin or clinical physical scan. Due to strict medical privacy standards for bodily health scans, biometric verification is mandatory to proceed."
                     }
                 </p>
 
