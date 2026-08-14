@@ -158,7 +158,7 @@ export default function CeoRequestsAdminPage() {
     if (!isCeo) {
         return (
             <main className="min-h-screen pt-28 pb-16 px-4 flex items-center justify-center">
-                <div className="max-w-md w-full p-8 rounded-3xl bg-slate-900 border border-red-500/30 text-center">
+                <div className="max-w-md w-full p-8 rounded-3xl bg-[#080D1A]/90 border border-red-500/30 backdrop-blur-2xl text-center shadow-2xl">
                     <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-4" />
                     <h1 className="text-xl font-bold text-white mb-2">غير مصرح بالدخول</h1>
                     <p className="text-slate-400 text-sm mb-6">هذه اللوحة مخصصة حصرياً للمدير التنفيذي (CEO).</p>
@@ -218,27 +218,27 @@ export default function CeoRequestsAdminPage() {
 
             {/* KPI Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-                <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 flex items-center justify-between">
+                <div className="p-5 rounded-2xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-xl flex items-center justify-between">
                     <div>
                         <p className="text-xs text-slate-400 font-semibold">{t("Total Requests", "إجمالي الطلبات")}</p>
                         <p className="text-2xl font-black text-white mt-1">{stats.total}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[#0C1324] border border-white/[0.08] text-slate-300 flex items-center justify-center">
                         <Users className="w-5 h-5" />
                     </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 flex items-center justify-between">
+                <div className="p-5 rounded-2xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-xl flex items-center justify-between">
                     <div>
                         <p className="text-xs text-slate-400 font-semibold">{t("Pending Review", "قيد المراجعة")}</p>
                         <p className="text-2xl font-black text-slate-200 mt-1">{stats.pending}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-cyan-400 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[#0C1324] border border-white/[0.08] text-cyan-400 flex items-center justify-center">
                         <Clock className="w-5 h-5" />
                     </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900/80 border border-emerald-500/25 flex items-center justify-between">
+                <div className="p-5 rounded-2xl bg-[#080D1A]/85 backdrop-blur-2xl border border-emerald-500/25 shadow-xl flex items-center justify-between">
                     <div>
                         <p className="text-xs text-emerald-400 font-semibold">{t("Active Ultra Users", "مشتركي ألترا الحاليين")}</p>
                         <p className="text-2xl font-black text-emerald-300 mt-1">{stats.approved}</p>
@@ -248,7 +248,7 @@ export default function CeoRequestsAdminPage() {
                     </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900/80 border border-rose-500/25 flex items-center justify-between">
+                <div className="p-5 rounded-2xl bg-[#080D1A]/85 backdrop-blur-2xl border border-rose-500/25 shadow-xl flex items-center justify-between">
                     <div>
                         <p className="text-xs text-rose-400 font-semibold">{t("Revoked / Rejected", "الملغيين والمرفوضين")}</p>
                         <p className="text-2xl font-black text-rose-300 mt-1">{stats.revoked}</p>
@@ -261,7 +261,7 @@ export default function CeoRequestsAdminPage() {
 
             {/* Filter & Search Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-1.5 p-1 bg-slate-900/80 border border-white/10 rounded-xl w-full sm:w-auto overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-1.5 p-1 bg-[#080D1A]/85 backdrop-blur-xl border border-white/[0.08] rounded-xl w-full sm:w-auto overflow-x-auto no-scrollbar">
                     {[
                         { id: "all", labelEn: "All", labelAr: "الكل" },
                         { id: "pending", labelEn: `Pending (${stats.pending})`, labelAr: `قيد الانتظار (${stats.pending})` },
@@ -290,7 +290,7 @@ export default function CeoRequestsAdminPage() {
                         placeholder={t("Search by email, name, or ID...", "بحث بالاسم، الإيميل، أو المعرف...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full py-2 ps-9 pe-4 bg-slate-900/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600"
+                        className="w-full py-2 ps-9 pe-4 bg-[#080D1A]/80 border border-white/[0.08] rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/40"
                     />
                 </div>
             </div>
@@ -431,7 +431,7 @@ export default function CeoRequestsAdminPage() {
                                                     className="flex-1 sm:flex-none py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm"
                                                 >
                                                     <Crown className="w-4 h-4 fill-current" />
-                                                    <span>{isActionLoading ? "جاري التفعيل..." : "⚡ تفعيل ألترا (٣٠٠ رصيد)"}</span>
+                                                    <span>{isActionLoading ? "جاري التفعيل..." : "تفعيل ألترا (٣٠٠ رصيد)"}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleAction(req.id, "reject")}
@@ -453,7 +453,7 @@ export default function CeoRequestsAdminPage() {
                                                     className="py-2 px-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 text-rose-300 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                                                 >
                                                     <Ban className="w-3.5 h-3.5 text-rose-400" />
-                                                    <span>{isActionLoading ? "جاري الإلغاء..." : "🛑 إلغاء الاشتراك"}</span>
+                                                    <span>{isActionLoading ? "جاري الإلغاء..." : "إلغاء الاشتراك"}</span>
                                                 </button>
                                             </div>
                                         ) : (

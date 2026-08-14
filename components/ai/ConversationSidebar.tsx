@@ -90,9 +90,9 @@ export function ConversationSidebar({
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed top-0 bottom-0 z-50 w-[min(17rem,85vw)] flex flex-col transition-all duration-300",
+                    "fixed top-0 bottom-0 z-50 w-[min(17rem,85vw)] flex flex-col transition-all duration-300 backdrop-blur-2xl",
                     "lg:static lg:z-auto lg:translate-x-0 lg:w-64",
-                    "border-r border-white/[0.06]",
+                    "border-r border-white/[0.08]",
                     isArabic ? "right-0 lg:border-r-0 lg:border-l" : "left-0",
                     isOpen
                         ? "translate-x-0"
@@ -100,19 +100,19 @@ export function ConversationSidebar({
                             ? "translate-x-full lg:translate-x-0"
                             : "-translate-x-full lg:translate-x-0"
                 )}
-                style={{ background: "rgba(5, 8, 15, 0.97)" }}
+                style={{ background: "rgba(8, 13, 26, 0.96)" }}
             >
                 {/* Top accent line */}
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
 
                 {/* Header */}
-                <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/[0.05]">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-500/10 border border-cyan-400/30 text-cyan-400">
+                <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/[0.06]">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-500/15 border border-cyan-400/30 text-cyan-400">
                         <Brain className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white leading-none">Qure AI</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">{isArabic ? "محادثات Qure AI" : "Qure AI Chats"}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{isArabic ? "محادثات Qure AI" : "Qure AI Chats"}</p>
                     </div>
                     <button
                         onClick={onClose}

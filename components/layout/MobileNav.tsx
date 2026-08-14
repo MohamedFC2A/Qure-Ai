@@ -44,14 +44,14 @@ export const MobileNav = () => {
                 role="navigation"
                 aria-label="Mobile Navigation"
             >
-                <div className="pointer-events-auto relative px-3.5 pb-2.5 pt-1.5">
+                <div className="pointer-events-auto relative px-3 pb-2 pt-1">
                     {/* Background Dock Frame */}
-                    <div className="relative rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
+                    <div className="relative rounded-2xl border border-white/[0.09] bg-[#080D1A]/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
                         
                         {/* Subtle top divider line */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
 
-                        <div className="flex items-center justify-around px-2 py-2 sm:py-2.5">
+                        <div className="flex items-center justify-around px-1.5 py-1.5 sm:py-2">
                             
                             {/* Standard Nav Tabs (Larger Icons & Clear Text) */}
                             {navItems.map((item) => {
@@ -66,18 +66,18 @@ export const MobileNav = () => {
                                         aria-current={isActive ? "page" : undefined}
                                         className="flex-1 rounded-xl py-1 focus-visible:outline-none"
                                     >
-                                        <div className="flex flex-col items-center gap-1.5 group">
+                                        <div className="flex flex-col items-center gap-1 group">
                                             <div className={cn(
-                                                "p-2 rounded-xl transition-all duration-150",
+                                                "p-1.5 rounded-xl transition-all duration-150",
                                                 isActive
-                                                    ? "bg-slate-800 text-cyan-300 border border-slate-700 shadow-sm"
+                                                    ? "bg-white/[0.08] text-cyan-300 border border-white/[0.12] shadow-sm"
                                                     : "text-slate-400 group-hover:text-slate-200"
                                             )}>
-                                                <Icon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                                                <Icon className="w-5 h-5 shrink-0" />
                                             </div>
                                             <span className={cn(
-                                                "text-[11px] sm:text-xs font-bold tracking-tight leading-none transition-colors",
-                                                isActive ? "text-white font-black" : "text-slate-400"
+                                                "text-[10px] sm:text-[11px] font-bold tracking-tight leading-none transition-colors",
+                                                isActive ? "text-white font-extrabold" : "text-slate-400"
                                             )}>
                                                 {item.name}
                                             </span>
@@ -93,18 +93,18 @@ export const MobileNav = () => {
                                 aria-label={t("More options", "المزيد")}
                                 className="flex-1 rounded-xl py-1 focus-visible:outline-none"
                             >
-                                <div className="flex flex-col items-center gap-1.5 group">
+                                <div className="flex flex-col items-center gap-1 group">
                                     <div className={cn(
-                                        "p-2 rounded-xl transition-all duration-150",
+                                        "p-1.5 rounded-xl transition-all duration-150",
                                         isHubOpen
-                                            ? "bg-slate-800 text-white border border-slate-700 shadow-sm"
+                                            ? "bg-white/[0.08] text-white border border-white/[0.12] shadow-sm"
                                             : "text-slate-400 group-hover:text-slate-200"
                                     )}>
-                                        <MoreHorizontal className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                                        <MoreHorizontal className="w-5 h-5 shrink-0" />
                                     </div>
                                     <span className={cn(
-                                        "text-[11px] sm:text-xs font-bold tracking-tight leading-none transition-colors",
-                                        isHubOpen ? "text-white font-black" : "text-slate-400"
+                                        "text-[10px] sm:text-[11px] font-bold tracking-tight leading-none transition-colors",
+                                        isHubOpen ? "text-white font-extrabold" : "text-slate-400"
                                     )}>
                                         {t("More", "المزيد")}
                                     </span>

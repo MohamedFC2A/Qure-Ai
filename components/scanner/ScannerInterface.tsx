@@ -658,7 +658,7 @@ export const ScannerInterface = () => {
                                     >
                                         {t("Cancel", "إلغاء")}
                                     </button>
-                                    <Button onClick={confirmCarePicker} disabled={!careTempId || isScanning} variant="primary" className="gap-2 px-6 font-bold" glow>
+                                    <Button onClick={confirmCarePicker} disabled={!careTempId || isScanning} variant="primary" className="gap-2 px-6 font-bold">
                                         <ScanLine className="w-4 h-4" />
                                         <span>{t("Start Analysis Now", "ابدأ الفحص الآن")}</span>
                                     </Button>

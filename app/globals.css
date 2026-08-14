@@ -8,14 +8,14 @@
 
 :root {
   --font-cairo: 'Cairo', system-ui, sans-serif;
-  --q-base: #030712;
+  --q-base: #040711;
   --q-surface: #080d1a;
-  --q-surface-2: #0f172a;
-  --q-card: rgba(15, 23, 42, 0.75);
-  --q-card-border: rgba(255, 255, 255, 0.06);
-  --q-glass-1: rgba(15, 23, 42, 0.65);
-  --q-glass-2: rgba(15, 23, 42, 0.85);
-  --q-glass-hover: rgba(30, 41, 59, 0.80);
+  --q-surface-2: #0c1324;
+  --q-card: rgba(10, 17, 34, 0.75);
+  --q-card-border: rgba(255, 255, 255, 0.08);
+  --q-glass-1: rgba(10, 17, 34, 0.70);
+  --q-glass-2: rgba(10, 17, 34, 0.88);
+  --q-glass-hover: rgba(16, 26, 48, 0.80);
   --q-cyan: #06b6d4;
   --q-cyan-light: #22d3ee;
   --q-emerald: #10b981;
@@ -208,15 +208,16 @@ body {
   }
 
   /* ── Form Inputs ── */
+  /* ── Form Inputs ── */
   .clinical-input {
     width: 100%;
     border-radius: 0.75rem;
     border: 1px solid rgba(255, 255, 255, 0.09);
-    background: rgba(10, 16, 26, 0.70);
+    background: rgba(8, 13, 26, 0.80);
     padding: 0.75rem 1rem;
     font-size: 1rem; /* 16px on mobile prevents iOS Safari auto-zoom */
     color: #fff;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease, background 0.2s ease;
   }
 
   @media (min-width: 640px) {
@@ -230,35 +231,36 @@ body {
   .clinical-input:focus {
     outline: none;
     border-color: rgba(34, 211, 238, 0.40);
-    background: rgba(12, 20, 34, 0.85);
+    background: rgba(12, 19, 36, 0.90);
     /* Only ring — no spread glow */
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
   }
 
-  /* ── Glass Surfaces ── */
+  /* ── Liquid Glass Surfaces ── */
   .glass-card {
     background: var(--q-glass-1);
-    backdrop-filter: blur(20px) saturate(130%);
-    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
     border: 1px solid var(--q-card-border);
     border-radius: 1.125rem;
-    transition: border-color 0.2s ease;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: border-color 0.2s ease, transform 0.2s ease;
   }
 
-  .glass-card:hover { border-color: rgba(255, 255, 255, 0.13); }
+  .glass-card:hover { border-color: rgba(255, 255, 255, 0.14); }
 
   .glass-elevated {
     background: var(--q-glass-2);
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 1.125rem;
     /* Depth shadow only — no color glow */
-    box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   .glass-inset {
-    background: rgba(0, 0, 0, 0.28);
+    background: rgba(0, 0, 0, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 0.875rem;
   }
@@ -266,20 +268,19 @@ body {
   /* ── AI Chat Input Container ── */
   .ai-input-container {
     position: relative;
-    background: rgba(9, 14, 24, 0.90);
+    background: rgba(8, 13, 26, 0.92);
     border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 1.125rem;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     /* Depth only */
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.50);
     transition: border-color 0.2s ease;
   }
 
   .ai-input-container:focus-within {
-    border-color: rgba(201, 151, 58, 0.28);
-    /* Very subtle ring — no spread glow */
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(201, 151, 58, 0.06);
+    border-color: rgba(34, 211, 238, 0.35);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55), 0 0 0 3px rgba(34, 211, 238, 0.06);
   }
 
   /* ── Icon Badges — flat tinted ── */

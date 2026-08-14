@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain } from "lucide-react";
+import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -418,7 +420,7 @@ export function AiChatPage() {
     /* ── Loading ── */
     if (loading) {
         return (
-            <main className="min-h-screen pt-20 px-4 bg-slate-950 flex items-center justify-center">
+            <main className="min-h-screen pt-20 px-4 bg-[#040711] flex items-center justify-center">
                 <div className="w-full max-w-3xl space-y-4">
                     <div className="h-12 skeleton rounded-2xl bg-white/[0.04]" />
                     <div className="h-[60vh] skeleton rounded-2xl bg-white/[0.04]" />
@@ -433,7 +435,7 @@ export function AiChatPage() {
         <main
             className="fixed inset-0 pt-16 sm:pt-20 md:pt-20 z-40 flex"
             dir={isArabic ? "rtl" : "ltr"}
-            style={{ background: "#050811" }}
+            style={{ background: "#040711" }}
         >
             {/* ── Sidebar ── */}
             {isUltra && (
@@ -456,7 +458,7 @@ export function AiChatPage() {
                 {isUltra && (
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden fixed top-20 right-3 z-30 p-2 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 hover:text-white shadow-md"
+                        className="lg:hidden fixed top-20 right-3 z-30 p-2 rounded-xl bg-[#080D1A]/90 border border-white/[0.08] backdrop-blur-xl text-slate-300 hover:text-white shadow-md"
                         title="Open Conversations"
                     >
                         <Menu className="w-4 h-4" />
@@ -466,65 +468,55 @@ export function AiChatPage() {
                 {/* ── ULTRA PAYWALL BLOCK (For Free Tier Users) ── */}
                 {!isUltra ? (
                     <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
-                        <div className="max-w-xl w-full rounded-3xl border border-white/10 p-6 sm:p-8 text-center space-y-6 bg-slate-900/90 backdrop-blur-xl shadow-xl relative overflow-hidden">
-                            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-cyan-400">
+                        <div className="max-w-xl w-full rounded-3xl border border-white/[0.09] p-6 sm:p-8 text-center space-y-6 bg-[#080D1A]/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+                            <div className="w-16 h-16 rounded-2xl bg-[#0C1324] border border-white/[0.08] flex items-center justify-center mx-auto text-cyan-400">
                                 <Lock className="w-8 h-8" />
                             </div>
 
                             <div className="space-y-2">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#0C1324] text-slate-300 border border-white/[0.08]">
                                     <Zap className="w-3.5 h-3.5 text-cyan-400" />
                                     {t("ULTRA EXCLUSIVE FEATURE", "ميزة حصرية لمشتركي ULTRA")}
                                 </span>
                                 <h2 className="text-2xl font-extrabold text-white tracking-tight">
                                     {t("Unlock Qure AI Assistant", "افتح المساعد الطبي الذكي Qure AI")}
                                 </h2>
-                                <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
                                     {t(
-                                        "Qure AI is available exclusively for ULTRA members. Get personalized clinical insights, comprehensive medication analysis, and health advice.",
-                                        "مساعد Qure AI متاح حصرياً لأعضاء باقة ULTRA. احصل على تحليلات سريرية فائقة الدقة، قراءة شفرات الأدوية، واستشارات صحية مخصصة."
+                                        "Qure AI Assistant offers deep pharmaceutical memory, prescription interaction checks, and instant clinical reasoning.",
+                                        "يقدم مساعد Qure AI ذاكرة أدوية متطورة، وفحص تعارضات الوصفات، وتحليلات سريرية فورية معتمدة."
                                     )}
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start pt-2">
-                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
-                                    <Pill className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                                    <div className="text-xs">
-                                        <p className="font-bold text-white">{t("Full Medication Context", "قراءة بيانات الأدوية بالكامل")}</p>
-                                        <p className="text-slate-400 text-[11px]">{t("Reads ingredients, warnings & FDA labels", "يفهم المواد الفعالة والتحذيرات والجرعات")}</p>
-                                    </div>
+                            <div className="p-4 rounded-2xl bg-[#0C1324]/60 border border-white/[0.06] text-start space-y-2.5 max-w-md mx-auto">
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                                    <span>{t("Continuous Medication Memory across all scans", "ذاكرة أدوية متصلة مع جميع فحوصاتك")}</span>
                                 </div>
-                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
-                                    <Brain className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                                    <div className="text-xs">
-                                        <p className="font-bold text-white">{t("Personalized Health Profile", "ربط بالملف الصحي الخاص")}</p>
-                                        <p className="text-slate-400 text-[11px]">{t("Cross-checks allergies & conditions", "يفحص الحساسية والتداخلات لملفك")}</p>
-                                    </div>
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                                    <span>{t("Automated Drug-Drug & Disease Interaction Engine", "محرك كشف التعارضات الدوائية والمرضية التلقائي")}</span>
                                 </div>
-                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
-                                    <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                                    <div className="text-xs">
-                                        <p className="font-bold text-white">{t("Clinical Safety Guard", "فحص السلامة الصيدلانية")}</p>
-                                        <p className="text-slate-400 text-[11px]">{t("FDA verified interaction checks", "مراجعة معايير السلامة والتداخلات")}</p>
-                                    </div>
-                                </div>
-                                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-start gap-2.5">
-                                    <Zap className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                                    <div className="text-xs">
-                                        <p className="font-bold text-white">{t("Zero-Lag Streaming", "استجابة فائقة السرعة")}</p>
-                                        <p className="text-slate-400 text-[11px]">{t("Instant token streaming & continuous chat", "بث فوري للإجابات وحفظ المحادثات")}</p>
-                                    </div>
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                                    <span>{t("Voice input & real-time audio explanations", "إمكانية التحدث الصوتي وسماع الشرح الطبي المباشر")}</span>
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => router.push("/pricing")}
-                                className="w-full py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-base transition-all flex items-center justify-center gap-2"
-                            >
-                                <Zap className="w-5 h-5" />
-                                {t("Upgrade to ULTRA Now", "ترقية إلى باقة ULTRA الآن")}
-                            </button>
+                            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                                <Link href="/pricing" className="w-full sm:w-auto">
+                                    <Button variant="primary" className="w-full sm:w-auto px-8 py-3.5 font-black gap-2">
+                                        <Zap className="w-4 h-4" />
+                                        <span>{t("Upgrade to Ultra ($9/mo)", "الترقية إلى ألترا ($9/شهر)")}</span>
+                                    </Button>
+                                </Link>
+                                <Link href="/scan" className="w-full sm:w-auto">
+                                    <Button variant="ghost" className="w-full sm:w-auto text-xs text-slate-400 hover:text-white">
+                                        {t("Back to Scanner", "العودة للفحص")}
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 ) : (
@@ -534,26 +526,38 @@ export function AiChatPage() {
                         <div
                             ref={chatContainerRef}
                             onScroll={handleScroll}
-                            className="flex-1 overflow-y-auto px-4 py-6 no-scrollbar"
+                            className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-4"
                         >
-                            <div className="max-w-2xl mx-auto space-y-6">
+                            <div className="max-w-3xl mx-auto space-y-4">
+
+                                {/* Top Active User Banner */}
+                                {user && (
+                                    <div className="flex items-center justify-between p-3 rounded-2xl bg-[#080D1A]/80 border border-white/[0.08] backdrop-blur-xl shadow-sm text-xs">
+                                        <div className="flex items-center gap-2 text-slate-300">
+                                            <span className="text-slate-500 font-medium">{t("Active Profile:", "الملف الصحي النشط:")}</span>
+                                            <span className="font-bold text-white">{user.email || user.id}</span>
+                                        </div>
+                                        <Link href="/profile" className="text-cyan-300 hover:underline font-semibold text-[11px]">
+                                            {t("Manage Health Profile", "إدارة الملف الصحي")}
+                                        </Link>
+                                    </div>
+                                )}
 
                                 {/* Welcome section when empty */}
                                 {messages.length === 0 && (
-                                    <div className="flex flex-col items-center text-center pt-10 pb-6 animate-fade-in space-y-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                                            <Brain className="w-7 h-7" />
+                                    <div className="py-10 sm:py-16 text-center flex flex-col items-center justify-center space-y-5">
+                                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-[#080D1A]/90 border border-white/[0.09] flex items-center justify-center text-cyan-300 backdrop-blur-xl shadow-xl">
+                                            <Brain className="w-7 h-7 sm:w-8 sm:h-8" />
                                         </div>
 
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <h2 className="text-2xl font-black tracking-tight text-white">Qure AI</h2>
-                                                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-cyan-300 font-mono">INTELLIGENCE</span>
-                                            </div>
-                                            <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
+                                        <div className="space-y-1.5 max-w-md">
+                                            <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                                                {t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
+                                            </h3>
+                                            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
                                                 {t(
-                                                    "Your personal health AI — knows your profile, your medications, and gives you personalized answers. Just ask anything.",
-                                                    "مساعدك الصحي الشخصي — يعرف ملفك الصحي وتاريخ أدويتك ويجيبك بشكل مخصص. فقط اسأل عن أي شيء."
+                                                    "Ask about your scanned medications, verify interactions, or analyze treatment regimens with AI precision.",
+                                                    "اسأل عن أدويتك المسجلة، وتحقق من التداخلات الدوائية والجرعات بدقة الذكاء الاصطناعي."
                                                 )}
                                             </p>
                                         </div>
@@ -564,7 +568,7 @@ export function AiChatPage() {
                                                 <button
                                                     key={i}
                                                     onClick={() => sendMessage(isArabic ? s.ar : s.en)}
-                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-slate-800 bg-slate-900/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-slate-800 transition-all leading-relaxed"
+                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-white/[0.08] bg-[#080D1A]/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324]/90 backdrop-blur-xl transition-all leading-relaxed"
                                                 >
                                                     {isArabic ? s.ar : s.en}
                                                 </button>
@@ -598,7 +602,7 @@ export function AiChatPage() {
                         </div>
 
                         {/* ── INPUT BAR ── */}
-                        <div className="shrink-0 px-3 sm:px-6 pt-3 pb-3 sm:pb-5 border-t border-white/[0.08] bg-slate-950/95 backdrop-blur-2xl">
+                        <div className="shrink-0 px-3 sm:px-6 pt-3 pb-3 sm:pb-5 border-t border-white/[0.08] bg-[#080D1A]/90 backdrop-blur-2xl">
                             <div className="max-w-3xl mx-auto space-y-2.5">
 
                                 {/* Medication picker bar */}
@@ -610,7 +614,7 @@ export function AiChatPage() {
                                 />
 
                                 {/* Premium Main Input Container */}
-                                <div className="rounded-2xl border border-white/10 bg-slate-900/95 focus-within:border-cyan-500/60 focus-within:bg-slate-900 transition-all duration-200 shadow-xl overflow-hidden">
+                                <div className="rounded-2xl border border-white/[0.09] bg-[#0C1324]/90 focus-within:border-cyan-500/50 backdrop-blur-xl transition-all duration-200 shadow-xl overflow-hidden">
                                     
                                     {/* Subtitle / Mode Indicator Header */}
                                     <div className="flex items-center justify-between px-4 pt-2.5 pb-1 border-b border-white/[0.04]">

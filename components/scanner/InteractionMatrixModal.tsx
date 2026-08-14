@@ -97,15 +97,15 @@ export function InteractionMatrixModal({
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="w-full max-w-3xl overflow-hidden rounded-3xl border border-cyan-500/30 bg-slate-900 shadow-2xl shadow-cyan-950/50"
+                        className="w-full max-w-3xl overflow-hidden rounded-3xl border border-white/[0.12] bg-[#080D1A]/95 shadow-2xl backdrop-blur-2xl"
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-slate-950/50">
+                        <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-4 bg-[#0C1324]/60">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
                                     <ShieldAlert className="h-5 w-5" />

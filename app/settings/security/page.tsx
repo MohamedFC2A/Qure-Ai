@@ -37,12 +37,12 @@ export default function SecuritySettingsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-12 dir-rtl font-sans">
+    <div className="min-h-screen bg-[#040711] text-slate-100 p-6 md:p-12 dir-rtl font-sans pt-24">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="border-b border-slate-800 pb-6 flex items-center justify-between">
+        <div className="border-b border-white/[0.08] pb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-teal-400 via-cyan-400 to-sky-400 bg-clip-text text-transparent flex items-center gap-3">
               <ShieldCheck className="w-8 h-8 text-cyan-400" />
               أمان وحماية الحساب الطبي العائلي (World-Class Security)
             </h1>
@@ -53,7 +53,7 @@ export default function SecuritySettingsPage() {
         </div>
 
         {/* 1. Biometrics & Passkeys (Face ID / Touch ID) Section */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-xl shadow-2xl space-y-6">
+        <div className="bg-[#080D1A]/85 border border-white/[0.08] rounded-3xl p-6 backdrop-blur-2xl shadow-2xl space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-cyan-950/60 border border-cyan-500/30 rounded-xl text-cyan-400">

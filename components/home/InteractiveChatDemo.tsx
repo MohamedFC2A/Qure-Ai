@@ -173,15 +173,15 @@ export function InteractiveChatDemo({ isArabic }: { isArabic: boolean }) {
             <div
                 className="rounded-3xl border overflow-hidden backdrop-blur-2xl transition-all duration-300"
                 style={{
-                    background: "rgba(8, 12, 22, 0.96)",
-                    borderColor: "rgba(255,255,255,0.10)",
+                    background: "rgba(8, 13, 26, 0.96)",
+                    borderColor: "rgba(255,255,255,0.09)",
                     boxShadow: "0 28px 70px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.08) inset",
                 }}
             >
                 {/* Header Bar */}
                 <div
                     className="flex items-center justify-between px-4 sm:px-5 py-3 border-b"
-                    style={{ background: "rgba(6, 9, 16, 0.95)", borderColor: "rgba(255,255,255,0.07)" }}
+                    style={{ background: "rgba(6, 10, 20, 0.95)", borderColor: "rgba(255,255,255,0.07)" }}
                 >
                     <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
@@ -190,8 +190,8 @@ export function InteractiveChatDemo({ isArabic }: { isArabic: boolean }) {
                     </div>
 
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-                        <div className="w-5 h-5 rounded-lg bg-gradient-to-tr from-cyan-500 to-emerald-400 p-0.5 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-3 h-3 text-slate-950" />
+                        <div className="w-5 h-5 rounded-lg bg-cyan-500/20 border border-cyan-400/30 p-0.5 flex items-center justify-center shrink-0">
+                            <Brain className="w-3.5 h-3.5 text-cyan-300" />
                         </div>
                         <span>Qure AI — Clinical Interaction Intelligence</span>
                     </div>

@@ -299,7 +299,7 @@ export default function DashboardPage() {
 
                         {/* Quick scan CTA */}
                         <Link href="/scan" className="w-full sm:w-auto">
-                            <Button size="lg" glow className="w-full sm:w-auto font-bold px-7">
+                            <Button size="lg" className="w-full sm:w-auto font-bold px-7">
                                 <ScanLine className="w-4 h-4 mr-2" />
                                 <span>{t("Scan Medication", "افحص دواءك الآن")}</span>
                             </Button>
@@ -393,7 +393,7 @@ export default function DashboardPage() {
                                             {t("Upload a medication to get started.", "ارفع صورة دواء للبدء.")}
                                         </p>
                                         <Link href="/scan" className="mt-4">
-                                            <Button size="sm" glow>
+                                            <Button size="sm">
                                                 <ScanLine className="w-4 h-4 mr-2" />
                                                 <span>{t("Scan now", "افحص الآن")}</span>
                                             </Button>

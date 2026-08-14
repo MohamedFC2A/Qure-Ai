@@ -150,7 +150,7 @@ export default function Home() {
                 {/* Single very-low-opacity vignette — no colored orbs */}
                 <div
                     className="absolute inset-0"
-                    style={{ background: "radial-gradient(ellipse 100% 60% at 50% -10%, rgba(22,36,60,0.45) 0%, transparent 70%)" }}
+                    style={{ background: "radial-gradient(ellipse 100% 60% at 50% -10%, rgba(12,19,36,0.45) 0%, transparent 70%)" }}
                 />
             </div>
 
@@ -168,14 +168,14 @@ export default function Home() {
                         {isArabic ? (
                             <>
                                 منصة التحليل والفحص الذكي{" "}
-                                <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
+                                <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-sky-300 bg-clip-text text-transparent">
                                     للأدوية والملصقات الطبية.
                                 </span>
                             </>
                         ) : (
                             <>
                                 Advanced Pharmaceutical{" "}
-                                <span className="bg-gradient-to-r from-cyan-300 via-sky-200 to-emerald-300 bg-clip-text text-transparent">
+                                <span className="bg-gradient-to-r from-cyan-300 via-sky-200 to-teal-300 bg-clip-text text-transparent">
                                     Medication Intelligence.
                                 </span>
                             </>
@@ -200,10 +200,10 @@ export default function Home() {
                         </Link>
 
                         <Link href="/ai" className="w-full sm:w-auto">
-                            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-xl border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.07] hover:border-white/[0.18] text-white/80 hover:text-white font-semibold text-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5">
-                                <Sparkles className="h-4 w-4 shrink-0 text-amber-400/80" />
+                            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-xl border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.07] hover:border-white/[0.18] text-white/90 hover:text-white font-semibold text-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5">
+                                <Brain className="h-4 w-4 shrink-0 text-cyan-400" />
                                 <span>Qure AI</span>
-                                <ChevronRight className={cn("h-4 w-4 shrink-0 text-white/30", isArabic ? "rotate-180" : "")} />
+                                <ChevronRight className={cn("h-4 w-4 shrink-0 text-white/40", isArabic ? "rotate-180" : "")} />
                             </button>
                         </Link>
                     </div>
@@ -211,17 +211,17 @@ export default function Home() {
                     {/* Trust Indicators */}
                     <div className="pt-4 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-400 font-medium">
                         <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400/70" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400/80" />
                             <span>{t("Instant Label OCR", "قراءة فورية للملصقات")}</span>
                         </div>
                         <div className="w-px h-3 bg-white/8" />
                         <div className="flex items-center gap-1.5">
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400/70" />
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400/80" />
                             <span>{t("FDA Verified Data", "مطابقة معتمدة مع FDA")}</span>
                         </div>
                         <div className="w-px h-3 bg-white/8" />
                         <div className="flex items-center gap-1.5">
-                            <Lock className="h-3.5 w-3.5 text-slate-400/70" />
+                            <Lock className="h-3.5 w-3.5 text-slate-400/80" />
                             <span>{t("Encrypted & Private", "حماية وخصوصية تامة")}</span>
                         </div>
                     </div>
@@ -241,10 +241,10 @@ export default function Home() {
             {/* ── STATS ── */}
             <section className="clinical-page max-w-4xl mx-auto mt-14 sm:mt-16">
                 <div
-                    className="rounded-2xl border p-8 sm:p-10"
-                    style={{ background: "rgba(9, 14, 24, 0.85)", borderColor: "rgba(255,255,255,0.07)" }}
+                    className="rounded-2xl border p-8 sm:p-10 backdrop-blur-2xl shadow-xl"
+                    style={{ background: "rgba(10, 16, 32, 0.85)", borderColor: "rgba(255,255,255,0.08)" }}
                 >
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-white/[0.05]">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-white/[0.06]">
                         {stats.map((item, i) => (
                             <StatItem key={item.label} value={item.value} label={item.label} delay={i * 0.1} />
                         ))}

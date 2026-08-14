@@ -335,10 +335,10 @@ export default function PricingPage() {
                 <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
                     
                     {/* Free Plan Card */}
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+                    <div className="rounded-3xl border border-white/[0.08] bg-[#080D1A]/80 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-xl">
                         <div>
                             <div className="flex items-center justify-between gap-4">
-                                <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800/80 border border-slate-700 text-slate-300">
+                                <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/[0.05] border border-white/[0.08] text-slate-300">
                                     {t("Free Plan", "الخطة المجانية")}
                                 </span>
                                 <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
@@ -380,17 +380,17 @@ export default function PricingPage() {
                     </div>
 
                     {/* Ultra Plan Card */}
-                    <div className="relative rounded-3xl border border-cyan-500/30 bg-slate-900/90 p-6 sm:p-8 flex flex-col justify-between shadow-md">
+                    <div className="relative rounded-3xl border border-cyan-500/30 bg-[#0C1324]/90 backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl">
                         
                         <div>
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-800 border border-slate-700 text-cyan-300 flex items-center gap-1.5">
+                                    <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 flex items-center gap-1.5">
                                         <Zap className="h-3.5 w-3.5 text-cyan-400" />
                                         {t("Ultra Plan", "خطة ألترا")}
                                     </span>
                                 </div>
-                                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-800 border border-slate-700 text-slate-300">
+                                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-white/[0.06] border border-white/[0.08] text-slate-300">
                                     {t("Most Popular", "الأكثر تميزاً")}
                                 </span>
                             </div>
@@ -405,7 +405,7 @@ export default function PricingPage() {
                                 {t("For regular health checks, Qure AI medical chat, and full family care.", "للرعاية المتكاملة، استشارات Qure AI، ومتابعة صحة الأسرة بدون حدود.")}
                             </p>
 
-                            <div className="my-6 h-px bg-slate-800" />
+                            <div className="my-6 h-px bg-white/[0.08]" />
 
                             <p className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3">
                                 {t("Everything in Free, plus:", "كل ما في المجاني، بالإضافة إلى:")}
@@ -418,15 +418,15 @@ export default function PricingPage() {
                                 <div className="h-12 w-full skeleton rounded-2xl" />
                             ) : plan === "ultra" ? (
                                 <>
-                                    <div className="w-full py-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-cyan-300 font-bold text-center flex items-center justify-center gap-2">
+                                    <div className="w-full py-3.5 rounded-2xl bg-white/[0.06] border border-white/15 text-cyan-300 font-bold text-center flex items-center justify-center gap-2">
                                         <CheckCircle2 className="w-4 h-4 text-cyan-400" />
                                         <span>{t("Ultra is Active", "ألترا مفعّل بحسابك")}</span>
                                     </div>
                                     <button
                                         onClick={() => triggerCelebration({ force: true })}
-                                        className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-cyan-500/20 to-violet-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-400/40 text-amber-300 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                                        className="w-full py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.12] text-slate-200 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                                     >
-                                        <Crown className="w-4 h-4 text-amber-400" />
+                                        <Crown className="w-4 h-4 text-cyan-400" />
                                         <span>{t("Explore All ULTRA Perks", "استعراض كافة مميزات ألترا المفتوحة")}</span>
                                     </button>
                                 </>

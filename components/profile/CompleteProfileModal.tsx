@@ -117,8 +117,8 @@ export function CompleteProfileModal({ forceOpen = false, onCompleted }: Complet
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-start">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
+            <div className="w-full max-w-lg bg-[#080D1A]/95 border border-white/[0.12] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-start">
                 
                 {/* Header */}
                 <div className="flex items-start gap-4">

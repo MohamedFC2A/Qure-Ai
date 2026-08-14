@@ -124,7 +124,7 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 30, stiffness: 350 }}
-                        className="relative z-10 w-full max-h-[80vh] flex flex-col rounded-t-[28px] bg-slate-950 border-t border-white/10 shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom)]"
+                        className="relative z-10 w-full max-h-[80vh] flex flex-col rounded-t-[28px] bg-[#080D1A] border-t border-white/[0.10] shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom)]"
                     >
                         {/* Drag Handle Bar */}
                         <div className="pt-3 pb-1 flex justify-center items-center shrink-0">
@@ -144,7 +144,7 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
 
                             <button
                                 onClick={onClose}
-                                className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white active:scale-95 transition-all"
+                                className="w-8 h-8 rounded-xl bg-[#0C1324] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white active:scale-95 transition-all"
                                 aria-label="Close"
                             >
                                 <X className="w-4 h-4" />
@@ -164,13 +164,13 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
                                         className={cn(
                                             "p-3 rounded-2xl border transition-all duration-150 flex items-center justify-between group active:scale-[0.99]",
                                             isActive
-                                                ? "bg-slate-900 border-white/20"
-                                                : "bg-slate-900/50 border-white/[0.06] hover:bg-slate-900/80 hover:border-white/10"
+                                                ? "bg-[#0C1324] border-white/20"
+                                                : "bg-[#0C1324]/50 border-white/[0.06] hover:bg-[#0C1324]/80 hover:border-white/10"
                                         )}
                                     >
                                         <div className="flex items-center gap-3 min-w-0">
                                             {/* Unified Slate Icon Box (No Clashing Colors) */}
-                                            <div className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-200 shrink-0 group-hover:text-cyan-300 group-hover:border-slate-600 transition-colors">
+                                            <div className="w-9 h-9 rounded-xl bg-[#10192F] border border-white/[0.08] flex items-center justify-center text-slate-200 shrink-0 group-hover:text-cyan-300 group-hover:border-slate-600 transition-colors">
                                                 <Icon className="w-4 h-4" />
                                             </div>
 
@@ -186,7 +186,7 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
 
                                         <div className="flex items-center gap-2 shrink-0 ms-2">
                                             {item.badge && (
-                                                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-800 border border-slate-700 text-cyan-300">
+                                                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#10192F] border border-white/[0.08] text-cyan-300">
                                                     {item.badge}
                                                 </span>
                                             )}
@@ -198,14 +198,14 @@ export const MobileHubDrawer: React.FC<MobileHubDrawerProps> = ({ isOpen, onClos
                         </div>
 
                         {/* Minimal Footer: Language Switcher Only */}
-                        <div className="p-3.5 border-t border-white/[0.06] bg-slate-950/90 flex items-center justify-between shrink-0">
+                        <div className="p-3.5 border-t border-white/[0.06] bg-[#080D1A]/95 flex items-center justify-between shrink-0">
                             <span className="text-[11px] text-slate-400 font-medium">
                                 {t("Language", "لغة المنصة")}
                             </span>
 
                             <button
                                 onClick={toggleLanguage}
-                                className="py-2 px-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all"
+                                className="py-2 px-3.5 rounded-xl bg-[#0C1324] border border-white/[0.08] hover:border-slate-700 text-slate-200 font-bold text-xs flex items-center gap-2 active:scale-95 transition-all"
                             >
                                 <Globe className="w-3.5 h-3.5 text-cyan-400" />
                                 <span>{isArabic ? "English" : "العربية"}</span>

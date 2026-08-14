@@ -339,7 +339,7 @@ export default function TermsPage() {
                                 {isBiometricVerifying
                                     ? t("Scanning Face ID / Fingerprint...", "جارٍ مسح بصمة الجوال أو Face ID...")
                                     : isBiometricVerified
-                                    ? t("✓ Approved", "✓ تم الموافقة")
+                                    ? t("Approved", "تمت الموافقة")
                                     : t("Confirm via Face ID / Fingerprint", "الموافقة والتأكيد عبر بصمة الجوال أو Face ID")}
                             </span>
                         </Button>

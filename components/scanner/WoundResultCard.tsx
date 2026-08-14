@@ -254,7 +254,7 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
     const handleShareSosWhatsApp = () => {
         const mapsLink = userCoords ? `https://maps.google.com/?q=${userCoords.lat},${userCoords.lng}` : "غير متاح";
         const msg = (
-            `🚨 استغاثة طارئة - حالة إصابة حرجة (ESOS AI)\n\n` +
+            `[نداء استغاثة عاجل] حالة إصابة حرجة (ESOS AI)\n\n` +
             `تشخيص الإصابة: ${result.woundTitle} (${severityConfig.label})\n` +
             `التخصص الموصى به: ${result.recommendedMedicalSpecialty}\n` +
             `الموقع الجغرافي المباشر للمصاب:\n${mapsLink}\n\n` +
@@ -270,7 +270,7 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
     return (
         <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* ── TOP HERO HEADER & TRIAGE BANNER ── */}
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/90 p-5 sm:p-6 backdrop-blur-xl">
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080D1A]/85 p-5 sm:p-6 backdrop-blur-2xl shadow-xl">
                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-white/10">
                     <div className="flex items-center gap-3.5">
                         <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-white/10 text-emerald-400 shrink-0">

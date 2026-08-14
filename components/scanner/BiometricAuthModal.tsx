@@ -87,8 +87,8 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-            <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-7 text-center overflow-hidden shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl animate-in fade-in duration-150">
+            <div className="relative w-full max-w-md rounded-3xl border border-white/[0.12] bg-[#080D1A]/95 p-6 sm:p-7 text-center overflow-hidden shadow-2xl backdrop-blur-2xl">
                 {/* Shield Icon Badge */}
                 <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-emerald-500/10">
                     <Fingerprint className={`h-8 w-8 text-emerald-400 ${authenticating ? "animate-pulse" : ""}`} />

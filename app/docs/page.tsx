@@ -246,8 +246,8 @@ console.log("Analysis Output:", result);`;
                     >
                         {/* Quick Feature Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400">
+                            <div className="p-5 rounded-2xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-xl space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-[#0C1324] border border-white/[0.08] flex items-center justify-center text-cyan-400">
                                     <ScanLine className="w-5 h-5" />
                                 </div>
                                 <h3 className="text-base font-bold text-white">
@@ -265,8 +265,8 @@ console.log("Analysis Output:", result);`;
                                 </Link>
                             </div>
 
-                            <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400">
+                            <div className="p-5 rounded-2xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-xl space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-[#0C1324] border border-white/[0.08] flex items-center justify-center text-emerald-400">
                                     <Brain className="w-5 h-5" />
                                 </div>
                                 <h3 className="text-base font-bold text-white">
@@ -284,8 +284,8 @@ console.log("Analysis Output:", result);`;
                                 </Link>
                             </div>
 
-                            <div className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-purple-400">
+                            <div className="p-5 rounded-2xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-xl space-y-3">
+                                <div className="w-10 h-10 rounded-xl bg-[#0C1324] border border-white/[0.08] flex items-center justify-center text-cyan-300">
                                     <ShieldCheck className="w-5 h-5" />
                                 </div>
                                 <h3 className="text-base font-bold text-white">
@@ -337,7 +337,7 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-8"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-6">
                             <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div>
                                     <h2 className="text-xl font-extrabold text-white">
@@ -411,7 +411,7 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
                                     <Brain className="w-6 h-6" />
@@ -478,7 +478,7 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-purple-400 shrink-0">
                                     <ShieldCheck className="w-6 h-6" />
@@ -546,7 +546,7 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-6">
                             <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 shrink-0">
@@ -603,7 +603,7 @@ console.log("Analysis Output:", result);`;
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
-                        <div className="p-6 rounded-3xl bg-slate-900/90 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-3xl bg-[#080D1A]/85 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-6">
                             <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 shrink-0">

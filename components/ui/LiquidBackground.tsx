@@ -6,15 +6,15 @@ import React from "react";
 export const LiquidBackground = () => {
     const prefersReducedMotion = useReducedMotion();
     return (
-        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#050A10]" suppressHydrationWarning>
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.035)_1px,transparent_1px)] bg-[size:64px_64px]" />
-            <div className="absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-cyan-950/35 via-teal-950/10 to-transparent" />
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-[#040711]" suppressHydrationWarning>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.025)_1px,transparent_1px)] bg-[size:64px_64px]" />
+            <div className="absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-cyan-950/20 via-[#040711]/60 to-transparent" />
             <motion.div
                 animate={
                     prefersReducedMotion
-                        ? { opacity: 0.18 }
+                        ? { opacity: 0.12 }
                         : {
-                            opacity: [0.16, 0.28, 0.16],
+                            opacity: [0.10, 0.18, 0.10],
                             x: [0, 18, 0],
                         }
                 }
@@ -27,14 +27,14 @@ export const LiquidBackground = () => {
                             ease: "easeInOut",
                         }
                 }
-                className="absolute right-[-10%] top-[-20%] h-[45vw] w-[45vw] rounded-full bg-cyan-500/10 blur-[120px] will-change-transform"
+                className="absolute right-[-10%] top-[-20%] h-[45vw] w-[45vw] rounded-full bg-cyan-600/8 blur-[120px] will-change-transform"
             />
             <motion.div
                 animate={
                     prefersReducedMotion
-                        ? { opacity: 0.18 }
+                        ? { opacity: 0.12 }
                         : {
-                            opacity: [0.12, 0.22, 0.12],
+                            opacity: [0.08, 0.15, 0.08],
                             y: [0, -16, 0],
                         }
                 }
@@ -47,9 +47,9 @@ export const LiquidBackground = () => {
                             ease: "easeInOut",
                         }
                 }
-                className="absolute bottom-[-24%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-emerald-500/10 blur-[130px] will-change-transform"
+                className="absolute bottom-[-24%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-slate-800/10 blur-[130px] will-change-transform"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050A10]/45 to-[#050A10]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#040711]/45 to-[#040711]" />
         </div>
     );
 };

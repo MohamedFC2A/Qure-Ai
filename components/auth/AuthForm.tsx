@@ -172,7 +172,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                     setUsernameStatus({
                         checking: false,
                         available: true,
-                        message: isArabic ? "اسم المستخدم متاح ✓" : "Username is available ✓",
+                        message: isArabic ? "اسم المستخدم متاح" : "Username is available",
                     });
                 } else {
                     setUsernameStatus({
@@ -263,8 +263,8 @@ function AuthFormContent({ type }: AuthFormProps) {
         if (verified === "true") {
             setSuccessMessage(
                 t(
-                    "✓ Email verified successfully! Please enter your password to sign in.",
-                    "✓ تم تأكيد البريد الإلكتروني بنجاح! يرجى إدخال كلمة المرور لتسجيل الدخول."
+                    "Email verified successfully! Please enter your password to sign in.",
+                    "تم تأكيد البريد الإلكتروني بنجاح! يرجى إدخال كلمة المرور لتسجيل الدخول."
                 )
             );
         }
@@ -301,8 +301,8 @@ function AuthFormContent({ type }: AuthFormProps) {
             if (session && isMounted) {
                 setSuccessMessage(
                     isArabic
-                        ? "✓ تم تفعيل الحساب وتأكيد البريد بنجاح! جاري تحويلك..."
-                        : "✓ Account verified successfully! Redirecting..."
+                        ? "تم تفعيل الحساب وتأكيد البريد بنجاح! جاري تحويلك..."
+                        : "Account verified successfully! Redirecting..."
                 );
                 setTimeout(() => {
                     router.push(getNextPath());
@@ -318,8 +318,8 @@ function AuthFormContent({ type }: AuthFormProps) {
             if (session && isMounted) {
                 setSuccessMessage(
                     isArabic
-                        ? "✓ تم تفعيل الحساب بنجاح! جاري تحويلك..."
-                        : "✓ Account verified successfully! Redirecting..."
+                        ? "تم تفعيل الحساب بنجاح! جاري تحويلك..."
+                        : "Account verified successfully! Redirecting..."
                 );
                 clearInterval(interval);
                 setTimeout(() => {
@@ -447,7 +447,7 @@ function AuthFormContent({ type }: AuthFormProps) {
 
                         if (!loginResult.error) {
                             setSuccessMessage(
-                                t("Account created successfully! Redirecting...", "✓ تم إنشاء الحساب بنجاح! جاري تحويلك...")
+                                t("Account created successfully! Redirecting...", "تم إنشاء الحساب بنجاح! جاري تحويلك...")
                             );
                             speakVoiceOs(isArabic ? "تم التسجيل بنجاح" : "Successfully registered!");
                             setTimeout(() => {
@@ -629,7 +629,7 @@ function AuthFormContent({ type }: AuthFormProps) {
     // If registered and awaiting email confirmation: Show dedicated clean confirmation state
     if (registeredEmail) {
         return (
-            <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl text-center space-y-6">
+            <div className="w-full max-w-md bg-[#080D1A]/85 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
                 <div className="w-14 h-14 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto text-cyan-400">
                     <Mail className="w-7 h-7" />
                 </div>
@@ -734,7 +734,7 @@ function AuthFormContent({ type }: AuthFormProps) {
     }
 
     return (
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+        <div className="w-full max-w-md bg-[#080D1A]/85 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl">
             <div className="space-y-6">
                 {/* Header */}
                 <div className="text-center space-y-1.5">
@@ -1024,7 +1024,7 @@ function AuthFormContent({ type }: AuthFormProps) {
                                         {isBiometricVerifying
                                             ? t("Scanning Face ID / Fingerprint...", "جارٍ مسح بصمة الجوال أو Face ID...")
                                             : isBiometricVerified
-                                            ? t("✓ Approved", "✓ تم الموافقة")
+                                            ? t("Approved", "تمت الموافقة")
                                             : t("Approve via Mobile Fingerprint / Face ID", "الموافقة عبر بصمة الجوال أو Face ID")}
                                     </span>
                                 </Button>

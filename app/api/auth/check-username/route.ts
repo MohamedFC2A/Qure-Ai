@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             valid: true,
             available: true,
-            message: "Username is available ✓",
-            messageAr: "اسم المستخدم متاح ✓",
+            message: "Username is available",
+            messageAr: "اسم المستخدم متاح",
         });
     } catch (err: any) {
         console.error("[Check Username Exception]:", err);

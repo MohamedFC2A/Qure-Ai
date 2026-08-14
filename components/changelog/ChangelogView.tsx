@@ -141,7 +141,7 @@ export function ChangelogView() {
                             </div>
 
                             {/* Release Card */}
-                            <div className="flex-1 w-full rounded-3xl border border-white/[0.08] bg-slate-950/70 p-6 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:border-white/20">
+                            <div className="flex-1 w-full rounded-3xl border border-white/[0.08] bg-[#080D1A]/85 p-6 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:border-white/20">
                                 
                                 {/* Top metadata row */}
                                 <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-white/[0.06]">

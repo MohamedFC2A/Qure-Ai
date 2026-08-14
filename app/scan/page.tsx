@@ -90,7 +90,7 @@ export default function ScanPage() {
                 <CreditsUpsellBanner />
 
                 {/* ── Scanner Interface Container ── */}
-                <section className="w-full rounded-3xl border border-white/[0.08] bg-slate-950/60 p-3 sm:p-5 md:p-6 shadow-2xl shadow-black/50 backdrop-blur-2xl">
+                <section className="w-full rounded-3xl border border-white/[0.09] bg-[#080D1A]/80 p-3 sm:p-5 md:p-6 shadow-2xl shadow-black/50 backdrop-blur-2xl">
                     <ScannerInterface />
                 </section>
             </div>

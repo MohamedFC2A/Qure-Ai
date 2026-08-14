@@ -31,7 +31,7 @@ export const Footer = () => {
     };
 
     return (
-        <footer className="relative z-10 mt-16 border-t mb-16 md:mb-0 border-white/[0.06] bg-slate-950/40 backdrop-blur-xl">
+        <footer className="relative z-10 mt-16 border-t mb-16 md:mb-0 border-white/[0.08] bg-[#080D1A]/70 backdrop-blur-2xl">
             {/* Top gradient line */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
 
@@ -107,7 +107,7 @@ export const Footer = () => {
                         </p>
                         <span className="text-slate-600 hidden sm:inline">•</span>
                         <Link href="/changelog" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
-                            <span>v1.3.7</span>
+                            <span>v1.3.10</span>
                             <span className="font-black uppercase tracking-wider bg-gradient-to-b from-white via-slate-200 to-slate-400 bg-clip-text text-transparent text-[10px]">
                                 Beta
                             </span>

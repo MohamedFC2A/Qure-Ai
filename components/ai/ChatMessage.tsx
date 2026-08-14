@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { Copy, Check, User, CheckCircle2, AlertTriangle, Zap, Info, HelpCircle, ArrowRight, XCircle, Brain } from "lucide-react";
 import { useState } from "react";
 import { parseAiResponse } from "@/lib/ai/chat";
@@ -162,22 +163,22 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                     const bodyRows = tableLines.slice(startIdx).map(parseRow);
 
                     elements.push(
-                        <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/90 shadow-sm">
+                        <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-xl border border-white/[0.08] bg-[#080D1A]/90 backdrop-blur-xl shadow-md">
                             <table className="w-full text-xs sm:text-sm text-slate-200 border-collapse">
-                                <thead className="bg-cyan-950/40 text-cyan-300 font-bold border-b border-slate-800">
+                                <thead className="bg-cyan-950/30 text-cyan-300 font-bold border-b border-white/[0.08]">
                                     <tr>
                                         {headers.map((h, hIdx) => (
-                                            <th key={hIdx} className="px-4 py-3 text-start font-bold border-x border-slate-800/60 whitespace-nowrap">
+                                            <th key={hIdx} className="px-4 py-3 text-start font-bold border-x border-white/[0.04] whitespace-nowrap">
                                                 <span dangerouslySetInnerHTML={{ __html: formatInline(h) }} />
                                             </th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800/70">
+                                <tbody className="divide-y divide-white/[0.04]">
                                     {bodyRows.map((r, rIdx) => (
-                                        <tr key={rIdx} className="hover:bg-slate-900/60 transition-colors">
+                                        <tr key={rIdx} className="hover:bg-white/[0.03] transition-colors">
                                             {r.map((cell, cIdx) => (
-                                                <td key={cIdx} className="px-4 py-3 leading-relaxed border-x border-slate-800/50">
+                                                <td key={cIdx} className="px-4 py-3 leading-relaxed border-x border-white/[0.04]">
                                                     <span dangerouslySetInnerHTML={{ __html: formatInline(cell) }} />
                                                 </td>
                                             ))}
@@ -195,7 +196,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             if (line.startsWith("> ")) {
                 flushList();
                 elements.push(
-                    <div key={`quote-${i}`} className="my-3.5 p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/30 text-cyan-200 text-xs sm:text-sm leading-relaxed flex items-start gap-3 shadow-sm">
+                    <div key={`quote-${i}`} className="my-3.5 p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/20 backdrop-blur-xl text-cyan-200 text-xs sm:text-sm leading-relaxed flex items-start gap-3 shadow-sm">
                         <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                         <div className="flex-1" dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^>\s+/, "")) }} />
                     </div>
@@ -241,9 +242,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
             flushList();
             elements.push(
-                <p key={`p-${i}`} className="text-sm leading-relaxed my-1.5 text-slate-200"
-                    dangerouslySetInnerHTML={{ __html: formatInline(line) }}
-                />
+                <p key={i} className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
             );
         }
         flushList();
@@ -252,41 +251,34 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
     };
 
     return (
-        <div className={cn(
-            "flex gap-3 items-start w-full",
-            isUser ? "flex-row-reverse" : "flex-row"
-        )}>
-            {/* Avatar */}
-            {isUser ? (
-                <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 bg-slate-800 border border-slate-700">
-                    <User className="w-4 h-4 text-slate-400" />
-                </div>
-            ) : (
-                <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 bg-cyan-950/60 border border-cyan-500/30 text-cyan-400">
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}
+        >
+            {/* AI Avatar Icon */}
+            {!isUser && (
+                <div className="w-8 h-8 rounded-xl bg-[#080D1A] border border-white/[0.08] flex items-center justify-center text-cyan-400 shrink-0 shadow-sm mt-0.5">
                     <Brain className="w-4 h-4" />
                 </div>
             )}
 
-            {/* Message Bubble */}
-            <div className={cn(
-                "group relative",
-                isUser
-                    ? "max-w-[85%] sm:max-w-[75%]"
-                    : "max-w-[92%] sm:max-w-[85%]"
-            )}>
+            <div className={cn("max-w-[85%] sm:max-w-[80%] relative group space-y-2")}>
+                
+                {/* User bubble */}
                 {isUser ? (
-                    /* User bubble — crisp, dark cyan-tinted border */
                     <div className={cn(
                         "rounded-2xl px-4 py-3 border text-sm leading-relaxed",
                         isArabic ? "rounded-tr-sm" : "rounded-tl-sm",
-                        "bg-cyan-950/40 border-cyan-800/40 text-cyan-50"
+                        "bg-cyan-950/35 border-cyan-500/30 text-cyan-50 backdrop-blur-xl shadow-lg"
                     )}>
                         <p className="whitespace-pre-wrap">{message.content}</p>
                     </div>
                 ) : (
-                    /* AI bubble — crisp, dark slate card with clean border */
+                    /* AI bubble — authentic liquid glass */
                     <div className={cn(
-                        "px-5 py-4 border border-slate-800 bg-slate-900/90 rounded-2xl text-slate-100 leading-relaxed shadow-sm",
+                        "px-5 py-4 border border-white/[0.09] bg-[#080D1A]/90 backdrop-blur-2xl rounded-2xl text-slate-100 leading-relaxed shadow-xl",
                         isArabic ? "rounded-tl-sm" : "rounded-tr-sm"
                     )}>
                         {displayContent ? (
@@ -312,8 +304,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         <button
                             onClick={handleCopy}
                             className={cn(
-                                "p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700",
-                                "text-slate-400 hover:text-white shadow-md"
+                                "p-1.5 rounded-lg bg-[#0C1324] hover:bg-[#10192F] border border-white/[0.08]",
+                                "text-slate-400 hover:text-white shadow-md backdrop-blur-md"
                             )}
                             title="Copy"
                         >
@@ -327,7 +319,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
                 {/* Key Points */}
                 {!isUser && displayKeyPoints && displayKeyPoints.length > 0 && (
-                    <div className="mt-3.5 rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-2.5 shadow-sm">
+                    <div className="mt-3.5 rounded-xl border border-white/[0.08] bg-[#0C1324]/80 backdrop-blur-xl p-4 space-y-2.5 shadow-sm">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
                             <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                             <span>{isArabic ? "أهم النقاط السريرية" : "Key Clinical Takeaways"}</span>
@@ -352,8 +344,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                 onClick={() => onSuggestionClick(s)}
                                 className={cn(
                                     "px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5",
-                                    "border border-slate-800 bg-slate-900/90 shadow-sm",
-                                    "text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 hover:bg-cyan-950/30"
+                                    "border border-white/[0.08] bg-[#080D1A]/80 backdrop-blur-xl shadow-sm",
+                                    "text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 hover:bg-[#0C1324]/90"
                                 )}
                             >
                                 <span>{s}</span>
@@ -363,6 +355,6 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                     </div>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 }
