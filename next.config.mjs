@@ -1,5 +1,24 @@
-/** @type {import('next').NextConfig} */
+const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com data:;
+    img-src 'self' data: blob: https: http:;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com https://rxnav.nlm.nih.gov https://api.fda.gov https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://*.googleapis.com https://api.resend.com;
+    media-src 'self' data: blob:;
+    frame-src 'self' https://googleads.g.doubleclick.net https://*.google.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
+`.replace(/\s{2,}/g, ' ').trim();
+
 const securityHeaders = [
+    {
+        key: 'Content-Security-Policy',
+        value: cspHeader
+    },
     {
         key: 'X-DNS-Prefetch-Control',
         value: 'on'
