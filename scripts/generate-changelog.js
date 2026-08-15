@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const AI_API_KEY = process.env.POLLINATIONS_API_KEY || 'sk_3cpHv0pELis47TdPWKSNvMwrJZKLXh1Y';
+const AI_API_KEY = process.env.POLLINATIONS_API_KEY || '';
 const AI_BASE_URL = 'https://gen.pollinations.ai/v1/chat/completions';
 
 // Intelligent fallback translator for clean human language (no tech/git jargon)
@@ -49,6 +49,10 @@ function humanizeAndTranslate(commits) {
 }
 
 async function summarizeWithQureAi(commitList) {
+    if (!AI_API_KEY) {
+        console.warn('[Qure AI] POLLINATIONS_API_KEY not set; skipping AI summarization and using heuristic fallback.');
+        return null;
+    }
     try {
         console.log('[Qure AI] Summarizing recent updates using Qure AI engine...');
         const prompt = `You are Qure AI, an expert medical tech product manager for QureScan.

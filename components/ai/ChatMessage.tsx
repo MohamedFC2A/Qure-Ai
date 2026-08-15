@@ -213,7 +213,12 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
         };
 
         const formatInline = (s: string): string => {
-            let formatted = s;
+            // Escape raw HTML first to prevent XSS if the AI output ever echoes
+            // user input or is manipulated via prompt injection to include markup.
+            let formatted = s
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
 
             // 1. Red Critical Threat Warning Badge: ⚠️ [...] or [⚠️ ...]
             formatted = formatted.replace(

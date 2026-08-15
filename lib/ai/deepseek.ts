@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 
-const DEFAULT_POLLINATIONS_KEY = "sk_3cpHv0pELis47TdPWKSNvMwrJZKLXh1Y";
 const DEFAULT_POLLINATIONS_BASE_URL = "https://gen.pollinations.ai/v1";
 const DEFAULT_POLLINATIONS_MODEL = "openai";
 
@@ -10,7 +9,10 @@ export function getDeepSeekApiKey(): string {
     if (envKey && envKey.startsWith("sk_")) {
         return envKey;
     }
-    return DEFAULT_POLLINATIONS_KEY;
+    throw new Error(
+        "[Pollinations AI] Missing or invalid POLLINATIONS_API_KEY/DEEPSEEK_API_KEY environment variable. " +
+        "Set a valid key (must start with 'sk_') in your deployment environment."
+    );
 }
 
 export function getDeepSeekBaseUrl(): string {

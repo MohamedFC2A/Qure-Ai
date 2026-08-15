@@ -5,12 +5,16 @@ import { sendGoldenCeoNotificationEmail } from "@/lib/emailService";
 import { getLocalDevUser } from "@/lib/devAuth";
 import crypto from "crypto";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kzrcnmxcmrvrahukabjh.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6cmNubXhjbXJ2cmFodWthYmpoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDI1MDk0NywiZXhwIjoyMDk1ODI2OTQ3fQ.R1COHheLS0dKYuT_uJcmXnpCxMYcVxA6b5RsF1ksTCo";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const OFFICIAL_SITE_URL = "https://qure-ai-nexus.vercel.app";
 
 export async function GET(req: NextRequest) {
     try {
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+            return NextResponse.json({ request: null });
+        }
+
         const supabase = await createClient();
         const { data: authData } = await supabase.auth.getUser();
         const authUser = authData?.user ?? null;
@@ -68,7 +72,7 @@ export async function POST(req: NextRequest) {
             : OFFICIAL_SITE_URL;
 
         // Insert into database using admin client
-        if (SUPABASE_SERVICE_ROLE_KEY) {
+        if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
             const adminSupabase = createAdminClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
             await adminSupabase
                 .from("ceo_upgrade_requests")

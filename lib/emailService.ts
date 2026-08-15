@@ -17,7 +17,6 @@ interface GoldenCeoEmailParams {
 
 const OFFICIAL_PRODUCTION_URL = "https://qure-ai-nexus.vercel.app";
 const CEO_EMAIL = "mohamedahmedmatany@gmail.com";
-const DEFAULT_TELEGRAM_BOT_TOKEN = "8931765268:AAH8gCqORvLTpSsQF0mOAAD8sKxQR2Ko7Pw";
 
 export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParams) {
     const {
@@ -43,8 +42,13 @@ export async function sendGoldenCeoNotificationEmail(params: GoldenCeoEmailParam
     // ─────────────────────────────────────────────────────────────
     // METHOD 1: Telegram Bot Instant Push (Zero-Spam, Instant on Phone!)
     // ─────────────────────────────────────────────────────────────
-    const telegramToken = process.env.TELEGRAM_BOT_TOKEN || DEFAULT_TELEGRAM_BOT_TOKEN;
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const configuredChatId = process.env.TELEGRAM_CHAT_ID;
+
+    if (!telegramToken) {
+        console.warn("[Golden CEO Email] TELEGRAM_BOT_TOKEN not configured; skipping Telegram push notification.");
+        return;
+    }
 
     try {
         const chatIdsToNotify = new Set<string>();
