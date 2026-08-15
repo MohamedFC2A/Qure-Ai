@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
                     outOfCredits: true,
                 }, { status: 402 });
             }
-            await deductCredit(user.id, 1, "medication_scan_analysis");
+            await deductCredit(user.id, 1, "medication_scan_analysis", supabase);
         }
 
         let savedToHistory = false;

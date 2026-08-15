@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
                         { status: 402, headers: { "Content-Type": "application/json" } }
                     );
                 }
-                await deductCredit(user.id, 1, `qurescan_ai_chat:${mode}`);
+                await deductCredit(user.id, 1, `qurescan_ai_chat:${mode}`, supabase);
             } catch (creditErr) {
                 console.warn("[AI Stream Route] Credit deduction note:", creditErr);
             }

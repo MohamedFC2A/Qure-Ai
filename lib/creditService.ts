@@ -268,12 +268,12 @@ async function getLedgerBalance(supabase: any, userId: string, fallbackClient?: 
     }
 }
 
-export async function deductCredit(userId: string, amount: number, reason: string): Promise<boolean> {
+export async function deductCredit(userId: string, amount: number, reason: string, supabaseClient?: any): Promise<boolean> {
     if (process.env.NODE_ENV === "development" && (userId === "local-dev-user" || !userId)) {
         return true;
     }
 
-    const supabaseAdmin = getAdminClientSafe();
+    const supabaseAdmin = getAdminClientSafe() || supabaseClient;
     if (!supabaseAdmin) {
         console.warn("[CreditService] Admin client unavailable, safely proceeding.");
         return true;
@@ -331,7 +331,7 @@ export async function deductCredit(userId: string, amount: number, reason: strin
         }
 
         return false;
-    } catch (err) {
+    } catch (err: any) {
         console.warn("[CreditService] Error during deductCredit, bypassing safely:", err);
         return true;
     }

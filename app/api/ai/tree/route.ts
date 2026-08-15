@@ -35,6 +35,77 @@ function fixInvalidJsonEscapes(jsonText: string): string {
     return jsonText.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, "\\\\");
 }
 
+function repairAndParseJson(raw: string): any {
+    const candidate = fixInvalidJsonEscapes(extractJsonCandidate(raw));
+    try {
+        return JSON.parse(candidate);
+    } catch (e1) {
+        // Auto-close open structures if truncated
+        let text = candidate.trim();
+        text = text.replace(/,\s*$/, "");
+
+        let openBraces = 0;
+        let openBrackets = 0;
+        let inString = false;
+        let escaped = false;
+
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (ch === '\\') {
+                escaped = true;
+                continue;
+            }
+            if (ch === '"') {
+                inString = !inString;
+                continue;
+            }
+            if (!inString) {
+                if (ch === '{') openBraces++;
+                else if (ch === '}') openBraces = Math.max(0, openBraces - 1);
+                else if (ch === '[') openBrackets++;
+                else if (ch === ']') openBrackets = Math.max(0, openBrackets - 1);
+            }
+        }
+
+        if (inString) {
+            text += '"';
+        }
+        text = text.replace(/,\s*$/, "");
+        while (openBrackets > 0) {
+            text += ']';
+            openBrackets--;
+        }
+        while (openBraces > 0) {
+            text += '}';
+            openBraces--;
+        }
+
+        try {
+            return JSON.parse(text);
+        } catch (e2) {
+            // Regex field extractors fallback
+            const titleMatch = raw.match(/"title"\s*:\s*"([^"]+)"/);
+            const summaryMatch = raw.match(/"summary"\s*:\s*"([^"]+)"/);
+            const answerMatch = raw.match(/"answer"\s*:\s*"([\s\S]*?)(?:",\s*"keyPoints|"\s*,\s*"nextQuestions|"$)/);
+
+            if (answerMatch || summaryMatch || titleMatch) {
+                return {
+                    title: titleMatch?.[1] || "",
+                    summary: summaryMatch?.[1] || "",
+                    answer: answerMatch?.[1] ? answerMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : (summaryMatch?.[1] || ""),
+                    keyPoints: [],
+                    nextQuestions: []
+                };
+            }
+            throw e2;
+        }
+    }
+}
+
 function presetToQuestion(preset: PresetId, language: "en" | "ar") {
     const isAr = language === "ar";
     switch (preset) {
@@ -334,7 +405,7 @@ ${rootQuestion}
                         { role: "user", content: userPayload },
                     ],
                     temperature: 0.15,
-                    max_tokens: 400,
+                    max_tokens: 1500,
                 });
                 content = response.choices[0]?.message?.content || null;
                 if (content && content.trim().length > 0) {
@@ -350,12 +421,11 @@ ${rootQuestion}
             return NextResponse.json({ error: "No AI response" }, { status: 502 });
         }
 
-        const candidate = fixInvalidJsonEscapes(extractJsonCandidate(content));
         let parsed: any;
         try {
-            parsed = JSON.parse(candidate);
+            parsed = repairAndParseJson(content);
         } catch (e: any) {
-            console.error("AI follow-up JSON parse failed:", candidate);
+            console.error("AI follow-up JSON parse failed:", content);
             return NextResponse.json({ error: "AI returned invalid JSON" }, { status: 502 });
         }
 

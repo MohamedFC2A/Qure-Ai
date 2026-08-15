@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
         // Pre-check credits safely (don't charge if OCR fails).
         if (!localDevUser && process.env.NODE_ENV !== "development") {
             try {
-                const supabaseAdmin = createAdminClient();
-                const status = await getCreditsStatus(user.id, supabaseAdmin);
+                const status = await getCreditsStatus(user.id, supabase);
                 if (status?.plan !== "ultra" && (status?.totalAvailable ?? 0) < 1) {
                     return NextResponse.json({ error: "Insufficient credits. Please upgrade your plan." }, {
                         status: 402,
@@ -190,7 +189,7 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
 
         // Deduct credit only for valid scans
         if (!localDevUser) {
-            const charged = await deductCredit(user.id, 1, 'scan_pipeline');
+            const charged = await deductCredit(user.id, 1, 'scan_pipeline', supabase);
             if (!charged) {
                 return NextResponse.json({ error: "Insufficient credits. Please try again." }, {
                     status: 402,

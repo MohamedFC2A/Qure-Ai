@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
                     outOfCredits: true,
                 }, { status: 402 });
             }
-            await deductCredit(user.id, 1, "wound_scan_analysis");
+            await deductCredit(user.id, 1, "wound_scan_analysis", supabase);
         }
 
         console.log(`[Wound API] Analyzing wound image for user ${user.id}...`);

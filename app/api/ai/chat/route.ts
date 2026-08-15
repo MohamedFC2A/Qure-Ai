@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
                         outOfCredits: true,
                     }, { status: 402 });
                 }
-                await deductCredit(user.id, 1, `mat_ai_chat_message:${mode}`);
+                await deductCredit(user.id, 1, `mat_ai_chat_message:${mode}`, supabase);
             } catch (creditErr) {
                 console.warn("[AI Chat API] Credit deduction note:", creditErr);
             }
