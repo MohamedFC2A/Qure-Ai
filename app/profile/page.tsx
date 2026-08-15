@@ -41,7 +41,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SmartHeightInput, SmartWeightInput } from "@/components/ui/SmartMeasurementInput";
 import { ESOSAISection } from "@/components/profile/ESOSAISection";
 
-export default function ProfilePage() {
+function ProfileContent() {
     const { user, profile, plan, credits, loading: userLoading, refreshUser } = useUser();
     const {
         resultsLanguage,
@@ -1378,5 +1378,19 @@ export default function ProfilePage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function ProfilePage() {
+    return (
+        <React.Suspense
+            fallback={
+                <div className="min-h-screen pt-28 px-4 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full border-2 border-cyan-400/30 border-t-cyan-400 animate-spin" />
+                </div>
+            }
+        >
+            <ProfileContent />
+        </React.Suspense>
     );
 }

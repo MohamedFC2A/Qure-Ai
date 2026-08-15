@@ -158,6 +158,21 @@ export default function Home() {
             <section className="clinical-page max-w-6xl mx-auto text-center">
                 <div className="space-y-5 animate-fade-in">
 
+                    {/* Eyebrow Pill with A+ Security & Quality Grade */}
+                    <div className="flex items-center justify-center pt-2">
+                        <a
+                            href="/qa-report.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-400 text-xs font-bold text-emerald-300 transition-all duration-200 shadow-sm select-none group cursor-pointer"
+                        >
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="bg-emerald-400 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded">A+</span>
+                            <span>{t("Security & Quality Certified (100% Pass Rate)", "شهادة الجودة والأمان العالمية A+ (نسبة نجاح 100%)")}</span>
+                            <ChevronRight className={cn("w-3.5 h-3.5 text-emerald-400 transition-transform group-hover:translate-x-0.5", isArabic ? "rotate-180 group-hover:-translate-x-0.5" : "")} />
+                        </a>
+                    </div>
+
                     {/* Headline */}
                     <h1 className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.08] tracking-tight text-white max-w-5xl mx-auto">
                         {isArabic ? (
@@ -206,7 +221,17 @@ export default function Home() {
                     </div>
 
                     {/* Trust Indicators */}
-                    <div className="pt-4 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-400 font-medium">
+                    <div className="pt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-5 text-xs text-slate-400 font-medium">
+                        <a
+                            href="/qa-report.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-emerald-400/90 hover:text-emerald-300 transition-colors"
+                        >
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                            <span>{t("A+ 100% Certified", "اعتماد A+ بنسبة 100%")}</span>
+                        </a>
+                        <div className="w-px h-3 bg-white/8" />
                         <div className="flex items-center gap-1.5">
                             <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400/80" />
                             <span>{t("Instant Label OCR", "قراءة فورية للملصقات")}</span>

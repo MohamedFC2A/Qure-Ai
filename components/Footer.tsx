@@ -22,6 +22,7 @@ export const Footer = () => {
         company: {
             title: t("Company", "الشركة"),
             items: [
+                { name: t("A+ Security & QA Audit (100%)", "شهادة الجودة والأمان A+ (100%)"), href: "/qa-report.html" },
                 { name: t("Terms of Service", "شروط الخدمة"), href: "/terms" },
                 { name: t("Privacy Policy",   "سياسة الخصوصية"), href: "/terms" },
                 { name: t("Changelog & Updates", "التحديثات والسجل"), href: "/changelog" },
@@ -112,6 +113,16 @@ export const Footer = () => {
                                 Beta
                             </span>
                         </Link>
+                        <span className="text-slate-600 hidden sm:inline">•</span>
+                        <a
+                            href="/qa-report.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400 transition-colors"
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>{t("A+ Security & Quality Grade", "شهادة الجودة والأمان A+")}</span>
+                        </a>
                     </div>
 
                     <div className="flex items-center gap-4">
