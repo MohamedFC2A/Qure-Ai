@@ -50,6 +50,8 @@ export function createPollinationsClient(customKey?: string, customBaseUrl?: str
     return new OpenAI({
         apiKey,
         baseURL,
+        timeout: 15000, // 15s timeout prevents hung connections
+        maxRetries: 1,  // Fast failover to next candidate model
         defaultQuery: { key: apiKey },
         defaultHeaders: {
             "Authorization": `Bearer ${apiKey}`

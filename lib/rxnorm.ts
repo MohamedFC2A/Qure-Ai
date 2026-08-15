@@ -74,6 +74,7 @@ export async function searchRxNorm(term: string): Promise<RxNormSearchResult | n
         const res = await fetch(exactUrl, {
             headers: { Accept: "application/json" },
             next: { revalidate: 86400 }, // Cache for 24 hours
+            signal: AbortSignal.timeout(3500),
         });
 
         if (res.ok) {
@@ -101,6 +102,7 @@ export async function searchRxNorm(term: string): Promise<RxNormSearchResult | n
         const approxRes = await fetch(approxUrl, {
             headers: { Accept: "application/json" },
             next: { revalidate: 86400 },
+            signal: AbortSignal.timeout(3500),
         });
 
         if (approxRes.ok) {
@@ -133,7 +135,10 @@ export async function getRxNormProperties(rxcui: string) {
     if (!rxcui) return null;
     try {
         const url = `${RXNAV_BASE_URL}/rxcui/${encodeURIComponent(rxcui)}/properties.json`;
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const res = await fetch(url, {
+            headers: { Accept: "application/json" },
+            signal: AbortSignal.timeout(3500),
+        });
         if (res.ok) {
             const data = await res.json();
             const props = data?.properties;
@@ -174,7 +179,10 @@ export async function getRxNormConceptDetails(rxcui: string): Promise<RxNormConc
 
     try {
         const url = `${RXNAV_BASE_URL}/rxcui/${encodeURIComponent(rxcui)}/allrelated.json`;
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const res = await fetch(url, {
+            headers: { Accept: "application/json" },
+            signal: AbortSignal.timeout(3500),
+        });
         if (res.ok) {
             const data = await res.json();
             const conceptGroups = data?.allRelatedGroup?.conceptGroup || [];
@@ -230,7 +238,10 @@ export async function getRxNormByNDC(ndc: string): Promise<string | null> {
     const cleanNdc = ndc.replace(/[^0-9]/g, "");
     try {
         const url = `${RXNAV_BASE_URL}/ndcstatus.json?ndc=${encodeURIComponent(cleanNdc)}`;
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const res = await fetch(url, {
+            headers: { Accept: "application/json" },
+            signal: AbortSignal.timeout(3500),
+        });
         if (res.ok) {
             const data = await res.json();
             const rxcui = data?.ndcStatus?.rxcui;

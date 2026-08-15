@@ -92,6 +92,7 @@ export async function serperSearch(opts: {
                 "X-API-KEY": apiKey,
             },
             body: JSON.stringify({ q: query, num, page, gl, hl }),
+            signal: AbortSignal.timeout(4000),
         });
 
         const payload = await res.json().catch(() => ({} as any));

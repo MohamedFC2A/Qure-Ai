@@ -7,6 +7,16 @@ const rateLimitMap = new Map<string, { count: number; expiresAt: number }>();
 
 function applyRateLimit(ip: string, limit: number = 60, windowMs: number = 60000): boolean {
     const now = Date.now();
+
+    // Auto-prune expired rate limit entries to prevent memory growth
+    if (rateLimitMap.size > 2000) {
+        for (const [key, val] of rateLimitMap.entries()) {
+            if (val.expiresAt < now) {
+                rateLimitMap.delete(key);
+            }
+        }
+    }
+
     const entry = rateLimitMap.get(ip);
 
     if (!entry || entry.expiresAt < now) {

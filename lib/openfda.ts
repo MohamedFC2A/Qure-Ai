@@ -346,7 +346,10 @@ export async function fetchOpenFdaNdcSnapshot(opts: {
             `search=${encodeURIComponent(attempt)}&limit=${encodeURIComponent(String(limit))}`;
 
         try {
-            const res = await fetch(url, { next: { revalidate: 60 * 60 } });
+            const res = await fetch(url, {
+                next: { revalidate: 60 * 60 },
+                signal: AbortSignal.timeout(4000),
+            });
             const payload = await res.json().catch(() => ({} as any));
             const results = Array.isArray(payload?.results) ? payload.results : [];
 
@@ -476,6 +479,7 @@ export async function fetchOpenFdaLabelSnapshot(opts: {
             const res = await fetch(url, {
                 // Best-effort caching; route handlers are dynamic, but Next may still revalidate in some runtimes.
                 next: { revalidate: 60 * 60 },
+                signal: AbortSignal.timeout(4000),
             });
 
             const payload = await res.json().catch(() => ({} as any));

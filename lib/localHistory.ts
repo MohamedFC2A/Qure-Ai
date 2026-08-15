@@ -87,7 +87,7 @@ export function saveLocalScan(analysisResult: any, profileId?: string | null): S
             updated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         }
 
-        const finalItems = updated.slice(0, 50);
+        const finalItems = updated.slice(0, 100);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalItems));
 
         const returnItem = finalItems.find((it) => it.id === matchedId) || finalItems[0];
@@ -98,18 +98,40 @@ export function saveLocalScan(analysisResult: any, profileId?: string | null): S
     }
 }
 
+export function deleteLocalScan(id: string): boolean {
+    if (typeof window === "undefined" || !id) return false;
+    try {
+        const existing = getLocalScans();
+        const filtered = existing.filter((item) => item.id !== id && item.analysis_json?.meta?.historyId !== id);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+        return true;
+    } catch (e) {
+        console.warn("Failed to delete local scan:", e);
+        return false;
+    }
+}
+
+export function clearLocalScans(): void {
+    if (typeof window === "undefined") return;
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+    } catch (e) {
+        console.warn("Failed to clear local scans:", e);
+    }
+}
+
 export function mergeHistoryItems(remoteItems: StoredScanItem[], localItems: StoredScanItem[]): StoredScanItem[] {
     const map = new Map<string, StoredScanItem>();
 
     // Add local items first
     for (const item of localItems) {
-        const key = (item.drug_name || "").toLowerCase().trim() + "_" + (item.created_at || "").slice(0, 16);
+        const key = item.id || `${(item.drug_name || "").toLowerCase().trim()}_${(item.created_at || "").slice(0, 19)}`;
         map.set(key, item);
     }
 
     // Remote items override local items if duplicate key
     for (const item of remoteItems) {
-        const key = (item.drug_name || "").toLowerCase().trim() + "_" + (item.created_at || "").slice(0, 16);
+        const key = item.id || `${(item.drug_name || "").toLowerCase().trim()}_${(item.created_at || "").slice(0, 19)}`;
         map.set(key, item);
     }
 
