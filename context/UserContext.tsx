@@ -34,7 +34,7 @@ const getLocalDevUser = () => {
     if (!hasDevAuthCookie) return null;
 
     return {
-        id: "00000000-0000-0000-0000-000000000001",
+        id: "360899ab-a2cb-4455-8508-3e274704a83e",
         email: "local.dev@qurescan.local",
         created_at: new Date("2026-01-01T00:00:00.000Z").toISOString(),
         user_metadata: {

@@ -30,27 +30,19 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Credits deduction requires admin privileges (service role) to bypass RLS.
-        if (!localDevUser && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-            console.error("[OCR API] SUPABASE_SERVICE_ROLE_KEY is missing");
-            return NextResponse.json(
-                { error: "Server configuration error: SUPABASE_SERVICE_ROLE_KEY is missing (required for credits deduction)." },
-                {
-                    status: 503,
-                    headers: { 'Content-Type': 'application/json' }
+        // Pre-check credits safely (don't charge if OCR fails).
+        if (!localDevUser && process.env.NODE_ENV !== "development") {
+            try {
+                const supabaseAdmin = createAdminClient();
+                const status = await getCreditsStatus(user.id, supabaseAdmin);
+                if (status?.plan !== "ultra" && (status?.totalAvailable ?? 0) < 1) {
+                    return NextResponse.json({ error: "Insufficient credits. Please upgrade your plan." }, {
+                        status: 402,
+                        headers: { 'Content-Type': 'application/json' }
+                    });
                 }
-            );
-        }
-
-        // Pre-check credits (don't charge if OCR fails).
-        if (!localDevUser) {
-            const supabaseAdmin = createAdminClient();
-            const status = await getCreditsStatus(user.id, supabaseAdmin);
-            if ((status?.totalAvailable ?? 0) < 1) {
-                return NextResponse.json({ error: "Insufficient credits. Please upgrade your plan." }, {
-                    status: 402,
-                    headers: { 'Content-Type': 'application/json' }
-                });
+            } catch (creditCheckErr) {
+                console.warn("[OCR API] Credit pre-check skipped gracefully:", creditCheckErr);
             }
         }
 

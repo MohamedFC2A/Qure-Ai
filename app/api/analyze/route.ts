@@ -87,9 +87,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Check Credit Availability & Deduct 1 Credit for scan analysis
-        if (!localDevUser) {
+        if (!localDevUser && process.env.NODE_ENV !== "development") {
             const creditStatus = await getCreditsStatus(user.id, supabase);
-            if (creditStatus.totalAvailable < 1) {
+            if (!isUltra && creditStatus.totalAvailable < 1) {
                 return NextResponse.json({
                     error: "عذراً، لقد استنفدت رصيد النقاط المتاح لك هذا الشهر. يرجى الترقية إلى باقة ULTRA للمزيد من الفحوصات.",
                     outOfCredits: true,

@@ -6,6 +6,12 @@ import { useUser } from "@/context/UserContext";
 import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
 import { getLocalScans } from "@/lib/localHistory";
 import { BiometricAuthModal } from "@/components/scanner/BiometricAuthModal";
+import {
+    savePersistedSession,
+    loadPersistedSession,
+    clearPersistedSession,
+    PersistedScanSession,
+} from "@/lib/scanSessionStorage";
 
 export type StepStatus = "idle" | "running" | "done" | "error";
 
@@ -21,58 +27,11 @@ export interface PipelineStep {
 type ErrorAction = null | "login" | "terms";
 
 const INITIAL_STEPS: PipelineStep[] = [
-    { id: "preprocess", label: "Image Preprocessing (High-Res)", status: "idle" },
-    { id: "ocr", label: `Smart Medical Triage (${AI_DISPLAY_NAME})`, status: "idle" },
-    { id: "analyze", label: `${AI_DISPLAY_NAME} Clinical Analysis`, status: "idle" },
-    { id: "structure", label: "Clinical Structuring", status: "idle" },
+    { id: "preprocess", label: "المعالجة والضبط البصري", status: "idle" },
+    { id: "ocr", label: "المسح وقراءة النصوص", status: "idle" },
+    { id: "analyze", label: "التحليل السريري والتداخلات", status: "idle" },
+    { id: "structure", label: "هيكلة واعتماد التقرير", status: "idle" },
 ];
-
-type PersistedScanSession = {
-    version: 1;
-    updatedAt: number;
-    status: "idle" | "running" | "done" | "error";
-    startedAtMs: number | null;
-    completedAtMs: number | null;
-    language: "en" | "ar";
-    subjectProfileId: string | null;
-    steps: PipelineStep[];
-    fileName: string | null;
-    processedImageDataUrl: string | null;
-    extractedText: string | null;
-    finalResult: any | null;
-    errorMsg: string | null;
-    errorAction: ErrorAction;
-    detectedScanType?: "auto" | "medication" | "prescription" | "wound";
-};
-
-const STORAGE_KEY = "qurescan_scan_session_v1";
-const STORAGE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
-
-function safeJsonParse<T>(raw: string | null): T | null {
-    if (!raw) return null;
-    try {
-        return JSON.parse(raw) as T;
-    } catch {
-        return null;
-    }
-}
-
-function loadPersistedSession(): PersistedScanSession | null {
-    if (typeof window === "undefined") return null;
-    const parsed = safeJsonParse<PersistedScanSession>(localStorage.getItem(STORAGE_KEY));
-    if (!parsed || parsed.version !== 1) return null;
-    if (!parsed.updatedAt || Date.now() - Number(parsed.updatedAt) > STORAGE_TTL_MS) return null;
-    return parsed;
-}
-
-function clearPersistedSession() {
-    if (typeof window === "undefined") return;
-    try {
-        localStorage.removeItem(STORAGE_KEY);
-    } catch {
-        // ignore
-    }
-}
 
 interface ScanContextValue {
     file: File | null;
@@ -98,6 +57,8 @@ interface ScanContextValue {
     detectedScanType: "auto" | "medication" | "prescription" | "wound";
     setDetectedScanType: (type: "auto" | "medication" | "prescription" | "wound") => void;
     isWoundScan: boolean;
+    isRestoredSession: boolean;
+    hasInterruptedDraft: boolean;
     setFile: (file: File) => void;
     resetScan: () => void;
     startScan: (profileIdOverride?: string) => Promise<void>;
@@ -118,6 +79,8 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
     const [extractedText, setExtractedText] = useState<string | null>(null);
     const [subjectProfileId, setSubjectProfileIdState] = useState<string | null>(null);
     const [detectedScanType, setDetectedScanType] = useState<"auto" | "medication" | "prescription" | "wound">("auto");
+    const [isRestoredSession, setIsRestoredSession] = useState(false);
+    const [hasInterruptedDraft, setHasInterruptedDraft] = useState(false);
 
     // Biometric Security Guard State
     const [isBiometricModalOpen, setIsBiometricModalOpen] = useState(false);
@@ -161,7 +124,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
     }, []);
 
-    // High-Resolution & Clean Image Preprocessor (up to 2048px, quality 0.92)
+    // High-Resolution & Clean Image Preprocessor (up to 2048px, quality 0.95)
     const preprocessImage = useCallback((imageFile: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -170,7 +133,7 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             img.onload = () => {
                 try {
                     const canvas = document.createElement("canvas");
-                    const MAX_WIDTH = 2048; // Ultra-High Resolution for Wound/OCR clarity
+                    const MAX_WIDTH = 2048;
                     const scaleSize = MAX_WIDTH / img.width;
                     const finalWidth = Math.min(img.width, MAX_WIDTH);
                     const finalHeight = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
@@ -188,7 +151,6 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                         ctx.translate(canvas.width / 2, canvas.height / 2);
                         ctx.rotate((rotation * Math.PI) / 180);
 
-                        // Adaptive Auto-Enhancement for optimal clinical clarity and OCR read accuracy
                         const autoBrightness = brightness !== 0 ? 100 + brightness : 102;
                         const autoContrast = contrast !== 0 ? 100 + contrast : 108;
 
@@ -256,7 +218,9 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         setErrorAction(null);
         setDetectedScanType("auto");
         setIsBiometricModalOpen(false);
-        clearPersistedSession();
+        setIsRestoredSession(false);
+        setHasInterruptedDraft(false);
+        void clearPersistedSession();
     }, []);
 
     const setFile = useCallback(
@@ -286,7 +250,21 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             setCompletedAtMs(null);
             setErrorMsg(null);
             setErrorAction(null);
-            clearPersistedSession();
+            setIsRestoredSession(false);
+            setHasInterruptedDraft(false);
+
+            // Pre-save basic draft into IndexedDB
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64 = reader.result as string;
+                void savePersistedSession({
+                    status: "idle",
+                    fileName: nextFile.name,
+                    processedImageDataUrl: base64,
+                    detectedScanType: "auto",
+                });
+            };
+            reader.readAsDataURL(nextFile);
         },
         []
     );
@@ -336,10 +314,13 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         setErrorMsg(null);
         setErrorAction(null);
         setFinalResult(null);
+        setHasInterruptedDraft(false);
 
-        const startedAt = startedAtMs ?? Date.now();
-        if (!startedAtMs) setStartedAtMs(startedAt);
+        const startedAt = Date.now();
+        setStartedAtMs(startedAt);
         setCompletedAtMs(null);
+
+        const effectiveProfileId = profileIdOverride || subjectProfileId || user.id;
 
         const makeAbortError = () => {
             const err = new Error("Aborted");
@@ -352,6 +333,16 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             if (runId !== runIdRef.current) throw makeAbortError();
         };
 
+        // Sync session start to IndexedDB
+        void savePersistedSession({
+            status: "running",
+            startedAtMs: startedAt,
+            language: resultsLanguage,
+            subjectProfileId: effectiveProfileId,
+            detectedScanType,
+            processedImageDataUrl,
+        });
+
         try {
             throwIfCancelled();
 
@@ -360,14 +351,19 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             updateStep("preprocess", { status: "running", startTime: preprocessStart });
 
             let imageDataUrl = processedImageDataUrl;
-            if (!imageDataUrl) {
-                imageDataUrl = await preprocessImage(file as File);
+            if (!imageDataUrl && file) {
+                imageDataUrl = await preprocessImage(file);
                 throwIfCancelled();
                 setProcessedImageDataUrl(imageDataUrl);
             }
 
             const preprocessEnd = Date.now();
             updateStep("preprocess", { status: "done", endTime: preprocessEnd, durationMs: preprocessEnd - preprocessStart });
+
+            void savePersistedSession({
+                processedImageDataUrl: imageDataUrl,
+                status: "running",
+            });
 
             // STEP 2: Zero-Error Medical Triage & OCR
             const ocrStart = Date.now();
@@ -423,10 +419,9 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
                     errorMessage.toLowerCase().includes("rate limit");
 
                 if (!ocrResponse.ok && shouldFallbackToLocalOcr) {
-                    ocrText = await runLocalOcr(imageDataUrl);
+                    ocrText = await runLocalOcr(imageDataUrl!);
                     throwIfCancelled();
                 } else if ((ocrData as any)?.error) {
-                    // Graceful self-healing fallback for low-quality / blurry images
                     ocrText = (ocrData as any)?.extractedText || (isArabic ? "فحص سريري دوائي (تم التجاوز الذكي للجودة)" : "Clinical medication evaluation (Auto-enhanced)");
                     triageType = (ocrData as any)?.scanType === "wound" ? "wound" : "medication";
                 } else {
@@ -444,6 +439,12 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
 
             const ocrEnd = Date.now();
             updateStep("ocr", { status: "done", endTime: ocrEnd, durationMs: ocrEnd - ocrStart });
+
+            void savePersistedSession({
+                extractedText: ocrText,
+                detectedScanType: triageType,
+                status: "running",
+            });
 
             // MANDATORY BIOMETRIC GUARD FOR WOUND SCANS
             if (triageType === "wound" || requireBiometricOnScan) {
@@ -463,11 +464,9 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             const analyzeStart = Date.now();
             updateStep("analyze", { status: "running", startTime: analyzeStart });
 
-            const effectiveProfileId = profileIdOverride || subjectProfileId || user.id;
             let analysisData: any;
 
             if (triageType === "wound") {
-                // Route to Dedicated Clinical Wound AI Engine
                 const woundResponse = await fetch("/api/wound/analyze", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -489,7 +488,6 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
 
                 if (analysisData?.error) throw new Error(analysisData.error);
             } else {
-                // Route to Medication & Interaction Analysis Engine
                 const localScans = getLocalScans();
                 const localHistoryMedications = localScans.map((s) => s.drug_name).filter(Boolean);
 
@@ -547,7 +545,25 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             setIsScanning(false);
             const completedAt = Date.now();
             setCompletedAtMs(completedAt);
-            setTotalDuration(((completedAt - startedAt) / 1000).toFixed(1));
+            const finalDur = ((completedAt - startedAt) / 1000).toFixed(1);
+            setTotalDuration(finalDur);
+
+            // Persist completed scan into IndexedDB
+            void savePersistedSession({
+                status: "done",
+                finalResult: analysisData,
+                completedAtMs: completedAt,
+                startedAtMs: startedAt,
+                subjectProfileId: effectiveProfileId,
+                detectedScanType: triageType,
+                processedImageDataUrl: imageDataUrl,
+                steps: [
+                    { id: "preprocess", label: "Image Preprocessing", status: "done", durationMs: preprocessEnd - preprocessStart },
+                    { id: "ocr", label: "Smart Medical Triage", status: "done", durationMs: ocrEnd - ocrStart },
+                    { id: "analyze", label: "Clinical Analysis", status: "done", durationMs: analyzeEnd - analyzeStart },
+                    { id: "structure", label: "Clinical Structuring", status: "done", durationMs: structureEnd - structureStart },
+                ],
+            });
 
         } catch (error: any) {
             const isAbort = error?.name === "AbortError" || controller.signal.aborted || runId !== runIdRef.current;
@@ -569,6 +585,11 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             setSteps((prev) => prev.map((s) => (s.status === "running" ? { ...s, status: "error" } : s)));
             setCompletedAtMs(Date.now());
             setIsScanning(false);
+
+            void savePersistedSession({
+                status: "error",
+                errorMsg: error?.message || "Analysis Failed",
+            });
         } finally {
             runningRef.current = false;
             if (abortRef.current === controller) abortRef.current = null;
@@ -584,7 +605,6 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         requestBiometricAuthentication,
         resultsLanguage,
         runLocalOcr,
-        startedAtMs,
         subjectProfileId,
         t,
         updateStep,
@@ -620,20 +640,35 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }, [previewObjectUrl]);
 
-    // Restore & auto-resume after refresh
+    // Restore session smoothly after refresh or navigation
     useEffect(() => {
-        const session = loadPersistedSession();
-        if (session) {
-            setProcessedImageDataUrl(session.processedImageDataUrl || null);
-            setExtractedText(session.extractedText || null);
-            setFinalResult(session.finalResult || null);
-            setErrorMsg(session.errorMsg || null);
-            setErrorAction(session.errorAction || null);
-            setStartedAtMs(session.startedAtMs || null);
-            setCompletedAtMs(session.completedAtMs || null);
-            setSubjectProfileIdState(session.subjectProfileId || null);
-            if (session.detectedScanType) setDetectedScanType(session.detectedScanType);
-        }
+        let isMounted = true;
+        loadPersistedSession().then((session) => {
+            if (!isMounted || !session) return;
+
+            if (session.status === "done" && session.finalResult) {
+                setProcessedImageDataUrl(session.processedImageDataUrl || null);
+                setExtractedText(session.extractedText || null);
+                setFinalResult(session.finalResult);
+                setSubjectProfileIdState(session.subjectProfileId || null);
+                if (session.detectedScanType) setDetectedScanType(session.detectedScanType);
+                if (session.steps?.length) setSteps(session.steps);
+                setIsRestoredSession(true);
+            } else if (session.processedImageDataUrl) {
+                // Staged image or interrupted scan
+                setProcessedImageDataUrl(session.processedImageDataUrl);
+                setExtractedText(session.extractedText || null);
+                setSubjectProfileIdState(session.subjectProfileId || null);
+                if (session.detectedScanType) setDetectedScanType(session.detectedScanType);
+                if (session.status === "running") {
+                    setHasInterruptedDraft(true);
+                }
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const value: ScanContextValue = useMemo(
@@ -661,6 +696,8 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             detectedScanType,
             setDetectedScanType,
             isWoundScan,
+            isRestoredSession,
+            hasInterruptedDraft,
             setFile,
             resetScan,
             startScan,
@@ -688,6 +725,8 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             highContrastMode,
             detectedScanType,
             isWoundScan,
+            isRestoredSession,
+            hasInterruptedDraft,
         ]
     );
 

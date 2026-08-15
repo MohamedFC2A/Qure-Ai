@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Upload,
     X,
@@ -16,41 +16,30 @@ import {
     Zap,
     Timer,
     AlertCircle,
-    AlertTriangle,
     ChevronRight,
     Users,
     Camera,
     Image as ImageIcon,
-    ShieldAlert,
-    RefreshCw,
-    RotateCw,
-    Sun,
-    SlidersHorizontal,
-    Layers,
     Pill,
-    Package,
-    FlaskConical,
-    Droplets,
-    Flame,
-    Scissors,
-    HeartPulse,
     Stethoscope,
     Activity,
-    Bandage,
-} from 'lucide-react';
+    Clock,
+} from "lucide-react";
 import { getLocalScans, saveLocalScan, mergeHistoryItems } from "@/lib/localHistory";
-import { Button } from '@/components/ui/Button';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { cn } from '@/lib/utils';
-import { MedicalResultCard } from './MedicalResultCard';
-import { WoundResultCard } from './WoundResultCard';
-import { InteractionMatrixModal } from './InteractionMatrixModal';
-import { useSettings } from '@/context/SettingsContext';
-import { createClient } from '@/lib/supabase/client';
-import Link from 'next/link';
-import { useUser } from '@/context/UserContext';
-import { AI_DISPLAY_NAME } from '@/lib/ai/branding';
-import { useScan } from '@/context/ScanContext';
+import { Button } from "@/components/ui/Button";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { cn } from "@/lib/utils";
+import { MedicalResultCard } from "./MedicalResultCard";
+import { WoundResultCard } from "./WoundResultCard";
+import { InteractionMatrixModal } from "./InteractionMatrixModal";
+import { PreFlightEstimator } from "./PreFlightEstimator";
+import { ScanProgressHud } from "./ScanProgressHud";
+import { useSettings } from "@/context/SettingsContext";
+import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
+import { useUser } from "@/context/UserContext";
+import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
+import { useScan } from "@/context/ScanContext";
 
 interface ImageQualityInfo {
     width: number;
@@ -62,36 +51,34 @@ interface ImageQualityInfo {
 }
 
 export const ScannerInterface = () => {
-    const { user, plan, loading } = useUser();
+    const { user, plan } = useUser();
     const {
         file,
         previewSrc,
+        processedImageDataUrl,
         isScanning,
         steps,
         totalDuration,
         finalResult,
         errorMsg,
-        errorAction,
         subjectProfileId,
         setSubjectProfileId,
         rotation,
         setRotation,
         brightness,
-        setBrightness,
         contrast,
-        setContrast,
         highContrastMode,
-        setHighContrastMode,
         setFile,
         resetScan,
         startScan,
         detectedScanType,
         setDetectedScanType,
-        isWoundScan,
+        isRestoredSession,
+        hasInterruptedDraft,
     } = useScan();
     const { resultsLanguage } = useSettings();
 
-    const isArabic = resultsLanguage === 'ar';
+    const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
     const [isMatrixOpen, setIsMatrixOpen] = useState(false);
 
@@ -136,8 +123,25 @@ export const ScannerInterface = () => {
         }
     };
 
-    // Analyze image resolution upon selection
-    const analyzeImageQuality = (imgFile: File) => {
+    const analyzeImageQuality = (imgFile: File | string) => {
+        if (typeof imgFile === "string") {
+            const img = new Image();
+            img.onload = () => {
+                const width = img.naturalWidth || img.width;
+                const height = img.naturalHeight || img.height;
+                setQualityInfo({
+                    width,
+                    height,
+                    sizeMB: 1.2,
+                    isHighClarity: width >= 800 && height >= 600,
+                    isAcceptable: width >= 350 && height >= 350,
+                    isTooSmall: width < 350 || height < 350,
+                });
+            };
+            img.src = imgFile;
+            return;
+        }
+
         const sizeMB = Number((imgFile.size / (1024 * 1024)).toFixed(2));
         const img = new Image();
         const objectUrl = URL.createObjectURL(imgFile);
@@ -145,7 +149,7 @@ export const ScannerInterface = () => {
             const width = img.naturalWidth || img.width;
             const height = img.naturalHeight || img.height;
             const isHighClarity = width >= 800 && height >= 600;
-            const isAcceptable = (width >= 350 && height >= 350) && !isHighClarity;
+            const isAcceptable = width >= 350 && height >= 350 && !isHighClarity;
             const isTooSmall = width < 350 || height < 350;
 
             setQualityInfo({
@@ -165,12 +169,21 @@ export const ScannerInterface = () => {
         img.src = objectUrl;
     };
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-        if (acceptedFiles[0]) {
-            analyzeImageQuality(acceptedFiles[0]);
-            setFile(acceptedFiles[0]);
+    useEffect(() => {
+        if (previewSrc && !qualityInfo) {
+            analyzeImageQuality(previewSrc);
         }
-    }, [setFile]);
+    }, [previewSrc, qualityInfo]);
+
+    const onDrop = useCallback(
+        (acceptedFiles: File[]) => {
+            if (acceptedFiles[0]) {
+                analyzeImageQuality(acceptedFiles[0]);
+                setFile(acceptedFiles[0]);
+            }
+        },
+        [setFile]
+    );
 
     const fetchRecentHistory = useCallback(async () => {
         const localItems = getLocalScans();
@@ -183,7 +196,6 @@ export const ScannerInterface = () => {
         try {
             const combined: any[] = [];
 
-            // 1. Medications
             const { data: medData } = await supabase
                 .from("medication_history")
                 .select("id, drug_name, manufacturer, created_at, analysis_json")
@@ -195,7 +207,6 @@ export const ScannerInterface = () => {
                 combined.push(...medData.map((m: any) => ({ ...m, type: "medication" })));
             }
 
-            // 2. Wounds
             try {
                 const { data: woundData } = await supabase
                     .from("wound_scans")
@@ -279,18 +290,12 @@ export const ScannerInterface = () => {
         fetchCareProfiles();
     }, [fetchCareProfiles]);
 
-    const { getRootProps, getInputProps, isDragActive, open: openFileDialog } = useDropzone({
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
         maxFiles: 1,
         noClick: false,
     });
-
-    useEffect(() => {
-        if (finalResult && user?.id) {
-            fetchRecentHistory();
-        }
-    }, [finalResult, fetchRecentHistory, user?.id]);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -326,223 +331,96 @@ export const ScannerInterface = () => {
         void startScan(chosen);
     };
 
-    // Progress Timeline Component
-    const Timeline = () => {
-        const totalStepsCount = steps.length || 1;
-        const doneCount = steps.filter((s) => s.status === "done").length;
-        const runningIndex = steps.findIndex((s) => s.status === "running");
-        const hasError = steps.some((s) => s.status === "error") || Boolean(errorMsg);
+    // ── Render 1: Final Results View ──
+    if (finalResult && !isScanning) {
+        if (finalResult.scanType === "wound") {
+            return (
+                <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
+                    {isRestoredSession && (
+                        <div className="w-full max-w-4xl mb-4 flex items-center justify-between p-3 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-200 text-xs">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-cyan-300" />
+                                <span>{t("Scan results restored automatically from session.", "تمت استعادة نتيجة الفحص السريري تلقائياً من الجلسة المحفوظة.")}</span>
+                            </div>
+                            <button onClick={resetScan} className="underline text-cyan-300 hover:text-white font-bold">
+                                {t("Start New Scan", "بدء فحص جديد")}
+                            </button>
+                        </div>
+                    )}
 
-        const progress = (doneCount + (runningIndex !== -1 && isScanning ? 0.5 : 0)) / totalStepsCount;
-        const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
-
-        const statusLabel = hasError
-            ? t("Quality Check", "تحقق من الجودة")
-            : isScanning
-                ? t("Analyzing", "جارٍ الفحص")
-                : t("Ready", "جاهز");
-
-        return (
-            <div className="w-full relative group min-w-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-xl" />
-
-                <div className="relative bg-black/50 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-white/10 shadow-2xl">
-                    {/* Header */}
-                    <div className="relative">
-                        <div className="relative flex items-start justify-between gap-3 sm:gap-4 bg-white/[0.03] backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 sm:gap-3 mb-1.5">
-                                    <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl border border-cyan-400/30">
-                                        <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />
-                                    </div>
-                                    <h3 className="text-white font-bold text-base sm:text-lg">
-                                        {AI_DISPLAY_NAME} Engine
-                                    </h3>
-                                </div>
-                                <p className="text-xs text-white/60 leading-relaxed">
-                                    {t(
-                                        "Extracting active substances and verifying safety profile.",
-                                        "قراءة المواد الفعالة والتحقق من التداخلات والسلامة الدوائية."
-                                    )}
+                    <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                                <CheckCircle className="w-6 h-6 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">
+                                    {t("Clinical Skin & Health Assessment Complete", "اكتمل الفحص السريري للجلد والإصابة")}
+                                </h2>
+                                <p className="text-white/50 text-sm">
+                                    {t("Processed in", "استغرق الفحص")} {totalDuration}s
                                 </p>
                             </div>
-
-                            <div className="shrink-0 flex flex-col items-end gap-1.5">
-                                <div className={cn(
-                                    "px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-sm",
-                                    hasError
-                                        ? "bg-amber-500/20 text-amber-200 border-amber-400/40"
-                                        : isScanning
-                                            ? "bg-cyan-500/20 text-cyan-100 border-cyan-400/40 animate-pulse"
-                                            : "bg-emerald-500/20 text-emerald-100 border-emerald-400/40"
-                                )}>
-                                    <span>{statusLabel}</span>
-                                </div>
-
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-full border border-white/10">
-                                    <Timer className="w-3.5 h-3.5 text-cyan-300" />
-                                    <span className="text-white font-mono text-xs font-semibold tabular-nums">
-                                        {`${totalDuration}s`}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="mt-5">
-                        <div className="flex items-center justify-between text-xs text-white/60 mb-2">
-                            <span className="font-semibold">{t("Progress", "نسبة الإنجاز")}</span>
-                            <span className="font-mono font-bold tabular-nums text-cyan-300">{percent}%</span>
                         </div>
 
-                        <div className="relative h-2.5 rounded-full bg-white/10 overflow-hidden border border-white/10">
-                            <div
-                                className="absolute inset-y-0 start-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 rounded-full transition-all duration-500"
-                                style={{ width: `${percent}%` }}
-                            />
+                        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
+                            <Button onClick={resetScan} variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+                                {t("Scan Another", "فحص جديد")}
+                            </Button>
                         </div>
                     </div>
-
-                    {/* Steps Timeline */}
-                    <div className="relative space-y-3 pl-1 mt-6">
-                        {steps.map((step, index) => {
-                            const isDone = step.status === 'done';
-                            const isRunning = step.status === 'running';
-                            const isError = step.status === 'error';
-
-                            const seconds = isDone && typeof step.durationMs === "number"
-                                ? `${(step.durationMs / 1000).toFixed(1)}s`
-                                : isRunning && typeof step.startTime === "number"
-                                    ? `${((Date.now() - step.startTime) / 1000).toFixed(1)}s`
-                                    : "—";
-
-                            return (
-                                <div key={step.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center border text-xs font-bold shrink-0",
-                                            isDone ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" :
-                                            isRunning ? "border-cyan-400 bg-cyan-500/20 text-cyan-300 animate-pulse" :
-                                            isError ? "border-amber-400 bg-amber-500/20 text-amber-300" :
-                                            "border-white/20 text-white/40"
-                                        )}>
-                                            {isDone ? <CheckCircle className="w-4 h-4" /> :
-                                             isRunning ? <Loader2 className="w-4 h-4 animate-spin" /> :
-                                             isError ? <AlertTriangle className="w-4 h-4" /> :
-                                             index + 1}
-                                        </div>
-                                        <span className={cn("text-xs sm:text-sm font-semibold truncate", isDone ? "text-white" : isRunning ? "text-cyan-200" : "text-white/50")}>
-                                            {step.label}
-                                        </span>
-                                    </div>
-                                    <span className="text-xs font-mono font-bold text-cyan-300">{seconds}</span>
-                                </div>
-                            );
-                        })}
-
-                        {/* Blurry / Non-Medical Quality Feedback Alert */}
-                        {errorMsg && (
-                            <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-amber-200 shadow-xl">
-                                <div className="flex items-start gap-3">
-                                    <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                                    <div className="space-y-2 flex-1">
-                                        <p className="text-xs sm:text-sm font-bold text-white">
-                                            {t("Image Quality Notice", "تنبيه جودة ووضوح الصورة")}
-                                        </p>
-                                        <p className="text-xs text-amber-200/90 leading-relaxed">
-                                            {errorMsg}
-                                        </p>
-
-                                        {/* Action Buttons to Retry with Clearer Photo */}
-                                        <div className="pt-2 flex flex-wrap gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    resetScan();
-                                                    setTimeout(() => openFileDialog(), 100);
-                                                }}
-                                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors shadow-md"
-                                            >
-                                                <Camera className="w-3.5 h-3.5" />
-                                                <span>{t("Upload Clearer Photo", "رفع صورة أوضح للدواء")}</span>
-                                            </button>
-
-                                            <Button
-                                                onClick={resetScan}
-                                                size="sm"
-                                                variant="outline"
-                                                className="border-white/20 text-white hover:bg-white/10 text-xs"
-                                            >
-                                                {t("Cancel", "إلغاء")}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <WoundResultCard result={finalResult} scannedImage={previewSrc} onResetScan={resetScan} />
                 </div>
-            </div>
-        );
-    };
-
-    if (finalResult && !isScanning) {
-        const isWound = finalResult.scanType === "wound";
-        const resultTitle = isWound
-            ? (isArabic ? (finalResult.woundTitle || "فحص سريري للجلد والإصابات") : (finalResult.woundTitleEn || "Clinical Assessment"))
-            : (finalResult.brandName || finalResult.productName || (isArabic ? "تحليل الدواء" : "Medication Analysis"));
+            );
+        }
 
         return (
-            <div className="w-full flex flex-col items-center animate-in fade-in duration-300 min-w-0">
-                {/* ── SMART STICKY NAVIGATION BAR (Always fixed and accessible on scroll) ── */}
-                <div className="sticky top-16 sm:top-20 z-40 w-full max-w-4xl mx-auto mb-4 px-1">
-                    <div className="flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-2xl bg-[#080D1A]/95 border border-white/15 backdrop-blur-2xl shadow-2xl shadow-black/80">
-                        {/* Right / Start: Smart Close & New Scan button */}
-                        <button
-                            type="button"
-                            onClick={resetScan}
-                            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-200 font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all shrink-0 group"
-                            title={t("Close and Start New Scan", "إغلاق وبدء فحص جديد")}
-                        >
-                            <X className="w-4 h-4 text-rose-400 group-hover:rotate-90 transition-transform duration-200" />
-                            <span>{t("New Scan", "فحص جديد")}</span>
+            <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
+                {isRestoredSession && (
+                    <div className="w-full max-w-4xl mb-4 flex items-center justify-between p-3 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-200 text-xs">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-cyan-300" />
+                            <span>{t("Scan results restored automatically from session.", "تمت استعادة نتيجة الفحص السريري تلقائياً من الجلسة المحفوظة.")}</span>
+                        </div>
+                        <button onClick={resetScan} className="underline text-cyan-300 hover:text-white font-bold">
+                            {t("Start New Scan", "بدء فحص جديد")}
                         </button>
+                    </div>
+                )}
 
-                        {/* Middle: Title & Status */}
-                        <div className="min-w-0 flex-1 text-center px-2">
-                            <p className="text-white font-black text-xs sm:text-sm truncate">
-                                {resultTitle}
-                            </p>
-                            <p className="text-slate-400 text-[10px] sm:text-[11px] truncate">
-                                {isWound
-                                    ? (finalResult.severity ? (isArabic ? `الشدة: ${finalResult.severity}` : `Severity: ${finalResult.severity}`) : t("Clinical Assessment", "فحص سريري"))
-                                    : (finalResult.genericName || t("Pharmaceutical Intelligence", "ذكاء صيدلاني"))}
+                <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                            <CheckCircle className="w-6 h-6 text-emerald-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white">
+                                {t("Analysis Complete", "اكتمل الفحص والتحليل الطبي")}
+                            </h2>
+                            <p className="text-white/50 text-sm">
+                                {t("Processed in", "استغرق الفحص")} {totalDuration}s
                             </p>
                         </div>
+                    </div>
 
-                        {/* Left / End: History Link */}
-                        <Link
-                            href="/dashboard/history"
-                            className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-300 hover:text-white text-xs font-semibold transition-all shrink-0"
-                        >
-                            <History className="w-3.5 h-3.5 text-cyan-400" />
-                            <span className="hidden sm:inline">{t("History", "السجل")}</span>
+                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
+                        <Link href="/dashboard/history">
+                            <Button variant="outline" size="sm" className="gap-2 border-white/20 text-white hover:bg-white/10">
+                                <History className="w-4 h-4" /> {t("History", "السجل")}
+                            </Button>
                         </Link>
+                        <Button onClick={resetScan} variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+                            {t("Analyze Another", "فحص دواء آخر")}
+                        </Button>
                     </div>
                 </div>
-
-                {isWound ? (
-                    <WoundResultCard result={finalResult} scannedImage={previewSrc} onResetScan={resetScan} />
-                ) : (
-                    <MedicalResultCard data={finalResult} onResetScan={resetScan} />
-                )}
+                <MedicalResultCard data={finalResult} />
             </div>
         );
     }
 
     return (
-        <div className="w-full flex flex-col items-center justify-center gap-4 sm:gap-6 relative p-1 sm:p-3 lg:p-4 overflow-x-hidden">
-
+        <div className="w-full h-full flex flex-col items-center justify-center gap-6 relative p-2 sm:p-3 lg:p-4 overflow-y-auto">
             {/* Hidden Inputs for Direct Camera & Gallery Trigger */}
             <input
                 ref={cameraInputRef}
@@ -584,7 +462,7 @@ export const ScannerInterface = () => {
                                         <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 shrink-0">
                                             <Users className="w-5 h-5 text-cyan-200" />
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 text-start">
                                             <p className="text-white font-bold text-lg">{t("Who is this scan for?", "لمن هذا الفحص؟")}</p>
                                             <p className="text-white/55 text-sm mt-1">
                                                 {t(
@@ -610,34 +488,36 @@ export const ScannerInterface = () => {
                                         </div>
                                     ) : (
                                         careProfiles.map((p) => {
-                                             const selected = (careTempId || "") === p.id;
-                                             return (
-                                                 <button
-                                                     key={p.id}
-                                                     onClick={() => setCareTempId(p.id)}
-                                                     className={cn(
-                                                         "w-full text-left p-4 rounded-xl border transition-colors",
-                                                         selected
-                                                             ? "bg-cyan-500/10 border-cyan-500/25"
-                                                             : "bg-white/5 border-white/10 hover:bg-white/10"
-                                                     )}
-                                                 >
-                                                     <div className="flex items-center justify-between gap-3">
-                                                         <div className="min-w-0">
-                                                             <p className="text-white font-semibold truncate">{p.display_name}</p>
-                                                             <p className="text-white/45 text-xs mt-1 truncate">
-                                                                 {p.relationship ? String(p.relationship) : p.id === user?.id ? t("self", "أنا") : t("family", "عائلة")}
-                                                             </p>
-                                                         </div>
-                                                         <div className={cn(
-                                                             "w-6 h-6 rounded-full border flex items-center justify-center shrink-0",
-                                                             selected ? "border-cyan-400 text-cyan-200" : "border-white/15 text-white/30"
-                                                         )}>
-                                                             {selected ? <CheckCircle className="w-4 h-4" /> : <span className="text-[10px] font-bold">•</span>}
-                                                         </div>
-                                                     </div>
-                                                 </button>
-                                             );
+                                            const selected = (careTempId || "") === p.id;
+                                            return (
+                                                <button
+                                                    key={p.id}
+                                                    onClick={() => setCareTempId(p.id)}
+                                                    className={cn(
+                                                        "w-full text-start p-4 rounded-xl border transition-colors",
+                                                        selected
+                                                            ? "bg-cyan-500/10 border-cyan-500/25"
+                                                            : "bg-white/5 border-white/10 hover:bg-white/10"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-white font-semibold truncate">{p.display_name}</p>
+                                                            <p className="text-white/45 text-xs mt-1 truncate">
+                                                                {p.relationship ? String(p.relationship) : p.id === user?.id ? t("self", "أنا") : t("family", "عائلة")}
+                                                            </p>
+                                                        </div>
+                                                        <div
+                                                            className={cn(
+                                                                "w-6 h-6 rounded-full border flex items-center justify-center shrink-0",
+                                                                selected ? "border-cyan-400 text-cyan-200" : "border-white/15 text-white/30"
+                                                            )}
+                                                        >
+                                                            {selected ? <CheckCircle className="w-4 h-4" /> : <span className="text-[10px] font-bold">•</span>}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
                                         })
                                     )}
                                 </div>
@@ -660,433 +540,251 @@ export const ScannerInterface = () => {
                 )}
             </AnimatePresence>
 
-            {/* ── Mode Switcher Tab (Responsive, Symmetrical & Centered) ── */}
-            <div className="w-full max-w-md mx-auto flex items-center justify-center px-1">
-                <div className="w-full grid grid-cols-3 p-1 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-lg gap-1">
+            {/* ── Mode Switcher Tab ── */}
+            <div className="w-full flex items-center justify-center">
+                <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-lg">
                     <button
                         type="button"
                         onClick={() => setDetectedScanType("auto")}
                         className={cn(
-                            "py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center",
-                            detectedScanType === "auto"
-                                ? "bg-white text-slate-950 shadow-sm"
-                                : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            detectedScanType === "auto" ? "bg-white text-slate-950 shadow-md" : "text-slate-400 hover:text-white"
                         )}
                     >
-                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{t("Auto", "تلقائي ذكي")}</span>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{t("Auto Detect", "الوضع التلقائي الذكي")}</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setDetectedScanType("medication")}
                         className={cn(
-                            "py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center",
-                            detectedScanType === "medication"
-                                ? "bg-cyan-500 text-slate-950 shadow-sm"
-                                : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            detectedScanType === "medication" ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-400 hover:text-white"
                         )}
                     >
-                        <Pill className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{t("Medication", "أدوية وروشتات")}</span>
+                        <Pill className="w-3.5 h-3.5" />
+                        <span>{t("Medications", "أدوية وروشتات")}</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setDetectedScanType("wound")}
                         className={cn(
-                            "py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center",
-                            detectedScanType === "wound"
-                                ? "bg-emerald-500 text-slate-950 shadow-sm"
-                                : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            detectedScanType === "wound" ? "bg-emerald-500 text-slate-950 shadow-md" : "text-slate-400 hover:text-white"
                         )}
                     >
-                        <Stethoscope className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{t("Skin & Wounds", "جلد وإصابات")}</span>
+                        <Stethoscope className="w-3.5 h-3.5" />
+                        <span>{t("Skin & Lesions", "فحص الجلد والإصابات")}</span>
                     </button>
                 </div>
             </div>
 
+            {/* ── Main Scanning HUD (When Scanning is in progress) ── */}
             <AnimatePresence mode="wait">
-                {!previewSrc && (
+                {isScanning && (
                     <motion.div
-                        key="upload"
+                        key="scanning-hud"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="w-full max-w-4xl"
+                    >
+                        <ScanProgressHud
+                            steps={steps}
+                            totalDuration={totalDuration}
+                            isScanning={isScanning}
+                            previewSrc={previewSrc}
+                            scanType={detectedScanType}
+                            errorMsg={errorMsg}
+                            onCancel={resetScan}
+                            rotation={rotation}
+                            brightness={brightness}
+                            contrast={contrast}
+                            highContrastMode={highContrastMode}
+                        />
+                    </motion.div>
+                )}
+
+                {/* ── Pre-Scan Staged Image & Pre-Flight Estimator (When image selected but not scanning) ── */}
+                {!isScanning && previewSrc && (
+                    <motion.div
+                        key="preview-estimator"
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch min-w-0"
+                        exit={{ opacity: 0, y: -15 }}
+                        className="w-full flex flex-col lg:flex-row gap-6 max-w-5xl items-start"
                     >
-                        {/* ── Main Dropzone Area ── */}
-                        <div className="flex flex-col gap-4 min-w-0 w-full">
-                            <div
-                                {...getRootProps()}
-                                className={cn(
-                                    "relative min-h-[300px] sm:min-h-[340px] border-2 border-dashed rounded-3xl p-4 sm:p-7 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group overflow-hidden w-full min-w-0",
-                                    isDragActive
-                                        ? "border-cyan-400 bg-[#080D1A]"
-                                        : "border-white/15 hover:border-cyan-400/50 hover:bg-[#080D1A]/50 bg-[#080D1A]/75 backdrop-blur-2xl"
-                                )}
-                            >
-                                <input {...getInputProps()} />
+                        {/* Left: Image Card */}
+                        <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl flex flex-col">
+                            <div className="p-3.5 border-b border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-3 text-xs">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                    <span className="font-bold text-white">
+                                        {t("AI Auto-Enhanced Resolution (4K Ready)", "دقة محسنة تلقائياً بالذكاء الاصطناعي")}
+                                    </span>
+                                </div>
+                                <span className="font-mono text-emerald-300/90 text-[11px] font-bold">
+                                    {qualityInfo ? `${qualityInfo.width}×${qualityInfo.height} px` : "4K Ready"}
+                                </span>
+                            </div>
 
-                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm border bg-[#0C1324] border-white/[0.08] text-cyan-300 shrink-0">
-                                    {detectedScanType === "wound" ? (
-                                        <Stethoscope className="w-6 h-6 sm:w-8 sm:h-8 text-cyan-400" />
-                                    ) : (
-                                        <ScanLine className="w-6 h-6 sm:w-8 sm:h-8 text-cyan-300" />
-                                    )}
+                            <div className="relative w-full h-[360px] flex items-center justify-center p-4 bg-black/40">
+                                <img
+                                    src={previewSrc}
+                                    alt="Medication / Clinical Target Preview"
+                                    style={{
+                                        transform: `rotate(${rotation}deg)`,
+                                        filter: `brightness(${100 + brightness}%) contrast(${100 + contrast}%) ${
+                                            highContrastMode ? "grayscale(100%) contrast(220%)" : ""
+                                        }`,
+                                    }}
+                                    className="max-w-full max-h-full object-contain rounded-2xl transition-all duration-300 shadow-lg"
+                                />
+
+                                <button
+                                    onClick={resetScan}
+                                    className="absolute top-4 end-4 p-2.5 bg-black/60 hover:bg-rose-500/80 rounded-2xl text-white/70 hover:text-white transition-all duration-200 backdrop-blur-md border border-white/10"
+                                    title={t("Cancel", "إلغاء")}
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="p-3 border-t border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-2 text-xs">
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                                    <span className="text-xs font-semibold">
+                                        {t("Optical Contrast & Noise Calibration Active", "المعايرة البصرية وإزالة الضوضاء نشطة")}
+                                    </span>
+                                </div>
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                                    AUTO 4K
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Right: Pre-Flight Estimator & Start Scan Controls */}
+                        <div className="w-full lg:w-1/2">
+                            {hasInterruptedDraft && (
+                                <div className="mb-4 p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-200 text-xs flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-cyan-300 shrink-0" />
+                                    <span>{t("Saved session restored — ready to begin analysis instantly.", "تمت استعادة الصورة المحفوظة بنجاح — جاهز لبدء الفحص فوراً.")}</span>
+                                </div>
+                            )}
+
+                            <PreFlightEstimator
+                                imageQuality={qualityInfo}
+                                scanType={detectedScanType}
+                                activeProfileName={activeCareProfile?.display_name}
+                                onOpenProfilePicker={
+                                    plan === "ultra" && careProfiles.length > 1
+                                        ? () => {
+                                              setCareTempId(subjectProfileId || user?.id || null);
+                                              setCarePickerOpen(true);
+                                          }
+                                        : undefined
+                                }
+                                onStartScan={openCarePickerAndStart}
+                                onRetakeCamera={triggerCamera}
+                                onChooseGallery={triggerGallery}
+                                onRotate={() => setRotation((r) => (r + 90) % 360)}
+                                isScanning={isScanning}
+                            />
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ── Empty Initial Dropzone View ── */}
+                {!isScanning && !previewSrc && (
+                    <motion.div
+                        key="dropzone-view"
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -15 }}
+                        className="w-full max-w-4xl flex flex-col items-center gap-6"
+                    >
+                        <div
+                            {...getRootProps()}
+                            className={cn(
+                                "w-full min-h-[320px] sm:min-h-[360px] rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center p-6 sm:p-8 cursor-pointer relative overflow-hidden group",
+                                isDragActive
+                                    ? "border-cyan-400 bg-cyan-500/10 shadow-[0_0_30px_rgba(6,182,212,0.2)]"
+                                    : "border-white/15 bg-[#080E1E]/80 hover:border-cyan-500/40 hover:bg-[#0B132B]/90 shadow-2xl backdrop-blur-xl"
+                            )}
+                        >
+                            <input {...getInputProps()} />
+
+                            <div className="relative z-10 flex flex-col items-center text-center max-w-md">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300 mb-4 shadow-[0_0_20px_rgba(6,182,212,0.25)] group-hover:scale-105 transition-transform duration-300">
+                                    <ScanLine className="w-8 h-8 sm:w-10 sm:h-10 animate-pulse" />
                                 </div>
 
-                                <h3 className="text-base sm:text-xl font-black text-white mb-1.5 tracking-tight px-1 max-w-md">
-                                    {detectedScanType === "wound"
-                                        ? t("Capture skin, facial photo, lesion, or wound", "التقط صورة للوجه، الجلد، الحبوب، أو الإصابات")
-                                        : detectedScanType === "medication"
-                                        ? t("Upload medication box or prescription photo", "ارفع صورة ملصق علبة الدواء أو الروشتة")
-                                        : t("Upload medication, prescription, skin, or wound photo", "ارفع صورة الدواء، الروشتة، أو فحص الجلد")}
+                                <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5">
+                                    {t("Upload Prescription, Medication Box, or Skin Photo", "ارفع صورة الروشتة، علبة الدواء، أو فحص الجلد")}
                                 </h3>
-
-                                <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed px-1 mb-4">
-                                    {detectedScanType === "wound"
-                                        ? t(
-                                            "Clinical AI diagnosis: Skin types, acne, burns, eczema, and bodily trauma with step-by-step care.",
-                                            "تشخيص سريري متكامل: تحليل نوع البشرة، حب الشباب، الحروق، الإكزيما، والجروح مع بروتوكول عناية مفصل."
-                                        )
-                                        : detectedScanType === "medication"
-                                        ? t(
-                                            "Clear focus on medication brand name, strength (mg/ml), and instructions for high precision.",
-                                            "تأكد من تركيز الكاميرا على اسم الدواء التجاري، تركيز المادة الفعالة، والتعليمات الطبية بدقة."
-                                        )
-                                        : t(
-                                            "AI automatically identifies medications, prescriptions, or skin conditions. (High-Res JPEG, PNG, WEBP)",
-                                            "يتعرف النظام تلقائياً على نوع الصورة (دواء، روشتة، أو فحص جلدي) ويوجه الفحص بدقة فائقة."
-                                        )}
+                                <p className="text-xs sm:text-sm text-slate-400 mb-6 leading-relaxed">
+                                    {t(
+                                        "Drag & drop here or choose direct capture to start AI clinical analysis.",
+                                        "اسحب الصورة هنا أو اختر التصوير المباشر لبدء الفحص والتحليل الفوري."
+                                    )}
                                 </p>
 
-                                {/* Explicit Choice Buttons: Camera vs Gallery (Matching Sizing, Clean Alignment) */}
-                                <div className="w-full max-w-md grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 z-20 px-1">
+                                {/* Direct Action Buttons */}
+                                <div className="flex flex-wrap items-center justify-center gap-3 w-full">
                                     <button
                                         type="button"
                                         onClick={triggerCamera}
-                                        className={cn(
-                                            "w-full h-12 sm:h-13 inline-flex items-center justify-center gap-2 px-4 rounded-2xl text-white font-bold text-xs sm:text-sm shadow-sm active:scale-[0.98] transition-all duration-150",
-                                            detectedScanType === "wound" ? "bg-emerald-600 hover:bg-emerald-500" : "bg-cyan-600 hover:bg-cyan-500"
-                                        )}
+                                        className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all hover:scale-105"
                                     >
-                                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                                        <span className="whitespace-nowrap">{t("Take Photo", "التقاط بالكاميرا")}</span>
+                                        <Camera className="w-4 h-4 stroke-[2.5]" />
+                                        <span>{t("Camera Capture", "تصوير بالكاميرا")}</span>
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={triggerGallery}
-                                        className="w-full h-12 sm:h-13 inline-flex items-center justify-center gap-2 px-4 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs sm:text-sm backdrop-blur-md hover:scale-[1.01] active:scale-[0.98] transition-all duration-200"
+                                        className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white font-bold text-sm transition-all hover:scale-105"
                                     >
-                                        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-cyan-300" />
-                                        <span className="whitespace-nowrap">{t("Choose from Gallery", "اختيار من الاستوديو")}</span>
+                                        <ImageIcon className="w-4 h-4 text-cyan-300" />
+                                        <span>{t("Browse Gallery", "اختيار من الاستوديو")}</span>
                                     </button>
                                 </div>
-
-                                {/* Dynamic Accepted Medical Formats Guidance Cards (No Overlaps, Clean Typography) */}
-                                <div className="mt-4 sm:mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 w-full max-w-xl mx-auto">
-                                    {detectedScanType === "wound" ? (
-                                        <>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Skin Profile", "نوع البشرة")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Oily, Dry, Pores", "دهنية، جافة، مسام")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Activity className="w-4 h-4 text-amber-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Acne & Lesions", "حب الشباب والآفات")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Lesions & Calluses", "سنط، كالو، دمامل")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Flame className="w-4 h-4 text-rose-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Burns & Eczema", "الحروق والإكزيما")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Rash & Irritation", "طفح جلدي وتهيج")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Cuts & Injuries", "الجروح والقطوع")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Sutures & First Aid", "الخياطة والإسعاف")}</p>
-                                            </div>
-                                        </>
-                                    ) : detectedScanType === "medication" ? (
-                                        <>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Package className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Boxes", "علب الأدوية")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Clear Name & Dose", "الاسم والتركيز")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <FileText className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Prescriptions", "الروشتات الطبية")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Legible Text", "خط مقروء")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <FlaskConical className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Bottles & Drops", "العبوات والقطرات")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Label Visible", "الملصق الرئيسي")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Layers className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Blisters", "شرائط الأقراص")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Printed Side", "الجانب المطبوع")}</p>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Pill className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Medications", "علب الأدوية")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Instant Match", "تعرف فوري")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <FileText className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Prescriptions", "الروشتات الطبية")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Prescription OCR", "تحليل الجرعات")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Skin & Face", "الجلد والبشرة")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Clinical Diagnosis", "تشخيص سريري")}</p>
-                                            </div>
-                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
-                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1 shrink-0" />
-                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Wounds & Burns", "الجروح والحروق")}</p>
-                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Tissue Analysis", "تحليل الأنسجة")}</p>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Helpful Photography Guidance Banner */}
-                            <div className={cn(
-                                "rounded-2xl border p-3 sm:p-3.5 flex items-start sm:items-center gap-2.5 sm:gap-3 transition-all w-full min-w-0",
-                                detectedScanType === "wound"
-                                    ? "border-cyan-500/30 bg-cyan-500/[0.06]"
-                                    : "border-amber-400/20 bg-amber-400/[0.04]"
-                            )}>
-                                {detectedScanType === "wound" ? (
-                                    <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 shrink-0 mt-0.5 sm:mt-0" />
-                                ) : (
-                                    <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
-                                )}
-                                <p className="text-xs text-slate-300 leading-relaxed">
-                                    {detectedScanType === "wound"
-                                        ? t(
-                                            "For high clinical accuracy: Ensure direct lighting, steady camera focus on skin/lesion margins, and keep the area centered.",
-                                            "لضمان أعلى دقة سريرية: صوّر المنطقة في إضاءة مباشرة وثبات تام لليد مع إظهار حواف المنطقة أو الآفة ونوع البشرة بوضوح."
-                                        )
-                                        : t(
-                                            "For high accuracy: Ensure good lighting, avoid glare, and keep the drug name and strength centered.",
-                                            "لضمان دقة القراءة: صوّر الدواء في إضاءة كافية بدون انعكاسات قوية وتأكد من وضوح اسم الدواء وتركيزه."
-                                        )}
-                                </p>
                             </div>
                         </div>
 
-                        {/* ── Right Column: Recent Scans ── */}
-                        <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 sm:p-5 md:p-6 backdrop-blur-xl shadow-2xl w-full min-w-0">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                                    <History className="w-4 h-4 text-cyan-400" />
-                                    <span>{t("Recent Scans", "الفحوصات الأخيرة")}</span>
-                                </div>
-                                <Link href="/dashboard/history" className="text-xs text-cyan-300 hover:text-cyan-200 font-semibold hover:underline">
-                                    {t("View all", "عرض الكل")}
-                                </Link>
-                            </div>
-
-                            {user && activeCareProfile && careProfiles.length > 1 && (
-                                <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-                                    <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
-                                        <Users className="w-4 h-4 text-cyan-300 shrink-0" />
-                                        <span className="shrink-0 text-slate-500">{t("Active:", "الملف:")}</span>
-                                        <span className="text-white font-semibold truncate">{activeCareProfile.display_name}</span>
+                        {/* Recent History Quick Strip */}
+                        {recentHistory.length > 0 && (
+                            <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 backdrop-blur-xl">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
+                                        <History className="w-3.5 h-3.5 text-cyan-400" />
+                                        <span>{t("Recent Clinical Scans", "آخر الفحوصات الطبية")}</span>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            setCareTempId(activeCareProfile.id);
-                                            setCarePickerOpen(true);
-                                        }}
-                                        className="text-xs text-cyan-300 hover:underline font-semibold shrink-0"
-                                    >
-                                        {t("Change", "تغيير")}
-                                    </button>
+                                    <Link href="/dashboard/history" className="text-[11px] text-cyan-300 hover:underline">
+                                        {t("View All", "عرض السجل بالكامل")}
+                                    </Link>
                                 </div>
-                            )}
 
-                            {!user ? (
-                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
-                                    <p className="mb-3">{t("Log in to use your History and build Medication Memories.", "سجّل الدخول للوصول إلى سجلك وبناء ذاكرة الأدوية الخاصة بك.")}</p>
-                                    <Button href="/login" size="xs" variant="outline" className="text-white border-white/15">
-                                        {t("Log In", "تسجيل الدخول")}
-                                    </Button>
-                                </div>
-                            ) : historyLoading ? (
-                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-500 text-xs">
-                                    {t("Loading history...", "جارٍ تحميل السجل...")}
-                                </div>
-                            ) : recentHistory.length === 0 ? (
-                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
-                                    {t("No scans yet. Run your first scan to start your personal database.", "لا توجد فحوصات بعد. أجرِ أول فحص لبدء بناء سجلك الشخصي.")}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-3">
-                                    {recentHistory.map((item) => {
-                                        const scanCount = item.analysis_json?.meta?.scanCount || item.scan_count || 1;
-                                        const isWound = item.type === "wound" || Boolean(item.wound_title);
-                                        const title = item.wound_title || item.drug_name || (isWound ? "Wound Assessment" : "Medication");
-                                        return (
-                                            <Link key={item.id} href="/dashboard/history" className="block group">
-                                                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-150">
-                                                    <div className="flex items-center gap-2.5 min-w-0 flex-1 me-2">
-                                                        <div className={cn(
-                                                            "w-8 h-8 rounded-xl border flex items-center justify-center shrink-0",
-                                                            isWound ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
-                                                        )}>
-                                                            {isWound ? <Bandage className="w-4 h-4" /> : <Pill className="w-4 h-4" />}
-                                                        </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <p className="text-white font-bold text-xs truncate group-hover:text-cyan-300 transition-colors">{title}</p>
-                                                                {scanCount > 1 && (
-                                                                    <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono text-[9px] font-bold shrink-0">
-                                                                        ×{scanCount}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-slate-400 text-[10px] truncate mt-0.5">
-                                                                {item.manufacturer || (isWound ? (isArabic ? "تقييم سريري" : "Clinical triage") : t("Generic", "عام"))} • {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { month: "short", day: "numeric" })}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <ChevronRight className={cn("w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-300 transition-colors shrink-0", isArabic ? "rotate-180" : "")} />
-                                                </div>
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
-
-                {previewSrc && (
-                    <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full flex flex-col lg:flex-row gap-6 max-w-6xl items-start min-w-0">
-
-                        {/* Left: Image Preview & Pre-Flight Quality Guard */}
-                        <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl group flex flex-col min-w-0">
-                            
-                            {/* Pre-Flight Auto-Enhanced Quality Bar */}
-                            {qualityInfo && (
-                                <div className="p-3 sm:p-3.5 border-b border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-2 text-xs">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                                        <span className="font-bold text-white truncate text-[11px] sm:text-xs">
-                                            {t("AI Auto-Enhanced Resolution (4K Ready)", "دقة محسنة تلقائياً بالذكاء الاصطناعي")}
-                                        </span>
-                                    </div>
-                                    <span className="font-mono text-emerald-300/80 text-[10px] sm:text-[11px] font-semibold shrink-0">
-                                        {qualityInfo.width}×{qualityInfo.height} px
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Image Container */}
-                            <div className="relative w-full h-[280px] sm:h-[340px] md:h-[380px] flex items-center justify-center p-3 sm:p-4 bg-black/40">
-                                <img
-                                    src={previewSrc!}
-                                    alt="Medication Preview"
-                                    style={{
-                                        transform: `rotate(${rotation}deg)`,
-                                        filter: `brightness(${100 + brightness}%) contrast(${100 + contrast}%) ${highContrastMode ? "grayscale(100%) contrast(220%)" : ""}`,
-                                    }}
-                                    className={cn(
-                                        "max-w-full max-h-full object-contain rounded-2xl transition-all duration-300",
-                                        isScanning && "opacity-50 scale-95 blur-sm"
-                                    )}
-                                />
-
-                                {!isScanning && !finalResult && (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3 sm:p-4">
-                                        <div className="flex flex-col gap-3 items-center max-w-sm w-full text-center px-2">
-                                            
-                                            {/* Glowing Ultra-Shiny Start Analysis Button */}
-                                            <button
-                                                onClick={openCarePickerAndStart}
-                                                className={cn(
-                                                    "shiny-cta-btn w-full gap-2.5 sm:gap-3.5 px-6 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base font-black tracking-wide",
-                                                    detectedScanType === "wound" ? "from-emerald-400 via-teal-300 to-emerald-400" : ""
-                                                )}
-                                            >
-                                                {detectedScanType === "wound" ? (
-                                                    <>
-                                                        <Bandage className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-slate-950 stroke-[2.5]" />
-                                                        <span>{t("Analyze Wound Now", "فحص الجرح الآن")}</span>
-                                                    </>
-                                                ) : detectedScanType === "medication" ? (
-                                                    <>
-                                                        <Pill className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-slate-950 stroke-[2.5]" />
-                                                        <span>{t("Analyze Medication Now", "فحص الدواء الآن")}</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-slate-950 stroke-[2.5]" />
-                                                        <span>{t("Analyze Now", "الفحص الآن")}</span>
-                                                    </>
-                                                )}
-                                            </button>
-
-                                            {/* Camera vs Gallery Re-select Buttons */}
-                                            <div className="grid grid-cols-2 gap-2 w-full">
-                                                <button
-                                                    type="button"
-                                                    onClick={triggerCamera}
-                                                    className="h-10 inline-flex items-center justify-center gap-1.5 px-3 rounded-xl border border-cyan-500/30 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-100 text-xs font-semibold transition-all whitespace-nowrap"
-                                                >
-                                                    <Camera className="w-3.5 h-3.5 shrink-0" />
-                                                    <span>{t("Camera", "الكاميرا")}</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={triggerGallery}
-                                                    className="h-10 inline-flex items-center justify-center gap-1.5 px-3 rounded-xl border border-white/20 bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold transition-all whitespace-nowrap"
-                                                >
-                                                    <ImageIcon className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
-                                                    <span>{t("Gallery", "الاستوديو")}</span>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            onClick={resetScan}
-                                            className="absolute top-3 end-3 sm:top-4 sm:end-4 p-2 bg-black/60 hover:bg-rose-500/80 rounded-2xl text-white/70 hover:text-white transition-all duration-200 backdrop-blur-md border border-white/10"
-                                            title={t("Cancel", "إلغاء")}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                    {recentHistory.slice(0, 3).map((item, idx) => (
+                                        <div
+                                            key={item.id || idx}
+                                            className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-3 text-start"
                                         >
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Automatic Image Quality Pre-Processing (Auto 4K & Contrast) */}
-                            {!isScanning && (
-                                <div className="p-3 border-t border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-2 text-xs">
-                                    <div className="flex items-center gap-2 text-slate-300 min-w-0">
-                                        <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                                        <span className="text-[11px] sm:text-xs font-semibold truncate">{t("AI Auto-Enhance & 4K Clarity Active", "التحسين التلقائي لجودة المستند نشط")}</span>
-                                    </div>
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shrink-0">
-                                        AUTO 4K
-                                    </span>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-bold text-white truncate">{item.drug_name || t("Medical Scan", "فحص طبي")}</p>
+                                                <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                                                    {item.manufacturer || (item.created_at ? new Date(item.created_at).toLocaleDateString() : "")}
+                                                </p>
+                                            </div>
+                                            <span className="px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-400/20 text-[10px] font-mono">
+                                                {item.type === "wound" ? t("SKIN", "جلد") : t("RX", "دواء")}
+                                            </span>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Right: Timeline & Analysis Progress */}
-                        <div className="w-full lg:w-1/2 min-w-0">
-                            <Timeline />
-                        </div>
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

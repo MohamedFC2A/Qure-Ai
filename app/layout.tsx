@@ -11,6 +11,7 @@ import { UltraCelebrationProvider } from "@/context/UltraCelebrationContext";
 import { UltraCelebrationModal } from "@/components/ui/UltraCelebrationModal";
 import { CompleteProfileModal } from "@/components/profile/CompleteProfileModal";
 import { GoogleAdsense } from "@/components/GoogleAdsense";
+import { AppMotionProvider } from "@/components/layout/AppMotionProvider";
 import { Footer } from "@/components/Footer";
 
 const inter = Inter({
@@ -155,13 +156,15 @@ export default function RootLayout({
                     <UserProvider>
                         <UltraCelebrationProvider>
                             <ScanProvider>
-                                <Navbar />
-                                <UltraCelebrationModal />
-                                <CompleteProfileModal />
-                                <div className="flex-1 w-full pb-16 md:pb-0" suppressHydrationWarning>
-                                    {children}
-                                </div>
-                                <Footer />
+                                <AppMotionProvider>
+                                    <Navbar />
+                                    <UltraCelebrationModal />
+                                    <CompleteProfileModal />
+                                    <div className="flex-1 w-full pb-16 md:pb-0" suppressHydrationWarning>
+                                        {children}
+                                    </div>
+                                    <Footer />
+                                </AppMotionProvider>
                             </ScanProvider>
                         </UltraCelebrationProvider>
                     </UserProvider>

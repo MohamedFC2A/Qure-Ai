@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
-// ⛔ SECURITY: This endpoint is disabled in production.
-// It was only ever meant for local dev use. In production, return 404 always.
 export async function GET(req: NextRequest) {
     if (process.env.NODE_ENV !== "development") {
         return NextResponse.json({ error: "Not Found" }, { status: 404 });
     }
 
-    // In development, still require localhost
     const host = req.headers.get("host") || "";
     const isLocalHost =
         host.startsWith("localhost:") ||
@@ -18,20 +16,39 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Not Found" }, { status: 404 });
     }
 
-    // SAFE: Only reaches here in dev + localhost
     const { createAdminClient } = await import("@/lib/supabase/admin");
-    const supabase = createAdminClient();
-    const userId = "43304a66-686e-437d-b171-3734d37cda59";
+    const supabaseAdmin = createAdminClient();
 
-    const { data, error } = await supabase
+    const supabaseServer = await createClient();
+    const { data: { user } } = await supabaseServer.auth.getUser();
+
+    const url = new URL(req.url);
+    const targetUserId = url.searchParams.get("userId") || user?.id;
+
+    if (targetUserId) {
+        const { data, error } = await supabaseAdmin
+            .from("profiles")
+            .update({ plan: "ultra", plan_expires_at: null })
+            .eq("id", targetUserId)
+            .select();
+
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, message: `User ${targetUserId} plan updated to ultra`, data });
+    }
+
+    // Otherwise update all active local dev profiles
+    const { data, error } = await supabaseAdmin
         .from("profiles")
-        .update({ plan: "ultra" })
-        .eq("id", userId)
+        .update({ plan: "ultra", plan_expires_at: null })
+        .neq("id", "00000000-0000-0000-0000-000000000000")
         .select();
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: "User plan updated to ultra", data });
+    return NextResponse.json({ success: true, message: "All profiles set to ultra in dev", count: data?.length });
 }

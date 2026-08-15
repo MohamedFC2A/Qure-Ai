@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Check Credits
-        if (!localDevUser) {
+        if (!localDevUser && process.env.NODE_ENV !== "development") {
             const creditStatus = await getCreditsStatus(user.id, supabase);
-            if (creditStatus.totalAvailable < 1) {
+            if (!isUltra && creditStatus.totalAvailable < 1) {
                 return NextResponse.json({
                     error: "عذراً، لقد استنفدت رصيد النقاط المتاح لك. يرجى الترقية إلى باقة ULTRA للمزيد من الفحوصات الطبية.",
                     outOfCredits: true,

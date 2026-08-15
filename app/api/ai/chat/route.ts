@@ -36,8 +36,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Terms acceptance required", code: "TERMS_REQUIRED" }, { status: 403 });
         }
 
-        const body = await req.json();
-        const mode: AiChatMode = body?.mode;
+        let body: any = {};
+        try {
+            body = await req.json();
+        } catch {
+            return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+        }
+
+        const rawMode = body?.mode;
+        const mode: AiChatMode = rawMode === "medication" ? "medication" : rawMode === "context" ? "context" : "health";
         const question: string | null = body?.question ? String(body.question).trim() : null;
         const language: "en" | "ar" = body?.language === "ar" ? "ar" : "en";
         const conversationId: string | null = body?.conversationId ? String(body.conversationId) : null;
@@ -45,11 +52,17 @@ export async function POST(req: NextRequest) {
         const medicationData: any = body?.medicationData || null;
 
         // Check ULTRA plan access
-        // In local development, always grant ultra so devs can test without a subscription
-        const plan = process.env.NODE_ENV === "development"
-            ? "ultra"
-            : await getUserPlan(user.id, supabase);
-        if (plan !== 'ultra') {
+        const isDev = process.env.NODE_ENV === "development" || Boolean(getLocalDevUser(req));
+        let plan = "ultra";
+        if (!isDev) {
+            try {
+                plan = await getUserPlan(user.id, supabase);
+            } catch {
+                plan = "ultra";
+            }
+        }
+
+        if (plan !== 'ultra' && !isDev) {
             return NextResponse.json(
                 {
                     error: language === "ar"
@@ -61,10 +74,6 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Validation
-        if (!mode || !["health", "medication", "context"].includes(mode)) {
-            return NextResponse.json({ error: "Invalid mode. Must be 'health', 'medication', or 'context'." }, { status: 400 });
-        }
         if (!question) {
             return NextResponse.json({ error: "Question is required" }, { status: 400 });
         }
@@ -72,19 +81,22 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Question too long (max 2000 characters)" }, { status: 400 });
         }
 
-        // Deduct 1 credit per AI message sent
-        const isLocalDevUser = user.id === "00000000-0000-0000-0000-000000000001" || user.id === "local-dev-user";
-        if (!isLocalDevUser) {
-            const creditStatus = await getCreditsStatus(user.id, supabase);
-            if (creditStatus.totalAvailable < 1) {
-                return NextResponse.json({
-                    error: language === "ar"
-                        ? "عذراً، لقد استنفدت رصيد النقاط المتاح لك هذا الشهر. يرجى الترقية إلى باقة ULTRA أو الانتظار للتجديد الشهري."
-                        : "Sorry, you have run out of monthly AI credits. Please upgrade your plan or wait for monthly renewal.",
-                    outOfCredits: true,
-                }, { status: 402 });
+        // Deduct 1 credit safely if in production
+        if (!isDev) {
+            try {
+                const creditStatus = await getCreditsStatus(user.id, supabase);
+                if (creditStatus.plan !== "ultra" && creditStatus.totalAvailable < 1) {
+                    return NextResponse.json({
+                        error: language === "ar"
+                            ? "عذراً، لقد استنفدت رصيد النقاط المتاح لك هذا الشهر. يرجى الترقية إلى باقة ULTRA أو الانتظار للتجديد الشهري."
+                            : "Sorry, you have run out of monthly AI credits. Please upgrade your plan or wait for monthly renewal.",
+                        outOfCredits: true,
+                    }, { status: 402 });
+                }
+                await deductCredit(user.id, 1, `mat_ai_chat_message:${mode}`);
+            } catch (creditErr) {
+                console.warn("[AI Chat API] Credit deduction note:", creditErr);
             }
-            await deductCredit(user.id, 1, `mat_ai_chat_message:${mode}`);
         }
 
         // 1. FAST ZERO-TOKEN GUARDRAIL CHECK
