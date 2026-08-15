@@ -38,7 +38,9 @@ export async function POST(req: NextRequest) {
         const heightVal = validated.height.includes("cm") ? validated.height : `${validated.height} cm`;
         const weightVal = validated.weight.includes("kg") ? validated.weight : `${validated.weight} kg`;
 
-        const updatePayload: Record<string, any> = {
+        const upsertPayload: Record<string, any> = {
+            id: user.id,
+            email: user.email,
             age: validated.age,
             gender: validated.gender,
             height: heightVal,
@@ -48,22 +50,20 @@ export async function POST(req: NextRequest) {
 
         if (validated.username) {
             const cleanUsername = validated.username.trim().toLowerCase();
-            updatePayload.username = cleanUsername;
+            upsertPayload.username = cleanUsername;
         }
 
-        // 1. Try authenticated client update
+        // 1. Try authenticated client upsert
         const { error: profileError } = await supabase
             .from("profiles")
-            .update(updatePayload)
-            .eq("id", user.id);
+            .upsert(upsertPayload, { onConflict: "id" });
 
         // 2. Fallback to admin client if RLS blocked or column security tripped
         if (profileError && process.env.SUPABASE_SERVICE_ROLE_KEY) {
             const admin = createAdminClient();
             await admin
                 .from("profiles")
-                .update(updatePayload)
-                .eq("id", user.id);
+                .upsert(upsertPayload, { onConflict: "id" });
         }
 
         // 3. Update self care_profile if exists
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            profile: updatePayload,
+            profile: upsertPayload,
         });
     } catch (err: any) {
         console.error("[Profile Update Error]:", err);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
 import { Button } from "@/components/ui/Button";
@@ -14,16 +14,22 @@ import {
     AlertCircle,
     ShieldAlert,
     RotateCw,
+    X,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface CompleteProfileModalProps {
     forceOpen?: boolean;
     onCompleted?: () => void;
+    onClose?: () => void;
 }
 
-export function CompleteProfileModal({ forceOpen = false, onCompleted }: CompleteProfileModalProps) {
+const STORAGE_DISMISSED_KEY = "qurescan_profile_modal_dismissed_v1";
+
+export function CompleteProfileModal({ forceOpen = false, onCompleted, onClose }: CompleteProfileModalProps) {
     const { user, profile, isProfileIncomplete, refreshUser, loading } = useUser();
     const { resultsLanguage } = useSettings();
+    const pathname = usePathname();
     const isArabic = resultsLanguage === "ar";
     const t = (en: string, ar: string) => (isArabic ? ar : en);
 
@@ -36,26 +42,71 @@ export function CompleteProfileModal({ forceOpen = false, onCompleted }: Complet
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!loading && user && (isProfileIncomplete || forceOpen)) {
-            setOpen(true);
-            if (profile) {
-                if (profile.age) setAge(String(profile.age));
-                if (profile.gender) setGender(profile.gender);
-                if (profile.height) {
-                    const cleanH = String(profile.height).replace(/[^0-9.]/g, "");
-                    if (cleanH) setHeightCm(cleanH);
-                }
-                if (profile.weight) {
-                    const cleanW = String(profile.weight).replace(/[^0-9.]/g, "");
-                    if (cleanW) setWeightKg(cleanW);
-                }
-                if (profile.username) setUsername(profile.username);
+    const handleDismiss = useCallback(() => {
+        if (typeof window !== "undefined") {
+            try {
+                sessionStorage.setItem(STORAGE_DISMISSED_KEY, "1");
+            } catch {
+                // Ignore storage error
             }
-        } else if (!isProfileIncomplete && !forceOpen) {
+        }
+        setOpen(false);
+        if (onClose) onClose();
+    }, [onClose]);
+
+    useEffect(() => {
+        if (loading || !user) {
+            setOpen(false);
+            return;
+        }
+
+        // Avoid popups on auth, legal, pricing, and informational routes
+        const isBypassRoute =
+            pathname.startsWith("/auth") ||
+            pathname === "/login" ||
+            pathname === "/signup" ||
+            pathname === "/terms" ||
+            pathname === "/pricing" ||
+            pathname === "/docs" ||
+            pathname === "/changelog";
+
+        const isDismissed =
+            typeof window !== "undefined" &&
+            sessionStorage.getItem(STORAGE_DISMISSED_KEY) === "1";
+
+        if (forceOpen) {
+            setOpen(true);
+        } else if (isProfileIncomplete && !isDismissed && !isBypassRoute) {
+            setOpen(true);
+        } else {
             setOpen(false);
         }
-    }, [user, profile, isProfileIncomplete, forceOpen, loading]);
+
+        if (profile) {
+            if (profile.age) setAge(String(profile.age));
+            if (profile.gender) setGender(profile.gender);
+            if (profile.height) {
+                const cleanH = String(profile.height).replace(/[^0-9.]/g, "");
+                if (cleanH) setHeightCm(cleanH);
+            }
+            if (profile.weight) {
+                const cleanW = String(profile.weight).replace(/[^0-9.]/g, "");
+                if (cleanW) setWeightKg(cleanW);
+            }
+            if (profile.username) setUsername(profile.username);
+        }
+    }, [user, profile, isProfileIncomplete, forceOpen, loading, pathname]);
+
+    // Handle ESC key press
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && open) {
+                handleDismiss();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [open, handleDismiss]);
 
     if (!open || loading || !user) return null;
 
@@ -106,6 +157,14 @@ export function CompleteProfileModal({ forceOpen = false, onCompleted }: Complet
                 throw new Error(data.error || "Failed to update profile");
             }
 
+            if (typeof window !== "undefined") {
+                try {
+                    sessionStorage.setItem(STORAGE_DISMISSED_KEY, "1");
+                } catch {
+                    // Ignore storage error
+                }
+            }
+
             await refreshUser();
             setOpen(false);
             if (onCompleted) onCompleted();
@@ -117,26 +176,42 @@ export function CompleteProfileModal({ forceOpen = false, onCompleted }: Complet
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
-            <div className="w-full max-w-lg bg-[#080D1A]/95 border border-white/[0.12] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-start">
-                
+        <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200"
+            onClick={handleDismiss}
+        >
+            <div
+                className="w-full max-w-lg bg-[#080D1A]/95 border border-white/[0.12] backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-start relative"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Close Button */}
+                <button
+                    type="button"
+                    onClick={handleDismiss}
+                    className="absolute top-5 end-5 p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 text-slate-400 hover:text-white transition-all duration-200"
+                    title={t("Close", "إغلاق")}
+                    aria-label={t("Close profile modal", "إغلاق نافذة البيانات")}
+                >
+                    <X className="w-4 h-4" />
+                </button>
+
                 {/* Header */}
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 pe-8">
                     <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
                         <HeartPulse className="w-6 h-6" />
                     </div>
                     <div className="space-y-1">
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-[10px] font-bold text-cyan-300">
                             <ShieldAlert className="w-3 h-3" />
-                            <span>{t("Required for Clinical Safety", "مطلوب لمعايير السلامة الدوائية")}</span>
+                            <span>{t("Optional Safety Data", "بيانات موصى بها للسلامة الدوائية")}</span>
                         </div>
                         <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
                             {t("Complete Your Health Profile", "استكمال بياناتك الصحية الأساسية")}
                         </h2>
                         <p className="text-xs text-slate-400 leading-relaxed">
                             {t(
-                                "To calculate safe medication dosages and check contraindications accurately, please enter your basic details.",
-                                "لحساب الجرعات الآمنة بدقة وفحص موانع الاستعمال بحسب وزنك وعمرك، يرجى استكمال البيانات التالية."
+                                "To calculate safe medication dosages and check contraindications accurately, you can provide your basic details.",
+                                "لحساب الجرعات الآمنة بدقة وفحص موانع الاستعمال بحسب وزنك وعمرك، يمكنك استكمال البيانات التالية أو تخطيها."
                             )}
                         </p>
                     </div>
@@ -267,12 +342,12 @@ export function CompleteProfileModal({ forceOpen = false, onCompleted }: Complet
                         </div>
                     )}
 
-                    {/* Submit Button */}
-                    <div className="pt-2">
+                    {/* Action Buttons */}
+                    <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
                         <Button
                             type="submit"
                             disabled={saving}
-                            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
+                            className="w-full sm:flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
                         >
                             {saving ? (
                                 <>
@@ -282,10 +357,18 @@ export function CompleteProfileModal({ forceOpen = false, onCompleted }: Complet
                             ) : (
                                 <>
                                     <CheckCircle2 className="w-4 h-4" />
-                                    <span>{t("Save & Continue to Platform", "حفظ ومتابعة استخدام المنصة")}</span>
+                                    <span>{t("Save & Continue", "حفظ ومتابعة")}</span>
                                 </>
                             )}
                         </Button>
+
+                        <button
+                            type="button"
+                            onClick={handleDismiss}
+                            className="w-full sm:w-auto px-5 py-3 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-slate-400 hover:text-white text-xs sm:text-sm font-semibold transition-colors text-center"
+                        >
+                            {t("Skip for now", "تخطي الآن")}
+                        </button>
                     </div>
                 </form>
             </div>
