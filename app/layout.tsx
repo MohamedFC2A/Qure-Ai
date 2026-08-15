@@ -18,6 +18,9 @@ const inter = Inter({
     subsets: ["latin"],
     variable: "--font-inter",
     display: "swap",
+    preload: true,
+    fallback: ["system-ui", "-apple-system", "sans-serif"],
+    adjustFontFallback: true,
 });
 
 const cairo = Cairo({
@@ -25,6 +28,9 @@ const cairo = Cairo({
     variable: "--font-cairo",
     display: "swap",
     weight: ["300", "400", "500", "600", "700", "800", "900"],
+    preload: true,
+    fallback: ["system-ui", "sans-serif"],
+    adjustFontFallback: true,
 });
 
 export const viewport: Viewport = {

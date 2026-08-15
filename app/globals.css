@@ -367,13 +367,16 @@ img, video, canvas {
   .shiny-cta-btn::before {
     content: '';
     position: absolute;
-    top: 0; left: -130%;
+    top: 0;
+    left: 0;
     width: 80%;
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.40), transparent);
-    transform: skewX(-20deg);
+    transform: translateX(-150%) skewX(-20deg);
     animation: btnShimmerSweep 4s infinite ease-in-out;
     pointer-events: none;
+    will-change: transform;
+    contain: paint layout;
   }
 
   .shiny-cta-btn:hover {
@@ -438,6 +441,7 @@ img, video, canvas {
     inset: 0;
     pointer-events: none;
     z-index: 0;
+    contain: paint layout;
     /* Single very subtle tinted overlay */
     background: radial-gradient(ellipse 70% 50% at 70% 0%, rgba(14, 22, 40, 0.6) 0%, transparent 100%);
   }
@@ -446,6 +450,7 @@ img, video, canvas {
   .hero-grid {
     position: absolute;
     inset: 0;
+    contain: paint layout;
     background-image:
       linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
@@ -535,8 +540,8 @@ img, video, canvas {
 }
 
 @keyframes btnShimmerSweep {
-  0% { left: -130%; }
-  40%, 100% { left: 140%; }
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  40%, 100% { transform: translateX(250%) skewX(-20deg); }
 }
 
 @keyframes goldRotate {

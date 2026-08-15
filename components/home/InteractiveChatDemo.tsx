@@ -193,12 +193,13 @@ export function InteractiveChatDemo({ isArabic }: { isArabic: boolean }) {
                         <div className="w-5 h-5 rounded-lg bg-cyan-500/20 border border-cyan-400/30 p-0.5 flex items-center justify-center shrink-0">
                             <Brain className="w-3.5 h-3.5 text-cyan-300" />
                         </div>
-                        <span>Qure AI — Clinical Interaction Intelligence</span>
+                        <h2 className="text-xs font-bold text-slate-300">Qure AI — Clinical Interaction Intelligence</h2>
                     </div>
 
                     <button
                         onClick={runNextScenario}
-                        title={isArabic ? "إعادة الفحص" : "Replay Simulation"}
+                        aria-label={isArabic ? "إعادة تشغيل المحاكاة" : "Replay Simulation"}
+                        title={isArabic ? "إعادة تشغيل المحاكاة" : "Replay Simulation"}
                         className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
                     >
                         <RefreshCw className={cn("w-3.5 h-3.5", phase !== "done" && "animate-spin")} />
@@ -297,9 +298,9 @@ export function InteractiveChatDemo({ isArabic }: { isArabic: boolean }) {
 
                                 {/* Clinical Analysis Body */}
                                 <div>
-                                    <h4 className="text-xs sm:text-sm font-bold text-white mb-1">
+                                    <h3 className="text-xs sm:text-sm font-bold text-white mb-1">
                                         {isArabic ? scenario.aiResponse.headline.ar : scenario.aiResponse.headline.en}
-                                    </h4>
+                                    </h3>
                                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
                                         {phase === "typing_ai"
                                             ? fullAiBody.slice(0, typedAiCharsCount)
@@ -342,6 +343,8 @@ export function InteractiveChatDemo({ isArabic }: { isArabic: boolean }) {
                         </span>
                         <button
                             onClick={runNextScenario}
+                            aria-label={isArabic ? "تحليل ومحاكاة تفاصيل الدواء" : "Analyze medication details"}
+                            title={isArabic ? "تحليل ومحاكاة تفاصيل الدواء" : "Analyze medication details"}
                             className="w-7 h-7 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-400 text-slate-950 font-bold flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
                         >
                             <Send className={cn("w-3.5 h-3.5", isArabic && "rotate-180")} />

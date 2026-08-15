@@ -145,23 +145,18 @@ export default function Home() {
         <main className="relative min-h-screen pb-24 pt-20 sm:pt-24 md:pb-20 md:pt-28">
 
             {/* ── BACKGROUND — clean, single subtle grid ── */}
-            <div className="pointer-events-none fixed inset-0 -z-10">
-                <div className="hero-grid" />
+            <div className="pointer-events-none fixed inset-0 -z-10" style={{ contain: "paint layout", transform: "translateZ(0)" }}>
+                <div className="hero-grid" style={{ contain: "paint layout" }} />
                 {/* Single very-low-opacity vignette — no colored orbs */}
                 <div
                     className="absolute inset-0"
-                    style={{ background: "radial-gradient(ellipse 100% 60% at 50% -10%, rgba(12,19,36,0.45) 0%, transparent 70%)" }}
+                    style={{ background: "radial-gradient(ellipse 100% 60% at 50% -10%, rgba(12,19,36,0.45) 0%, transparent 70%)", contain: "paint layout" }}
                 />
             </div>
 
             {/* ── HERO SECTION ── */}
-            <motion.section
-                className="clinical-page max-w-6xl mx-auto text-center"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                <motion.div variants={itemVariants} className="space-y-5">
+            <section className="clinical-page max-w-6xl mx-auto text-center">
+                <div className="space-y-5 animate-fade-in">
 
                     {/* Headline */}
                     <h1 className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.08] tracking-tight text-white max-w-5xl mx-auto">
@@ -232,13 +227,13 @@ export default function Home() {
                     <div className="pt-8 sm:pt-12">
                         <AiPartnersMarquee />
                     </div>
-                </motion.div>
+                </div>
 
                 {/* ── INTERACTIVE QURE AI CHAT DEMO ── */}
-                <motion.div variants={itemVariants} className="mt-12 sm:mt-14">
+                <div className="mt-12 sm:mt-14">
                     <InteractiveChatDemo isArabic={isArabic} />
-                </motion.div>
-            </motion.section>
+                </div>
+            </section>
 
             {/* ── STATS ── */}
             <section className="clinical-page max-w-4xl mx-auto mt-14 sm:mt-16">
