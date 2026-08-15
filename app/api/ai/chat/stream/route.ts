@@ -261,43 +261,6 @@ export async function POST(req: NextRequest) {
         }
         deepseekMessages.push({ role: "user", content: question });
 
-        // Autonomous Live Medical Search Tool Check (Serper Engine)
-        let searchMetadata: any = null;
-        let searchEvidenceText = "";
-        try {
-            const { shouldTriggerLiveMedicalSearch, executeAutonomousMedicalSearch } = await import("@/lib/ai/searchTool");
-            if (forceLiveSearch || shouldTriggerLiveMedicalSearch(question, mode)) {
-                console.log("[AI Stream] Live medical search triggered (forceLiveSearch:", forceLiveSearch, ") for query:", question);
-                const searchResult = await executeAutonomousMedicalSearch({
-                    query: question,
-                    language,
-                    maxPages: 5,
-                });
-
-                if (searchResult.performed) {
-                    searchMetadata = {
-                        performed: true,
-                        query: searchResult.query,
-                        pagesCount: searchResult.pagesCount,
-                        totalSources: searchResult.totalSources,
-                        sources: searchResult.sources,
-                        directAnswer: searchResult.directAnswer,
-                        knowledgeEntity: searchResult.knowledgeEntity,
-                    };
-                    searchEvidenceText = searchResult.evidenceText;
-
-                    deepseekMessages.push({
-                        role: "user",
-                        content: language === "ar"
-                            ? `[نتائج البحث السريري المباشر عبر الإنترنت (${searchResult.pagesCount} صفحات ومصادر طبية معتمدة)]:\n${searchResult.evidenceText}\n\nاستند إلى هذه الأدلة والمصادر السريرية المباشرة بدقة في إجابتك واستشهد بها عند اللزوم.`
-                            : `[LIVE MEDICAL WEB SEARCH EVIDENCE (${searchResult.pagesCount} Verified Sources)]:\n${searchResult.evidenceText}\n\nIncorporate this fresh clinical evidence accurately in your answer.`
-                    });
-                }
-            }
-        } catch (searchErr) {
-            console.warn("[AI Stream] Live search tool note:", searchErr);
-        }
-
         deepseekMessages.push({
             role: "system",
             content:
@@ -310,11 +273,51 @@ export async function POST(req: NextRequest) {
             async start(controller) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "start" })}\n\n`));
 
-                // If live search was performed, emit search status event immediately
-                if (searchMetadata) {
-                    controller.enqueue(
-                        encoder.encode(`data: ${JSON.stringify({ type: "search_status", ...searchMetadata })}\n\n`)
-                    );
+                // Autonomous Live Medical Search Decision & Execution (Real-Time Stepper)
+                let searchMetadata: any = null;
+                try {
+                    const { shouldTriggerLiveMedicalSearch, executeAutonomousMedicalSearch } = await import("@/lib/ai/searchTool");
+                    const needsSearch = forceLiveSearch || shouldTriggerLiveMedicalSearch(question, mode);
+
+                    if (needsSearch) {
+                        // 1. Immediately notify client that live medical search has begun
+                        controller.enqueue(
+                            encoder.encode(`data: ${JSON.stringify({ type: "search_start", query: question, force: forceLiveSearch })}\n\n`)
+                        );
+
+                        // 2. Execute deep 5-page clinical search
+                        const searchResult = await executeAutonomousMedicalSearch({
+                            query: question,
+                            language,
+                            maxPages: 5,
+                        });
+
+                        if (searchResult.performed) {
+                            searchMetadata = {
+                                performed: true,
+                                query: searchResult.query,
+                                pagesCount: searchResult.pagesCount,
+                                totalSources: searchResult.totalSources,
+                                sources: searchResult.sources,
+                                directAnswer: searchResult.directAnswer,
+                                knowledgeEntity: searchResult.knowledgeEntity,
+                            };
+
+                            // 3. Emit real-time verified sources metadata to client
+                            controller.enqueue(
+                                encoder.encode(`data: ${JSON.stringify({ type: "search_status", ...searchMetadata })}\n\n`)
+                            );
+
+                            deepseekMessages.push({
+                                role: "user",
+                                content: language === "ar"
+                                    ? `[نتائج البحث السريري المباشر عبر الإنترنت (${searchResult.pagesCount} صفحات ومصادر طبية معتمدة)]:\n${searchResult.evidenceText}\n\nاستند إلى هذه الأدلة والمصادر السريرية المباشرة بدقة في إجابتك واستشهد بها عند اللزوم.`
+                                    : `[LIVE MEDICAL WEB SEARCH EVIDENCE (${searchResult.pagesCount} Verified Sources)]:\n${searchResult.evidenceText}\n\nIncorporate this fresh clinical evidence accurately in your answer.`
+                            });
+                        }
+                    }
+                } catch (searchErr) {
+                    console.warn("[AI Stream] Live search tool note:", searchErr);
                 }
 
                 let fullText = "";

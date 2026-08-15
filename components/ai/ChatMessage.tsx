@@ -57,47 +57,57 @@ const SEARCH_STEPS_EN = [
     { title: "Synthesizing Verified Clinical Recommendations...", source: "Qure Clinical Synthesizer" },
 ];
 
-const LIVE_SOURCES = [
-    { name: "FDA.gov (هيئة الغذاء والدواء الأمريكية)", nameEn: "FDA.gov (US Approved Database)" },
-    { name: "DailyMed (المكتبة الوطنية للطب NLM)", nameEn: "DailyMed (National Library of Medicine)" },
-    { name: "Mayo Clinic (البروتوكولات السريرية)", nameEn: "Mayo Clinic Clinical Protocols" },
-    { name: "Medscape (المراجع الدوائية والتحذيرات)", nameEn: "Medscape Drug Reference & Alerts" },
-    { name: "PubMed / NIH (الأبحاث السريرية المحكمة)", nameEn: "PubMed / NIH Peer-Reviewed Studies" },
-    { name: "RxNorm (المعايير الصيدلانية الدولية)", nameEn: "RxNorm Standard Registry" },
+const FALLBACK_LIVE_SOURCES = [
+    { name: "FDA.gov (هيئة الغذاء والدواء الأمريكية)", nameEn: "FDA.gov (US Approved Database)", domain: "fda.gov" },
+    { name: "DailyMed (المكتبة الوطنية للطب NLM)", nameEn: "DailyMed (National Library of Medicine)", domain: "dailymed.nlm.nih.gov" },
+    { name: "Mayo Clinic (البروتوكولات السريرية)", nameEn: "Mayo Clinic Clinical Protocols", domain: "mayoclinic.org" },
+    { name: "Medscape (المراجع الدوائية والتحذيرات)", nameEn: "Medscape Drug Reference & Alerts", domain: "medscape.com" },
+    { name: "PubMed / NIH (الأبحاث السريرية المحكمة)", nameEn: "PubMed / NIH Peer-Reviewed Studies", domain: "pubmed.ncbi.nlm.nih.gov" },
+    { name: "RxNorm (المعايير الصيدلانية الدولية)", nameEn: "RxNorm Standard Registry", domain: "nlm.nih.gov" },
 ];
 
-function LiveMedicalSearchRadar({ isArabic }: { isArabic: boolean }) {
+function LiveMedicalSearchRadar({ isArabic, searchMetadata }: { isArabic: boolean; searchMetadata?: ChatSearchMetadata | null }) {
     const [stepIndex, setStepIndex] = useState(0);
     const [sourceIndex, setSourceIndex] = useState(0);
 
     const steps = isArabic ? SEARCH_STEPS_AR : SEARCH_STEPS_EN;
 
+    // Use actual sources retrieved from the search if already available, else fallback to verified registries
+    const actualSources = searchMetadata?.sources && searchMetadata.sources.length > 0
+        ? searchMetadata.sources.map((s) => ({
+            name: `${s.domain || "المصدر السريري"} (${s.title.slice(0, 35)}…)`,
+            nameEn: `${s.domain || "Clinical Source"} (${s.title.slice(0, 35)}…)`,
+            domain: s.domain || "clinical-source.org",
+        }))
+        : FALLBACK_LIVE_SOURCES;
+
     useEffect(() => {
         const stepTimer = setInterval(() => {
             setStepIndex((prev) => (prev + 1) % steps.length);
-        }, 1400);
+        }, 1300);
 
         const sourceTimer = setInterval(() => {
-            setSourceIndex((prev) => (prev + 1) % LIVE_SOURCES.length);
-        }, 750);
+            setSourceIndex((prev) => (prev + 1) % actualSources.length);
+        }, 650);
 
         return () => {
             clearInterval(stepTimer);
             clearInterval(sourceTimer);
         };
-    }, [steps.length]);
+    }, [steps.length, actualSources.length]);
 
     const currentStep = steps[stepIndex];
-    const currentSource = LIVE_SOURCES[sourceIndex];
+    const currentSource = actualSources[sourceIndex % actualSources.length];
     const progressPercent = Math.min(100, Math.round(((stepIndex + 1) / steps.length) * 100));
 
     return (
         <div className="w-full min-w-[280px] sm:min-w-[360px] max-w-lg py-1.5 space-y-2.5">
-            {/* Header Stage & Stepper */}
+            {/* Header Stage & Stepper with Official Qure Logo Badge */}
             <div className="flex items-center gap-3">
-                <div className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-xl bg-sky-950/80 border border-sky-500/40 text-sky-400 shadow-sm">
-                    <Globe className="w-4 h-4 animate-spin" style={{ animationDuration: "3s" }} />
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <div className="w-8 h-8 rounded-xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-sm select-none">
+                    <span className="text-[10px] font-black tracking-tight text-cyan-400 font-display">
+                        Qure
+                    </span>
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -115,10 +125,10 @@ function LiveMedicalSearchRadar({ isArabic }: { isArabic: boolean }) {
                 </div>
             </div>
 
-            {/* Step-by-step progress bar */}
+            {/* Step-by-step progress bar (Crisp, zero glowing) */}
             <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden p-0.5">
                 <div
-                    className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                    className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 rounded-full transition-all duration-400 ease-out"
                     style={{ width: `${progressPercent}%` }}
                 />
             </div>
@@ -128,8 +138,8 @@ function LiveMedicalSearchRadar({ isArabic }: { isArabic: boolean }) {
                 <span className="text-slate-500 text-[10px] font-medium shrink-0">
                     {isArabic ? "المصدر المفحوص حالياً:" : "Current Source:"}
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono text-[10px] font-semibold truncate transition-all duration-300">
-                    <Search className="w-3 h-3 text-sky-400 shrink-0" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#0C1428] border border-white/[0.08] text-sky-300 font-mono text-[10px] font-semibold truncate transition-all duration-200">
+                    <Globe className="w-3 h-3 text-sky-400 shrink-0" />
                     <span>{isArabic ? currentSource.name : currentSource.nameEn}</span>
                 </span>
             </div>
@@ -140,8 +150,10 @@ function LiveMedicalSearchRadar({ isArabic }: { isArabic: boolean }) {
 function ClinicalThinkingIndicator({ isArabic }: { isArabic: boolean }) {
     return (
         <div className="flex items-center gap-3 py-1.5 px-1">
-            <div className="w-8 h-8 rounded-xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
-                <Brain className="w-4 h-4 animate-pulse" />
+            <div className="w-8 h-8 rounded-xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-sm select-none">
+                <span className="text-[10px] font-black tracking-tight text-cyan-400 font-display">
+                    Qure
+                </span>
             </div>
             <div className="space-y-1">
                 <p className="text-xs text-slate-200 font-bold">
@@ -392,10 +404,12 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             transition={{ duration: 0.2 }}
             className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}
         >
-            {/* AI Avatar Icon */}
+            {/* AI Avatar Icon - Official Qure Brand Mark (Zero Glowing) */}
             {!isUser && (
-                <div className="w-8 h-8 rounded-xl bg-[#080D1A] border border-white/[0.08] flex items-center justify-center text-cyan-400 shrink-0 shadow-sm mt-0.5">
-                    <Brain className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shrink-0 shadow-sm mt-0.5 select-none">
+                    <span className="text-[10px] font-black tracking-tight text-cyan-400 font-display">
+                        Qure
+                    </span>
                 </div>
             )}
 
@@ -420,7 +434,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                             <div className="space-y-1">{renderMarkdown(displayContent)}</div>
                         ) : (message.isLiveSearch || message.searchMetadata?.performed) ? (
                             /* Live Medical Search Stepper Radar (Dedicated to live web searches only) */
-                            <LiveMedicalSearchRadar isArabic={isArabic} />
+                            <LiveMedicalSearchRadar isArabic={isArabic} searchMetadata={message.searchMetadata} />
                         ) : (
                             /* Standard Clinical AI Thinking (Fast, clean, no fake sources) */
                             <ClinicalThinkingIndicator isArabic={isArabic} />

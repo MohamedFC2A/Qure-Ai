@@ -238,6 +238,16 @@ export function AiChatPage() {
                         try {
                             const event = JSON.parse(jsonStr);
 
+                            if (event.type === "search_start") {
+                                setMessages((prev) =>
+                                    prev.map((m) =>
+                                        m.id === assistantId
+                                            ? { ...m, isLiveSearch: true }
+                                            : m
+                                    )
+                                );
+                            }
+
                             if (event.type === "search_status") {
                                 setMessages((prev) =>
                                     prev.map((m) =>
@@ -633,8 +643,10 @@ export function AiChatPage() {
                                 {/* Welcome section when empty */}
                                 {messages.length === 0 && (
                                     <div className="py-10 sm:py-16 text-center flex flex-col items-center justify-center space-y-5">
-                                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-[#080D1A]/90 border border-white/[0.09] flex items-center justify-center text-cyan-300 backdrop-blur-xl shadow-xl">
-                                            <Brain className="w-7 h-7 sm:w-8 sm:h-8" />
+                                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-3xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shadow-xl select-none">
+                                            <span className="text-xl sm:text-2xl font-black tracking-tight text-cyan-400 font-display">
+                                                Qure
+                                            </span>
                                         </div>
 
                                         <div className="space-y-1.5 max-w-md">
