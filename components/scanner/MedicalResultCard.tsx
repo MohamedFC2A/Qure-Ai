@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, Info, Pill, ShieldAlert, Thermometer, Box, Fil
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import type { OpenFdaLabelSnapshot } from "@/lib/openfda";
 import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
 import { AdUnit } from "@/components/AdUnit";
-import { useScan } from "@/context/ScanContext";
+import { useOptionalScan } from "@/context/ScanContext";
 import { VoiceReaderButton } from "@/components/ui/VoiceReaderButton";
 import { getLocalScans } from "@/lib/localHistory";
 
@@ -383,13 +384,9 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
 
     const isArabic = resultsLanguage === 'ar';
     const t = (en: string, ar: string) => (isArabic ? ar : en);
+    const router = useRouter();
 
-    let scanContext: any = null;
-    try {
-        scanContext = useScan();
-    } catch {
-        // ignore
-    }
+    const scanContext = useOptionalScan();
     const previewSrc = scanContext?.previewSrc || null;
     const scannedImage = data.scannedImage || previewSrc;
 
@@ -1210,19 +1207,49 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     };
 
     const askAiAbout = (topic: string, question: string) => {
-        if (!user) {
-            setAiError(t("Login required to ask AI.", "يجب تسجيل الدخول لسؤال الذكاء الاصطناعي."));
-            setActiveTab('chat');
-            return;
+        // 1. Prepare comprehensive medical intelligence payload
+        const activeMedicationContext = {
+            drug_name: displayDrugName,
+            generic_name: displayGenericName,
+            strength: data.strength,
+            form: data.form,
+            category: data.category,
+            manufacturer: data.manufacturer,
+            activeIngredients: data.activeIngredients,
+            uses: data.uses,
+            dosage: data.dosage,
+            warnings: data.warnings,
+            contraindications: data.contraindications,
+            interactions: data.interactions,
+            adverseReactions: (data as any).adverseReactions || (data as any).sideEffects,
+            foodInteractions: (data as any).foodInteractions,
+            storageInstructions: (data as any).storageInstructions || (data as any).storage,
+            description: data.description,
+            personalized: (data as any).personalized,
+            analysis_json: analysisForAi,
+        };
+
+        const smartPayload = {
+            medication: activeMedicationContext,
+            topic: topic,
+            question: question,
+            timestamp: Date.now(),
+        };
+
+        try {
+            sessionStorage.setItem("qure_ai_active_context", JSON.stringify(smartPayload));
+        } catch (e) {
+            console.warn("Could not save AI context to sessionStorage:", e);
         }
-        if (plan !== "ultra") {
-            setAiError(t("Ultra plan required to ask AI.", "يلزم الاشتراك ألترا لسؤال الذكاء الاصطناعي."));
-            setActiveTab('chat');
-            return;
-        }
-        setActiveTab('chat');
-        setCustomQuestion(question);
-        void askAi({ question, reset: false });
+
+        // 2. Direct user intelligently to Qure AI Assistant with auto-send
+        const queryParams = new URLSearchParams({
+            q: question,
+            topic: topic,
+            autoSend: "1",
+        });
+
+        router.push(`/ai?${queryParams.toString()}`);
     };
 
     // Copy answer to clipboard
@@ -1826,7 +1853,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                             className={cn(
                                                 "px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 shrink-0",
                                                 tab.active 
-                                                    ? "bg-amber-500/15 border-amber-500/30 text-amber-200 shadow-[0_0_12px_-3px_rgba(245,158,11,0.3)]" 
+                                                    ? "bg-amber-500/15 border-amber-500/35 text-amber-200" 
                                                     : "bg-black/10 border-transparent text-slate-400 hover:text-white hover:bg-white/[0.04]"
                                             )}
                                         >
@@ -2505,34 +2532,45 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     };
 
     const renderChat = () => {
+        const handleStartConsultation = () => {
+            askAiAbout(
+                t("Comprehensive Medication Consultation", "استشارة سريرية شاملة حول الدواء"),
+                t(
+                    `Please provide a comprehensive clinical consultation for ${displayDrugName}. Analyze its indications, active ingredients, dosage guidelines, safety precautions, and compatibility with my health profile.`,
+                    `يرجى تقديم استشارة سريرية متكاملة حول دواء ${displayDrugName}. حلّل دواعي استعماله، مواده الفعالة، إرشادات الجرعة الدقيقة، واحتياطات الأمان وملاءمته لملفي الصحي.`
+                )
+            );
+        };
+
         return (
             <div className="space-y-6 p-4 sm:p-10">
-                <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950/40 p-8 sm:p-12 text-center shadow-2xl space-y-6">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/10">
-                        <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-300 animate-pulse" />
+                <div className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950/40 p-8 sm:p-12 text-center shadow-2xl space-y-6">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 flex items-center justify-center mx-auto shadow-md">
+                        <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-300" />
                     </div>
 
                     <div className="space-y-3 max-w-xl mx-auto">
                         <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight">
-                            {t("Page Moved to Qure AI Assistant", "تم نقل الصفحة إلى المساعد الطبي الذكي Qure AI")}
+                            {t("Interactive Qure AI Consultation", "استشارة سريرية ذكية مع Qure AI")}
                         </h3>
                         <p className="text-slate-300 text-xs sm:text-base leading-relaxed">
                             {t(
-                                `Qure AI Medical Assistant has been upgraded to a dedicated interactive page with deep clinical reasoning and history integration.`,
-                                `تم تخصيص صفحة تفاعلية مستقلة ومطوّرة بالكامل للمساعد الذكي Qure AI لمتابعة كافة أسئلتك عن هذا الدواء (${displayDrugName}) مع ربط كامل بملفك الصحي والسجل الطبي.`
+                                `Qure AI Medical Assistant is ready with full contextual awareness of ${displayDrugName}, its active ingredients, dosage, and your personalized health profile.`,
+                                `المساعد الطبي الذكي Qure AI جاهز مع ربط كامل وتلقائي ببيانات دواء (${displayDrugName}) ومواده الفعالة وجرعاته وسجلك الطبي للإجابة الفورية.`
                             )}
                         </p>
                     </div>
 
                     <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                        <Link
-                            href={`/ai?medication=${encodeURIComponent(JSON.stringify({ drug_name: displayDrugName, generic_name: displayGenericName, description: data.description }))}`}
-                            className="shiny-cta-btn inline-flex items-center justify-center px-8 sm:px-12 py-4 font-black text-sm sm:text-base gap-3 select-none"
+                        <button
+                            type="button"
+                            onClick={handleStartConsultation}
+                            className="shiny-cta-btn inline-flex items-center justify-center px-8 sm:px-12 py-4 font-black text-sm sm:text-base gap-3 select-none cursor-pointer"
                         >
                             <Brain className="w-5 h-5 text-slate-950 shrink-0" />
-                            <span>{t("Go to Qure AI Assistant", "الانتقال إلى المساعد الذكي Qure AI")}</span>
+                            <span>{t("Start Smart Consultation", "بدء الاستشارة الفورية مع Qure AI")}</span>
                             <ChevronRight className={cn("w-5 h-5 stroke-[2.5] text-slate-950", isArabic ? "rotate-180" : "")} />
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </div>

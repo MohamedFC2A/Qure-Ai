@@ -88,6 +88,7 @@ export function AiChatPage() {
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedMedication, setSelectedMedication] = useState<any>(null);
+    const [activeTopic, setActiveTopic] = useState<string | null>(null);
     const [isListening, setIsListening] = useState(false);
     const [autoScroll, setAutoScroll] = useState(true);
     const [activeMode, setActiveMode] = useState<AiChatMode>("health");
@@ -95,6 +96,7 @@ export function AiChatPage() {
     const chatEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const autoSentRef = useRef(false);
 
     /* ── Load conversations ── */
     const loadConversations = useCallback(async () => {
@@ -133,59 +135,8 @@ export function AiChatPage() {
         } catch (e) { console.error("Failed to load conversation:", e); }
     }, []);
 
-    /* ── Handle URL params & Medication Selection ── */
-    useEffect(() => {
-        const medParam = searchParams.get("medication");
-        if (medParam) {
-            try {
-                const parsed = JSON.parse(decodeURIComponent(medParam));
-                setSelectedMedication(parsed);
-                setActiveMode("medication");
-            } catch { /* ignore */ }
-        }
-    }, [searchParams]);
-
-    /* ── Handle clinical context switch (Medication or Wound) ── */
-    const handleSelectMedication = useCallback((item: any) => {
-        setSelectedMedication(item);
-        if (item) {
-            const isWound = item.type === "wound";
-            setActiveMode(isWound ? "wound" : "medication");
-            if (!activeConversationId && messages.length === 0) {
-                const itemName = item.title || item.drug_name || item.wound_title || (isWound ? "Wound Scan" : "Medication");
-                const noticeText = isWound
-                    ? (isArabic
-                        ? `تم ربط تقييم الجرح: **${itemName}** بالمحادثة. يمكنك الآن سؤالي عن بروتوكول التضميد، خطوات الإسعاف، أو علامات الخطر والعدوى.`
-                        : `Wound assessment attached: **${itemName}**. Ask me about dressing protocols, first aid steps, suture needs, or infection signs.`)
-                    : (isArabic
-                        ? `تم ربط الدواء: **${itemName}** بالمحادثة. الآن يمكنك سؤالي عن جرعاته، آثاره الجانبية، تداخلاته، أو هل يناسبك شخصياً.`
-                        : `Medication attached: **${itemName}**. Ask me about dosage, side effects, interactions, or if it's suitable for you personally.`);
-                setMessages([{
-                    id: `notice-${Date.now()}`,
-                    role: "assistant",
-                    content: noticeText,
-                    created_at: new Date().toISOString()
-                }]);
-            }
-        }
-    }, [activeConversationId, messages.length, isArabic]);
-
-    /* ── Auto-scroll only when user is near bottom ── */
-    useEffect(() => {
-        if (!autoScroll) return;
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, isStreaming, autoScroll]);
-
-    /* ── Track scroll position to toggle auto-scroll ── */
-    const handleScroll = useCallback(() => {
-        const container = chatContainerRef.current;
-        if (!container) return;
-        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-        setAutoScroll(distanceFromBottom < 200);
-    }, []);
-
     /* ── STREAMING send message ── */
-    const sendMessage = useCallback(async (text: string) => {
+    const sendMessage = useCallback(async (text: string, overrideMedication?: any) => {
         if (!text.trim() || isSending) return;
 
         if (!isUltra) {
@@ -193,10 +144,12 @@ export function AiChatPage() {
             return;
         }
 
+        const currentMed = overrideMedication || selectedMedication;
+
         // Smart auto-detect mode from user's message text
         const detectedMode = detectModeFromText(text);
         // If a medication is selected, always use medication mode
-        const resolvedMode: AiChatMode = selectedMedication
+        const resolvedMode: AiChatMode = currentMed
             ? (detectedMode === "context" ? "context" : "medication")
             : detectedMode;
         setActiveMode(resolvedMode);
@@ -236,8 +189,8 @@ export function AiChatPage() {
                 content: m.content,
             }));
 
-            const medPayload = selectedMedication
-                ? (selectedMedication.analysis_json || selectedMedication)
+            const medPayload = currentMed
+                ? (currentMed.analysis_json || currentMed)
                 : undefined;
 
             const res = await fetch("/api/ai/chat/stream", {
@@ -329,14 +282,118 @@ export function AiChatPage() {
                 }
             }
         } catch (e: any) {
-            console.error("Chat error:", e);
             setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-            setError(t("Network error — please try again", "خطأ في الشبكة — يرجى المحاولة مرة أخرى"));
+            setError(e?.message || t("Failed to send message", "فشل إرسال الرسالة"));
         } finally {
             setIsSending(false);
             setIsStreaming(false);
         }
-    }, [isSending, isUltra, messages, activeConversationId, activeMode, isArabic, selectedMedication, t, loadConversations]);
+    }, [activeConversationId, isArabic, isSending, isUltra, loadConversations, messages, selectedMedication, speakVoiceOs, t]);
+
+    /* ── Handle URL params, sessionStorage Context, & Auto-Consultation ── */
+    useEffect(() => {
+        if (autoSentRef.current) return;
+
+        let initialMedication: any = null;
+        let initialQuestion: string | null = null;
+        let initialTopic: string | null = null;
+        let shouldAutoSend = false;
+
+        // 1. Read rich context from sessionStorage (from purple star click)
+        try {
+            const raw = sessionStorage.getItem("qure_ai_active_context");
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed.medication) initialMedication = parsed.medication;
+                if (parsed.question) initialQuestion = parsed.question;
+                if (parsed.topic) initialTopic = parsed.topic;
+                shouldAutoSend = true;
+                sessionStorage.removeItem("qure_ai_active_context");
+            }
+        } catch (err) {
+            console.warn("[AiChatPage] SessionStorage context error:", err);
+        }
+
+        // 2. Read URL search params as fallback / explicit query
+        const medParam = searchParams.get("medication");
+        if (medParam && !initialMedication) {
+            try {
+                initialMedication = JSON.parse(decodeURIComponent(medParam));
+            } catch {}
+        }
+
+        const qParam = searchParams.get("q") || searchParams.get("question");
+        if (qParam && !initialQuestion) {
+            initialQuestion = decodeURIComponent(qParam);
+        }
+
+        const topicParam = searchParams.get("topic");
+        if (topicParam && !initialTopic) {
+            initialTopic = decodeURIComponent(topicParam);
+        }
+
+        if (searchParams.get("autoSend") === "1" || searchParams.get("autoSend") === "true") {
+            shouldAutoSend = true;
+        }
+
+        if (initialMedication) {
+            setSelectedMedication(initialMedication);
+            const isWound = initialMedication.type === "wound";
+            setActiveMode(isWound ? "wound" : "medication");
+        }
+
+        if (initialTopic) {
+            setActiveTopic(initialTopic);
+        }
+
+        if (initialQuestion) {
+            if (shouldAutoSend && isUltra) {
+                autoSentRef.current = true;
+                void sendMessage(initialQuestion, initialMedication);
+            } else {
+                setInput(initialQuestion);
+            }
+        }
+    }, [searchParams, isUltra, sendMessage]);
+
+    /* ── Handle clinical context switch (Medication or Wound) ── */
+    const handleSelectMedication = useCallback((item: any) => {
+        setSelectedMedication(item);
+        if (item) {
+            const isWound = item.type === "wound";
+            setActiveMode(isWound ? "wound" : "medication");
+            if (!activeConversationId && messages.length === 0) {
+                const itemName = item.title || item.drug_name || item.wound_title || (isWound ? "Wound Scan" : "Medication");
+                const noticeText = isWound
+                    ? (isArabic
+                        ? `تم ربط تقييم الجرح: **${itemName}** بالمحادثة. يمكنك الآن سؤالي عن بروتوكول التضميد، خطوات الإسعاف، أو علامات الخطر والعدوى.`
+                        : `Wound assessment attached: **${itemName}**. Ask me about dressing protocols, first aid steps, suture needs, or infection signs.`)
+                    : (isArabic
+                        ? `تم ربط الدواء: **${itemName}** بالمحادثة. الآن يمكنك سؤالي عن جرعاته، آثاره الجانبية، تداخلاته، أو هل يناسبك شخصياً.`
+                        : `Medication attached: **${itemName}**. Ask me about dosage, side effects, interactions, or if it's suitable for you personally.`);
+                setMessages([{
+                    id: `notice-${Date.now()}`,
+                    role: "assistant",
+                    content: noticeText,
+                    created_at: new Date().toISOString()
+                }]);
+            }
+        }
+    }, [activeConversationId, messages.length, isArabic]);
+
+    /* ── Auto-scroll only when user is near bottom ── */
+    useEffect(() => {
+        if (!autoScroll) return;
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, isStreaming, autoScroll]);
+
+    /* ── Track scroll position to toggle auto-scroll ── */
+    const handleScroll = useCallback(() => {
+        const container = chatContainerRef.current;
+        if (!container) return;
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        setAutoScroll(distanceFromBottom < 200);
+    }, []);
 
     /* ── Voice input ── */
     const toggleVoice = useCallback(() => {
@@ -536,6 +593,34 @@ export function AiChatPage() {
                                         <Link href="/profile" className="text-cyan-300 hover:underline font-semibold text-[11px]">
                                             {t("Manage Health Profile", "إدارة الملف الصحي")}
                                         </Link>
+                                    </div>
+                                )}
+
+                                {/* Connected Medication / Topic Banner */}
+                                {selectedMedication && (
+                                    <div className="flex items-center justify-between p-3 rounded-2xl bg-cyan-950/40 border border-cyan-500/25 text-xs">
+                                        <div className="flex items-center gap-2 text-cyan-200 min-w-0">
+                                            <Pill className="w-4 h-4 text-cyan-300 shrink-0" />
+                                            <span className="text-slate-400 font-medium shrink-0">{t("Active Medical Target:", "الدواء أو الفحص النشط:")}</span>
+                                            <span className="font-bold text-white truncate">
+                                                {selectedMedication.drug_name || selectedMedication.title || selectedMedication.generic_name || (isArabic ? "مستحضر دوائي" : "Medication")}
+                                            </span>
+                                            {activeTopic && (
+                                                <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200 border border-purple-500/30 text-[10px] font-semibold truncate shrink-0">
+                                                    {activeTopic}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedMedication(null);
+                                                setActiveTopic(null);
+                                            }}
+                                            className="text-slate-400 hover:text-white text-xs px-2.5 py-1 rounded-lg hover:bg-white/10 shrink-0 transition-colors"
+                                        >
+                                            {t("Clear", "إلغاء")}
+                                        </button>
                                     </div>
                                 )}
 

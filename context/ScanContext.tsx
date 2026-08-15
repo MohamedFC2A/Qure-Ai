@@ -751,3 +751,7 @@ export const useScan = () => {
     }
     return context;
 };
+
+export const useOptionalScan = () => {
+    return useContext(ScanContext) || null;
+};

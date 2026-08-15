@@ -708,15 +708,15 @@ export const ScannerInterface = () => {
                             className={cn(
                                 "w-full min-h-[320px] sm:min-h-[360px] rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center p-6 sm:p-8 cursor-pointer relative overflow-hidden group",
                                 isDragActive
-                                    ? "border-cyan-400 bg-cyan-500/10 shadow-[0_0_30px_rgba(6,182,212,0.2)]"
+                                    ? "border-cyan-400 bg-cyan-500/10 shadow-xl"
                                     : "border-white/15 bg-[#080E1E]/80 hover:border-cyan-500/40 hover:bg-[#0B132B]/90 shadow-2xl backdrop-blur-xl"
                             )}
                         >
                             <input {...getInputProps()} />
 
                             <div className="relative z-10 flex flex-col items-center text-center max-w-md">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300 mb-4 shadow-[0_0_20px_rgba(6,182,212,0.25)] group-hover:scale-105 transition-transform duration-300">
-                                    <ScanLine className="w-8 h-8 sm:w-10 sm:h-10 animate-pulse" />
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300 mb-4 shadow-md group-hover:scale-105 transition-transform duration-300">
+                                    <ScanLine className="w-8 h-8 sm:w-10 sm:h-10" />
                                 </div>
 
                                 <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5">
