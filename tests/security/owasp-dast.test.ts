@@ -60,7 +60,7 @@ describe('Security (DAST & OWASP Top 10): Penetration & Resilience Suite', () =>
       expect(xContentType?.value).toBe('nosniff');
     });
 
-    it('enforces strict Content-Security-Policy (CSP) header preventing XSS and unauthorized framing', async () => {
+    it('enforces strict Content-Security-Policy (CSP) header preventing XSS and unauthorized framing (A+ Compliant)', async () => {
       const headers = typeof nextConfig.headers === 'function' ? await nextConfig.headers() : [];
       const globalHeaders = (headers as any[]).find((h: any) => h.source === '/:path*')?.headers || [];
 
@@ -70,6 +70,11 @@ describe('Security (DAST & OWASP Top 10): Penetration & Resilience Suite', () =>
       expect(csp?.value).toContain("object-src 'none'");
       expect(csp?.value).toContain("frame-ancestors 'none'");
       expect(csp?.value).toContain('upgrade-insecure-requests');
+
+      // Strict A+ Grade: script-src must not contain unsafe-inline or unsafe-eval
+      const scriptSrcDirective = csp?.value.match(/script-src[^;]+/)?.[0] || '';
+      expect(scriptSrcDirective).not.toContain("'unsafe-inline'");
+      expect(scriptSrcDirective).not.toContain("'unsafe-eval'");
     });
 
     it('disables X-Powered-By header to prevent server fingerprinting', () => {

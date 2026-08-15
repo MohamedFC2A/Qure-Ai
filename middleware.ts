@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
 
     const cspHeader = `
         default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net;
+        script-src 'self' https://pagead2.googlesyndication.com https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com data:;
         img-src 'self' data: blob: https: http:;
@@ -78,8 +78,10 @@ export async function middleware(request: NextRequest) {
         res.headers.set('Content-Security-Policy', cspHeader);
         res.headers.set('X-Content-Type-Options', 'nosniff');
         res.headers.set('X-Frame-Options', 'DENY');
-        res.headers.set('X-XSS-Protection', '1; mode=block');
+        res.headers.set('X-XSS-Protection', '0');
         res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        res.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+        res.headers.set('Cross-Origin-Resource-Policy', 'same-site');
         res.headers.delete('x-powered-by');
         res.headers.delete('server');
         if (pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2)$/)) {

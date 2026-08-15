@@ -137,11 +137,6 @@ export default function RootLayout({
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
                 />
-                <script
-                    dangerouslySetInnerHTML={{
-                        __html: `(function(){if(typeof window!=='undefined'){var cleanNode=function(node){if(node&&node.removeAttribute){if(node.hasAttribute('bis_skin_checked'))node.removeAttribute('bis_skin_checked');if(node.hasAttribute('fdprocessedid'))node.removeAttribute('fdprocessedid');}};var obs=new MutationObserver(function(mutations){mutations.forEach(function(m){if(m.type==='attributes'&&(m.attributeName==='bis_skin_checked'||m.attributeName==='fdprocessedid')){m.target.removeAttribute(m.attributeName);}if(m.addedNodes){m.addedNodes.forEach(function(n){cleanNode(n);if(n.querySelectorAll){n.querySelectorAll('[bis_skin_checked],[fdprocessedid]').forEach(cleanNode);}});}});});obs.observe(document.documentElement,{attributes:true,childList:true,subtree:true,attributeFilter:['bis_skin_checked','fdprocessedid']});}})();`,
-                    }}
-                />
             </head>
             <body
                 className={clsx(

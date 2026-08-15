@@ -1,6 +1,6 @@
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net;
+    script-src 'self' https://pagead2.googlesyndication.com https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: blob: https: http:;
@@ -42,6 +42,14 @@ const securityHeaders = [
     {
         key: 'Permissions-Policy',
         value: 'camera=(self), microphone=(), geolocation=(), browsing-topics=()'
+    },
+    {
+        key: 'Cross-Origin-Opener-Policy',
+        value: 'same-origin'
+    },
+    {
+        key: 'Cross-Origin-Resource-Policy',
+        value: 'same-site'
     }
 ];
 
