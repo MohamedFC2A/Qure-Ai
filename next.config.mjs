@@ -1,6 +1,6 @@
 const cspHeader = `
     default-src 'self';
-    script-src 'self' https://pagead2.googlesyndication.com https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://*.googleapis.com https://*.google.com https://cdn.jsdelivr.net;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: blob: https: http:;
@@ -11,7 +11,6 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    upgrade-insecure-requests;
 `.replace(/\s{2,}/g, ' ').trim();
 
 const securityHeaders = [
