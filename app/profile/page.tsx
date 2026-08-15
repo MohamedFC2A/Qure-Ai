@@ -983,11 +983,9 @@ export default function ProfilePage() {
                                             "تفعيل الربط التلقائي بالطوارئ، توجيه إسعاف الدولة ذكياً، بث إحداثيات وبطاقة المسعف، ومراقبة السقوط."
                                         )}
                                     </p>
-                                    <Link href="/pricing">
-                                        <Button variant="primary" className="bg-slate-800 hover:bg-slate-700 text-white border border-white/15 font-bold px-6">
-                                            {t("Upgrade to Ultra", "الترقية إلى Ultra")}
-                                        </Button>
-                                    </Link>
+                                    <Button href="/pricing" variant="primary" className="bg-slate-800 hover:bg-slate-700 text-white border border-white/15 font-bold px-6">
+                                        {t("Upgrade to Ultra", "الترقية إلى Ultra")}
+                                    </Button>
                                 </div>
                             )}
 
@@ -1009,7 +1007,7 @@ export default function ProfilePage() {
                                     <p className="text-white/60 mb-6 max-w-sm text-sm leading-relaxed">
                                         {t("Control FDA verification (openFDA label + NDC) to improve accuracy and ingredient dosages.", "التحكم في المطابقة الرسمية عبر هيئة الغذاء والدواء (openFDA + NDC) لزيادة الدقة وجرعات المكونات الفعالة.")}
                                     </p>
-                                    <Link href="/pricing"><Button variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button></Link>
+                                    <Button href="/pricing" variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button>
                                 </div>
                             )}
 
@@ -1071,7 +1069,7 @@ export default function ProfilePage() {
                                     <p className="text-white/60 mb-6 max-w-sm text-sm leading-relaxed">
                                         {t("Family/Caregiver Mode lets you create sub-profiles (Dad, Child, Grandma…) with separate History, Memories, and Private AI Context.", "تتيح ميزة رعاية الأسرة إنشاء ملفات فرعية (الأب، الطفل، الجدة...) مع سجل وملف صحي منفصل.")}
                                     </p>
-                                    <Link href="/pricing"><Button variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button></Link>
+                                    <Button href="/pricing" variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button>
                                 </div>
                             )}
 
@@ -1192,7 +1190,7 @@ export default function ProfilePage() {
                                     <p className="text-white/60 mb-6 max-w-sm text-sm leading-relaxed">
                                         {t("Private AI Profiles allow the AI to check for specific allergies and condition interactions.", "تسمح الملفات الصحية الخاصة للذكاء الاصطناعي بفحص التداخلات بناءً على الحساسية والأمراض المزمنة.")}
                                     </p>
-                                    <Link href="/pricing"><Button variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button></Link>
+                                    <Button href="/pricing" variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button>
                                 </div>
                             )}
 
@@ -1321,7 +1319,7 @@ export default function ProfilePage() {
                                     <p className="text-white/60 mb-6 max-w-sm text-sm leading-relaxed">
                                         {t("QureScan learns your medication history to warn you about potential interactions in future scans.", "يتعلم التطبيق تاريخ أدویتك تلقائياً للتحذير من أي تداخلات دوائية خطيرة مستقبلية.")}
                                     </p>
-                                    <Link href="/pricing"><Button variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button></Link>
+                                    <Button href="/pricing" variant="primary" className="bg-amber-600 hover:bg-amber-500 font-bold">{t("Upgrade to Ultra", "الترقية إلى Ultra")}</Button>
                                 </div>
                             )}
 

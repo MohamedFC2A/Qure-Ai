@@ -192,16 +192,12 @@ export const Navbar = () => {
                             </div>
                         ) : !loading ? (
                             <div className="flex items-center gap-2">
-                                <Link href="/login" className="shrink-0">
-                                    <Button variant="ghost" size="xs" className="text-slate-300 hover:text-white px-3 text-xs">
-                                        {t("Login", "دخول")}
-                                    </Button>
-                                </Link>
-                                <Link href="/signup" className="shrink-0">
-                                    <Button variant="primary" size="xs" className="px-4 text-xs font-bold whitespace-nowrap">
-                                        {t("Get Started", "ابدأ الآن")}
-                                    </Button>
-                                </Link>
+                                <Button href="/login" variant="ghost" size="xs" className="shrink-0 text-slate-300 hover:text-white px-3 text-xs">
+                                    {t("Login", "دخول")}
+                                </Button>
+                                <Button href="/signup" variant="primary" size="xs" className="shrink-0 px-4 text-xs font-bold whitespace-nowrap">
+                                    {t("Get Started", "ابدأ الآن")}
+                                </Button>
                             </div>
                         ) : (
                             <div className="w-20 h-8 skeleton rounded-xl" />

@@ -459,11 +459,9 @@ console.log("Analysis Output:", result);`;
                                     <p className="text-xs font-bold text-white">{t("Ready to test Qure AI?", "جاهز لتجربة Qure AI؟")}</p>
                                     <p className="text-[11px] text-slate-400 mt-0.5">{t("Available for ULTRA plan members with unlimited context.", "متاح لمشتركي ألترا مع إمكانية الربط بالملف الصحي الكامل.")}</p>
                                 </div>
-                                <Link href="/ai">
-                                    <Button variant="primary" size="xs" className="font-bold px-4">
-                                        {t("Open Chat", "بدء المحادثة")}
-                                    </Button>
-                                </Link>
+                                <Button href="/ai" variant="primary" size="xs" className="font-bold px-4">
+                                    {t("Open Chat", "بدء المحادثة")}
+                                </Button>
                             </div>
                         </div>
                     </motion.div>

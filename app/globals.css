@@ -36,15 +36,23 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {
   background-color: var(--q-base);
   color: #f8fafc;
   min-height: 100vh;
+  max-width: 100vw;
   overflow-x: hidden;
   font-family: var(--font-cairo), var(--font-inter), system-ui, -apple-system, sans-serif;
   position: relative;
+}
+
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 /* ================================================================

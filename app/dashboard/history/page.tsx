@@ -56,14 +56,15 @@ export default function HistoryPage() {
     const [careProfiles, setCareProfiles] = useState<Array<{ id: string; display_name: string }>>([]);
     const [profileFilter, setProfileFilter] = useState<string>("all");
     const { user } = useUser();
-    const hasLocalDevCookie =
-        typeof document !== "undefined" &&
-        document.cookie.split("; ").some((cookie) => cookie === "qurescan_dev_auth=1");
-    const isLocalDevUser = process.env.NODE_ENV === "development" && (user?.id === "local-dev-user" || hasLocalDevCookie);
 
     useEffect(() => {
         const init = async () => {
             try {
+                const hasLocalDevCookie =
+                    typeof document !== "undefined" &&
+                    document.cookie.split("; ").some((cookie) => cookie === "qurescan_dev_auth=1");
+                const isLocalDevUser = process.env.NODE_ENV === "development" && (user?.id === "local-dev-user" || hasLocalDevCookie);
+
                 if (isLocalDevUser) {
                     const localUserId = user?.id || "local-dev-user";
                     setUserId(localUserId);
@@ -99,7 +100,7 @@ export default function HistoryPage() {
         };
 
         init();
-    }, [isArabic, isLocalDevUser, supabase, user?.id]);
+    }, [isArabic, supabase, user?.id]);
 
     useEffect(() => {
         const fetchAllHistory = async () => {
@@ -237,12 +238,10 @@ export default function HistoryPage() {
                             </p>
                         </div>
 
-                        <Link href="/scan" className="w-full sm:w-auto">
-                            <Button className="w-full sm:w-auto gap-2 font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl">
-                                <Sparkles className="w-4 h-4" />
-                                <span>{t("Start New Scan", "ابدأ فحصاً جديداً")}</span>
-                            </Button>
-                        </Link>
+                        <Button href="/scan" className="w-full sm:w-auto gap-2 font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl">
+                            <Sparkles className="w-4 h-4" />
+                            <span>{t("Start New Scan", "ابدأ فحصاً جديداً")}</span>
+                        </Button>
                     </div>
 
                     {/* ── Category Tabs (All / Medications / Wounds) ── */}
@@ -438,12 +437,10 @@ export default function HistoryPage() {
                         <History className="w-12 h-12 mx-auto mb-3 text-slate-600" />
                         <p className="text-sm font-semibold text-white">{t("No clinical history found in this category.", "لا توجد سجلات مطابقة في هذا التصنيف.")}</p>
                         <p className="text-xs text-slate-500 mt-1">{t("Try switching the category filter or start a new scan.", "جرّب تغيير التصنيف أو ابدأ فحصًا جديدًا الآن.")}</p>
-                        <Link href="/scan" className="mt-4 inline-block">
-                            <Button size="sm" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border border-white/10 rounded-xl">
-                                <Sparkles className="w-4 h-4" />
-                                <span>{t("Start a Scan", "بدء فحص جديد")}</span>
-                            </Button>
-                        </Link>
+                        <Button href="/scan" size="sm" className="mt-4 gap-2 bg-slate-800 hover:bg-slate-700 text-white border border-white/10 rounded-xl">
+                            <Sparkles className="w-4 h-4" />
+                            <span>{t("Start a Scan", "بدء فحص جديد")}</span>
+                        </Button>
                     </div>
                 )}
 

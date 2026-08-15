@@ -93,11 +93,9 @@ function BillingContent() {
                             "تخضع بوابة الدفع حاليًا للصيانة المجدولة. تم تسجيل طلبك وسيتم إشعارك فور اكتمال التحديث."
                         )}
                     </p>
-                    <Link href="/dashboard" className="w-full">
-                        <Button variant="outline" className="w-full font-semibold">
-                            {t("Return to Dashboard", "العودة للوحة التحكم")}
-                        </Button>
-                    </Link>
+                    <Button href="/dashboard" variant="outline" className="w-full font-semibold">
+                        {t("Return to Dashboard", "العودة للوحة التحكم")}
+                    </Button>
                 </GlassCard>
             </main>
         );

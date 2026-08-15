@@ -40,12 +40,10 @@ const CreditsUpsellBanner = () => {
                             </p>
                         </div>
                     </div>
-                    <Link href="/pricing" className="shrink-0 w-full sm:w-auto">
-                        <Button variant="amber" size="xs" className="w-full sm:w-auto gap-1.5 font-bold whitespace-nowrap">
-                            <Zap className="w-3.5 h-3.5" />
-                            <span>{t("Upgrade", "ترقية")}</span>
-                        </Button>
-                    </Link>
+                    <Button href="/pricing" variant="amber" size="xs" className="shrink-0 w-full sm:w-auto gap-1.5 font-bold whitespace-nowrap">
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>{t("Upgrade", "ترقية")}</span>
+                    </Button>
                 </div>
             </div>
         );
@@ -73,24 +71,26 @@ export default function ScanPage() {
     };
 
     return (
-        <main className="pt-20 sm:pt-24 pb-12 sm:pb-16 px-3 sm:px-6 flex flex-col items-center relative">
-            <div className="z-10 w-full max-w-6xl flex flex-col items-center">
-                {/* ── Back button ── */}
-                <div className="w-full mb-3 sm:mb-4 flex items-center justify-start">
-                    <button
-                        onClick={handleBackClick}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs sm:text-sm text-slate-400 transition-all hover:bg-white/[0.08] hover:text-white"
-                    >
-                        <ArrowLeft className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
-                        <span>{t("Back to Scan", "رجوع للفحص")}</span>
-                    </button>
-                </div>
+        <main className="pt-20 sm:pt-24 pb-12 sm:pb-16 px-2.5 sm:px-4 md:px-6 flex flex-col items-center relative w-full overflow-x-hidden">
+            <div className="z-10 w-full max-w-6xl flex flex-col items-center min-w-0">
+                {/* ── Back button (when not viewing results) ── */}
+                {!finalResult && (
+                    <div className="w-full mb-3 sm:mb-4 flex items-center justify-start">
+                        <button
+                            onClick={handleBackClick}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs sm:text-sm text-slate-400 transition-all hover:bg-white/[0.08] hover:text-white"
+                        >
+                            <ArrowLeft className={cn("h-4 w-4 shrink-0", isArabic ? "rotate-180" : "")} />
+                            <span>{t("Back", "رجوع")}</span>
+                        </button>
+                    </div>
+                )}
 
                 {/* ── Upsell banner ── */}
                 <CreditsUpsellBanner />
 
                 {/* ── Scanner Interface Container ── */}
-                <section className="w-full rounded-3xl border border-white/[0.09] bg-[#080D1A]/80 p-3 sm:p-5 md:p-6 shadow-2xl shadow-black/50 backdrop-blur-2xl">
+                <section className="w-full rounded-3xl border border-white/[0.09] bg-[#080D1A]/80 p-2 sm:p-4 md:p-6 shadow-2xl shadow-black/50 backdrop-blur-2xl min-w-0">
                     <ScannerInterface />
                 </section>
             </div>

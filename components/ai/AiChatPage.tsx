@@ -505,17 +505,13 @@ export function AiChatPage() {
                             </div>
 
                             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                                <Link href="/pricing" className="w-full sm:w-auto">
-                                    <Button variant="primary" className="w-full sm:w-auto px-8 py-3.5 font-black gap-2">
-                                        <Zap className="w-4 h-4" />
-                                        <span>{t("Upgrade to Ultra ($9/mo)", "الترقية إلى ألترا ($9/شهر)")}</span>
-                                    </Button>
-                                </Link>
-                                <Link href="/scan" className="w-full sm:w-auto">
-                                    <Button variant="ghost" className="w-full sm:w-auto text-xs text-slate-400 hover:text-white">
-                                        {t("Back to Scanner", "العودة للفحص")}
-                                    </Button>
-                                </Link>
+                                <Button href="/pricing" variant="primary" className="w-full sm:w-auto px-8 py-3.5 font-black gap-2">
+                                    <Zap className="w-4 h-4" />
+                                    <span>{t("Upgrade to Ultra ($9/mo)", "الترقية إلى ألترا ($9/شهر)")}</span>
+                                </Button>
+                                <Button href="/scan" variant="ghost" className="w-full sm:w-auto text-xs text-slate-400 hover:text-white">
+                                    {t("Back to Scanner", "العودة للفحص")}
+                                </Button>
                             </div>
                         </div>
                     </div>

@@ -298,12 +298,10 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Quick scan CTA */}
-                        <Link href="/scan" className="w-full sm:w-auto">
-                            <Button size="lg" className="w-full sm:w-auto font-bold px-7">
-                                <ScanLine className="w-4 h-4 mr-2" />
-                                <span>{t("Scan Medication", "افحص دواءك الآن")}</span>
-                            </Button>
-                        </Link>
+                        <Button href="/scan" size="lg" className="w-full sm:w-auto font-bold px-7">
+                            <ScanLine className="w-4 h-4 mr-2" />
+                            <span>{t("Scan Medication", "افحص دواءك الآن")}</span>
+                        </Button>
                     </div>
                 </section>
 
@@ -330,12 +328,10 @@ export default function DashboardPage() {
                                 </h2>
                             </div>
                             {!isUltra && (
-                                <Link href="/pricing">
-                                    <Button variant="amber" size="xs" className="gap-1.5 shrink-0">
-                                        <Zap className="w-3 h-3" />
-                                        <span>{t("Upgrade", "ترقية")}</span>
-                                    </Button>
-                                </Link>
+                                <Button href="/pricing" variant="amber" size="xs" className="gap-1.5 shrink-0">
+                                    <Zap className="w-3 h-3" />
+                                    <span>{t("Upgrade", "ترقية")}</span>
+                                </Button>
                             )}
                         </div>
 
@@ -368,12 +364,10 @@ export default function DashboardPage() {
                                         {t("Your last analyzed medications", "آخر الأدوية التي حللتها")}
                                     </p>
                                 </div>
-                                <Link href="/dashboard/history">
-                                    <Button variant="outline" size="xs" className="gap-1 shrink-0">
-                                        <span>{t("All", "الكل")}</span>
-                                        <ArrowRight className={cn("w-3 h-3 shrink-0", isArabic ? "rotate-180" : "")} />
-                                    </Button>
-                                </Link>
+                                <Button href="/dashboard/history" variant="outline" size="xs" className="gap-1 shrink-0">
+                                    <span>{t("All", "الكل")}</span>
+                                    <ArrowRight className={cn("w-3 h-3 shrink-0", isArabic ? "rotate-180" : "")} />
+                                </Button>
                             </div>
 
                             <div className="p-4">
@@ -392,12 +386,10 @@ export default function DashboardPage() {
                                         <p className="mt-1 text-xs text-slate-500">
                                             {t("Upload a medication to get started.", "ارفع صورة دواء للبدء.")}
                                         </p>
-                                        <Link href="/scan" className="mt-4">
-                                            <Button size="sm">
-                                                <ScanLine className="w-4 h-4 mr-2" />
-                                                <span>{t("Scan now", "افحص الآن")}</span>
-                                            </Button>
-                                        </Link>
+                                        <Button href="/scan" size="sm" className="mt-4">
+                                            <ScanLine className="w-4 h-4 mr-2" />
+                                            <span>{t("Scan now", "افحص الآن")}</span>
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
@@ -454,12 +446,10 @@ export default function DashboardPage() {
                                                 "احصل على مساعد Qure AI، ملفات الأسرة، تصدير PDF، و٣٠٠ رصيد شهري."
                                             )}
                                         </p>
-                                        <Link href="/pricing" className="mt-3 inline-flex">
-                                            <Button variant="amber" size="xs" className="gap-1.5 font-bold">
-                                                <Zap className="w-3 h-3" />
-                                                <span>{t("Upgrade for $9/mo", "ترقية بـ $9/شهر")}</span>
-                                            </Button>
-                                        </Link>
+                                        <Button href="/pricing" variant="amber" size="xs" className="mt-3 inline-flex gap-1.5 font-bold">
+                                            <Zap className="w-3 h-3" />
+                                            <span>{t("Upgrade for $9/mo", "ترقية بـ $9/شهر")}</span>
+                                        </Button>
                                     </div>
                                 </div>
                             </GlassCard>
@@ -511,15 +501,13 @@ export default function DashboardPage() {
                                     <div className="mt-2.5 progress-bar">
                                         <div className="progress-fill" style={{ width: `${profilePercent}%` }} />
                                     </div>
-                                    <Link href="/profile" className="mt-3 inline-flex">
-                                        <Button variant="outline" size="xs" className="gap-1.5 border-emerald-400/20 text-emerald-300 hover:bg-emerald-400/8">
-                                            <span>
-                                                {profilePercent < 100
-                                                    ? t("Complete profile →", "أكمل الملف ←")
-                                                    : t("View profile →", "عرض الملف ←")}
-                                            </span>
-                                        </Button>
-                                    </Link>
+                                    <Button href="/profile" variant="outline" size="xs" className="mt-3 inline-flex gap-1.5 border-emerald-400/20 text-emerald-300 hover:bg-emerald-400/8">
+                                        <span>
+                                            {profilePercent < 100
+                                                ? t("Complete profile →", "أكمل الملف ←")
+                                                : t("View profile →", "عرض الملف ←")}
+                                        </span>
+                                    </Button>
                                 </div>
                             </div>
                         </GlassCard>

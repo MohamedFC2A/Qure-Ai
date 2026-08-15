@@ -147,15 +147,14 @@ export const CreditsWidget = () => {
                     </button>
                 )}
 
-                <Link href={isUltra ? "/billing" : "/pricing"}>
-                    <Button
-                        className={cn("w-full transition-all",
-                            isUltra ? "bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white shadow-sm" : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm"
-                        )}
-                    >
-                        {isUltra ? "Manage Subscription" : "Upgrade to Ultra"}
-                    </Button>
-                </Link>
+                <Button
+                    href={isUltra ? "/billing" : "/pricing"}
+                    className={cn("w-full transition-all",
+                        isUltra ? "bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white shadow-sm" : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm"
+                    )}
+                >
+                    {isUltra ? "Manage Subscription" : "Upgrade to Ultra"}
+                </Button>
 
                 <div className="text-center">
                     {!showRedeem ? (

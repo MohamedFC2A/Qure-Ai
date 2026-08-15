@@ -1,19 +1,23 @@
 import { cn } from "@/lib/utils";
 import React from "react";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 type ButtonVariant = "primary" | "secondary" | "glass" | "outline" | "ghost" | "violet" | "rose" | "emerald" | "amber";
 type ButtonSize = "xs" | "sm" | "md" | "lg";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: ButtonVariant;
     size?: ButtonSize;
     isLoading?: boolean;
     glow?: boolean;
+    href?: string;
+    target?: string;
+    rel?: string;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = "primary", size = "md", isLoading, glow = false, children, ...props }, ref) => {
+export const Button = React.forwardRef<any, ButtonProps>(
+    ({ className, variant = "primary", size = "md", isLoading, glow = false, href, children, ...props }, ref) => {
         const variants: Record<ButtonVariant, string> = {
             primary:
                 "bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold border border-cyan-400/40 shadow-sm",
@@ -42,19 +46,37 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             lg: "h-13 px-8 text-base rounded-xl",
         };
 
+        const commonClassName = cn(
+            "inline-flex items-center justify-center font-medium transition-all duration-150 select-none",
+            "disabled:opacity-40 disabled:pointer-events-none",
+            "active:scale-[0.98] focus-visible:outline-none",
+            "focus-visible:ring-1 focus-visible:ring-white/20",
+            variants[variant],
+            sizes[size],
+            className
+        );
+
+        if (href) {
+            return (
+                <Link
+                    href={href}
+                    ref={ref}
+                    className={commonClassName}
+                    target={props.target}
+                    rel={props.rel}
+                    onClick={props.onClick as any}
+                >
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />}
+                    {children}
+                </Link>
+            );
+        }
+
         return (
             <button
                 ref={ref}
                 disabled={isLoading || props.disabled}
-                className={cn(
-                    "inline-flex items-center justify-center font-medium transition-all duration-150",
-                    "disabled:opacity-40 disabled:pointer-events-none",
-                    "active:scale-[0.98] focus-visible:outline-none",
-                    "focus-visible:ring-1 focus-visible:ring-white/20",
-                    variants[variant],
-                    sizes[size],
-                    className
-                )}
+                className={commonClassName}
                 {...props}
             >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />}

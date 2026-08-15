@@ -192,19 +192,21 @@ export default function Home() {
 
                     {/* CTA Buttons */}
                     <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto">
-                        <Link href="/scan" className="w-full sm:w-auto flex-1">
-                            <button className="shiny-cta-btn w-full gap-3 px-7 sm:px-10 py-4 sm:py-4.5 text-sm sm:text-base font-black tracking-wide">
-                                <ScanLine className="h-5 w-5 shrink-0 stroke-[2.5]" />
-                                <span>{t("Start Medication Scan", "ابدأ فحص الدواء")}</span>
-                            </button>
+                        <Link
+                            href="/scan"
+                            className="shiny-cta-btn w-full sm:w-auto flex-1 gap-3 px-7 sm:px-10 py-4 sm:py-4.5 text-sm sm:text-base font-black tracking-wide text-center inline-flex items-center justify-center"
+                        >
+                            <ScanLine className="h-5 w-5 shrink-0 stroke-[2.5]" />
+                            <span>{t("Start Medication Scan", "ابدأ فحص الدواء")}</span>
                         </Link>
 
-                        <Link href="/ai" className="w-full sm:w-auto">
-                            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-xl border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.07] hover:border-white/[0.18] text-white/90 hover:text-white font-semibold text-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5">
-                                <Brain className="h-4 w-4 shrink-0 text-cyan-400" />
-                                <span>Qure AI</span>
-                                <ChevronRight className={cn("h-4 w-4 shrink-0 text-white/40", isArabic ? "rotate-180" : "")} />
-                            </button>
+                        <Link
+                            href="/ai"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-xl border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.07] hover:border-white/[0.18] text-white/90 hover:text-white font-semibold text-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 select-none"
+                        >
+                            <Brain className="h-4 w-4 shrink-0 text-cyan-400" />
+                            <span>Qure AI</span>
+                            <ChevronRight className={cn("h-4 w-4 shrink-0 text-white/40", isArabic ? "rotate-180" : "")} />
                         </Link>
                     </div>
 

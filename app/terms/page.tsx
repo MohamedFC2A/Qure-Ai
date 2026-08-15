@@ -375,11 +375,9 @@ export default function TermsPage() {
                                 <CheckCircle2 className="w-4 h-4 me-2" />
                                 <span>{saving ? t("Saving...", "جارٍ الحفظ...") : t("Accept & Continue", "إقرار وافقت والمتابعة")}</span>
                             </Button>
-                            <Link href="/" className="w-full sm:w-auto">
-                                <Button variant="ghost" className="w-full sm:w-auto text-slate-400 hover:text-white text-xs sm:text-sm">
-                                    {t("Return Home", "العودة للرئيسية")}
-                                </Button>
-                            </Link>
+                            <Button href="/" variant="ghost" className="w-full sm:w-auto text-slate-400 hover:text-white text-xs sm:text-sm">
+                                {t("Return Home", "العودة للرئيسية")}
+                            </Button>
                         </div>
                     </>
                 )}

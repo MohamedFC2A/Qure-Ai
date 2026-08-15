@@ -343,7 +343,7 @@ export const ScannerInterface = () => {
                 : t("Ready", "جاهز");
 
         return (
-            <div className="w-full lg:mr-12 relative group">
+            <div className="w-full relative group min-w-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-purple-500/10 rounded-3xl blur-xl" />
 
                 <div className="relative bg-black/50 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-white/10 shadow-2xl">
@@ -487,70 +487,61 @@ export const ScannerInterface = () => {
     };
 
     if (finalResult && !isScanning) {
-        if (finalResult.scanType === "wound") {
-            return (
-                <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
-                    <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-                                <CheckCircle className="w-6 h-6 text-emerald-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-white">
-                                    {t("Clinical Skin & Health Assessment Complete", "اكتمل الفحص السريري للجلد والإصابة")}
-                                </h2>
-                                <p className="text-white/50 text-sm">
-                                    {t("Processed in", "استغرق الفحص")} {totalDuration}s
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
-                            <Button onClick={resetScan} variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-                                {t("Scan Another", "فحص جديد")}
-                            </Button>
-                        </div>
-                    </div>
-                    <WoundResultCard result={finalResult} scannedImage={previewSrc} onResetScan={resetScan} />
-                </div>
-            );
-        }
+        const isWound = finalResult.scanType === "wound";
+        const resultTitle = isWound
+            ? (isArabic ? (finalResult.woundTitle || "فحص سريري للجلد والإصابات") : (finalResult.woundTitleEn || "Clinical Assessment"))
+            : (finalResult.brandName || finalResult.productName || (isArabic ? "تحليل الدواء" : "Medication Analysis"));
 
         return (
-            <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
-                <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-                            <CheckCircle className="w-6 h-6 text-emerald-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">
-                                {t("Analysis Complete", "اكتمل الفحص والتحليل الطبي")}
-                            </h2>
-                            <p className="text-white/50 text-sm">
-                                {t("Processed in", "استغرق الفحص")} {totalDuration}s
+            <div className="w-full flex flex-col items-center animate-in fade-in duration-300 min-w-0">
+                {/* ── SMART STICKY NAVIGATION BAR (Always fixed and accessible on scroll) ── */}
+                <div className="sticky top-16 sm:top-20 z-40 w-full max-w-4xl mx-auto mb-4 px-1">
+                    <div className="flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-2xl bg-[#080D1A]/95 border border-white/15 backdrop-blur-2xl shadow-2xl shadow-black/80">
+                        {/* Right / Start: Smart Close & New Scan button */}
+                        <button
+                            type="button"
+                            onClick={resetScan}
+                            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-200 font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all shrink-0 group"
+                            title={t("Close and Start New Scan", "إغلاق وبدء فحص جديد")}
+                        >
+                            <X className="w-4 h-4 text-rose-400 group-hover:rotate-90 transition-transform duration-200" />
+                            <span>{t("New Scan", "فحص جديد")}</span>
+                        </button>
+
+                        {/* Middle: Title & Status */}
+                        <div className="min-w-0 flex-1 text-center px-2">
+                            <p className="text-white font-black text-xs sm:text-sm truncate">
+                                {resultTitle}
+                            </p>
+                            <p className="text-slate-400 text-[10px] sm:text-[11px] truncate">
+                                {isWound
+                                    ? (finalResult.severity ? (isArabic ? `الشدة: ${finalResult.severity}` : `Severity: ${finalResult.severity}`) : t("Clinical Assessment", "فحص سريري"))
+                                    : (finalResult.genericName || t("Pharmaceutical Intelligence", "ذكاء صيدلاني"))}
                             </p>
                         </div>
-                    </div>
 
-                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
-                        <Link href="/dashboard/history">
-                            <Button variant="outline" size="sm" className="gap-2 border-white/20 text-white hover:bg-white/10">
-                                <History className="w-4 h-4" /> {t("History", "السجل")}
-                            </Button>
+                        {/* Left / End: History Link */}
+                        <Link
+                            href="/dashboard/history"
+                            className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-300 hover:text-white text-xs font-semibold transition-all shrink-0"
+                        >
+                            <History className="w-3.5 h-3.5 text-cyan-400" />
+                            <span className="hidden sm:inline">{t("History", "السجل")}</span>
                         </Link>
-                        <Button onClick={resetScan} variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-                            {t("Analyze Another", "فحص دواء آخر")}
-                        </Button>
                     </div>
                 </div>
-                <MedicalResultCard data={finalResult} />
+
+                {isWound ? (
+                    <WoundResultCard result={finalResult} scannedImage={previewSrc} onResetScan={resetScan} />
+                ) : (
+                    <MedicalResultCard data={finalResult} onResetScan={resetScan} />
+                )}
             </div>
         );
     }
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-6 relative p-2 sm:p-3 lg:p-4 overflow-y-auto">
+        <div className="w-full flex flex-col items-center justify-center gap-4 sm:gap-6 relative p-1 sm:p-3 lg:p-4 overflow-x-hidden">
 
             {/* Hidden Inputs for Direct Camera & Gallery Trigger */}
             <input
@@ -619,34 +610,34 @@ export const ScannerInterface = () => {
                                         </div>
                                     ) : (
                                         careProfiles.map((p) => {
-                                            const selected = (careTempId || "") === p.id;
-                                            return (
-                                                <button
-                                                    key={p.id}
-                                                    onClick={() => setCareTempId(p.id)}
-                                                    className={cn(
-                                                        "w-full text-left p-4 rounded-xl border transition-colors",
-                                                        selected
-                                                            ? "bg-cyan-500/10 border-cyan-500/25"
-                                                            : "bg-white/5 border-white/10 hover:bg-white/10"
-                                                    )}
-                                                >
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <p className="text-white font-semibold truncate">{p.display_name}</p>
-                                                            <p className="text-white/45 text-xs mt-1 truncate">
-                                                                {p.relationship ? String(p.relationship) : p.id === user?.id ? t("self", "أنا") : t("family", "عائلة")}
-                                                            </p>
-                                                        </div>
-                                                        <div className={cn(
-                                                            "w-6 h-6 rounded-full border flex items-center justify-center shrink-0",
-                                                            selected ? "border-cyan-400 text-cyan-200" : "border-white/15 text-white/30"
-                                                        )}>
-                                                            {selected ? <CheckCircle className="w-4 h-4" /> : <span className="text-[10px] font-bold">•</span>}
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            );
+                                             const selected = (careTempId || "") === p.id;
+                                             return (
+                                                 <button
+                                                     key={p.id}
+                                                     onClick={() => setCareTempId(p.id)}
+                                                     className={cn(
+                                                         "w-full text-left p-4 rounded-xl border transition-colors",
+                                                         selected
+                                                             ? "bg-cyan-500/10 border-cyan-500/25"
+                                                             : "bg-white/5 border-white/10 hover:bg-white/10"
+                                                     )}
+                                                 >
+                                                     <div className="flex items-center justify-between gap-3">
+                                                         <div className="min-w-0">
+                                                             <p className="text-white font-semibold truncate">{p.display_name}</p>
+                                                             <p className="text-white/45 text-xs mt-1 truncate">
+                                                                 {p.relationship ? String(p.relationship) : p.id === user?.id ? t("self", "أنا") : t("family", "عائلة")}
+                                                             </p>
+                                                         </div>
+                                                         <div className={cn(
+                                                             "w-6 h-6 rounded-full border flex items-center justify-center shrink-0",
+                                                             selected ? "border-cyan-400 text-cyan-200" : "border-white/15 text-white/30"
+                                                         )}>
+                                                             {selected ? <CheckCircle className="w-4 h-4" /> : <span className="text-[10px] font-bold">•</span>}
+                                                         </div>
+                                                     </div>
+                                                 </button>
+                                             );
                                         })
                                     )}
                                 </div>
@@ -669,86 +660,93 @@ export const ScannerInterface = () => {
                 )}
             </AnimatePresence>
 
-            {/* ── Mode Switcher Tab (Emoji-Free & Modern Icons) ── */}
-            <div className="w-full flex items-center justify-center">
-                <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-lg">
+            {/* ── Mode Switcher Tab (Responsive, Symmetrical & Centered) ── */}
+            <div className="w-full max-w-md mx-auto flex items-center justify-center px-1">
+                <div className="w-full grid grid-cols-3 p-1 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-lg gap-1">
                     <button
                         type="button"
                         onClick={() => setDetectedScanType("auto")}
                         className={cn(
-                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            "py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center",
                             detectedScanType === "auto"
-                                ? "bg-white text-slate-950"
-                                : "text-slate-400 hover:text-white"
+                                ? "bg-white text-slate-950 shadow-sm"
+                                : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                         )}
                     >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>{t("Auto Detect", "الوضع التلقائي الذكي")}</span>
+                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{t("Auto", "تلقائي ذكي")}</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setDetectedScanType("medication")}
                         className={cn(
-                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            "py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center",
                             detectedScanType === "medication"
-                                ? "bg-cyan-500 text-slate-950"
-                                : "text-slate-400 hover:text-white"
+                                ? "bg-cyan-500 text-slate-950 shadow-sm"
+                                : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                         )}
                     >
-                        <Pill className="w-3.5 h-3.5" />
-                        <span>{t("Medications", "أدوية وروشتات")}</span>
+                        <Pill className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{t("Medication", "أدوية وروشتات")}</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setDetectedScanType("wound")}
                         className={cn(
-                            "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+                            "py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 text-center",
                             detectedScanType === "wound"
-                                ? "bg-cyan-500 text-slate-950"
-                                : "text-slate-400 hover:text-white"
+                                ? "bg-emerald-500 text-slate-950 shadow-sm"
+                                : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                         )}
                     >
-                        <Stethoscope className="w-3.5 h-3.5" />
-                        <span>{t("Skin & Lesions", "فحص الجلد والإصابات")}</span>
+                        <Stethoscope className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{t("Skin & Wounds", "جلد وإصابات")}</span>
                     </button>
                 </div>
             </div>
 
             <AnimatePresence mode="wait">
                 {!previewSrc && (
-                    <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
-                        
+                    <motion.div
+                        key="upload"
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-5xl grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch min-w-0"
+                    >
                         {/* ── Main Dropzone Area ── */}
-                        <div className="flex flex-col gap-4">
-                            <div {...getRootProps()} className={cn(
-                                "relative min-h-[320px] sm:min-h-[350px] border-2 border-dashed rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group overflow-hidden flex-1",
-                                isDragActive
-                                    ? "border-cyan-400 bg-[#080D1A]"
-                                    : "border-white/15 hover:border-cyan-400/50 hover:bg-[#080D1A]/50 bg-[#080D1A]/75 backdrop-blur-2xl"
-                            )}>
+                        <div className="flex flex-col gap-4 min-w-0 w-full">
+                            <div
+                                {...getRootProps()}
+                                className={cn(
+                                    "relative min-h-[300px] sm:min-h-[340px] border-2 border-dashed rounded-3xl p-4 sm:p-7 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group overflow-hidden w-full min-w-0",
+                                    isDragActive
+                                        ? "border-cyan-400 bg-[#080D1A]"
+                                        : "border-white/15 hover:border-cyan-400/50 hover:bg-[#080D1A]/50 bg-[#080D1A]/75 backdrop-blur-2xl"
+                                )}
+                            >
                                 <input {...getInputProps()} />
 
-                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm border bg-[#0C1324] border-white/[0.08] text-cyan-300">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm border bg-[#0C1324] border-white/[0.08] text-cyan-300 shrink-0">
                                     {detectedScanType === "wound" ? (
-                                        <Stethoscope className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-400" />
+                                        <Stethoscope className="w-6 h-6 sm:w-8 sm:h-8 text-cyan-400" />
                                     ) : (
-                                        <ScanLine className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300" />
+                                        <ScanLine className="w-6 h-6 sm:w-8 sm:h-8 text-cyan-300" />
                                     )}
                                 </div>
 
-                                <h3 className="text-lg sm:text-xl font-black text-white mb-2 tracking-tight">
+                                <h3 className="text-base sm:text-xl font-black text-white mb-1.5 tracking-tight px-1 max-w-md">
                                     {detectedScanType === "wound"
                                         ? t("Capture skin, facial photo, lesion, or wound", "التقط صورة للوجه، الجلد، الحبوب، أو الإصابات")
                                         : detectedScanType === "medication"
                                         ? t("Upload medication box or prescription photo", "ارفع صورة ملصق علبة الدواء أو الروشتة")
-                                        : t("Upload medication, prescription, skin, or wound photo", "ارفع صورة الدواء، الروشتة، أو فحص الجلد والإصابات")}
+                                        : t("Upload medication, prescription, skin, or wound photo", "ارفع صورة الدواء، الروشتة، أو فحص الجلد")}
                                 </h3>
 
-                                <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                                <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto leading-relaxed px-1 mb-4">
                                     {detectedScanType === "wound"
                                         ? t(
-                                            "Clinical AI diagnosis: Skin types, acne, warts, corns, burns, eczema, and bodily trauma with step-by-step care.",
-                                            "تشخيص سريري متكامل: تحليل نوع البشرة، حب الشباب، عين السمكة، الكالو، الحروق، الإكزيما، والجروح مع بروتوكول عناية مفصل."
+                                            "Clinical AI diagnosis: Skin types, acne, burns, eczema, and bodily trauma with step-by-step care.",
+                                            "تشخيص سريري متكامل: تحليل نوع البشرة، حب الشباب، الحروق، الإكزيما، والجروح مع بروتوكول عناية مفصل."
                                         )
                                         : detectedScanType === "medication"
                                         ? t(
@@ -757,103 +755,103 @@ export const ScannerInterface = () => {
                                         )
                                         : t(
                                             "AI automatically identifies medications, prescriptions, or skin conditions. (High-Res JPEG, PNG, WEBP)",
-                                            "يتعرف النظام تلقائياً على نوع الصورة (دواء، روشتة، أو فحص جلدي وسريري) ويوجه الفحص بدقة فائقة."
+                                            "يتعرف النظام تلقائياً على نوع الصورة (دواء، روشتة، أو فحص جلدي) ويوجه الفحص بدقة فائقة."
                                         )}
                                 </p>
 
-                                {/* Explicit Choice Buttons: Camera vs Gallery */}
-                                <div className="mt-5 flex flex-wrap items-center justify-center gap-3 w-full max-w-md z-20">
+                                {/* Explicit Choice Buttons: Camera vs Gallery (Matching Sizing, Clean Alignment) */}
+                                <div className="w-full max-w-md grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 z-20 px-1">
                                     <button
                                         type="button"
                                         onClick={triggerCamera}
                                         className={cn(
-                                            "flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl text-white font-bold text-xs sm:text-sm shadow-sm active:scale-[0.98] transition-all duration-150",
+                                            "w-full h-12 sm:h-13 inline-flex items-center justify-center gap-2 px-4 rounded-2xl text-white font-bold text-xs sm:text-sm shadow-sm active:scale-[0.98] transition-all duration-150",
                                             detectedScanType === "wound" ? "bg-emerald-600 hover:bg-emerald-500" : "bg-cyan-600 hover:bg-cyan-500"
                                         )}
                                     >
-                                        <Camera className="w-4.5 h-4.5 shrink-0" />
-                                        <span>{t("Take Photo", "التقاط بالكاميرا")}</span>
+                                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                        <span className="whitespace-nowrap">{t("Take Photo", "التقاط بالكاميرا")}</span>
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={triggerGallery}
-                                        className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs sm:text-sm backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                        className="w-full h-12 sm:h-13 inline-flex items-center justify-center gap-2 px-4 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] text-white font-bold text-xs sm:text-sm backdrop-blur-md hover:scale-[1.01] active:scale-[0.98] transition-all duration-200"
                                     >
-                                        <ImageIcon className="w-4.5 h-4.5 shrink-0 text-cyan-300" />
-                                        <span>{t("Choose from Gallery", "اختيار من الاستوديو")}</span>
+                                        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-cyan-300" />
+                                        <span className="whitespace-nowrap">{t("Choose from Gallery", "اختيار من الاستوديو")}</span>
                                     </button>
                                 </div>
 
-                                {/* Dynamic Accepted Medical Formats Guidance Cards (Per Mode) */}
-                                <div className="mt-5 grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full max-w-xl">
+                                {/* Dynamic Accepted Medical Formats Guidance Cards (No Overlaps, Clean Typography) */}
+                                <div className="mt-4 sm:mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 w-full max-w-xl mx-auto">
                                     {detectedScanType === "wound" ? (
                                         <>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Skin & Face Profile", "نوع البشرة والوجه")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Oily, Dry, Pores", "دهنية، جافة، مسام")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Skin Profile", "نوع البشرة")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Oily, Dry, Pores", "دهنية، جافة، مسام")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Activity className="w-4 h-4 text-amber-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Acne, Warts & Corns", "حب الشباب وعين السمكة")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Lesions & Calluses", "سنط، كالو، دمامل")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Activity className="w-4 h-4 text-amber-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Acne & Lesions", "حب الشباب والآفات")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Lesions & Calluses", "سنط، كالو، دمامل")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Flame className="w-4 h-4 text-rose-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Burns & Eczema", "الحروق والإكزيما")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Rash & Irritation", "طفح جلدي وتهيج")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Flame className="w-4 h-4 text-rose-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Burns & Eczema", "الحروق والإكزيما")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Rash & Irritation", "طفح جلدي وتهيج")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Cuts & Injuries", "الجروح والقطوع")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Sutures & First Aid", "الخياطة والإسعاف")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Cuts & Injuries", "الجروح والقطوع")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Sutures & First Aid", "الخياطة والإسعاف")}</p>
                                             </div>
                                         </>
                                     ) : detectedScanType === "medication" ? (
                                         <>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Package className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Boxes", "علب الأدوية")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clear Name & Dose", "الاسم والتركيز")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Package className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Boxes", "علب الأدوية")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Clear Name & Dose", "الاسم والتركيز")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <FileText className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Prescriptions", "الروشتات الطبية")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Legible Text", "خط مقروء")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <FileText className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Prescriptions", "الروشتات الطبية")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Legible Text", "خط مقروء")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <FlaskConical className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Bottles & Drops", "العبوات والقطرات")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Label Visible", "الملصق الرئيسي")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <FlaskConical className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Bottles & Drops", "العبوات والقطرات")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Label Visible", "الملصق الرئيسي")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Layers className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Blisters", "شرائط الأقراص")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Printed Side", "الجانب المطبوع")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Layers className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Blisters", "شرائط الأقراص")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Printed Side", "الجانب المطبوع")}</p>
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Pill className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Medication Boxes", "علب وأشرطة الأدوية")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Instant Match", "تعرف فوري")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Pill className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Medications", "علب الأدوية")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Instant Match", "تعرف فوري")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <FileText className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Medical Rx", "الروشتات والتقارير")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Prescription OCR", "تحليل الجرعات")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <FileText className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Prescriptions", "الروشتات الطبية")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Prescription OCR", "تحليل الجرعات")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Skin & Face", "الجلد والبشرة")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Clinical Diagnosis", "تشخيص سريري")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Sparkles className="w-4 h-4 text-cyan-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Skin & Face", "الجلد والبشرة")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Clinical Diagnosis", "تشخيص سريري")}</p>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all">
-                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1" />
-                                                <p className="text-xs font-bold text-white tracking-tight whitespace-nowrap">{t("Wounds & Burns", "الجروح والحروق")}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">{t("Tissue Analysis", "تحليل الأنسجة")}</p>
+                                            <div className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 text-center flex flex-col items-center justify-center hover:bg-white/[0.07] transition-all min-h-[64px]">
+                                                <Bandage className="w-4 h-4 text-emerald-400 mb-1 shrink-0" />
+                                                <p className="text-[11px] sm:text-xs font-bold text-white tracking-tight line-clamp-1">{t("Wounds & Burns", "الجروح والحروق")}</p>
+                                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-1">{t("Tissue Analysis", "تحليل الأنسجة")}</p>
                                             </div>
                                         </>
                                     )}
@@ -862,15 +860,15 @@ export const ScannerInterface = () => {
 
                             {/* Helpful Photography Guidance Banner */}
                             <div className={cn(
-                                "rounded-2xl border p-3.5 flex items-center gap-3 transition-all",
+                                "rounded-2xl border p-3 sm:p-3.5 flex items-start sm:items-center gap-2.5 sm:gap-3 transition-all w-full min-w-0",
                                 detectedScanType === "wound"
                                     ? "border-cyan-500/30 bg-cyan-500/[0.06]"
                                     : "border-amber-400/20 bg-amber-400/[0.04]"
                             )}>
                                 {detectedScanType === "wound" ? (
-                                    <Stethoscope className="w-5 h-5 text-cyan-400 shrink-0" />
+                                    <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 shrink-0 mt-0.5 sm:mt-0" />
                                 ) : (
-                                    <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                                    <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
                                 )}
                                 <p className="text-xs text-slate-300 leading-relaxed">
                                     {detectedScanType === "wound"
@@ -887,7 +885,7 @@ export const ScannerInterface = () => {
                         </div>
 
                         {/* ── Right Column: Recent Scans ── */}
-                        <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-5 sm:p-6 backdrop-blur-xl shadow-2xl">
+                        <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 sm:p-5 md:p-6 backdrop-blur-xl shadow-2xl w-full min-w-0">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
                                     <History className="w-4 h-4 text-cyan-400" />
@@ -920,11 +918,9 @@ export const ScannerInterface = () => {
                             {!user ? (
                                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-400 text-xs leading-relaxed">
                                     <p className="mb-3">{t("Log in to use your History and build Medication Memories.", "سجّل الدخول للوصول إلى سجلك وبناء ذاكرة الأدوية الخاصة بك.")}</p>
-                                    <Link href="/login">
-                                        <Button size="xs" variant="outline" className="text-white border-white/15">
-                                            {t("Log In", "تسجيل الدخول")}
-                                        </Button>
-                                    </Link>
+                                    <Button href="/login" size="xs" variant="outline" className="text-white border-white/15">
+                                        {t("Log In", "تسجيل الدخول")}
+                                    </Button>
                                 </div>
                             ) : historyLoading ? (
                                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-slate-500 text-xs">
@@ -976,28 +972,28 @@ export const ScannerInterface = () => {
                 )}
 
                 {previewSrc && (
-                    <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full flex flex-col lg:flex-row gap-6 max-w-6xl items-start">
+                    <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full flex flex-col lg:flex-row gap-6 max-w-6xl items-start min-w-0">
 
                         {/* Left: Image Preview & Pre-Flight Quality Guard */}
-                        <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl group flex flex-col">
+                        <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl group flex flex-col min-w-0">
                             
                             {/* Pre-Flight Auto-Enhanced Quality Bar */}
                             {qualityInfo && (
-                                <div className="p-3.5 border-b border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-3 text-xs">
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                        <span className="font-bold text-white">
+                                <div className="p-3 sm:p-3.5 border-b border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-2 text-xs">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                                        <span className="font-bold text-white truncate text-[11px] sm:text-xs">
                                             {t("AI Auto-Enhanced Resolution (4K Ready)", "دقة محسنة تلقائياً بالذكاء الاصطناعي")}
                                         </span>
                                     </div>
-                                    <span className="font-mono text-emerald-300/80 text-[11px] font-semibold">
-                                        {qualityInfo.width}×{qualityInfo.height} px • {qualityInfo.sizeMB} MB
+                                    <span className="font-mono text-emerald-300/80 text-[10px] sm:text-[11px] font-semibold shrink-0">
+                                        {qualityInfo.width}×{qualityInfo.height} px
                                     </span>
                                 </div>
                             )}
 
                             {/* Image Container */}
-                            <div className="relative w-full h-[380px] flex items-center justify-center p-4 bg-black/40">
+                            <div className="relative w-full h-[280px] sm:h-[340px] md:h-[380px] flex items-center justify-center p-3 sm:p-4 bg-black/40">
                                 <img
                                     src={previewSrc!}
                                     alt="Medication Preview"
@@ -1012,51 +1008,51 @@ export const ScannerInterface = () => {
                                 />
 
                                 {!isScanning && !finalResult && (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-                                        <div className="flex flex-col gap-3.5 items-center max-w-sm text-center">
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3 sm:p-4">
+                                        <div className="flex flex-col gap-3 items-center max-w-sm w-full text-center px-2">
                                             
                                             {/* Glowing Ultra-Shiny Start Analysis Button */}
                                             <button
                                                 onClick={openCarePickerAndStart}
                                                 className={cn(
-                                                    "shiny-cta-btn w-full gap-3.5 px-8 sm:px-12 py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide",
+                                                    "shiny-cta-btn w-full gap-2.5 sm:gap-3.5 px-6 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base font-black tracking-wide",
                                                     detectedScanType === "wound" ? "from-emerald-400 via-teal-300 to-emerald-400" : ""
                                                 )}
                                             >
                                                 {detectedScanType === "wound" ? (
                                                     <>
-                                                        <Bandage className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                        <Bandage className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-slate-950 stroke-[2.5]" />
                                                         <span>{t("Analyze Wound Now", "فحص الجرح الآن")}</span>
                                                     </>
                                                 ) : detectedScanType === "medication" ? (
                                                     <>
-                                                        <Pill className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                        <Pill className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-slate-950 stroke-[2.5]" />
                                                         <span>{t("Analyze Medication Now", "فحص الدواء الآن")}</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Sparkles className="w-6 h-6 shrink-0 text-slate-950 stroke-[2.5]" />
+                                                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-slate-950 stroke-[2.5]" />
                                                         <span>{t("Analyze Now", "الفحص الآن")}</span>
                                                     </>
                                                 )}
                                             </button>
 
                                             {/* Camera vs Gallery Re-select Buttons */}
-                                            <div className="flex items-center gap-2 w-full">
+                                            <div className="grid grid-cols-2 gap-2 w-full">
                                                 <button
                                                     type="button"
                                                     onClick={triggerCamera}
-                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-100 text-xs font-semibold transition-all"
+                                                    className="h-10 inline-flex items-center justify-center gap-1.5 px-3 rounded-xl border border-cyan-500/30 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-100 text-xs font-semibold transition-all whitespace-nowrap"
                                                 >
-                                                    <Camera className="w-3.5 h-3.5" />
+                                                    <Camera className="w-3.5 h-3.5 shrink-0" />
                                                     <span>{t("Camera", "الكاميرا")}</span>
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={triggerGallery}
-                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-white/20 bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold transition-all"
+                                                    className="h-10 inline-flex items-center justify-center gap-1.5 px-3 rounded-xl border border-white/20 bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold transition-all whitespace-nowrap"
                                                 >
-                                                    <ImageIcon className="w-3.5 h-3.5 text-cyan-300" />
+                                                    <ImageIcon className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
                                                     <span>{t("Gallery", "الاستوديو")}</span>
                                                 </button>
                                             </div>
@@ -1064,7 +1060,7 @@ export const ScannerInterface = () => {
 
                                         <button
                                             onClick={resetScan}
-                                            className="absolute top-4 end-4 p-2.5 bg-black/60 hover:bg-rose-500/80 rounded-2xl text-white/70 hover:text-white transition-all duration-200 backdrop-blur-md border border-white/10"
+                                            className="absolute top-3 end-3 sm:top-4 sm:end-4 p-2 bg-black/60 hover:bg-rose-500/80 rounded-2xl text-white/70 hover:text-white transition-all duration-200 backdrop-blur-md border border-white/10"
                                             title={t("Cancel", "إلغاء")}
                                         >
                                             <X className="w-4 h-4" />
@@ -1076,11 +1072,11 @@ export const ScannerInterface = () => {
                             {/* Automatic Image Quality Pre-Processing (Auto 4K & Contrast) */}
                             {!isScanning && (
                                 <div className="p-3 border-t border-white/10 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-2 text-xs">
-                                    <div className="flex items-center gap-2 text-slate-300">
+                                    <div className="flex items-center gap-2 text-slate-300 min-w-0">
                                         <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                                        <span className="text-xs font-semibold">{t("AI Auto-Enhance & 4K Clarity Active", "التحسين التلقائي لجودة المستند والتباين نشط")}</span>
+                                        <span className="text-[11px] sm:text-xs font-semibold truncate">{t("AI Auto-Enhance & 4K Clarity Active", "التحسين التلقائي لجودة المستند نشط")}</span>
                                     </div>
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shrink-0">
                                         AUTO 4K
                                     </span>
                                 </div>
@@ -1088,7 +1084,7 @@ export const ScannerInterface = () => {
                         </div>
 
                         {/* Right: Timeline & Analysis Progress */}
-                        <div className="w-full lg:w-1/2">
+                        <div className="w-full lg:w-1/2 min-w-0">
                             <Timeline />
                         </div>
                     </motion.div>

@@ -162,9 +162,7 @@ export default function CeoRequestsAdminPage() {
                     <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-4" />
                     <h1 className="text-xl font-bold text-white mb-2">غير مصرح بالدخول</h1>
                     <p className="text-slate-400 text-sm mb-6">هذه اللوحة مخصصة حصرياً للمدير التنفيذي (CEO).</p>
-                    <Link href="/">
-                        <Button variant="outline" className="w-full">العودة للرئيسية</Button>
-                    </Link>
+                    <Button href="/" variant="outline" className="w-full">العودة للرئيسية</Button>
                 </div>
             </main>
         );

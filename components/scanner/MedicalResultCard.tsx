@@ -273,6 +273,7 @@ interface MedicalData {
 
 interface MedicalResultCardProps {
     data: MedicalData;
+    onResetScan?: () => void;
 }
 
 interface AiNextQuestion {
@@ -367,7 +368,7 @@ const renderFormattedText = (text: string) => {
 
 type UltraSafetyTab = 'precautions' | 'interactions' | 'sideEffects' | 'overdose' | 'seekHelp';
 
-export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
+export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps) => {
     const { user, plan, profile } = useUser();
     const { resultsLanguage, fdaDrugsEnabled } = useSettings();
 
@@ -1473,11 +1474,9 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                 )}
                                                 {item.cta && (
                                                     <div className="mt-3">
-                                                        <Link href={item.cta.href}>
-                                                            <Button size="sm" className="h-9 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold border-0 shadow-sm transition-all duration-200">
-                                                                {item.cta.label}
-                                                            </Button>
-                                                        </Link>
+                                                        <Button href={item.cta.href} size="sm" className="h-9 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold border-0 shadow-sm transition-all duration-200">
+                                                            {item.cta.label}
+                                                        </Button>
                                                     </div>
                                                 )}
                                             </div>
@@ -1566,7 +1565,7 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                                 <Sparkles className="w-3 h-3" />
                                             </button>
                                         </div>
-                                        <p className="text-white font-semibold text-xs mt-0.5 truncate" title={row.name}>{row.name}</p>
+                                        <p className="text-white font-semibold text-xs mt-0.5 line-clamp-2 leading-tight" title={row.name}>{row.name}</p>
                                     </div>
                                     <div className="w-max px-2.5 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold">
                                         {row.doseText}
@@ -1797,15 +1796,11 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     </p>
                                     <div className="mt-4 flex justify-center gap-2">
                                         {!user ? (
-                                            <Link href="/login">
-                                                <Button size="sm">{t("Log in", "تسجيل الدخول")}</Button>
-                                            </Link>
+                                            <Button href="/login" size="sm">{t("Log in", "تسجيل الدخول")}</Button>
                                         ) : (
-                                            <Link href="/pricing">
-                                                <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
-                                                    {t("Upgrade to Ultra", "ترقية إلى ألترا")}
-                                                </Button>
-                                            </Link>
+                                            <Button href="/pricing" size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
+                                                {t("Upgrade to Ultra", "ترقية إلى ألترا")}
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
@@ -2117,15 +2112,11 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                 </p>
                                 <div className="mt-4 flex justify-center gap-2">
                                     {!user ? (
-                                        <Link href="/login">
-                                            <Button size="sm">{t("Log in", "تسجيل الدخول")}</Button>
-                                        </Link>
+                                        <Button href="/login" size="sm">{t("Log in", "تسجيل الدخول")}</Button>
                                     ) : (
-                                        <Link href="/pricing">
-                                            <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
-                                                {t("Upgrade to Ultra", "ترقية إلى ألترا")}
-                                            </Button>
-                                        </Link>
+                                        <Button href="/pricing" size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-bold border-0">
+                                            {t("Upgrade to Ultra", "ترقية إلى ألترا")}
+                                        </Button>
                                     )}
                                 </div>
                             </div>
@@ -2534,12 +2525,13 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                     </div>
 
                     <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                        <Link href={`/ai?medication=${encodeURIComponent(JSON.stringify({ drug_name: displayDrugName, generic_name: displayGenericName, description: data.description }))}`}>
-                            <button className="shiny-cta-btn px-8 sm:px-12 py-4 font-black text-sm sm:text-base gap-3">
-                                <Brain className="w-5 h-5 text-slate-950 shrink-0" />
-                                <span>{t("Go to Qure AI Assistant", "الانتقال إلى المساعد الذكي Qure AI")}</span>
-                                <ChevronRight className={cn("w-5 h-5 stroke-[2.5] text-slate-950", isArabic ? "rotate-180" : "")} />
-                            </button>
+                        <Link
+                            href={`/ai?medication=${encodeURIComponent(JSON.stringify({ drug_name: displayDrugName, generic_name: displayGenericName, description: data.description }))}`}
+                            className="shiny-cta-btn inline-flex items-center justify-center px-8 sm:px-12 py-4 font-black text-sm sm:text-base gap-3 select-none"
+                        >
+                            <Brain className="w-5 h-5 text-slate-950 shrink-0" />
+                            <span>{t("Go to Qure AI Assistant", "الانتقال إلى المساعد الذكي Qure AI")}</span>
+                            <ChevronRight className={cn("w-5 h-5 stroke-[2.5] text-slate-950", isArabic ? "rotate-180" : "")} />
                         </Link>
                     </div>
                 </div>
@@ -2856,11 +2848,9 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                                     <p className="text-white font-bold text-sm">{t("Official FDA Drug Monograph Locked", "النشرة الطبية الرسمية مغلقة")}</p>
                                     <p className="text-white/60 text-xs mt-1 max-w-sm mx-auto">{t("Unlock direct excerpts from the FDA drug label dataset regarding safety warnings, drug combinations, and adverse reactions.", "افتح النشرات المباشرة من الغذاء والدواء للتحذيرات، تفاعلات الدواء، والأعراض الجانبية.")}</p>
                                     <div className="mt-3">
-                                        <Link href="/pricing">
-                                            <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-bold border-0">
-                                                {t("Upgrade to Ultra", "ترقية إلى ألترا")}
-                                            </Button>
-                                        </Link>
+                                        <Button href="/pricing" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-bold border-0">
+                                            {t("Upgrade to Ultra", "ترقية إلى ألترا")}
+                                        </Button>
                                     </div>
                                 </div>
                             )
@@ -2981,6 +2971,18 @@ export const MedicalResultCard = ({ data }: MedicalResultCardProps) => {
                         {/* Export & Actions */}
                         <div className="flex flex-wrap items-center gap-2 md:justify-end">
                             <div id="export" data-export-ignore className="flex flex-wrap items-center gap-1.5">
+                                {onResetScan && (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={onResetScan}
+                                        className="border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-white h-9 rounded-xl text-xs px-3 border-0"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5 me-1.5" />
+                                        <span>{t("New Scan", "فحص جديد")}</span>
+                                    </Button>
+                                )}
+
                                 <Button
                                     size="sm"
                                     variant="outline"

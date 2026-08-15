@@ -56,19 +56,15 @@ export default function AuthCodeError() {
                 </p>
 
                 <div className="space-y-3">
-                    <Link href="/login" className="block w-full">
-                        <Button className="w-full font-bold text-sm" size="md">
-                            <LogIn className="w-4 h-4 me-2" />
-                            <span>تسجيل الدخول / Sign In</span>
-                        </Button>
-                    </Link>
+                    <Button href="/login" className="w-full font-bold text-sm" size="md">
+                        <LogIn className="w-4 h-4 me-2" />
+                        <span>تسجيل الدخول / Sign In</span>
+                    </Button>
 
-                    <Link href="/" className="block w-full">
-                        <Button variant="outline" className="w-full text-xs text-slate-300 hover:text-white border-slate-800 hover:bg-slate-800/60" size="md">
-                            <Home className="w-4 h-4 me-2" />
-                            <span>الصفحة الرئيسية / Home</span>
-                        </Button>
-                    </Link>
+                    <Button href="/" variant="outline" className="w-full text-xs text-slate-300 hover:text-white border-slate-800 hover:bg-slate-800/60" size="md">
+                        <Home className="w-4 h-4 me-2" />
+                        <span>الصفحة الرئيسية / Home</span>
+                    </Button>
                 </div>
             </div>
         </div>
