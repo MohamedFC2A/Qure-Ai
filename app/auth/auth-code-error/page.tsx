@@ -15,8 +15,8 @@ export default function AuthCodeError() {
         const checkExistingSession = async () => {
             try {
                 const supabase = createClient();
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
+                const { data: sessionData } = await supabase.auth.getSession();
+                if (sessionData?.session) {
                     router.replace("/scan");
                     return;
                 }

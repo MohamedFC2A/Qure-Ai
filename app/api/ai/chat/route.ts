@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
     const startTime = Date.now();
     try {
         const supabase = await createClient();
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: authData } = await supabase.auth.getUser();
+        const authUser = authData?.user ?? null;
         const user = authUser || getLocalDevUser(req);
 
         if (!user) {
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
         const conversationId: string | null = body?.conversationId ? String(body.conversationId) : null;
         const messageHistory: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.messageHistory) ? body.messageHistory : [];
         const medicationData: any = body?.medicationData || null;
+        const forceLiveSearch: boolean = Boolean(body?.forceLiveSearch);
 
         // Check ULTRA plan access
         const isDev = process.env.NODE_ENV === "development" || Boolean(getLocalDevUser(req));
@@ -205,6 +207,41 @@ export async function POST(req: NextRequest) {
         // Add current question
         deepseekMessages.push({ role: "user", content: question });
 
+        // Autonomous Live Medical Search Tool Check (Serper API Engine)
+        let searchMetadata: any = null;
+        try {
+            const { shouldTriggerLiveMedicalSearch, executeAutonomousMedicalSearch } = await import("@/lib/ai/searchTool");
+            if (forceLiveSearch || shouldTriggerLiveMedicalSearch(question, mode)) {
+                console.log("[AI Chat] Live medical search triggered (forceLiveSearch:", forceLiveSearch, ") for query:", question);
+                const searchResult = await executeAutonomousMedicalSearch({
+                    query: question,
+                    language,
+                    maxPages: 5,
+                });
+
+                if (searchResult.performed) {
+                    searchMetadata = {
+                        performed: true,
+                        query: searchResult.query,
+                        pagesCount: searchResult.pagesCount,
+                        totalSources: searchResult.totalSources,
+                        sources: searchResult.sources,
+                        directAnswer: searchResult.directAnswer,
+                        knowledgeEntity: searchResult.knowledgeEntity,
+                    };
+
+                    deepseekMessages.push({
+                        role: "user",
+                        content: language === "ar"
+                            ? `[نتائج البحث السريري المباشر عبر الإنترنت (${searchResult.pagesCount} صفحات ومصادر طبية معتمدة)]:\n${searchResult.evidenceText}\n\nاستند إلى هذه الأدلة والمصادر السريرية المباشرة بدقة في إجابتك.`
+                            : `[LIVE MEDICAL WEB SEARCH EVIDENCE (${searchResult.pagesCount} Verified Sources)]:\n${searchResult.evidenceText}\n\nIncorporate this fresh clinical evidence accurately in your answer.`
+                    });
+                }
+            }
+        } catch (searchErr) {
+            console.warn("[AI Chat] Live search tool note:", searchErr);
+        }
+
         // Add format instruction
         deepseekMessages.push({
             role: "system",
@@ -298,6 +335,7 @@ export async function POST(req: NextRequest) {
             answer,
             keyPoints,
             suggestedFollowUps,
+            searchMetadata,
             meta: { mode },
             serverDurationMs: Date.now() - startTime,
         });

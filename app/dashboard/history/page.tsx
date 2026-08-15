@@ -73,7 +73,8 @@ export default function HistoryPage() {
                     return;
                 }
 
-                const { data: { user: authUser } } = await supabase.auth.getUser();
+                const { data: authData } = await supabase.auth.getUser();
+                const authUser = authData?.user ?? null;
                 if (!authUser) {
                     setUserId(null);
                     return;

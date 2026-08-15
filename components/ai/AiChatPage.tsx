@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2 } from "lucide-react";
+import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -63,8 +63,6 @@ const QUICK_PROMPTS_UNIFIED: { en: string; ar: string }[] = [
     { en: "First aid for a bleeding laceration", ar: "إسعافات أولية لجرح قطعي ينزف" },
     { en: "How to properly care for thermal burns?", ar: "كيف أتعامل مع حرق جلدي منزلي بشكل سليم؟" },
     { en: "Check drug interactions for my medications", ar: "افحص تداخلات الأدوية بناءً على ملفي الصحي" },
-    { en: "When is a tetanus shot strictly required?", ar: "متى يلزم أخذ مصل التيتانوس عند الإصابة؟" },
-    { en: "How to care for surgical sutures & stitches?", ar: "طرق العناية بغرز الخياطة الجراحية والوقاية من التلوث" },
 ];
 
 export function AiChatPage() {
@@ -88,6 +86,7 @@ export function AiChatPage() {
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedMedication, setSelectedMedication] = useState<any>(null);
+    const [liveSearchEnabled, setLiveSearchEnabled] = useState(false);
     const [activeTopic, setActiveTopic] = useState<string | null>(null);
     const [isListening, setIsListening] = useState(false);
     const [autoScroll, setAutoScroll] = useState(true);
@@ -203,6 +202,7 @@ export function AiChatPage() {
                     messageHistory: history.slice(0, -1),
                     language: isArabic ? "ar" : "en",
                     medicationData: medPayload,
+                    forceLiveSearch: liveSearchEnabled,
                 }),
             });
 
@@ -237,6 +237,27 @@ export function AiChatPage() {
                         try {
                             const event = JSON.parse(jsonStr);
 
+                            if (event.type === "search_status") {
+                                setMessages((prev) =>
+                                    prev.map((m) =>
+                                        m.id === assistantId
+                                            ? {
+                                                ...m,
+                                                searchMetadata: {
+                                                    performed: true,
+                                                    query: event.query,
+                                                    pagesCount: event.pagesCount,
+                                                    totalSources: event.totalSources,
+                                                    sources: event.sources,
+                                                    directAnswer: event.directAnswer,
+                                                    knowledgeEntity: event.knowledgeEntity,
+                                                },
+                                            }
+                                            : m
+                                    )
+                                );
+                            }
+
                             if (event.type === "token" && event.token) {
                                 streamedContent += event.token;
                                 setMessages((prev) =>
@@ -256,6 +277,7 @@ export function AiChatPage() {
                                                 content: finalAns || m.content,
                                                 keyPoints: event.keyPoints || [],
                                                 suggestedFollowUps: event.suggestedFollowUps || [],
+                                                searchMetadata: event.searchMetadata || m.searchMetadata,
                                             }
                                             : m
                                     )
@@ -362,24 +384,8 @@ export function AiChatPage() {
         if (item) {
             const isWound = item.type === "wound";
             setActiveMode(isWound ? "wound" : "medication");
-            if (!activeConversationId && messages.length === 0) {
-                const itemName = item.title || item.drug_name || item.wound_title || (isWound ? "Wound Scan" : "Medication");
-                const noticeText = isWound
-                    ? (isArabic
-                        ? `تم ربط تقييم الجرح: **${itemName}** بالمحادثة. يمكنك الآن سؤالي عن بروتوكول التضميد، خطوات الإسعاف، أو علامات الخطر والعدوى.`
-                        : `Wound assessment attached: **${itemName}**. Ask me about dressing protocols, first aid steps, suture needs, or infection signs.`)
-                    : (isArabic
-                        ? `تم ربط الدواء: **${itemName}** بالمحادثة. الآن يمكنك سؤالي عن جرعاته، آثاره الجانبية، تداخلاته، أو هل يناسبك شخصياً.`
-                        : `Medication attached: **${itemName}**. Ask me about dosage, side effects, interactions, or if it's suitable for you personally.`);
-                setMessages([{
-                    id: `notice-${Date.now()}`,
-                    role: "assistant",
-                    content: noticeText,
-                    created_at: new Date().toISOString()
-                }]);
-            }
         }
-    }, [activeConversationId, messages.length, isArabic]);
+    }, []);
 
     /* ── Auto-scroll only when user is near bottom ── */
     useEffect(() => {
@@ -583,33 +589,31 @@ export function AiChatPage() {
                         >
                             <div className="max-w-3xl mx-auto space-y-4">
 
-                                {/* Top Active User Banner */}
-                                {user && (
-                                    <div className="flex items-center justify-between p-3 rounded-2xl bg-[#080D1A]/80 border border-white/[0.08] backdrop-blur-xl shadow-sm text-xs">
-                                        <div className="flex items-center gap-2 text-slate-300">
-                                            <span className="text-slate-500 font-medium">{t("Active Profile:", "الملف الصحي النشط:")}</span>
-                                            <span className="font-bold text-white">{user.email || user.id}</span>
-                                        </div>
-                                        <Link href="/profile" className="text-cyan-300 hover:underline font-semibold text-[11px]">
-                                            {t("Manage Health Profile", "إدارة الملف الصحي")}
-                                        </Link>
-                                    </div>
-                                )}
-
-                                {/* Connected Medication / Topic Banner */}
+                                {/* Smart Unified Linked Context Banner */}
                                 {selectedMedication && (
-                                    <div className="flex items-center justify-between p-3 rounded-2xl bg-cyan-950/40 border border-cyan-500/25 text-xs">
-                                        <div className="flex items-center gap-2 text-cyan-200 min-w-0">
-                                            <Pill className="w-4 h-4 text-cyan-300 shrink-0" />
-                                            <span className="text-slate-400 font-medium shrink-0">{t("Active Medical Target:", "الدواء أو الفحص النشط:")}</span>
-                                            <span className="font-bold text-white truncate">
-                                                {selectedMedication.drug_name || selectedMedication.title || selectedMedication.generic_name || (isArabic ? "مستحضر دوائي" : "Medication")}
-                                            </span>
-                                            {activeTopic && (
-                                                <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200 border border-purple-500/30 text-[10px] font-semibold truncate shrink-0">
-                                                    {activeTopic}
-                                                </span>
-                                            )}
+                                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#080E1E]/90 border border-cyan-500/30 text-xs backdrop-blur-xl shadow-lg transition-all">
+                                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                            <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-sm">
+                                                <Pill className="w-4 h-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-slate-300 font-medium">
+                                                        {t("Attached Medication:", "تم ربط الدواء:")}
+                                                    </span>
+                                                    <span className="font-bold text-white text-sm truncate">
+                                                        {selectedMedication.drug_name || selectedMedication.title || selectedMedication.generic_name || (isArabic ? "مستحضر دوائي" : "Medication")}
+                                                    </span>
+                                                    {activeTopic && (
+                                                        <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200 border border-purple-500/30 text-[10px] font-semibold truncate shrink-0">
+                                                            {activeTopic}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-cyan-300/80 mt-0.5 leading-normal">
+                                                    {t("Ask about personalized suitability, dosages, side effects, or drug interactions.", "يمكنك السؤال عن ملاءمته لملفك الصحي، الجرعات، الآثار الجانبية، والتداخلات الدوائية.")}
+                                                </p>
+                                            </div>
                                         </div>
                                         <button
                                             type="button"
@@ -617,9 +621,9 @@ export function AiChatPage() {
                                                 setSelectedMedication(null);
                                                 setActiveTopic(null);
                                             }}
-                                            className="text-slate-400 hover:text-white text-xs px-2.5 py-1 rounded-lg hover:bg-white/10 shrink-0 transition-colors"
+                                            className="text-slate-400 hover:text-rose-300 text-xs px-3 py-1.5 rounded-xl border border-white/[0.08] hover:border-rose-500/30 bg-white/[0.02] hover:bg-rose-950/30 shrink-0 transition-all font-medium mr-1.5"
                                         >
-                                            {t("Clear", "إلغاء")}
+                                            {t("Unlink", "إلغاء الربط")}
                                         </button>
                                     </div>
                                 )}
@@ -704,7 +708,7 @@ export function AiChatPage() {
                                                 <span className="w-2 h-2 rounded-full bg-current" />
                                                 <span>{isArabic ? modeLabels[activeMode].ar : modeLabels[activeMode].en}</span>
                                             </div>
-                                            <span className="text-[10px] text-slate-500 font-medium">
+                                            <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
                                                 {t("• Smart Intent Engine", "• كشف تلقائي بالذكاء الاصطناعي")}
                                             </span>
                                         </div>
@@ -732,10 +736,15 @@ export function AiChatPage() {
                                                         `Ask about ${selectedMedication.drug_name || "this medication"} or suitability…`,
                                                         `اسأل عن ${selectedMedication.drug_name || "هذا الدواء"} أو هل يناسبك…`
                                                     )
-                                                    : t(
-                                                        "Ask Qure AI anything — health, medications, or allergies…",
-                                                        "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الطبي…"
-                                                    )
+                                                    : liveSearchEnabled
+                                                        ? t(
+                                                            "Search live medical web & clinical databases for any topic…",
+                                                            "ابحث مباشرة عبر الويب وقواعد البيانات السريرية في أي موضوع طبي…"
+                                                        )
+                                                        : t(
+                                                            "Ask Qure AI anything — health, medications, or allergies…",
+                                                            "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الطبي…"
+                                                        )
                                             }
                                             className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder:text-slate-400/90 text-sm sm:text-base leading-normal py-1.5 resize-none min-h-[44px] max-h-[160px]"
                                             disabled={isSending}
@@ -744,6 +753,22 @@ export function AiChatPage() {
                                         />
 
                                         <div className="flex items-center gap-2 shrink-0 pb-1">
+                                            {/* Live Search quick button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setLiveSearchEnabled((prev) => !prev)}
+                                                disabled={isSending}
+                                                className={cn(
+                                                    "w-9 h-9 rounded-xl border flex items-center justify-center transition-all duration-150 active:scale-95",
+                                                    liveSearchEnabled
+                                                        ? "bg-sky-950/80 border-sky-500/60 text-sky-300"
+                                                        : "bg-slate-800/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600"
+                                                )}
+                                                title={t("Toggle Live Medical Web Search", "تفعيل/إلغاء البحث السريري المباشر عبر الإنترنت")}
+                                            >
+                                                <Globe className={cn("w-4 h-4", liveSearchEnabled ? "text-sky-400" : "text-slate-400")} />
+                                            </button>
+
                                             {/* Voice input button */}
                                             <button
                                                 type="button"

@@ -12,7 +12,8 @@ const OFFICIAL_SITE_URL = "https://qure-ai-nexus.vercel.app";
 export async function GET(req: NextRequest) {
     try {
         const supabase = await createClient();
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: authData } = await supabase.auth.getUser();
+        const authUser = authData?.user ?? null;
         const user = authUser || getLocalDevUser(req);
 
         if (!user) {
@@ -37,7 +38,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const supabase = await createClient();
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: authData } = await supabase.auth.getUser();
+        const authUser = authData?.user ?? null;
         const user = authUser || getLocalDevUser(req);
 
         if (!user) {

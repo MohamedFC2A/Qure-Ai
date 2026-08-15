@@ -127,7 +127,8 @@ export async function POST(req: NextRequest) {
     try {
         const localDevUser = getLocalDevUser(req);
         const supabase = await createClient();
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: authData } = await supabase.auth.getUser();
+        const authUser = authData?.user ?? null;
         const user = authUser || localDevUser;
 
         if (!user) {

@@ -14,7 +14,8 @@ export default function SecuritySettingsPage() {
     async function loadSecurityData() {
       try {
         const supabase = createClient()
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        const { data: authData } = await supabase.auth.getUser()
+        const currentUser = authData?.user ?? null
         setUser(currentUser)
 
         if (currentUser) {

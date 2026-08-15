@@ -543,7 +543,15 @@ export function formatClinicalContext(item: any, language: "en" | "ar" = "ar"): 
     const summary = data.summary || data.summaryAr || data.summaryEn || "";
 
     const lines = [
-        isAr ? `[سجل الفحص الدوائي المرفق (QURE AI MEDICATION CONTEXT)]` : `[TARGET MEDICATION DETAILS]`,
+        isAr
+            ? `[سجل الفحص الدوائي المرفق الممسوح ضوئياً (QURE AI TARGET MEDICATION CONTEXT)]
+⚠️ توجيه سياقي ذكي للذكاء الاصطناعي: هذا هو المستحضر/الدواء الذي قام المستخدم بتصويره ورفعه حالياً (${name}).
+- عندما يسأل المستخدم أي سؤال ضمني أو مباشر (مثل "مناسب مع زنك 20؟"، "هل يناسبني؟"، "متى آخذه؟"، "هل يتعارض مع الضغط؟")، اعلم تلقائياً ودون تردد أنه يتحدث عن هذا الدواء المرفوع ويطلب مقارنته أو فحصه بالنسبة لملفه الصحي الشخصي أو دمجه مع المستحضر الآخر الذي ذكره.
+- إذا كان السؤال عاماً تثقيفياً بحتاً (مثل "ما هو الزنك؟") أجب بإيجاز عام ودقيق. أما إذا كان السؤال عن الملاءمة أو التداخل، فاربط فوراً بين هذا الدواء المرفوع وملف صاحب الفحص.`
+            : `[TARGET UPLOADED MEDICATION CONTEXT]
+⚠️ CONTEXT INTELLIGENCE DIRECTIVE: This is the exact target medication scanned/uploaded by the user (${name}).
+- When the user asks contextual questions (e.g. "Suitable with Zinc 20?", "Is it safe for me?", "When to take it?", "Any interaction with hypertension?"), automatically understand they refer to this uploaded medication in relation to the patient's personal health profile and/or the new item mentioned.
+- If purely educational ("What is Zinc?"), answer generally. If consultative/safety-oriented, automatically cross-reference this target medication.`,
         `• Drug Name: ${name} ${genericName ? `(${genericName})` : ""}`,
         strength ? `• Strength: ${strength}` : "",
         mfg ? `• Manufacturer: ${mfg}` : "",

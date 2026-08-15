@@ -80,10 +80,32 @@ export async function middleware(request: NextRequest) {
         return response;
     }
 
+    const safeFetch = async (url: RequestInfo | URL, options?: RequestInit): Promise<Response> => {
+        try {
+            return await fetch(url, options);
+        } catch (err: any) {
+            console.warn("[Middleware Supabase] Fetch intercepted safely:", err?.message || err);
+            return new Response(
+                JSON.stringify({
+                    error: "network_error",
+                    message: err?.message || "Failed to fetch",
+                }),
+                {
+                    status: 503,
+                    statusText: "Service Unavailable",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+        }
+    };
+
     const supabase = createServerClient(
         supabaseUrl,
         supabaseAnonKey,
         {
+            global: {
+                fetch: safeFetch,
+            },
             cookies: {
                 getAll() {
                     return request.cookies.getAll();
@@ -100,10 +122,15 @@ export async function middleware(request: NextRequest) {
         }
     );
 
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error) {
-        console.log(`[Middleware] Auth Error: ${error.message}`);
+    let user: any = null;
+    try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) {
+            console.log(`[Middleware] Auth Error: ${error.message}`);
+        }
+        user = data?.user ?? null;
+    } catch (authErr: any) {
+        console.warn("[Middleware] Auth check network exception:", authErr?.message || authErr);
     }
 
     const isApi = pathname.startsWith('/api');

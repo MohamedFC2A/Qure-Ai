@@ -6,7 +6,8 @@ export async function GET(req: NextRequest) {
     const supabase = await createClient();
 
     // Get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const user = authData?.user ?? null;
     if (authError || !user) {
         console.error("[API/Keys] GET Unauthorized:", authError?.message || "No user found");
         return NextResponse.json({ error: "Unauthorized", details: authError?.message || "No session" }, { status: 401 });
@@ -35,7 +36,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Label is required" }, { status: 400 });
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const user = authData?.user ?? null;
     if (authError || !user) {
         console.error("[API/Keys] POST Unauthorized:", authError?.message || "No user found");
         return NextResponse.json({ error: "Unauthorized", details: authError?.message || "No session" }, { status: 401 });
@@ -77,7 +79,8 @@ export async function DELETE(req: NextRequest) {
     const supabase = await createClient();
     const { id } = await req.json();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const user = authData?.user ?? null;
     if (authError || !user) {
         console.error("[API/Keys] DELETE Unauthorized:", authError?.message || "No user found");
         return NextResponse.json({ error: "Unauthorized", details: authError?.message || "No session" }, { status: 401 });

@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
     const supabaseAdmin = createAdminClient();
 
     const supabaseServer = await createClient();
-    const { data: { user } } = await supabaseServer.auth.getUser();
+    const { data: authData } = await supabaseServer.auth.getUser();
+    const user = authData?.user ?? null;
 
     const url = new URL(req.url);
     const targetUserId = url.searchParams.get("userId") || user?.id;

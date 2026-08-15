@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
 
         const localDevUser = getLocalDevUser(req);
         const supabase = await createClient();
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: authData } = await supabase.auth.getUser();
+        const authUser = authData?.user ?? null;
         const user = authUser || localDevUser;
 
         if (!user) {
@@ -238,7 +239,64 @@ export async function POST(req: NextRequest) {
         const preflight = await preflightMedicationEvidence({ ocrText: text, language: lang, enableFda: fdaEnabled });
 
         // 1. Call AI Service (DeepSeek) with verification evidence
-        const data = await analyzeMedicationText(text, lang, analysisContext, preflight.evidenceForAi);
+        let data = await analyzeMedicationText(text, lang, analysisContext, preflight.evidenceForAi);
+
+        // 1a. Layered AI Synthesis for Missing Numbers / Unformatted Details (Serper 5-Page Synthesis)
+        const isMissingCriticalDetails =
+            !data.dosage ||
+            data.dosage.includes("غير محدد") ||
+            data.dosage.includes("Not specified") ||
+            !data.strength ||
+            data.strength === "Unknown" ||
+            !data.activeIngredients ||
+            data.activeIngredients.length === 0 ||
+            !data.uses ||
+            data.uses.length === 0;
+
+        if (isMissingCriticalDetails) {
+            try {
+                console.log("[Analyze Route] Missing numbers/details detected on packaging, activating 5-Page Layered Serper Synthesizer...");
+                const { buildDeepMedicationDossier, layeredMedicationSynthesis } = await import("@/lib/ai/layeredMedicationSynthesizer");
+                const dossier = await buildDeepMedicationDossier({
+                    ocrText: text,
+                    language: lang,
+                });
+
+                if (dossier.topSnippets.length > 0 || dossier.fdaLabel?.found) {
+                    const synthesized = await layeredMedicationSynthesis({
+                        rawOcrText: text,
+                        language: lang,
+                        dossier,
+                        patientContext: analysisContext,
+                    });
+
+                    // Merge synthesized details preserving high-precision values
+                    if (synthesized && typeof synthesized === "object") {
+                        data = {
+                            ...data,
+                            ...synthesized,
+                            drugName: synthesized.drugName || data.drugName,
+                            drugNameEn: synthesized.drugNameEn || data.drugNameEn,
+                            genericName: synthesized.genericName || data.genericName,
+                            genericNameEn: synthesized.genericNameEn || data.genericNameEn,
+                            strength: synthesized.strength || data.strength,
+                            dosage: (synthesized.dosage && !synthesized.dosage.includes("غير محدد")) ? synthesized.dosage : data.dosage,
+                            uses: (synthesized.uses && synthesized.uses.length > 0) ? synthesized.uses : data.uses,
+                            activeIngredients: (synthesized.activeIngredients && synthesized.activeIngredients.length > 0) ? synthesized.activeIngredients : data.activeIngredients,
+                            activeIngredientsDetailed: synthesized.activeIngredientsDetailed || data.activeIngredientsDetailed,
+                            warnings: (synthesized.warnings && synthesized.warnings.length > 0) ? synthesized.warnings : data.warnings,
+                            contraindications: (synthesized.contraindications && synthesized.contraindications.length > 0) ? synthesized.contraindications : data.contraindications,
+                            precautions: (synthesized.precautions && synthesized.precautions.length > 0) ? synthesized.precautions : data.precautions,
+                            sideEffects: (synthesized.sideEffects && synthesized.sideEffects.length > 0) ? synthesized.sideEffects : data.sideEffects,
+                            interactions: (synthesized.interactions && synthesized.interactions.length > 0) ? synthesized.interactions : data.interactions,
+                            confidenceScore: Math.max(Number(data.confidenceScore || 90), Number(dossier.searchConfidence || 95)),
+                        };
+                    }
+                }
+            } catch (layerErr) {
+                console.warn("[Analyze Route] Layered synthesizer pass note:", layerErr);
+            }
+        }
 
         // 1b. Post-analysis openFDA pass (best-effort): improves hit-rate using AI's English identifiers.
         // This does NOT replace the fact that preflight already ran before analysis.

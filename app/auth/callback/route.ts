@@ -92,8 +92,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Check existing user session
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData?.user) {
         return response;
     }
 

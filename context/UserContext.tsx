@@ -72,21 +72,37 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
             }
 
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            let authenticatedUser: any = null;
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (!error && data?.user) {
+                    authenticatedUser = data.user;
+                }
+            } catch (authErr) {
+                console.warn("UserProvider: Auth verification network note:", authErr);
+            }
 
-            if (user) {
+            setUser(authenticatedUser);
+
+            if (authenticatedUser) {
                 try {
                     const [profileRes, creditsRes] = await Promise.all([
                         supabase
                             .from('profiles')
                             .select('username, full_name, gender, age, height, weight, plan')
-                            .eq('id', user.id)
-                            .maybeSingle(),
-                        fetch('/api/credits/status'),
+                            .eq('id', authenticatedUser.id)
+                            .maybeSingle()
+                            .catch((e: any) => {
+                                console.warn("UserProvider: Failed to load profile:", e);
+                                return { data: null, error: e };
+                            }),
+                        fetch('/api/credits/status').catch((e: any) => {
+                            console.warn("UserProvider: Credits status endpoint error:", e);
+                            return null;
+                        }),
                     ]);
 
-                    if (profileRes.data) {
+                    if (profileRes?.data) {
                         const profileData = profileRes.data;
                         setProfile({
                             username: profileData.username,
@@ -101,9 +117,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                         }
                     }
 
-                    if (creditsRes.ok) {
+                    if (creditsRes?.ok) {
                         const data = await creditsRes.json();
-                        setPlan(data.plan);
+                        if (data.plan) setPlan(data.plan);
                         setCredits(Number(data.totalAvailable ?? 0));
                     }
                 } catch (e) {
@@ -124,15 +140,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         refreshUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
-            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-                refreshUser();
-            } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-                setUser(session.user);
-            }
-        });
+        try {
+            const { data } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+                if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+                    refreshUser();
+                } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+                    setUser(session.user);
+                }
+            });
 
-        return () => subscription.unsubscribe();
+            return () => {
+                data?.subscription?.unsubscribe();
+            };
+        } catch (err) {
+            console.warn("UserProvider: Auth listener subscription note:", err);
+        }
     }, [refreshUser, supabase]);
 
     const isProfileIncomplete = Boolean(

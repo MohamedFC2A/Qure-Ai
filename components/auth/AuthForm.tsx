@@ -297,41 +297,51 @@ function AuthFormContent({ type }: AuthFormProps) {
         let isMounted = true;
 
         // 1. Listen for auth state changes from Supabase
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-            if (session && isMounted) {
-                setSuccessMessage(
-                    isArabic
-                        ? "تم تفعيل الحساب وتأكيد البريد بنجاح! جاري تحويلك..."
-                        : "Account verified successfully! Redirecting..."
-                );
-                setTimeout(() => {
-                    router.push(getNextPath());
-                    router.refresh();
-                }, 800);
-            }
-        });
+        let subscription: any = null;
+        try {
+            const { data } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+                if (session && isMounted) {
+                    setSuccessMessage(
+                        isArabic
+                            ? "تم تفعيل الحساب وتأكيد البريد بنجاح! جاري تحويلك..."
+                            : "Account verified successfully! Redirecting..."
+                    );
+                    setTimeout(() => {
+                        router.push(getNextPath());
+                        router.refresh();
+                    }, 800);
+                }
+            });
+            subscription = data?.subscription;
+        } catch (subErr) {
+            console.warn("[AuthForm] onAuthStateChange setup note:", subErr);
+        }
 
         // 2. Poll for session periodically (every 3 seconds) in case link was opened in another window or device
         const interval = setInterval(async () => {
             if (!isMounted) return;
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session && isMounted) {
-                setSuccessMessage(
-                    isArabic
-                        ? "تم تفعيل الحساب بنجاح! جاري تحويلك..."
-                        : "Account verified successfully! Redirecting..."
-                );
-                clearInterval(interval);
-                setTimeout(() => {
-                    router.push(getNextPath());
-                    router.refresh();
-                }, 800);
+            try {
+                const { data } = await supabase.auth.getSession();
+                if (data?.session && isMounted) {
+                    setSuccessMessage(
+                        isArabic
+                            ? "تم تفعيل الحساب بنجاح! جاري تحويلك..."
+                            : "Account verified successfully! Redirecting..."
+                    );
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        router.push(getNextPath());
+                        router.refresh();
+                    }, 800);
+                }
+            } catch (pollErr) {
+                console.warn("[AuthForm] Session poll note:", pollErr);
             }
         }, 3000);
 
         return () => {
             isMounted = false;
-            subscription.unsubscribe();
+            subscription?.unsubscribe?.();
             clearInterval(interval);
         };
     }, [registeredEmail, router, isArabic]);

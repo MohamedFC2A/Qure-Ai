@@ -13,7 +13,8 @@ export async function GET(
 ) {
     try {
         const supabase = await createClient();
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: authData } = await supabase.auth.getUser();
+        const authUser = authData?.user ?? null;
         const user = authUser || getLocalDevUser(req);
 
         if (!user) {

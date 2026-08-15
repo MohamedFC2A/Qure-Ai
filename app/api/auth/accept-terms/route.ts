@@ -34,7 +34,8 @@ export async function POST(req: NextRequest) {
             }
         );
 
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: authData, error: userError } = await supabase.auth.getUser();
+        const user = authData?.user ?? null;
 
         // 2. Set client cookie to immediately unblock middleware
         response.cookies.set("qurescan_terms_accepted", "1", {

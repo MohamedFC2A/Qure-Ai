@@ -11,6 +11,26 @@ export function createAdminClient() {
         supabaseUrl,
         serviceRoleKey,
         {
+            global: {
+                fetch: async (url, options) => {
+                    try {
+                        return await fetch(url, options);
+                    } catch (err: any) {
+                        console.warn("[Supabase Admin Client] Network fetch note:", err?.message || err);
+                        return new Response(
+                            JSON.stringify({
+                                error: "network_error",
+                                message: err?.message || "Failed to fetch",
+                            }),
+                            {
+                                status: 503,
+                                statusText: "Service Unavailable",
+                                headers: { "Content-Type": "application/json" },
+                            }
+                        );
+                    }
+                },
+            },
             auth: {
                 autoRefreshToken: false,
                 persistSession: false
@@ -18,3 +38,4 @@ export function createAdminClient() {
         }
     )
 }
+

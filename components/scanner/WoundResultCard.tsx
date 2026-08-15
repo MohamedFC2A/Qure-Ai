@@ -9,6 +9,8 @@ import {
     CheckCircle2,
     Clock,
     Download,
+    FileDown,
+    Lock,
     Flame,
     HeartPulse,
     HelpCircle,
@@ -35,6 +37,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSettings } from "@/context/SettingsContext";
+import { useUser } from "@/context/UserContext";
 import { type WoundAnalysisResult } from "@/lib/ai/wound";
 import { cn } from "@/lib/utils";
 
@@ -77,10 +80,57 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
     onResetScan,
 }) => {
     const { resultsLanguage } = useSettings();
+    const { user, profile, plan } = useUser();
     const isAr = resultsLanguage === "ar";
     const [copied, setCopied] = useState(false);
+    const [exporting, setExporting] = useState<null | "png" | "pdf">(null);
+    const [exportError, setExportError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<"care" | "reasoning" | "safety">("care");
     const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
+
+    const downloadPng = async () => {
+        setExportError(null);
+        setExporting("png");
+        try {
+            const { exportWoundReportPng } = await import("@/lib/export/medicalPdfExporter");
+            await exportWoundReportPng({
+                data: result,
+                isArabic: isAr,
+                userName: profile?.full_name || profile?.username || user?.user_metadata?.username || (isAr ? "المستخدم الرئيسي" : "Primary User"),
+                scannedImage,
+            });
+        } catch (e: any) {
+            console.error("Wound PNG export failed:", e);
+            setExportError(String(e?.message || (isAr ? "فشل التصدير" : "Export failed")));
+        } finally {
+            setExporting(null);
+        }
+    };
+
+    const downloadPdf = async () => {
+        if (plan !== "ultra") {
+            setExportError(isAr ? "تصدير PDF يتطلب الاشتراك ألترا." : "Ultra plan required for PDF export.");
+            return;
+        }
+
+        setExportError(null);
+        setExporting("pdf");
+        try {
+            const { exportWoundReportPdf } = await import("@/lib/export/medicalPdfExporter");
+            await exportWoundReportPdf({
+                data: result,
+                isArabic: isAr,
+                userName: profile?.full_name || profile?.username || user?.user_metadata?.username || (isAr ? "المستخدم الرئيسي" : "Primary User"),
+                scannedImage,
+                plan: plan || "ultra",
+            });
+        } catch (e: any) {
+            console.error("Wound PDF export failed:", e);
+            setExportError(String(e?.message || (isAr ? "فشل التصدير" : "Export failed")));
+        } finally {
+            setExporting(null);
+        }
+    };
 
     // ESOS Emergency Telemetry
     const [detectedCountryCode, setDetectedCountryCode] = useState<string>("EG");
@@ -214,7 +264,32 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
                     </div>
 
                     {/* Quick Action Buttons */}
-                    <div className="flex items-center gap-2 w-full md:w-auto justify-end shrink-0">
+                    <div className="flex items-center gap-2 w-full md:w-auto justify-end shrink-0 flex-wrap">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={downloadPng}
+                            disabled={!!exporting}
+                            className="gap-1.5 text-xs bg-[#0C1324] border border-white/[0.08] hover:bg-[#10192F]"
+                        >
+                            <Download className="h-3.5 w-3.5" />
+                            <span>{exporting === "png" ? (isAr ? "جاري التصدير..." : "Exporting...") : "PNG"}</span>
+                        </Button>
+
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={downloadPdf}
+                            disabled={!!exporting || plan !== "ultra"}
+                            className={cn(
+                                "gap-1.5 text-xs bg-[#0C1324] border border-white/[0.08] hover:bg-[#10192F]",
+                                plan === "ultra" ? "text-white" : "text-white/40"
+                            )}
+                        >
+                            {plan === "ultra" ? <FileDown className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5 text-amber-400" />}
+                            <span>{exporting === "pdf" ? (isAr ? "جاري التصدير..." : "Exporting...") : (isAr ? "تقرير PDF" : "PDF Report")}</span>
+                        </Button>
+
                         <Button
                             variant="secondary"
                             size="sm"
@@ -224,6 +299,7 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
                             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5" />}
                             <span>{copied ? (isAr ? "تم النسخ" : "Copied") : (isAr ? "مشاركة" : "Share")}</span>
                         </Button>
+
                         <Button
                             variant="outline"
                             size="sm"

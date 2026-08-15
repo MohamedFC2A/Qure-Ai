@@ -672,28 +672,19 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     };
 
     const downloadPng = async () => {
-        const node = exportRef.current;
-        if (!node) return;
-
         setExportError(null);
         setExporting('png');
         try {
-            const { toPng } = await import("html-to-image");
-            const pixelRatio = getSafePixelRatio(node, plan === 'ultra' ? 4 : 3);
-            const dataUrl = await toPng(node, {
-                cacheBust: true,
-                pixelRatio,
-                backgroundColor: "#070A12",
-                style: exportFrameStyle,
-                filter: exportFilter,
+            const { exportMedicalReportPng } = await import("@/lib/export/medicalPdfExporter");
+            await exportMedicalReportPng({
+                data,
+                isArabic,
+                userName: profile?.full_name || profile?.username || user?.user_metadata?.username || t("Primary User", "المستخدم الرئيسي"),
+                scannedImage: data.scannedImage,
             });
-
-            const a = document.createElement("a");
-            a.href = dataUrl;
-            a.download = `${exportBaseName}-${Date.now()}.png`;
-            a.click();
         } catch (e: any) {
-            setExportError(String(e?.message || "Export failed"));
+            console.error("Export PNG error:", e);
+            setExportError(String(e?.message || t("Export failed", "فشل التصدير")));
         } finally {
             setExporting(null);
         }
@@ -705,45 +696,19 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
             return;
         }
 
-        const node = exportRef.current;
-        if (!node) return;
-
         setExportError(null);
         setExporting('pdf');
         try {
-            const [{ toPng }, { jsPDF }] = await Promise.all([
-                import("html-to-image"),
-                import("jspdf"),
-            ]);
-
-            const pixelRatio = getSafePixelRatio(node, 5);
-            const dataUrl = await toPng(node, {
-                cacheBust: true,
-                pixelRatio,
-                backgroundColor: "#070A12",
-                style: exportFrameStyle,
-                filter: exportFilter,
+            const { exportMedicalReportPdf } = await import("@/lib/export/medicalPdfExporter");
+            await exportMedicalReportPdf({
+                data,
+                isArabic,
+                userName: profile?.full_name || profile?.username || user?.user_metadata?.username || t("Primary User", "المستخدم الرئيسي"),
+                plan: plan || "ultra",
             });
-
-            const img = new Image();
-            img.src = dataUrl;
-            await img.decode();
-
-            const pxToPt = 0.75;
-            const pdfWidth = img.width * pxToPt;
-            const pdfHeight = img.height * pxToPt;
-            const orientation = pdfWidth > pdfHeight ? "landscape" : "portrait";
-
-            const pdf = new jsPDF({
-                orientation,
-                unit: "pt",
-                format: [pdfWidth, pdfHeight],
-            });
-
-            pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`${exportBaseName}-${Date.now()}.pdf`);
         } catch (e: any) {
-            setExportError(String(e?.message || "Export failed"));
+            console.error("Export PDF error:", e);
+            setExportError(String(e?.message || t("Export failed", "فشل التصدير")));
         } finally {
             setExporting(null);
         }

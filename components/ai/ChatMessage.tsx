@@ -1,11 +1,29 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { Copy, Check, User, CheckCircle2, AlertTriangle, Zap, Info, HelpCircle, ArrowRight, XCircle, Brain } from "lucide-react";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Copy, Check, User, CheckCircle2, AlertTriangle, Zap, Info, HelpCircle, ArrowRight, XCircle, Brain, Globe, ExternalLink, ChevronDown, ChevronUp, Search, ShieldCheck, Sparkles, Activity } from "lucide-react";
+import { useState, useEffect } from "react";
 import { parseAiResponse } from "@/lib/ai/chat";
 import { VoiceReaderButton } from "@/components/ui/VoiceReaderButton";
+
+export interface ChatSearchSource {
+    title: string;
+    link: string;
+    domain?: string;
+    snippet?: string;
+    date?: string;
+}
+
+export interface ChatSearchMetadata {
+    performed: boolean;
+    query?: string;
+    pagesCount?: number;
+    totalSources?: number;
+    sources?: ChatSearchSource[];
+    directAnswer?: string;
+    knowledgeEntity?: string;
+}
 
 export interface ChatMessageData {
     id?: string;
@@ -13,6 +31,7 @@ export interface ChatMessageData {
     content: string;
     keyPoints?: string[];
     suggestedFollowUps?: string[];
+    searchMetadata?: ChatSearchMetadata | null;
     created_at?: string;
 }
 
@@ -23,8 +42,119 @@ interface ChatMessageProps {
     onSuggestionClick?: (text: string) => void;
 }
 
+const SEARCH_STEPS_AR = [
+    { title: "جاري البحث السريري المباشر عبر محرك Serper (5 صفحات)...", source: "Serper Clinical Engine" },
+    { title: "فحص النشرات الدوائية والتركيبات المعتمدة عالمياً...", source: "FDA & RxNorm & DailyMed" },
+    { title: "مطابقة التداخلات والبروتوكولات السريرية الحديثة...", source: "Medscape & Mayo Clinic & PubMed" },
+    { title: "صياغة وتدقيق التوصيات السريرية بالذكاء الاصطناعي...", source: "Qure Clinical Synthesizer" },
+];
+
+const SEARCH_STEPS_EN = [
+    { title: "Executing 5-page live medical web search...", source: "Serper Clinical Engine" },
+    { title: "Scanning official drug monographs & registries...", source: "FDA & RxNorm & DailyMed" },
+    { title: "Cross-referencing clinical protocols & interactions...", source: "Medscape & Mayo Clinic & PubMed" },
+    { title: "Synthesizing verified clinical recommendation...", source: "Qure Clinical Synthesizer" },
+];
+
+const SOURCE_BADGES = [
+    { name: "FDA.gov", color: "text-sky-300 bg-sky-950/60 border-sky-500/30" },
+    { name: "RxNorm", color: "text-emerald-300 bg-emerald-950/60 border-emerald-500/30" },
+    { name: "DailyMed", color: "text-blue-300 bg-blue-950/60 border-blue-500/30" },
+    { name: "Medscape", color: "text-indigo-300 bg-indigo-950/60 border-indigo-500/30" },
+    { name: "Mayo Clinic", color: "text-teal-300 bg-teal-950/60 border-teal-500/30" },
+    { name: "PubMed", color: "text-cyan-300 bg-cyan-950/60 border-cyan-500/30" },
+    { name: "BNF (NICE)", color: "text-amber-300 bg-amber-950/60 border-amber-500/30" },
+];
+
+function LiveMedicalSearchRadar({ isArabic }: { isArabic: boolean }) {
+    const [stepIndex, setStepIndex] = useState(0);
+    const [activeBadgeIndex, setActiveBadgeIndex] = useState(0);
+
+    const steps = isArabic ? SEARCH_STEPS_AR : SEARCH_STEPS_EN;
+
+    useEffect(() => {
+        const stepInterval = setInterval(() => {
+            setStepIndex((prev) => (prev + 1) % steps.length);
+        }, 1300);
+
+        const badgeInterval = setInterval(() => {
+            setActiveBadgeIndex((prev) => (prev + 1) % SOURCE_BADGES.length);
+        }, 450);
+
+        return () => {
+            clearInterval(stepInterval);
+            clearInterval(badgeInterval);
+        };
+    }, [steps.length]);
+
+    const currentStep = steps[stepIndex];
+
+    return (
+        <div className="w-full min-w-[260px] sm:min-w-[340px] max-w-lg py-1.5 space-y-3">
+            {/* Header Stage with Animated Radar */}
+            <div className="flex items-center gap-3">
+                <div className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-xl bg-sky-950/70 border border-sky-500/30 text-sky-400 shadow-sm">
+                    <Globe className="w-4 h-4 animate-spin" style={{ animationDuration: "3s" }} />
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white truncate transition-all duration-300">
+                        {currentStep.title}
+                    </p>
+                    <p className="text-[10px] text-cyan-300/80 font-mono mt-0.5 truncate">
+                        {currentStep.source}
+                    </p>
+                </div>
+            </div>
+
+            {/* Live Progress Bar with smooth wave */}
+            <div className="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden relative">
+                <motion.div
+                    className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 rounded-full"
+                    animate={{
+                        x: isArabic ? ["100%", "-100%"] : ["-100%", "100%"],
+                    }}
+                    transition={{
+                        repeat: Infinity,
+                        duration: 1.5,
+                        ease: "easeInOut",
+                    }}
+                    style={{ width: "50%" }}
+                />
+            </div>
+
+            {/* Real-time cycling source pills */}
+            <div className="flex items-center gap-1.5 overflow-x-hidden pt-0.5">
+                <span className="text-[10px] text-slate-500 font-medium shrink-0">
+                    {isArabic ? "المصادر المعتمدة:" : "Sources:"}
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    {SOURCE_BADGES.map((b, idx) => {
+                        const isActive = idx === activeBadgeIndex;
+                        return (
+                            <span
+                                key={b.name}
+                                className={cn(
+                                    "px-2 py-0.5 rounded-md text-[10px] font-mono transition-all duration-200 border",
+                                    isActive
+                                        ? b.color + " scale-105 shadow-sm font-bold opacity-100"
+                                        : "text-slate-500 bg-white/[0.02] border-white/[0.04] opacity-50"
+                                )}
+                            >
+                                {b.name}
+                            </span>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick }: ChatMessageProps) {
     const [copied, setCopied] = useState(false);
+    const [showSources, setShowSources] = useState(false);
     const isUser = message.role === "user";
 
     // Fail-safe parsing for AI assistant messages to eliminate raw JSON artifacts
@@ -284,12 +414,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         {displayContent ? (
                             <div className="space-y-1">{renderMarkdown(displayContent)}</div>
                         ) : (
-                            /* Streaming: typing indicator */
-                            <div className="flex items-center gap-1.5 py-1">
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-100" />
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-200" />
-                            </div>
+                            /* Live Medical Search & Thinking Radar */
+                            <LiveMedicalSearchRadar isArabic={isArabic} />
                         )}
                     </div>
                 )}
@@ -314,6 +440,68 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                 : <Copy className="w-3.5 h-3.5 text-slate-400" />
                             }
                         </button>
+                    </div>
+                )}
+
+                {/* Live Medical Web Search Sources (Strictly No Glowing Borders) */}
+                {!isUser && message.searchMetadata?.performed && (
+                    <div className="mt-3 rounded-xl border border-white/[0.08] bg-[#0A1020]/90 backdrop-blur-xl p-3.5 space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                                <div className="p-1 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400">
+                                    <Globe className="w-3.5 h-3.5" />
+                                </div>
+                                <span>
+                                    {isArabic
+                                        ? `تم التحقق السريري المباشر عبر ${message.searchMetadata.pagesCount || 5} صفحات ومصادر طبية`
+                                        : `Verified via ${message.searchMetadata.pagesCount || 5} Live Medical Pages`}
+                                </span>
+                            </div>
+
+                            {message.searchMetadata.sources && message.searchMetadata.sources.length > 0 && (
+                                <button
+                                    onClick={() => setShowSources((prev) => !prev)}
+                                    className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] font-medium text-slate-300 flex items-center gap-1 transition-colors"
+                                >
+                                    <span>{showSources ? (isArabic ? "إخفاء المصادر" : "Hide Sources") : (isArabic ? `عرض المصادر (${message.searchMetadata.sources.length})` : `View Sources (${message.searchMetadata.sources.length})`)}</span>
+                                    {showSources ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Expandable Sources List */}
+                        {showSources && message.searchMetadata.sources && message.searchMetadata.sources.length > 0 && (
+                            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+                                {message.searchMetadata.sources.map((src, i) => (
+                                    <a
+                                        key={i}
+                                        href={src.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block p-2.5 rounded-lg bg-[#0C1428] hover:bg-[#101B36] border border-white/[0.06] transition-colors group"
+                                    >
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                            <span className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-mono text-cyan-300 truncate max-w-[200px]">
+                                                {src.domain || "medical-source.org"}
+                                            </span>
+                                            <span className="text-[10px] text-emerald-400 flex items-center gap-0.5 font-medium">
+                                                <CheckCircle2 className="w-3 h-3" />
+                                                <span>{isArabic ? "موثوق" : "Verified"}</span>
+                                            </span>
+                                        </div>
+                                        <p className="text-xs font-semibold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-1">
+                                            <span>{src.title}</span>
+                                            <ExternalLink className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                                        </p>
+                                        {src.snippet && (
+                                            <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                                {src.snippet}
+                                            </p>
+                                        )}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 

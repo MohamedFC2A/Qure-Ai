@@ -25,7 +25,8 @@ const updateProfileSchema = z.object({
 export async function POST(req: NextRequest) {
     try {
         const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        const user = authData?.user ?? null;
 
         if (!user || authError) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

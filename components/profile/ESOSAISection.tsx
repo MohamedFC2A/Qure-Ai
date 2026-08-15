@@ -136,7 +136,8 @@ export const ESOSAISection: React.FC<ESOSAISectionProps> = ({ isUltra, t, isArab
 
             // 2. Fetch authenticated user's private health profile
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: authData } = await supabase.auth.getUser();
+                const user = authData?.user ?? null;
                 if (user && isMounted) {
                     setUserId(user.id);
                     setIsSyncing(true);

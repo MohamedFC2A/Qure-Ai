@@ -45,7 +45,8 @@ export async function detectBiometricCapability(): Promise<DeviceBiometricInfo> 
 export async function registerPasskey(friendlyName?: string): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: authData, error: userError } = await supabase.auth.getUser()
+    const user = authData?.user ?? null
 
     if (userError || !user) {
       return { success: false, message: 'يجب تسجيل الدخول أولاً لتفعيل البصمة الذكية.' }

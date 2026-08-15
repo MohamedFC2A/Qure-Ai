@@ -1,5 +1,5 @@
 import { extractPossibleNdc, fetchOpenFdaLabelSnapshot, fetchOpenFdaNdcSnapshot, type OpenFdaLabelSnapshot } from "@/lib/openfda";
-import { serperSearch, type SerperSearchSnapshot } from "@/lib/serper";
+import { serperSearch, deepMedicalSerperSearch, type SerperSearchSnapshot } from "@/lib/serper";
 import { searchRxNorm, type RxNormSearchResult } from "@/lib/rxnorm";
 
 export type ProductKind =
@@ -288,14 +288,29 @@ export async function preflightMedicationEvidence(opts: {
     let web: SerperSearchSnapshot | null = null;
     try {
         const hl = opts.language === "ar" ? "ar" : "en";
-        web = await serperSearch({ query: trustedQuery, num: 8, gl: "us", hl });
+        const customAngles = [
+            `${hintedSeed} official package leaflet active ingredients strength`,
+            `${hintedSeed} دواعي الاستعمال والجرعة المكونات الفعالة`,
+            `${hintedSeed} monograph openfda dailymed registration`,
+            `${hintedSeed} contraindications warnings interactions`,
+        ];
+
+        web = await deepMedicalSerperSearch({
+            query: trustedQuery,
+            maxPages: 5,
+            gl: opts.language === "ar" ? "eg" : "us",
+            hl,
+            customAngles,
+        });
 
         if (web?.error) {
-            // If key is missing or Serper fails, treat as best-effort and continue.
-            web = null;
-        } else if (web && !web.found) {
-            const general = await serperSearch({ query: hintedSeed, num: 8, gl: "us", hl });
-            web = general?.error ? web : general;
+            // Fallback to general deep search
+            web = await deepMedicalSerperSearch({
+                query: hintedSeed,
+                maxPages: 3,
+                gl: opts.language === "ar" ? "eg" : "us",
+                hl,
+            });
         }
     } catch {
         web = null;
