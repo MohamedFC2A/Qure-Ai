@@ -23,68 +23,60 @@ export interface LiveSearchExecutionResult {
 }
 
 /**
- * Intelligent detector for whether a chat prompt requires real-time external medical search
+ * Intelligent detector for whether a chat prompt genuinely requires real-time external medical search
  */
 export function shouldTriggerLiveMedicalSearch(prompt: string, mode: string = "health"): boolean {
-    const text = String(prompt || "").toLowerCase();
+    const text = String(prompt || "").toLowerCase().trim();
+    if (!text) return false;
 
-    // 1. Explicit search requests
-    if (
-        text.includes("ابحث") ||
-        text.includes("بحث") ||
-        text.includes("سيرش") ||
-        text.includes("search") ||
-        text.includes("google") ||
-        text.includes("على النت") ||
-        text.includes("عبر الانترنت") ||
-        text.includes("on the web") ||
-        text.includes("latest") ||
-        text.includes("احدث") ||
-        text.includes("أحدث") ||
-        text.includes("دراسة") ||
-        text.includes("دراسات") ||
-        text.includes("سعر") ||
-        text.includes("اسعار") ||
-        text.includes("price") ||
-        text.includes("تكلفة")
-    ) {
+    // 1. Explicit user intent for live/online web search
+    const explicitSearchKeywords = [
+        "ابحث",
+        "ابحث في النت",
+        "ابحث على النت",
+        "ابحث عبر الانترنت",
+        "ابحث في جوجل",
+        "سيرش",
+        "search",
+        "google it",
+        "on the web",
+        "online search",
+        "check online",
+        "سعر",
+        "اسعار",
+        "price",
+        "تكلفة",
+        "متوفر في الصيدليات",
+        "سعر الدواء"
+    ];
+
+    if (explicitSearchKeywords.some((kw) => text.includes(kw))) {
         return true;
     }
 
-    // 2. Specific medical entities, trials, recalls, FDA approvals, and novel therapies
-    const externalTriggers = [
+    // 2. Clinical trials, FDA recalls, regulatory approvals, and novel research updates
+    const externalRegulatoryKeywords = [
         "fda approval",
-        "clinical trial",
-        "approved in",
-        "recall",
-        "warning letter",
-        "سحب دواء",
+        "موافقة fda",
         "موافقة الغذاء والدواء",
         "هيئة الدواء",
-        "وزارة الصحة",
+        "سحب دواء",
+        "drug recall",
+        "warning letter",
+        "تحذير رسمي",
+        "clinical trial",
         "تجارب سريرية",
-        "مستجدات",
-        "جديد",
-        "novel",
-        "guidelines 2024",
+        "أحدث الأبحاث",
+        "احدث الدراسات",
+        "أحدث دراسة",
         "guidelines 2025",
         "guidelines 2026",
         "إرشادات 2025",
         "إرشادات 2026",
-        "جرعة جديدة",
-        "بديل دواء",
-        "بدائل",
-        "متوفر في الصيدليات",
-        "pharmacy price",
-        "موانع جديدة",
+        "بروتوكول جديد",
     ];
 
-    if (externalTriggers.some((t) => text.includes(t))) {
-        return true;
-    }
-
-    // 3. Questions containing specific foreign or uncatalogued drug brand names or complex queries
-    if (text.length > 25 && (text.includes("ما هو") || text.includes("ما هي") || text.includes("what is") || text.includes("tell me about") || text.includes("هل يوجد") || text.includes("كيف يعمل"))) {
+    if (externalRegulatoryKeywords.some((kw) => text.includes(kw))) {
         return true;
     }
 

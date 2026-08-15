@@ -32,6 +32,7 @@ export interface ChatMessageData {
     keyPoints?: string[];
     suggestedFollowUps?: string[];
     searchMetadata?: ChatSearchMetadata | null;
+    isLiveSearch?: boolean;
     created_at?: string;
 }
 
@@ -43,109 +44,113 @@ interface ChatMessageProps {
 }
 
 const SEARCH_STEPS_AR = [
-    { title: "جاري البحث السريري المباشر عبر محرك Serper (5 صفحات)...", source: "Serper Clinical Engine" },
-    { title: "فحص النشرات الدوائية والتركيبات المعتمدة عالمياً...", source: "FDA & RxNorm & DailyMed" },
-    { title: "مطابقة التداخلات والبروتوكولات السريرية الحديثة...", source: "Medscape & Mayo Clinic & PubMed" },
-    { title: "صياغة وتدقيق التوصيات السريرية بالذكاء الاصطناعي...", source: "Qure Clinical Synthesizer" },
+    { title: "الاتصال بمحرك البحث السريري المباشر (Serper Engine)...", source: "فحص 5 صفحات ومصادر طبية معتمدة" },
+    { title: "استخراج ومطابقة النشرات وقواعد البيانات المعتمدة...", source: "FDA • RxNorm • DailyMed" },
+    { title: "مراجعة التداخلات والبروتوكولات السريرية الحديثة...", source: "Medscape • Mayo Clinic • PubMed" },
+    { title: "صياغة وتدقيق التوصيات بالذكاء الاصطناعي السريري...", source: "Qure Clinical Synthesizer" },
 ];
 
 const SEARCH_STEPS_EN = [
-    { title: "Executing 5-page live medical web search...", source: "Serper Clinical Engine" },
-    { title: "Scanning official drug monographs & registries...", source: "FDA & RxNorm & DailyMed" },
-    { title: "Cross-referencing clinical protocols & interactions...", source: "Medscape & Mayo Clinic & PubMed" },
-    { title: "Synthesizing verified clinical recommendation...", source: "Qure Clinical Synthesizer" },
+    { title: "Connecting to Serper Live Clinical Engine...", source: "Scanning 5-Page Verified Clinical Sources" },
+    { title: "Scanning Official Drug Monographs & Databases...", source: "FDA • RxNorm • DailyMed" },
+    { title: "Cross-referencing Safety Protocols & Interactions...", source: "Medscape • Mayo Clinic • PubMed" },
+    { title: "Synthesizing Verified Clinical Recommendations...", source: "Qure Clinical Synthesizer" },
 ];
 
-const SOURCE_BADGES = [
-    { name: "FDA.gov", color: "text-sky-300 bg-sky-950/60 border-sky-500/30" },
-    { name: "RxNorm", color: "text-emerald-300 bg-emerald-950/60 border-emerald-500/30" },
-    { name: "DailyMed", color: "text-blue-300 bg-blue-950/60 border-blue-500/30" },
-    { name: "Medscape", color: "text-indigo-300 bg-indigo-950/60 border-indigo-500/30" },
-    { name: "Mayo Clinic", color: "text-teal-300 bg-teal-950/60 border-teal-500/30" },
-    { name: "PubMed", color: "text-cyan-300 bg-cyan-950/60 border-cyan-500/30" },
-    { name: "BNF (NICE)", color: "text-amber-300 bg-amber-950/60 border-amber-500/30" },
+const LIVE_SOURCES = [
+    { name: "FDA.gov (هيئة الغذاء والدواء الأمريكية)", nameEn: "FDA.gov (US Approved Database)" },
+    { name: "DailyMed (المكتبة الوطنية للطب NLM)", nameEn: "DailyMed (National Library of Medicine)" },
+    { name: "Mayo Clinic (البروتوكولات السريرية)", nameEn: "Mayo Clinic Clinical Protocols" },
+    { name: "Medscape (المراجع الدوائية والتحذيرات)", nameEn: "Medscape Drug Reference & Alerts" },
+    { name: "PubMed / NIH (الأبحاث السريرية المحكمة)", nameEn: "PubMed / NIH Peer-Reviewed Studies" },
+    { name: "RxNorm (المعايير الصيدلانية الدولية)", nameEn: "RxNorm Standard Registry" },
 ];
 
 function LiveMedicalSearchRadar({ isArabic }: { isArabic: boolean }) {
     const [stepIndex, setStepIndex] = useState(0);
-    const [activeBadgeIndex, setActiveBadgeIndex] = useState(0);
+    const [sourceIndex, setSourceIndex] = useState(0);
 
     const steps = isArabic ? SEARCH_STEPS_AR : SEARCH_STEPS_EN;
 
     useEffect(() => {
-        const stepInterval = setInterval(() => {
+        const stepTimer = setInterval(() => {
             setStepIndex((prev) => (prev + 1) % steps.length);
-        }, 1300);
+        }, 1400);
 
-        const badgeInterval = setInterval(() => {
-            setActiveBadgeIndex((prev) => (prev + 1) % SOURCE_BADGES.length);
-        }, 450);
+        const sourceTimer = setInterval(() => {
+            setSourceIndex((prev) => (prev + 1) % LIVE_SOURCES.length);
+        }, 750);
 
         return () => {
-            clearInterval(stepInterval);
-            clearInterval(badgeInterval);
+            clearInterval(stepTimer);
+            clearInterval(sourceTimer);
         };
     }, [steps.length]);
 
     const currentStep = steps[stepIndex];
+    const currentSource = LIVE_SOURCES[sourceIndex];
+    const progressPercent = Math.min(100, Math.round(((stepIndex + 1) / steps.length) * 100));
 
     return (
-        <div className="w-full min-w-[260px] sm:min-w-[340px] max-w-lg py-1.5 space-y-3">
-            {/* Header Stage with Animated Radar */}
+        <div className="w-full min-w-[280px] sm:min-w-[360px] max-w-lg py-1.5 space-y-2.5">
+            {/* Header Stage & Stepper */}
             <div className="flex items-center gap-3">
-                <div className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-xl bg-sky-950/70 border border-sky-500/30 text-sky-400 shadow-sm">
+                <div className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-xl bg-sky-950/80 border border-sky-500/40 text-sky-400 shadow-sm">
                     <Globe className="w-4 h-4 animate-spin" style={{ animationDuration: "3s" }} />
                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-white truncate transition-all duration-300">
-                        {currentStep.title}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-bold text-white truncate transition-all duration-200">
+                            {currentStep.title}
+                        </p>
+                        <span className="text-[10px] font-mono font-bold text-sky-400 shrink-0">
+                            {stepIndex + 1}/{steps.length}
+                        </span>
+                    </div>
                     <p className="text-[10px] text-cyan-300/80 font-mono mt-0.5 truncate">
                         {currentStep.source}
                     </p>
                 </div>
             </div>
 
-            {/* Live Progress Bar with smooth wave */}
-            <div className="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden relative">
-                <motion.div
-                    className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 rounded-full"
-                    animate={{
-                        x: isArabic ? ["100%", "-100%"] : ["-100%", "100%"],
-                    }}
-                    transition={{
-                        repeat: Infinity,
-                        duration: 1.5,
-                        ease: "easeInOut",
-                    }}
-                    style={{ width: "50%" }}
+            {/* Step-by-step progress bar */}
+            <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden p-0.5">
+                <div
+                    className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${progressPercent}%` }}
                 />
             </div>
 
-            {/* Real-time cycling source pills */}
-            <div className="flex items-center gap-1.5 overflow-x-hidden pt-0.5">
-                <span className="text-[10px] text-slate-500 font-medium shrink-0">
-                    {isArabic ? "المصادر المعتمدة:" : "Sources:"}
+            {/* Single Spotlight Source Item (No messy wrapping!) */}
+            <div className="flex items-center gap-2 text-[11px] pt-0.5">
+                <span className="text-slate-500 text-[10px] font-medium shrink-0">
+                    {isArabic ? "المصدر المفحوص حالياً:" : "Current Source:"}
                 </span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    {SOURCE_BADGES.map((b, idx) => {
-                        const isActive = idx === activeBadgeIndex;
-                        return (
-                            <span
-                                key={b.name}
-                                className={cn(
-                                    "px-2 py-0.5 rounded-md text-[10px] font-mono transition-all duration-200 border",
-                                    isActive
-                                        ? b.color + " scale-105 shadow-sm font-bold opacity-100"
-                                        : "text-slate-500 bg-white/[0.02] border-white/[0.04] opacity-50"
-                                )}
-                            >
-                                {b.name}
-                            </span>
-                        );
-                    })}
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono text-[10px] font-semibold truncate transition-all duration-300">
+                    <Search className="w-3 h-3 text-sky-400 shrink-0" />
+                    <span>{isArabic ? currentSource.name : currentSource.nameEn}</span>
+                </span>
+            </div>
+        </div>
+    );
+}
+
+function ClinicalThinkingIndicator({ isArabic }: { isArabic: boolean }) {
+    return (
+        <div className="flex items-center gap-3 py-1.5 px-1">
+            <div className="w-8 h-8 rounded-xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                <Brain className="w-4 h-4 animate-pulse" />
+            </div>
+            <div className="space-y-1">
+                <p className="text-xs text-slate-200 font-bold">
+                    {isArabic ? "جاري التحليل السريري وصياغة التوصيات الطبية..." : "Analyzing clinical context & synthesizing recommendations..."}
+                </p>
+                <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse delay-150" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse delay-300" />
                 </div>
             </div>
         </div>
@@ -413,9 +418,12 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                     )}>
                         {displayContent ? (
                             <div className="space-y-1">{renderMarkdown(displayContent)}</div>
-                        ) : (
-                            /* Live Medical Search & Thinking Radar */
+                        ) : (message.isLiveSearch || message.searchMetadata?.performed) ? (
+                            /* Live Medical Search Stepper Radar (Dedicated to live web searches only) */
                             <LiveMedicalSearchRadar isArabic={isArabic} />
+                        ) : (
+                            /* Standard Clinical AI Thinking (Fast, clean, no fake sources) */
+                            <ClinicalThinkingIndicator isArabic={isArabic} />
                         )}
                     </div>
                 )}

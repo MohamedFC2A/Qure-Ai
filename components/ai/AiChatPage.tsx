@@ -176,6 +176,7 @@ export function AiChatPage() {
             id: assistantId,
             role: "assistant",
             content: "",
+            isLiveSearch: liveSearchEnabled,
             keyPoints: [],
             suggestedFollowUps: [],
             created_at: new Date().toISOString(),
@@ -243,6 +244,7 @@ export function AiChatPage() {
                                         m.id === assistantId
                                             ? {
                                                 ...m,
+                                                isLiveSearch: true,
                                                 searchMetadata: {
                                                     performed: true,
                                                     query: event.query,
