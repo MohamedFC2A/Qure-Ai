@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search, Sparkles } from "lucide-react";
+import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search, Sparkles, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -414,10 +414,11 @@ export function AiChatPage() {
         }
     }, []);
 
-    /* ── Auto-scroll only when user is near bottom ── */
+    /* ── Auto-scroll strictly on container, zero window jitter ── */
     useEffect(() => {
-        if (!autoScroll) return;
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (!autoScroll || !chatContainerRef.current) return;
+        const el = chatContainerRef.current;
+        el.scrollTop = el.scrollHeight;
     }, [messages, isStreaming, autoScroll]);
 
     /* ── Track scroll position to toggle auto-scroll ── */
@@ -523,7 +524,7 @@ export function AiChatPage() {
 
     return (
         <main
-            className="fixed inset-0 pt-16 sm:pt-20 md:pt-20 z-40 flex"
+            className="fixed inset-0 pt-16 sm:pt-20 md:pt-20 z-40 flex overflow-hidden"
             dir={isArabic ? "rtl" : "ltr"}
             style={{ background: "#040711" }}
         >
@@ -542,17 +543,45 @@ export function AiChatPage() {
             )}
 
             {/* ── Main Chat Area ── */}
-            <div className="flex-1 flex flex-col min-w-0 relative z-10">
-
-                {/* Floating mobile sidebar toggle */}
+            <div className="flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden">
+                {/* Top Chat Sub-Header with Smooth Sidebar Toggle */}
                 {isUltra && (
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden fixed top-20 right-3 z-30 p-2 rounded-xl bg-[#080D1A]/90 border border-white/[0.08] backdrop-blur-xl text-slate-300 hover:text-white shadow-md"
-                        title="Open Conversations"
-                    >
-                        <Menu className="w-4 h-4" />
-                    </button>
+                    <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
+                        <div className="flex items-center gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => setSidebarOpen((prev) => !prev)}
+                                className={cn(
+                                    "p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold select-none",
+                                    sidebarOpen
+                                        ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+                                        : "bg-white/[0.03] hover:bg-cyan-500/10 border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200"
+                                )}
+                                title={isArabic ? "سجل المحادثات" : "Chat History"}
+                            >
+                                <Menu className="w-4 h-4" />
+                                <span className="hidden sm:inline">{isArabic ? "المحادثات" : "Chats"}</span>
+                            </button>
+
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="text-[11px] font-bold text-slate-200">
+                                    Qure AI
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={handleNewChat}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-cyan-500/15 border border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200 text-xs font-semibold transition-all cursor-pointer"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">{isArabic ? "محادثة جديدة" : "New Chat"}</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
 
                 {/* ── ULTRA PAYWALL BLOCK (For Free Tier Users) ── */}
@@ -749,13 +778,15 @@ export function AiChatPage() {
                         <div className="shrink-0 px-3 sm:px-6 pt-3 pb-3 sm:pb-5 border-t border-white/[0.08] bg-[#080D1A]/90 backdrop-blur-2xl">
                             <div className="max-w-3xl mx-auto space-y-2.5">
 
-                                {/* Medication picker bar */}
-                                <MedicationSelect
-                                    isArabic={isArabic}
-                                    onSelect={handleSelectMedication}
-                                    selected={selectedMedication}
-                                    onNavigateToScan={() => router.push("/scan")}
-                                />
+                                {/* Medication picker bar — only show picker when no medication is active */}
+                                {!selectedMedication && (
+                                    <MedicationSelect
+                                        isArabic={isArabic}
+                                        onSelect={handleSelectMedication}
+                                        selected={selectedMedication}
+                                        onNavigateToScan={() => router.push("/scan")}
+                                    />
+                                )}
 
                                 {/* Premium Main Input Container */}
                                 <div className="rounded-2xl border border-white/[0.09] bg-[#0C1324]/90 focus-within:border-cyan-500/50 backdrop-blur-xl transition-all duration-200 shadow-xl overflow-hidden">

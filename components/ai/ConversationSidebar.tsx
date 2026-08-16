@@ -90,17 +90,16 @@ export function ConversationSidebar({
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed top-0 bottom-0 z-50 w-[min(17rem,85vw)] flex flex-col transition-all duration-300 backdrop-blur-2xl",
-                    "lg:static lg:z-auto lg:translate-x-0 lg:w-64",
-                    "border-r border-white/[0.08]",
-                    isArabic ? "right-0 lg:border-r-0 lg:border-l" : "left-0",
+                    "fixed inset-y-0 z-50 w-72 flex flex-col backdrop-blur-2xl transition-transform duration-200 ease-out border-r border-white/[0.08]",
+                    isArabic ? "right-0 border-r-0 border-l border-white/[0.08]" : "left-0",
                     isOpen
-                        ? "translate-x-0"
+                        ? "translate-x-0 pointer-events-auto"
                         : isArabic
-                            ? "translate-x-full lg:translate-x-0"
-                            : "-translate-x-full lg:translate-x-0"
+                            ? "translate-x-full pointer-events-none invisible lg:translate-x-0 lg:pointer-events-auto lg:visible"
+                            : "-translate-x-full pointer-events-none invisible lg:translate-x-0 lg:pointer-events-auto lg:visible",
+                    "lg:static lg:z-auto lg:w-72 lg:shrink-0"
                 )}
-                style={{ background: "rgba(8, 13, 26, 0.96)" }}
+                style={{ background: "rgba(8, 13, 26, 0.98)" }}
             >
                 {/* Top accent line */}
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
