@@ -82,6 +82,11 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
 
     // 2. Commercial Brand Name Refiner (Prioritize popular trade names over raw scientific formulas)
     const brandMatches = [
+        { key: "123", name: "1,2,3 Cold & Flu" },
+        { key: "1 2 3", name: "1,2,3 Cold & Flu" },
+        { key: "1,2,3", name: "1,2,3 Cold & Flu" },
+        { key: "one two three", name: "1,2,3 Cold & Flu" },
+        { key: "وان تو ثري", name: "وان تو ثري (1 2 3)" },
         { key: "doliprane", name: "Doliprane" },
         { key: "panadol", name: "Panadol" },
         { key: "cetal", name: "Cetal" },
@@ -104,18 +109,32 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
     const lowerRaw = rawText.toLowerCase();
     const foundBrand = brandMatches.find((b) => lowerRaw.includes(b.key));
 
-    const isCongestal = combinedText.includes("congestal") || (combinedText.includes("paracetamol") && (combinedText.includes("pseudoephedrine") || combinedText.includes("chlorpheniramine")));
+    const isOneTwoThree = combinedText.includes("123") || combinedText.includes("1 2 3") || combinedText.includes("1,2,3") || combinedText.includes("one two three") || combinedText.includes("وان تو ثري");
+    const isCongestal = !isOneTwoThree && (combinedText.includes("congestal") || (combinedText.includes("paracetamol") && (combinedText.includes("pseudoephedrine") || combinedText.includes("chlorpheniramine"))));
+    const isColdFluCombo = isOneTwoThree || isCongestal;
     const isAugmentin = combinedText.includes("augmentin") || (combinedText.includes("amoxicillin") && combinedText.includes("clavulan"));
     const isFlumox = combinedText.includes("flumox") || (combinedText.includes("amoxicillin") && combinedText.includes("flucloxacillin"));
-    const isParacetamol = !isCongestal && (combinedText.includes("doliprane") || combinedText.includes("paracetamol") || combinedText.includes("panadol") || combinedText.includes("acetaminophen") || combinedText.includes("cetal") || combinedText.includes("abimol"));
+    const isParacetamol = !isColdFluCombo && (combinedText.includes("doliprane") || combinedText.includes("paracetamol") || combinedText.includes("panadol") || combinedText.includes("acetaminophen") || combinedText.includes("cetal") || combinedText.includes("abimol"));
     const isIbuprofen = combinedText.includes("ibuprofen") || combinedText.includes("brufen") || combinedText.includes("advil") || combinedText.includes("spidifen") || combinedText.includes("nurofen");
 
-    if (isCongestal) {
-        const defaultBrand = "Congestal";
+    if (isColdFluCombo) {
         if (!res.drugName || res.drugName === "Unknown") {
-            res.drugName = isAr ? (combinedText.includes("congestal") ? "كونجستال" : "دواء نزلات البرد والاحتقان") : "Congestal Cold & Flu";
+            if (isOneTwoThree) {
+                res.drugName = isAr ? "وان تو ثري (1 2 3)" : "1,2,3 Cold & Flu";
+            } else {
+                res.drugName = isAr ? (combinedText.includes("congestal") ? "كونجستال" : "دواء نزلات البرد والاحتقان") : "Congestal Cold & Flu";
+            }
         }
-        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = "Congestal Cold & Flu";
+        if (!res.drugNameEn || res.drugNameEn === "Unknown") {
+            res.drugNameEn = isOneTwoThree ? "1,2,3 Cold & Flu" : "Congestal Cold & Flu";
+        }
+        if (!res.manufacturer || res.manufacturer === "Unknown") {
+            if (isOneTwoThree) {
+                res.manufacturer = isAr ? "شركة الحكمة للصناعات الدوائية (Hikma Pharmaceuticals)" : "Hikma Pharmaceuticals";
+            } else if (combinedText.includes("sigma")) {
+                res.manufacturer = isAr ? "شركة سيجما للصناعات الدوائية (Sigma)" : "Sigma Pharmaceuticals";
+            }
+        }
         if (!res.genericName || res.genericName === "Unknown") {
             res.genericName = isAr ? "باراسيتامول + كلورفينيرامين ماليات + سودوإيفيدرين هيدروكلوريد" : "Paracetamol + Chlorpheniramine Maleate + Pseudoephedrine Hydrochloride";
         }
@@ -126,6 +145,8 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
             res.strength = "500 mg + 2 mg + 30 mg";
         }
         if (!res.form) res.form = isAr ? "أقراص مغلفة" : "Film-coated tablets";
+        if (!res.dosageForm) res.dosageForm = "tablet";
+        if (!res.routeOfAdministration) res.routeOfAdministration = isAr ? "عن طريق الفم" : "Oral";
         if (!res.category) res.category = isAr ? "علاج نزلات البرد والاحتقان" : "Cold & Flu Decongestant";
         
         if (!Array.isArray(res.activeIngredients) || res.activeIngredients.length < 2) {
@@ -144,9 +165,9 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
                 "Pseudoephedrine hydrochloride 30mg"
             ];
             res.activeIngredientsDetailed = [
-                { name: isAr ? "باراسيتامول" : "Paracetamol", nameAr: "باراسيتامول", strength: "500 mg", strengthMg: 500 },
-                { name: isAr ? "كلورفينيرامين ماليات" : "Chlorpheniramine maleate", nameAr: "كلورفينيرامين ماليات", strength: "2 mg", strengthMg: 2 },
-                { name: isAr ? "سودوإيفيدرين هيدروكلوريد" : "Pseudoephedrine hydrochloride", nameAr: "سودوإيفيدرين هيدروكلوريد", strength: "30 mg", strengthMg: 30 }
+                { name: isAr ? "باراسيتامول" : "Paracetamol", nameAr: "باراسيتامول", strength: "500 mg", strengthMg: 500, source: isAr ? "مسكن للألم وخافض للحرارة" : "Analgesic & Antipyretic" },
+                { name: isAr ? "كلورفينيرامين ماليات" : "Chlorpheniramine maleate", nameAr: "كلورفينيرامين ماليات", strength: "2 mg", strengthMg: 2, source: isAr ? "مضاد للحساسية والرشح" : "Antihistamine" },
+                { name: isAr ? "سودوإيفيدرين هيدروكلوريد" : "Pseudoephedrine hydrochloride", nameAr: "سودوإيفيدرين هيدروكلوريد", strength: "30 mg", strengthMg: 30, source: isAr ? "مضاد لاحتقان الأنف والجيوب" : "Nasal Decongestant" }
             ];
         }
 
@@ -489,7 +510,18 @@ export const analyzeMedicationText = async (
             : "Medication Product - Forensic Clinical Identification";
 
         const languageInstruction = language === 'ar'
-            ? `CRITICAL LANGUAGE RULE: You MUST answer in professional Arabic (Modern Standard Arabic) for all descriptive and clinical text fields. Keep "drugName", "genericName", "strength", "activeIngredients", and "activeIngredientsEn" strictly in English (Latin script). Do NOT translate brand names to Arabic.`
+            ? `CRITICAL LANGUAGE RULE: You MUST answer in professional Modern Standard Arabic (الفصحى) for all clinical and descriptive fields.
+- "drugName": Localized Arabic commercial trade name (e.g. "وان تو ثري (1 2 3)" or "كونجستال" or "بنادول" or "أوجمنتين").
+- "drugNameEn": English commercial trade name in Latin script (e.g. "1,2,3 Cold & Flu").
+- "genericName": Arabic scientific active molecule name (e.g. "باراسيتامول + كلورفينيرامين + سودوإيفيدرين").
+- "genericNameEn": English scientific active molecule name in Latin script (e.g. "Paracetamol + Chlorpheniramine + Pseudoephedrine").
+- "activeIngredients": Array of active ingredients with Arabic chemical names and Arabic units (e.g. ["باراسيتامول 500 مجم", "كلورفينيرامين ماليات 2 مجم", "سودوإيفيدرين هيدروكلوريد 30 مجم"]).
+- "activeIngredientsEn": Array of active ingredients in English (e.g. ["Paracetamol 500mg", "Chlorpheniramine maleate 2mg", "Pseudoephedrine hydrochloride 30mg"]).
+- "form": Pharmaceutical form in Arabic (e.g. "أقراص مغلفة", "كبسولات", "شراب").
+- "routeOfAdministration": Route of administration in Arabic (e.g. "عن طريق الفم", "موضعي").
+- "category": Pharmacological category in Arabic (e.g. "علاج نزلات البرد والاحتقان").
+- "manufacturer": Arabic/bilingual manufacturer name (e.g. "شركة الحكمة للأدوية (Hikma Pharmaceuticals)").
+- ALL other clinical fields ("uses", "dosage", "missedDose", "overdose", "warnings", "contraindications", "precautions", "sideEffects", "interactions", "whenToSeekHelp", "storage"): MUST BE IN 100% SOUND, FLUENT, ACCURATE ARABIC.`
             : `CRITICAL LANGUAGE RULE: You MUST answer completely in English.`;
 
         const contextJson = context ? JSON.stringify({

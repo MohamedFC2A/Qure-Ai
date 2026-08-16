@@ -98,6 +98,19 @@ export const PreFlightEstimator: React.FC<PreFlightEstimatorProps> = ({
         };
     }, [scanType, imageQuality, isArabic]);
 
+    const cleanProfileName = useMemo(() => {
+        if (!activeProfileName) return t("Primary Profile", "الملف الشخصي الأساسي");
+        if (activeProfileName.includes("@")) {
+            const handle = activeProfileName.split("@")[0].replace(/[0-9_.-]/g, " ").trim();
+            return handle.length > 2 ? handle : activeProfileName;
+        }
+        if (/^[a-zA-Z0-9_.-]{12,}$/.test(activeProfileName)) {
+            const cleaned = activeProfileName.replace(/[0-9_.-]/g, " ").trim();
+            return cleaned.length > 2 ? cleaned : activeProfileName;
+        }
+        return activeProfileName;
+    }, [activeProfileName, t]);
+
     return (
         <div className="w-full flex flex-col gap-4 text-start">
             {/* Top Pre-Flight Diagnostic Bar */}
@@ -108,11 +121,8 @@ export const PreFlightEstimator: React.FC<PreFlightEstimatorProps> = ({
                             <Cpu className="w-4 h-4" />
                         </div>
                         <div>
-                            <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
-                                <span>{t("Pre-Scan Clinical Calibration", "المعايرة السريرية المسبقة")}</span>
-                                <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 text-[10px] font-mono">
-                                    {t("READY", "جاهز")}
-                                </span>
+                            <h4 className="text-xs sm:text-sm font-bold text-white">
+                                {t("Pre-Scan Clinical Calibration", "المعايرة السريرية المسبقة")}
                             </h4>
                             <p className="text-[11px] text-slate-400 mt-0.5">
                                 {AI_DISPLAY_NAME} {t("Vision Neural Core v4.2", "المحرك البصري السريري")}
@@ -121,14 +131,14 @@ export const PreFlightEstimator: React.FC<PreFlightEstimatorProps> = ({
                     </div>
 
                     {/* Accurate Estimated Processing Time Badge */}
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-400/30 shadow-inner self-start sm:self-center">
-                        <Timer className="w-4 h-4 text-cyan-300 shrink-0" />
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-400/25 shadow-inner self-start sm:self-center">
+                        <Timer className="w-3.5 h-3.5 text-cyan-300 shrink-0 animate-pulse" />
                         <div className="text-start">
-                            <span className="text-[10px] text-cyan-200/70 block leading-tight font-medium">
+                            <span className="text-[9.5px] text-cyan-200/70 block leading-tight font-medium">
                                 {t("Estimated Scan Time", "الوقت التقديري المتوقع")}
                             </span>
                             <span className="text-xs font-black text-cyan-300 font-mono">
-                                ~ {estimation.rangeMin} - {estimation.rangeMax} {t("seconds", "ثانية")}
+                                <bdi dir="ltr">~ {estimation.rangeMin} - {estimation.rangeMax} {t("sec", "ثانية")}</bdi>
                             </span>
                         </div>
                     </div>
@@ -167,51 +177,22 @@ export const PreFlightEstimator: React.FC<PreFlightEstimatorProps> = ({
                         )}
                     >
                         <span className="text-[10px] text-slate-400 font-medium">{t("Target Profile", "الملف الصحي")}</span>
-                        <div className="flex items-center justify-between gap-1 mt-1.5">
-                            <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="flex items-center justify-between gap-1.5 mt-1.5 min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                 <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                                <span className="text-xs font-bold text-white truncate">
-                                    {activeProfileName || t("Personal", "شخصي")}
+                                <span className="text-xs font-bold text-white truncate" title={activeProfileName || cleanProfileName}>
+                                    <bdi dir={/^[A-Za-z0-9\s]+$/.test(cleanProfileName) ? "ltr" : "rtl"}>
+                                        {cleanProfileName}
+                                    </bdi>
                                 </span>
                             </div>
                             {onOpenProfilePicker && (
-                                <span className="text-[10px] text-cyan-300 underline font-medium">
+                                <span className="text-[10px] text-cyan-300 hover:text-cyan-200 underline font-medium shrink-0">
                                     {t("Change", "تغيير")}
                                 </span>
                             )}
                         </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Quick Adjustment Toolbar (Rotate & Re-Select) */}
-            <div className="flex items-center justify-between gap-2 px-1">
-                <button
-                    type="button"
-                    onClick={onRotate}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white text-xs font-medium transition-all"
-                >
-                    <RotateCw className="w-3.5 h-3.5" />
-                    <span>{t("Rotate Image", "تدوير الصورة")}</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={onRetakeCamera}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white text-xs font-medium transition-all"
-                    >
-                        <Camera className="w-3.5 h-3.5 text-cyan-300" />
-                        <span className="hidden sm:inline">{t("Camera", "الكاميرا")}</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onChooseGallery}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white text-xs font-medium transition-all"
-                    >
-                        <ImageIcon className="w-3.5 h-3.5 text-cyan-300" />
-                        <span className="hidden sm:inline">{t("Gallery", "الاستوديو")}</span>
-                    </button>
                 </div>
             </div>
 
