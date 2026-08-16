@@ -181,7 +181,7 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                 {/* ── Top Header ── */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
                     <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 shadow-inner">
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
                             <Brain className="w-5 h-5" />
                         </div>
 
@@ -205,10 +205,10 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-400/25">
-                            <Clock className="w-3.5 h-3.5 text-cyan-300 animate-spin" style={{ animationDuration: "5s" }} />
-                            <span className="text-cyan-200 text-xs font-medium">{t("Est. Left:", "المتبقي:")}</span>
-                            <span className="text-cyan-300 font-mono font-bold text-xs tabular-nums">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10">
+                            <Clock className="w-3.5 h-3.5 text-emerald-400 animate-spin" style={{ animationDuration: "5s" }} />
+                            <span className="text-slate-300 text-xs font-medium">{t("Est. Left:", "المتبقي:")}</span>
+                            <span className="text-emerald-400 font-mono font-bold text-xs tabular-nums">
                                 <bdi dir="ltr">{remainingSecText}</bdi>
                             </span>
                         </div>
@@ -223,20 +223,20 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                     </div>
                 </div>
 
-                {/* ── Center: Fluid Smooth Progress Track ── */}
+                {/* ── Center: Fluid Smooth Progress Track (Pure Green & Zero Glowing) ── */}
                 <div className="mt-5">
                     <div className="flex items-center justify-between text-xs mb-2">
                         <span className="font-semibold text-slate-300">
                             {t("Analysis Progress", "مستوى اكتمال الفحص")}
                         </span>
-                        <span className="font-mono font-bold text-sm text-cyan-300 tabular-nums">
+                        <span className="font-mono font-bold text-sm text-emerald-400 tabular-nums">
                             <bdi dir="ltr">{progressPercent}%</bdi>
                         </span>
                     </div>
 
-                    <div className="relative h-2.5 rounded-full bg-slate-900 overflow-hidden border border-white/10 p-0.5 shadow-inner">
+                    <div className="relative h-2 rounded-full bg-slate-900 overflow-hidden border border-white/10">
                         <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]"
+                            className="h-full rounded-full bg-emerald-500 shadow-none"
                             initial={{ width: "8%" }}
                             animate={{ width: `${progressPercent}%` }}
                             transition={{ duration: 0.35, ease: "easeOut" }}
@@ -258,9 +258,9 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                                 className={cn(
                                     "p-3 rounded-2xl border transition-all duration-300 flex items-center gap-2.5",
                                     isDone
-                                        ? "bg-emerald-500/[0.08] border-emerald-500/30 text-emerald-100 shadow-sm"
+                                        ? "bg-emerald-500/[0.08] border-emerald-500/30 text-emerald-100"
                                         : isRunning
-                                        ? "bg-cyan-500/[0.1] border-cyan-400/45 text-cyan-100 shadow-sm shadow-cyan-500/10"
+                                        ? "bg-emerald-500/[0.06] border-emerald-500/30 text-emerald-100"
                                         : isError
                                         ? "bg-amber-500/[0.08] border-amber-400/30 text-amber-100"
                                         : "bg-white/[0.02] border-white/5 opacity-40"
@@ -272,7 +272,7 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                                         isDone
                                             ? "bg-emerald-500/25 border-emerald-400 text-emerald-300"
                                             : isRunning
-                                            ? "bg-cyan-500/25 border-cyan-400 text-cyan-200 animate-pulse"
+                                            ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-200 animate-pulse"
                                             : isError
                                             ? "bg-amber-500/20 border-amber-400 text-amber-300"
                                             : "bg-white/5 border-white/10 text-slate-400"
@@ -294,7 +294,7 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                                             isDone
                                                 ? "text-white"
                                                 : isRunning
-                                                ? "text-cyan-200"
+                                                ? "text-emerald-200"
                                                 : "text-slate-400"
                                         )}
                                     >
@@ -311,7 +311,7 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
 
                 {/* ── Rotating Clinical Reassurance Ticker ── */}
                 <div className="mt-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 shrink-0">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0">
                         <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1 overflow-hidden">

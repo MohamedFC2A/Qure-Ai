@@ -125,10 +125,10 @@ function LiveMedicalSearchRadar({ isArabic, searchMetadata }: { isArabic: boolea
                 </div>
             </div>
 
-            {/* Step-by-step progress bar (Crisp, zero glowing) */}
-            <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden p-0.5">
+            {/* Step-by-step progress bar (Crisp green, zero glowing) */}
+            <div className="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden border border-white/10">
                 <div
-                    className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 rounded-full transition-all duration-400 ease-out"
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-400 ease-out"
                     style={{ width: `${progressPercent}%` }}
                 />
             </div>
