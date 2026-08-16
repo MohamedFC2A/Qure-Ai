@@ -22,6 +22,18 @@ export const translateMedicalTerm = (str: string | undefined | null, isArabic: b
 
     const lower = trimmed.toLowerCase();
 
+    // Specific Therapeutic Categories (Check first before generic substrings)
+    if (lower.includes("nasal decongestant") || lower.includes("decongestant") || lower.includes("احتقان")) return "مضاد لاحتقان الأنف والجيوب";
+    if (lower.includes("antihistamine") || lower.includes("antihistaminic") || lower.includes("حساسية")) return "مضاد للحساسية (مضاد هيستامين)";
+    if (lower.includes("analgesic") || lower.includes("antipyretic") || lower.includes("pain reliever") || lower.includes("مسكن")) return "مسكن وخافض للحرارة";
+    if (lower.includes("cold and flu") || lower.includes("cold & flu") || lower.includes("برد") || lower.includes("إنفلونزا")) return "علاج نزلات البرد والإنفلونزا";
+    if (lower.includes("anti-inflammatory") || lower.includes("nsaid")) return "مضاد للالتهاب ومسكن";
+    if (lower.includes("antibiotic") || lower.includes("مضاد حيوي")) return "مضاد حيوي";
+    if (lower.includes("antifungal") || lower.includes("فطريات")) return "مضاد للفطريات";
+    if (lower.includes("antiviral") || lower.includes("فيروسات")) return "مضاد للفيروسات";
+    if (lower.includes("cough suppressant") || lower.includes("antitussive") || lower.includes("سعال")) return "مهدئ للسعال";
+    if (lower.includes("expectorant") || lower.includes("mucolytic") || lower.includes("بلغم")) return "مذيب وطارد للبلغم";
+
     // Target Audience
     if (lower.includes("adult") && lower.includes("adolescent")) return "البالغون والمراهقون";
     if (lower === "adults & adolescents" || lower === "adults and adolescents") return "البالغون والمراهقون";
@@ -32,47 +44,49 @@ export const translateMedicalTerm = (str: string | undefined | null, isArabic: b
     if (lower.includes("elderly") || lower.includes("senior")) return "كبار السن";
     if (lower.includes("all ages")) return "كافة الأعمار";
 
-    // Routes of Administration
-    if (lower === "oral" || lower === "oral use") return "عن طريق الفم";
-    if (lower.includes("topical external") || lower.includes("external use only")) return "استعمال خارجي فقط";
-    if (lower === "topical" || lower.includes("topical use")) return "موضعي (سطحي)";
-    if (lower === "inhalation" || lower.includes("inhalat")) return "عن طريق الاستنشاق";
-    if (lower.includes("ophthalmic") || lower.includes("eye drops")) return "قطرة / مرهم عين";
-    if (lower.includes("otic") || lower.includes("ear drops")) return "قطرة أذن";
-    if (lower.includes("nasal")) return "بخاخ / قطرة أنف";
-    if (lower.includes("sublingual")) return "تحت اللسان";
-    if (lower.includes("intravenous") || lower === "iv") return "حقن وريدي";
-    if (lower.includes("intramuscular") || lower === "im") return "حقن عضل";
-    if (lower.includes("rectal")) return "عن طريق الشرج";
-
-    // Dosage Forms & Types
+    // Dosage Forms & Physical Formulations
     if (lower.includes("film coated tablet") || lower.includes("film-coated tablet") || lower.includes("film coated tablets") || lower.includes("film-coated tablets")) return "أقراص مغلفة";
     if (lower.includes("effervescent tablet") || lower.includes("effervescent tablets")) return "أقراص فوارة";
     if (lower.includes("chewable tablet") || lower.includes("chewable tablets")) return "أقراص مضغ";
     if (lower.includes("extended release") || lower.includes("sustained release")) return "أقراص ممتدة المفعول";
     if (lower.includes("lozenge") || lower.includes("lozenges")) return "أقراص استحلاب";
-    if (lower === "tablets" || lower === "tablet" || lower === "tabs" || lower === "tab") return "أقراص";
-    if (lower === "capsules" || lower === "capsule" || lower === "caps" || lower === "cap") return "كبسولات";
-    if (lower === "syrup" || lower.includes("syrup")) return "شراب";
-    if (lower === "suspension" || lower.includes("suspension")) return "معلّق";
-    if (lower === "solution" || lower.includes("solution")) return "محلول";
-    if (lower.includes("injection") || lower.includes("ampoule") || lower.includes("vial")) return "حقن / أمبولات";
-    if (lower === "cream" || lower.includes("cream")) return "كريم";
-    if (lower === "ointment" || lower.includes("ointment")) return "مرهم";
-    if (lower === "gel" || lower.includes("gel")) return "جل موجه";
-    if (lower.includes("drops") || lower === "drop") return "قطرات";
-    if (lower.includes("spray")) return "بخاخ";
-    if (lower.includes("suppository") || lower.includes("suppositories")) return "تحاميل (لبوس)";
+    if (lower.includes("tablet") || lower.includes("tabs") || lower === "tab" || lower.includes("قرص") || lower.includes("أقراص")) return "أقراص";
+    if (lower.includes("capsule") || lower.includes("caps") || lower === "cap" || lower.includes("كبسول")) return "كبسولات";
+    if (lower.includes("syrup") || lower.includes("شراب")) return "شراب";
+    if (lower.includes("suspension") || lower.includes("معلق")) return "معلّق";
+    if (lower.includes("solution") || lower.includes("محلول")) return "محلول";
+    if (lower.includes("injection") || lower.includes("ampoule") || lower.includes("vial") || lower.includes("حقن")) return "حقن / أمبولات";
+    if (lower.includes("cream") || lower.includes("كريم")) return "كريم";
+    if (lower.includes("ointment") || lower.includes("مرهم")) return "مرهم";
+    if (lower.includes("gel") || lower.includes("جل")) return "جل موضعي";
+    if (lower.includes("nasal spray") || lower.includes("بخاخ أنف")) return "بخاخ أنف";
+    if (lower.includes("nasal drop") || lower.includes("nasal drops") || lower.includes("قطرة أنف")) return "قطرة أنف";
+    if (lower.includes("spray") || lower.includes("بخاخ")) return "بخاخ";
+    if (lower.includes("drop") || lower.includes("قطر")) return "قطرات";
+    if (lower.includes("suppository") || lower.includes("suppositories") || lower.includes("لبوس")) return "تحاميل (لبوس)";
     if (lower.includes("deodorant")) return "مزيل عرق طبي";
 
-    // Categories & Manufacturers
-    if (lower === "dawa" || lower === "medication" || lower === "drug" || lower === "human_drug") return "دواء";
+    // Routes of Administration
+    if (lower === "oral" || lower === "oral use" || lower.includes("oral")) return "عن طريق الفم";
+    if (lower.includes("topical external") || lower.includes("external use only")) return "استعمال خارجي فقط";
+    if (lower === "topical" || lower.includes("topical use") || lower.includes("topical")) return "موضعي (سطحي)";
+    if (lower === "inhalation" || lower.includes("inhalat")) return "عن طريق الاستنشاق";
+    if (lower.includes("ophthalmic") || lower.includes("eye drops")) return "قطرة / مرهم عين";
+    if (lower.includes("otic") || lower.includes("ear drops")) return "قطرة أذن";
+    if (lower === "nasal" || lower === "nasal use") return "عن طريق الأنف";
+    if (lower.includes("sublingual")) return "تحت اللسان";
+    if (lower.includes("intravenous") || lower === "iv") return "حقن وريدي";
+    if (lower.includes("intramuscular") || lower === "im") return "حقن عضل";
+    if (lower.includes("rectal")) return "عن طريق الشرج";
+
+    // High-level categories
+    if (lower === "dawa" || lower === "medication" || lower === "drug" || lower === "human_drug") return "دواء معتمد";
     if (lower === "human_supplement" || lower.includes("supplement")) return "مكمل غذائي";
     if (lower.includes("cosmetic") || lower.includes("topical_cosmetic")) return "مستحضر تجميل";
     if (lower === "veterinary_drug" || lower === "veterinary_supplement" || lower.includes("veterinary")) return "مستحضر بيطري";
     if (lower.includes("otc") || lower.includes("over-the-counter")) return "دواء OTC";
     if (lower.includes("prescription")) return "دواء بوصفة";
-    if (lower === "unknown" || lower === "generic") return "غير محدد";
+    if (lower === "unknown" || lower === "generic") return "دواء علاجي";
 
     return trimmed;
 };
@@ -390,8 +404,8 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     const previewSrc = scanContext?.previewSrc || null;
     const scannedImage = data.scannedImage || previewSrc;
 
-    const displayDrugName = data.drugNameEn || data.drugName;
-    const displayGenericName = data.genericNameEn || data.genericName;
+    const displayDrugName = isArabic ? (data.drugName || data.drugNameEn) : (data.drugNameEn || data.drugName);
+    const displayGenericName = isArabic ? (data.genericName || data.genericNameEn) : (data.genericNameEn || data.genericName);
 
     const [fda, setFda] = useState<MedicalData["fda"]>((data as any)?.fda ?? null);
     const [fdaLoading, setFdaLoading] = useState(false);
@@ -1043,8 +1057,18 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
         // 1. Direct active ingredients from AI scan (detailed)
         if (Array.isArray((data as any)?.activeIngredientsDetailed) && (data as any).activeIngredientsDetailed.length > 0) {
             return ((data as any).activeIngredientsDetailed as any[])
-                .map((it) => {
-                    const name = String(it?.name || "").trim();
+                .map((it, idx) => {
+                    let name = String(it?.name || "").trim();
+                    if (isArabic) {
+                        if (it?.nameAr) {
+                            name = String(it.nameAr).trim();
+                        } else if (Array.isArray(data.activeIngredients) && data.activeIngredients[idx]) {
+                            const parsedAr = parseDoseFromText(String(data.activeIngredients[idx]));
+                            if (parsedAr.name && /[\u0600-\u06FF]/.test(parsedAr.name)) {
+                                name = parsedAr.name;
+                            }
+                        }
+                    }
                     let strength = String(it?.strength || "").trim().replace(/\/1\b/g, "").trim();
                     const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
                     const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
@@ -1064,11 +1088,13 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                     if (!parsed.name) return null;
                     
                     let displayName = parsed.name;
-                    if (listEn[idx]) {
+                    if (!isArabic && listEn[idx]) {
                         const parsedEn = parseDoseFromText(String(listEn[idx]));
                         if (parsedEn.name) {
                             displayName = parsedEn.name;
                         }
+                    } else if (isArabic && !/[\u0600-\u06FF]/.test(displayName) && list[idx]) {
+                        displayName = parsed.name;
                     }
                     const doseText = String(parsed.doseText || "—").replace(/\/1\b/g, "").trim();
                     return { name: displayName, doseText, doseMg: parsed.doseMg, source: "scan" as const };

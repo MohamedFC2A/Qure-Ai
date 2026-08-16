@@ -112,10 +112,12 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
 
     if (isCongestal) {
         const defaultBrand = "Congestal";
-        if (!res.drugName || res.drugName === "Unknown") res.drugName = defaultBrand;
-        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = defaultBrand;
+        if (!res.drugName || res.drugName === "Unknown") {
+            res.drugName = isAr ? (combinedText.includes("congestal") ? "كونجستال" : "دواء نزلات البرد والاحتقان") : "Congestal Cold & Flu";
+        }
+        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = "Congestal Cold & Flu";
         if (!res.genericName || res.genericName === "Unknown") {
-            res.genericName = isAr ? "باراسيتامol + كلورفينيرامين + سودوإيفيدرين" : "Paracetamol + Chlorpheniramine + Pseudoephedrine";
+            res.genericName = isAr ? "باراسيتامول + كلورفينيرامين ماليات + سودوإيفيدرين هيدروكلوريد" : "Paracetamol + Chlorpheniramine Maleate + Pseudoephedrine Hydrochloride";
         }
         if (!res.genericNameEn || res.genericNameEn === "Unknown") {
             res.genericNameEn = "Paracetamol + Chlorpheniramine Maleate + Pseudoephedrine Hydrochloride";
@@ -123,11 +125,15 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
         if (!res.strength || res.strength === "1000 mg" || res.strength === "1000mg" || res.strength === "Unknown") {
             res.strength = "500 mg + 2 mg + 30 mg";
         }
-        if (!res.form) res.form = isAr ? "أقراص مغلفة (Film-coated tablets)" : "Film-coated tablets";
-        if (!res.category) res.category = isAr ? "علاج نزلات البرد والاحتقان والأنفلونزا (مركّب متعدد المواد)" : "Cold, Flu & Multi-Symptom Nasal Decongestant";
+        if (!res.form) res.form = isAr ? "أقراص مغلفة" : "Film-coated tablets";
+        if (!res.category) res.category = isAr ? "علاج نزلات البرد والاحتقان" : "Cold & Flu Decongestant";
         
         if (!Array.isArray(res.activeIngredients) || res.activeIngredients.length < 2) {
-            res.activeIngredients = [
+            res.activeIngredients = isAr ? [
+                "باراسيتامول 500 مجم",
+                "كلورفينيرامين ماليات 2 مجم",
+                "سودوإيفيدرين هيدروكلوريد 30 مجم"
+            ] : [
                 "Paracetamol 500mg",
                 "Chlorpheniramine maleate 2mg",
                 "Pseudoephedrine hydrochloride 30mg"
@@ -138,9 +144,9 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
                 "Pseudoephedrine hydrochloride 30mg"
             ];
             res.activeIngredientsDetailed = [
-                { name: "Paracetamol", strength: "500 mg", strengthMg: 500 },
-                { name: "Chlorpheniramine maleate", strength: "2 mg", strengthMg: 2 },
-                { name: "Pseudoephedrine hydrochloride", strength: "30 mg", strengthMg: 30 }
+                { name: isAr ? "باراسيتامول" : "Paracetamol", nameAr: "باراسيتامول", strength: "500 mg", strengthMg: 500 },
+                { name: isAr ? "كلورفينيرامين ماليات" : "Chlorpheniramine maleate", nameAr: "كلورفينيرامين ماليات", strength: "2 mg", strengthMg: 2 },
+                { name: isAr ? "سودوإيفيدرين هيدروكلوريد" : "Pseudoephedrine hydrochloride", nameAr: "سودوإيفيدرين هيدروكلوريد", strength: "30 mg", strengthMg: 30 }
             ];
         }
 
