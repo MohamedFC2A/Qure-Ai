@@ -105,78 +105,75 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
     const structureStep = steps.find((s) => s.id === "structure");
 
     // Dynamic Progress & Sub-step calculations with smart smooth interpolation
-    const { progressPercent, activePhaseIndex, activePhaseNote, remainingSec } = useMemo(() => {
-        let percent = 8;
-        let noteAr = "بدء تهيئة المحرك الطبي والضبط البصري...";
-        let noteEn = "Initializing medical engine & optical alignment...";
+    const { progressPercent, activePhaseIndex, activePhaseNote, remainingSecText } = useMemo(() => {
+        const durationNum = parseFloat(totalDuration) || 0;
+
+        let percent = 10;
+        let noteAr = "بدء معالجة الصورة وضبط التباين...";
+        let noteEn = "Enhancing optical clarity & perspective...";
         let activeIdx = 0;
-
-        const baselineTotal = scanType === "wound" ? 14.0 : scanType === "prescription" ? 16.0 : 12.0;
-        const expectedOcr = 3.5;
-        const expectedAnalyze = scanType === "wound" ? 8.5 : scanType === "prescription" ? 10.0 : 7.0;
-        const expectedStructure = 0.8;
-
-        let rem = 1.0;
+        let remText = "~8s";
 
         if (structureStep?.status === "done") {
             percent = 100;
             activeIdx = 3;
             noteAr = "اكتمل التحليل الطبي بنجاح — جارٍ فتح التقرير";
             noteEn = "Analysis complete — loading clinical report";
-            rem = 0.0;
+            remText = "0s";
         } else if (structureStep?.status === "running") {
-            const structureElapsed = structureStep.startTime ? (Date.now() - structureStep.startTime) / 1000 : 0.2;
-            percent = Math.min(99, Math.round(94 + Math.min(0.9, structureElapsed / expectedStructure) * 5));
+            percent = 96;
             activeIdx = 3;
             noteAr = "اعتماد التقرير وصياغة الجرعات والتحذيرات السريرية...";
             noteEn = "Finalizing report structure & dosage guidelines...";
-            rem = Math.max(0.2, Number((expectedStructure - structureElapsed).toFixed(1)));
+            remText = isArabic ? "لحظات..." : "Moments...";
         } else if (analyzeStep?.status === "running") {
-            const analyzeElapsed = analyzeStep.startTime ? (Date.now() - analyzeStep.startTime) / 1000 : 1;
             activeIdx = 2;
             noteAr = "فحص التداخلات الدوائية ومطابقة المراجع السريرية...";
             noteEn = "Cross-checking drug interactions & clinical references...";
 
-            if (analyzeElapsed < expectedAnalyze) {
-                const ratio = analyzeElapsed / expectedAnalyze;
-                percent = Math.round(42 + ratio * 46);
-                const remInAnalyze = expectedAnalyze - analyzeElapsed;
-                rem = Math.max(1.0, Number((remInAnalyze + expectedStructure).toFixed(1)));
+            const analyzeElapsed = analyzeStep.startTime ? (Date.now() - analyzeStep.startTime) / 1000 : Math.max(1, durationNum - 3);
+            
+            // Asymptotic smooth curve: 55% at 0s, 72% at 6s, 84% at 14s, 92% at 22s+
+            const smoothProgress = 55 + (1 - Math.exp(-analyzeElapsed / 9.0)) * 38;
+            percent = Math.min(94, Math.round(smoothProgress));
+
+            // Smart dynamic remaining time that adapts to elapsed time
+            if (analyzeElapsed < 4) {
+                remText = "~5s";
+            } else if (analyzeElapsed < 10) {
+                remText = "~3s";
+            } else if (analyzeElapsed < 20) {
+                remText = "~2s";
             } else {
-                const overtime = analyzeElapsed - expectedAnalyze;
-                const decayProgress = 1 - Math.exp(-overtime / 6.0);
-                percent = Math.min(94, Math.round(88 + decayProgress * 6));
-                const asymptoticRem = Math.max(0.6, 2.0 * Math.exp(-overtime / 8.0));
-                rem = Number((asymptoticRem + 0.3).toFixed(1));
+                remText = isArabic ? "لحظات..." : "Moments...";
             }
         } else if (ocrStep?.status === "running") {
-            const ocrElapsed = ocrStep.startTime ? (Date.now() - ocrStep.startTime) / 1000 : 1;
-            const ratio = Math.min(0.95, ocrElapsed / expectedOcr);
-            percent = Math.round(15 + ratio * 25);
+            const ocrElapsed = ocrStep.startTime ? (Date.now() - ocrStep.startTime) / 1000 : Math.max(1, durationNum - 1);
+            const ocrRatio = Math.min(0.9, ocrElapsed / 4.0);
+            percent = Math.round(25 + ocrRatio * 25);
             activeIdx = 1;
             noteAr = "قراءة العبوة واستخراج المواد الفعالة والبيانات...";
             noteEn = "Reading package text & active compounds...";
-            const remInOcr = Math.max(0.5, expectedOcr - ocrElapsed);
-            rem = Number((remInOcr + expectedAnalyze + expectedStructure).toFixed(1));
+            remText = "~7s";
         } else if (preprocessStep?.status === "running") {
-            percent = 12;
+            percent = 15;
             activeIdx = 0;
             noteAr = "معالجة الصورة وضبط التباين والأبعاد...";
             noteEn = "Enhancing optical contrast & alignment...";
-            rem = baselineTotal;
+            remText = "~10s";
         } else {
-            percent = 8;
+            percent = 10;
             activeIdx = 0;
-            rem = baselineTotal;
+            remText = "~10s";
         }
 
         return {
-            progressPercent: Math.min(100, Math.max(8, percent)),
+            progressPercent: Math.min(100, Math.max(10, percent)),
             activePhaseIndex: activeIdx,
             activePhaseNote: isArabic ? noteAr : noteEn,
-            remainingSec: structureStep?.status === "done" ? 0 : Math.max(0.2, rem),
+            remainingSecText: remText,
         };
-    }, [analyzeStep, isArabic, ocrStep, preprocessStep, scanType, structureStep]);
+    }, [analyzeStep, isArabic, ocrStep, preprocessStep, structureStep, totalDuration]);
 
     return (
         <div className="w-full relative text-start">
@@ -184,24 +181,15 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                 {/* ── Top Header ── */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
                     <div className="flex items-center gap-3.5">
-                        <div className="relative w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 shadow-inner">
+                        <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 shadow-inner">
                             <Brain className="w-5 h-5" />
-                            <span className="absolute -top-1 -end-1 flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400" />
-                            </span>
                         </div>
 
                         <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="text-white font-bold text-base tracking-tight">
-                                    {AI_DISPLAY_NAME}
-                                </h3>
-                                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[11px] font-semibold">
-                                    {isScanning ? t("Live Analysis", "تحليل مباشر") : t("Ready", "جاهز")}
-                                </span>
-                            </div>
-                            <p className="text-xs text-slate-300 font-medium mt-1">
+                            <h3 className="text-white font-bold text-base tracking-tight">
+                                {AI_DISPLAY_NAME}
+                            </h3>
+                            <p className="text-xs text-slate-300 font-medium mt-0.5">
                                 {activePhaseNote}
                             </p>
                         </div>
@@ -221,7 +209,7 @@ export const ScanProgressHud: React.FC<ScanProgressHudProps> = ({
                             <Clock className="w-3.5 h-3.5 text-cyan-300 animate-spin" style={{ animationDuration: "5s" }} />
                             <span className="text-cyan-200 text-xs font-medium">{t("Est. Left:", "المتبقي:")}</span>
                             <span className="text-cyan-300 font-mono font-bold text-xs tabular-nums">
-                                <bdi dir="ltr">~{remainingSec}s</bdi>
+                                <bdi dir="ltr">{remainingSecText}</bdi>
                             </span>
                         </div>
 
