@@ -84,7 +84,7 @@ export function AiChatPage() {
     const [error, setError] = useState<string | null>(null);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [selectedMedication, setSelectedMedication] = useState<any>(null);
     const [liveSearchEnabled, setLiveSearchEnabled] = useState(false);
     const [activeTopic, setActiveTopic] = useState<string | null>(null);
@@ -96,6 +96,13 @@ export function AiChatPage() {
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const autoSentRef = useRef(false);
+
+    // Responsive sidebar initialization
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            setSidebarOpen(false);
+        }
+    }, []);
 
     /* ── Load conversations ── */
     const loadConversations = useCallback(async () => {
@@ -388,15 +395,21 @@ export function AiChatPage() {
             setMessages([]);
             setError(null);
             setAutoScroll(true);
+            if (!initialMedication) {
+                setSelectedMedication(null);
+                setActiveTopic(null);
+                setActiveMode("health");
+            }
         }
 
         if (initialMedication) {
             setSelectedMedication(initialMedication);
             const isWound = initialMedication.type === "wound";
             setActiveMode(isWound ? "wound" : "medication");
-        }
-
-        if (initialTopic) {
+            if (initialTopic) {
+                setActiveTopic(initialTopic);
+            }
+        } else if (!isNewChat && initialTopic) {
             setActiveTopic(initialTopic);
         }
 
@@ -411,7 +424,10 @@ export function AiChatPage() {
     /* ── Handle clinical context switch (Medication or Wound) ── */
     const handleSelectMedication = useCallback((item: any) => {
         setSelectedMedication(item);
-        if (item) {
+        if (!item) {
+            setActiveTopic(null);
+            setActiveMode("health");
+        } else {
             const isWound = item.type === "wound";
             setActiveMode(isWound ? "wound" : "medication");
         }
@@ -472,13 +488,26 @@ export function AiChatPage() {
         setMessages([]);
         setError(null);
         setSelectedMedication(null);
+        setActiveTopic(null);
+        setInput("");
         setAutoScroll(true);
         setActiveMode("health");
-    }, []);
+        try {
+            sessionStorage.removeItem("qure_ai_active_context");
+        } catch {}
+        if (typeof window !== "undefined") {
+            router.replace("/ai");
+        }
+    }, [router]);
 
     const handleSelectConversation = useCallback((conv: ConversationSummary) => {
         loadConversation(conv.id);
-        setSidebarOpen(false);
+        setSelectedMedication(null);
+        setActiveTopic(null);
+        setInput("");
+        if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            setSidebarOpen(false);
+        }
     }, [loadConversation]);
 
     const handleDeleteConversation = useCallback(async (id: string) => {
@@ -545,8 +574,8 @@ export function AiChatPage() {
 
             {/* ── Main Chat Area ── */}
             <div className="flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden">
-                {/* Top Chat Sub-Header with Smooth Sidebar Toggle */}
-                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
+                {/* Top Chat Sub-Header with Zero-Duplication Clean Controls */}
+                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2.5 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
                     <div className="flex items-center gap-2.5">
                         <button
                             type="button"
@@ -557,30 +586,48 @@ export function AiChatPage() {
                                     ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
                                     : "bg-white/[0.03] hover:bg-cyan-500/10 border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200"
                             )}
-                            title={isArabic ? "سجل المحادثات" : "Chat History"}
+                            title={
+                                sidebarOpen
+                                    ? (isArabic ? "إخفاء سجل المحادثات" : "Collapse Sidebar")
+                                    : (isArabic ? "إظهار سجل المحادثات" : "Open History")
+                            }
                         >
                             <Menu className="w-4 h-4" />
-                            <span className="hidden sm:inline">{isArabic ? "المحادثات" : "Chats"}</span>
+                            <span className="text-xs font-medium">
+                                {isArabic
+                                    ? (sidebarOpen ? "إخفاء السجل" : "المحادثات")
+                                    : (sidebarOpen ? "Hide" : "Chats")
+                                }
+                            </span>
                         </button>
 
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.02] border border-white/[0.05]">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                            <span className="text-[11px] font-bold text-slate-200">
-                                Qure AI
+                            <span className="text-xs font-bold text-slate-200">
+                                {activeMode === "wound"
+                                    ? (isArabic ? "طوارئ وجروح" : "Wound AI")
+                                    : activeMode === "medication"
+                                        ? (isArabic ? "أدوية وروشتات" : "Medication AI")
+                                        : activeMode === "context"
+                                            ? (isArabic ? "الملف الصحي" : "Health Profile")
+                                            : (isArabic ? "مساعد Qure AI" : "Qure AI Assistant")}
                             </span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={handleNewChat}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-cyan-500/15 border border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200 text-xs font-semibold transition-all cursor-pointer"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">{isArabic ? "محادثة جديدة" : "New Chat"}</span>
-                        </button>
-                    </div>
+                    {/* Show New Chat button ONLY when sidebar is closed to eliminate dual button duplication */}
+                    {!sidebarOpen && (
+                        <div className="flex items-center gap-2 animate-fade-in">
+                            <button
+                                type="button"
+                                onClick={handleNewChat}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-200 text-xs font-semibold transition-all cursor-pointer shadow-sm"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>{isArabic ? "محادثة جديدة" : "New Chat"}</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── CHAT MESSAGES & INPUT ── */}
@@ -626,6 +673,7 @@ export function AiChatPage() {
                                             onClick={() => {
                                                 setSelectedMedication(null);
                                                 setActiveTopic(null);
+                                                setActiveMode("health");
                                             }}
                                             className="text-slate-400 hover:text-rose-300 text-xs px-3 py-1.5 rounded-xl border border-white/[0.08] hover:border-rose-500/30 bg-white/[0.02] hover:bg-rose-950/30 shrink-0 transition-all font-medium ms-2 cursor-pointer"
                                         >
@@ -751,8 +799,12 @@ export function AiChatPage() {
 
                                         {selectedMedication && (
                                             <button
-                                                onClick={() => setSelectedMedication(null)}
-                                                className="text-[10px] text-slate-400 hover:text-rose-400 font-medium transition-colors"
+                                                onClick={() => {
+                                                    setSelectedMedication(null);
+                                                    setActiveTopic(null);
+                                                    setActiveMode("health");
+                                                }}
+                                                className="text-[10px] text-slate-400 hover:text-rose-400 font-medium transition-colors cursor-pointer"
                                             >
                                                 {t("Clear selected drug", "إلغاء تحديد الدواء")}
                                             </button>
@@ -767,14 +819,14 @@ export function AiChatPage() {
                                             onChange={handleInputChange}
                                             onKeyDown={handleKeyDown}
                                             placeholder={
-                                                activeTopic
+                                                selectedMedication && activeTopic
                                                     ? (isArabic
                                                         ? `اسأل أي استفسار حول ${activeTopic}...`
                                                         : `Ask anything about ${activeTopic}...`)
                                                     : selectedMedication
                                                         ? t(
-                                                            `Ask about ${selectedMedication.drug_name || selectedMedication.drugName || "this medication"} or suitability…`,
-                                                            `اسأل عن ${selectedMedication.drug_name || selectedMedication.drugName || "هذا الدواء"} أو هل يناسبك…`
+                                                            `Ask about ${selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || "this medication"} or suitability…`,
+                                                            `اسأل عن ${selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || "هذا الدواء"} أو هل يناسبك…`
                                                         )
                                                         : liveSearchEnabled
                                                             ? t(

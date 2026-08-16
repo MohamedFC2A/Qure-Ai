@@ -82,7 +82,7 @@ export function ConversationSidebar({
             {/* Mobile overlay */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
                     onClick={onClose}
                 />
             )}
@@ -90,14 +90,13 @@ export function ConversationSidebar({
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 z-50 w-72 flex flex-col backdrop-blur-2xl transition-transform duration-200 ease-out border-r border-white/[0.08]",
+                    "fixed inset-y-0 z-50 flex flex-col backdrop-blur-2xl transition-all duration-300 ease-in-out border-r border-white/[0.08]",
                     isArabic ? "right-0 border-r-0 border-l border-white/[0.08]" : "left-0",
                     isOpen
-                        ? "translate-x-0 pointer-events-auto"
+                        ? "translate-x-0 w-72 opacity-100 pointer-events-auto lg:static lg:z-auto lg:shrink-0"
                         : isArabic
-                            ? "translate-x-full pointer-events-none invisible lg:translate-x-0 lg:pointer-events-auto lg:visible"
-                            : "-translate-x-full pointer-events-none invisible lg:translate-x-0 lg:pointer-events-auto lg:visible",
-                    "lg:static lg:z-auto lg:w-72 lg:shrink-0"
+                            ? "translate-x-full w-72 opacity-0 pointer-events-none lg:w-0 lg:overflow-hidden lg:border-none lg:p-0 lg:pointer-events-none"
+                            : "-translate-x-full w-72 opacity-0 pointer-events-none lg:w-0 lg:overflow-hidden lg:border-none lg:p-0 lg:pointer-events-none"
                 )}
                 style={{ background: "rgba(8, 13, 26, 0.98)" }}
             >
@@ -105,7 +104,7 @@ export function ConversationSidebar({
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
 
                 {/* Header */}
-                <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/[0.06]">
+                <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-white/[0.06] shrink-0">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-cyan-500/15 border border-cyan-400/30 text-cyan-400">
                         <Brain className="w-4 h-4" />
                     </div>
@@ -115,19 +114,25 @@ export function ConversationSidebar({
                     </div>
                     <button
                         onClick={onClose}
-                        className="lg:hidden p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-600 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        title={isArabic ? "إخفاء القائمة" : "Close sidebar"}
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
                 {/* New Chat Button */}
-                <div className="px-3 pt-3 pb-2">
+                <div className="px-3 pt-3 pb-2 shrink-0">
                     <button
-                        onClick={() => { onNewChat(); onClose(); }}
-                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.14] text-slate-400 hover:text-white text-xs font-semibold transition-all group"
+                        onClick={() => {
+                            onNewChat();
+                            if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                                onClose();
+                            }
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-white text-xs font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.15)] group cursor-pointer"
                     >
-                        <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90 duration-200" />
+                        <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 duration-200 text-cyan-300" />
                         <span>{isArabic ? "محادثة جديدة" : "New Chat"}</span>
                     </button>
                 </div>
