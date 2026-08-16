@@ -781,8 +781,8 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
 
     const isCosmetic = useMemo(() => {
         const pCat = String(data.productCategory || data.category || data.productCategoryLabel || data.productClassification?.kind || "").toLowerCase();
-        const dName = String(data.drugName || "").toLowerCase();
-        const gName = String(data.genericName || "").toLowerCase();
+        const dName = String(data.drugName || data.drugNameEn || "").toLowerCase();
+        const gName = String(data.genericName || data.genericNameEn || "").toLowerCase();
         const desc = String(data.description || "").toLowerCase();
         const formStr = String(data.form || "").toLowerCase();
 
@@ -790,10 +790,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                pCat.includes("تجميل") || 
                pCat.includes("بشرة") || 
                pCat.includes("شعر") ||
+               pCat.includes("لحية") ||
                pCat.includes("topical_cosmetic") ||
-               dName.includes("cream") || dName.includes("serum") || dName.includes("lotion") || dName.includes("deodorant") || dName.includes("shampoo") || dName.includes("sunscreen") || dName.includes("كريم") || dName.includes("سيروم") || dName.includes("شامبو") || dName.includes("مرطب") || dName.includes("غسول") || dName.includes("مزيل عرق") ||
-               formStr.includes("cream") || formStr.includes("gel") || formStr.includes("lotion") || formStr.includes("serum") || formStr.includes("shampoo") || formStr.includes("deodorant") ||
-               desc.includes("مستحضر تجميل") || desc.includes("عناية بالبشرة") || desc.includes("cosmetic");
+               pCat.includes("skincare") ||
+               pCat.includes("haircare") ||
+               dName.includes("cream") || dName.includes("serum") || dName.includes("lotion") || dName.includes("deodorant") || dName.includes("shampoo") || dName.includes("sunscreen") || dName.includes("conditioner") || dName.includes("cleanser") || dName.includes("moisturizer") || dName.includes("facewash") || dName.includes("body wash") || dName.includes("كريم") || dName.includes("سيروم") || dName.includes("شامبو") || dName.includes("مرطب") || dName.includes("غسول") || dName.includes("مزيل عرق") || dName.includes("بلسم") || dName.includes("واقي شمس") || dName.includes("تونر") || dName.includes("مقشر") ||
+               gName.includes("cosmetic") || gName.includes("تجميل") || gName.includes("skincare") ||
+               formStr.includes("cream") || formStr.includes("gel") || formStr.includes("lotion") || formStr.includes("serum") || formStr.includes("shampoo") || formStr.includes("deodorant") || formStr.includes("cleanser") || formStr.includes("moisturizer") ||
+               desc.includes("مستحضر تجميل") || desc.includes("عناية بالبشرة") || desc.includes("عناية بالشعر") || desc.includes("cosmetic") || desc.includes("skincare") || desc.includes("haircare");
     }, [data]);
 
     useEffect(() => {
@@ -810,58 +814,86 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
 
     const interactionGuard = (data as any)?.interactionGuard as MedicalData["interactionGuard"] | undefined;
     const serverGuardItems = useMemo(() => {
+        if (isCosmetic) return [];
         const list = (interactionGuard as any)?.items;
         return Array.isArray(list) ? (list as any[]).filter((x) => x && x.otherMedication) : [];
-    }, [interactionGuard]);
+    }, [interactionGuard, isCosmetic]);
 
     const localGuardItems = useMemo(() => {
+        // Cosmetic products have ZERO drug-drug interactions with oral medications
+        if (isCosmetic) return [];
         if (serverGuardItems.length > 0) return [];
         if (typeof window === "undefined") return [];
         try {
             const scans = getLocalScans();
             const currNorm = String(displayDrugName || "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ");
+            
+            // Filter out self and any cosmetic/topical items from history
             const otherScans = scans.filter((s) => {
-                const norm = String(s.drug_name || "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ");
-                return norm && norm !== currNorm && !(currNorm.length >= 4 && norm.length >= 4 && (norm.includes(currNorm) || currNorm.includes(norm)));
+                const name = String(s.drug_name || "").trim().toLowerCase();
+                const norm = name.replace(/[^\p{L}\p{N}]+/gu, " ");
+                if (!norm || norm === currNorm || (currNorm.length >= 4 && norm.length >= 4 && (norm.includes(currNorm) || currNorm.includes(norm)))) {
+                    return false;
+                }
+                const isHistoryCosmetic = name.includes("shampoo") || name.includes("شامبو") || name.includes("cream") || name.includes("كريم") ||
+                    name.includes("serum") || name.includes("سيروم") || name.includes("lotion") || name.includes("لوشن") ||
+                    name.includes("مرطب") || name.includes("غسول") || name.includes("cleanser") || name.includes("facewash") ||
+                    name.includes("sunscreen") || name.includes("واقي شمس") || name.includes("deodorant") || name.includes("مزيل عرق") ||
+                    name.includes("cosmetic") || name.includes("تجميل");
+                return !isHistoryCosmetic;
             });
 
+            // Known interactions from current medication analysis
+            const knownInteractions = Array.isArray(data.interactions) ? data.interactions.map(x => String(x || "").toLowerCase()) : [];
+
+            // ONLY return a warning if there is a verified matched interaction in data.interactions
             if (otherScans.length > 0) {
-                return otherScans.slice(0, 10).map((s, idx) => {
-                    const isFirst = idx === 0;
-                    return {
-                        otherMedication: s.drug_name,
-                        severity: isFirst ? "caution" : "safe",
-                        headline: isArabic ? `تداخل دوائي محتمل مع ${s.drug_name}` : `Potential Interaction with ${s.drug_name}`,
-                        summary: isArabic
-                            ? `تم العثور على الدواء ${s.drug_name} في سجل فحوصاتك الدوائية. يرجى توخي الحذر عند الاستخدام بالتزامن والتأكد من مراجعة الصيدلي.`
-                            : `${s.drug_name} was found in your medication scan history. Exercise caution when combining and consult your pharmacist.`,
-                        mechanism: isArabic
-                            ? `تأثيرات فارماكولوجية مشتركة على الاستقلاب أو الامتصاص عند تناول الدوائين في نفس الوقت.`
-                            : `Pharmacological synergy or metabolic interaction when co-administering both medications.`,
-                        whatToDo: [
-                            isArabic ? "الفصل بين مواعيد الجرعات بساعتين على الأقل." : "Separate administration times by at least 2 hours.",
-                            isArabic ? "مراجعة الصيدلي للتأكد من السلامة التامة." : "Check with a pharmacist for absolute safety."
-                        ],
-                        monitoring: [
-                            isArabic ? "مراقبة حدوث خمول أو آلام معدة أو أعراض غير معتادة." : "Monitor for fatigue, stomach discomfort, or unusual symptoms."
-                        ],
-                        redFlags: [
-                            isArabic ? "التوقف فوراً واستشارة الطبيب عند ظهور حكة جلديّة أو ضيق تنفس." : "Discontinue and seek care if skin rash or shortness of breath occurs."
-                        ]
-                    };
-                });
+                const verifiedItems: any[] = [];
+                for (const s of otherScans.slice(0, 10)) {
+                    const otherName = String(s.drug_name || "").toLowerCase();
+                    const hasMatchedInteraction = knownInteractions.some(inter => 
+                        inter.includes(otherName) || otherName.split(/\s+/).some(word => word.length >= 4 && inter.includes(word))
+                    );
+
+                    if (hasMatchedInteraction) {
+                        verifiedItems.push({
+                            otherMedication: s.drug_name,
+                            severity: "caution",
+                            headline: isArabic ? `تداخل دوائي محتمل مع ${s.drug_name}` : `Potential Interaction with ${s.drug_name}`,
+                            summary: isArabic
+                                ? `تم رصد تعارض دوائي محتمل مع ${s.drug_name} وفقاً لدليل التداخلات الدوائية. يرجى استشارة الصيدلي لتنظيم المواعيد.`
+                                : `Potential drug-drug interaction detected with ${s.drug_name} based on pharmacological guidelines. Consult your pharmacist.`,
+                            mechanism: isArabic
+                                ? `تأثيرات فارماكولوجية متداخلة على الامتصاص أو الفاعلية الحيوية.`
+                                : `Pharmacological interaction affecting absorption or bioavailability.`,
+                            whatToDo: [
+                                isArabic ? "الفصل بين مواعيد الجرعات بساعتين على الأقل." : "Separate administration times by at least 2 hours.",
+                                isArabic ? "مراجعة الصيدلي للتأكد من السلامة التامة." : "Check with a pharmacist for absolute safety."
+                            ],
+                            monitoring: [
+                                isArabic ? "مراقبة حدوث خمول أو آلام معدة أو أعراض غير معتادة." : "Monitor for unusual symptoms."
+                            ],
+                            redFlags: [
+                                isArabic ? "التوقف فوراً واستشارة الطبيب عند ظهور حكة جلديّة أو ضيق تنفس." : "Discontinue and seek care if rash or dyspnea occurs."
+                            ]
+                        });
+                    }
+                }
+                if (verifiedItems.length > 0) {
+                    return verifiedItems;
+                }
             }
 
-            // Multi-ingredient fallback for complex compound drugs
+            // Multi-ingredient synergy within complex compound drugs (e.g. Paracetamol + Caffeine)
             const ingredients = Array.isArray(data.activeIngredients) ? data.activeIngredients : [];
             if (ingredients.length > 1) {
                 return ingredients.slice(1).map((ing: string) => ({
                     otherMedication: ing,
-                    severity: "caution",
+                    severity: "safe",
                     headline: isArabic ? `تكامل المادة الفعالة: ${ing}` : `Active Component Synergy: ${ing}`,
                     summary: isArabic
-                        ? `يحتوي هذا المستحضر المركّب على أكثر من مادة فعالة بما فيها ${ing}. يجب مراقبة التأثير المزدوج للمكونات.`
-                        : `This compound formulation contains multiple active ingredients including ${ing}. Monitor active component synergy.`,
+                        ? `يحتوي هذا المستحضر المركّب على أكثر من مادة فعالة بما فيها ${ing}. تعمل المواد بتناغم علاجي مدروس.`
+                        : `This compound formulation contains multiple active ingredients including ${ing}, formulated for synergistic efficacy.`,
                     mechanism: isArabic ? `تأثيرات فارماكولوجية متكاملة ضمن الدواء المركّب.` : `Synergistic pharmacological action within multi-ingredient compound.`,
                     whatToDo: [isArabic ? "الالتزام التام بالجرعة المقررة لتجنب مضاعفات المواد الفعالة." : "Adhere strictly to recommended dose to avoid component toxicity."],
                     monitoring: [isArabic ? "مراقبة الاستجابة العلاجية وسلامة الجهاز الهضمي." : "Monitor therapeutic response and GI tolerance."],
@@ -872,9 +904,10 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
             console.warn("Error building local guard fallback:", e);
         }
         return [];
-    }, [serverGuardItems, displayDrugName, isArabic, data.activeIngredients]);
+    }, [isCosmetic, serverGuardItems, displayDrugName, isArabic, data.activeIngredients, data.interactions]);
 
     const guardItems = useMemo(() => {
+        if (isCosmetic) return [];
         const raw = serverGuardItems.length > 0 ? serverGuardItems : localGuardItems;
         const seen = new Set<string>();
         const deduplicated: typeof raw = [];
@@ -891,7 +924,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
         }
 
         return deduplicated;
-    }, [serverGuardItems, localGuardItems]);
+    }, [isCosmetic, serverGuardItems, localGuardItems]);
 
     const [selectedGuardKey, setSelectedGuardKey] = useState<string | null>(null);
 
@@ -1246,8 +1279,68 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
 
         const items: ActionCard[] = [];
 
+        // For Cosmetic Products: Provide specialized cosmetic safety & application checklists
+        if (isCosmetic) {
+            if (data.dosage) {
+                items.push({
+                    id: "cosmetic-dose",
+                    tone: "info",
+                    title: t("Application Protocol", "طريقة الاستخدام والتطبيق"),
+                    detail: String(data.dosage || "").trim(),
+                    icon: <Droplets className="w-4 h-4 text-white" />,
+                });
+            } else {
+                items.push({
+                    id: "cosmetic-apply",
+                    tone: "info",
+                    title: t("Application Protocol", "طريقة الاستخدام والتطبيق"),
+                    detail: t(
+                        "Apply an appropriate amount evenly to clean, dry skin/hair as directed.",
+                        "يُطبّق كمية مناسبة بانتظام على بشرة أو شعر نظيف وجاف وفق الإرشادات."
+                    ),
+                    icon: <Droplets className="w-4 h-4 text-white" />,
+                });
+            }
+
+            const cosmeticPrecautions = compactList(data.precautions || data.warnings, 2);
+            items.push({
+                id: "cosmetic-safety",
+                tone: "warn",
+                title: t("Topical Safety Guidance", "إرشادات الاستخدام الموضعي"),
+                detail: cosmeticPrecautions || t(
+                    "For external use only. Avoid contact with eyes and mucous membranes. Rinse with water if contact occurs.",
+                    "للاستخدام الظاهري فقط. تجنب ملامسة العينين والأغشية المخاطية، واشطف بالماء فوراً عند الملامسة."
+                ),
+                icon: <ShieldAlert className="w-4 h-4 text-white" />,
+            });
+
+            items.push({
+                id: "cosmetic-patch-test",
+                tone: "info",
+                title: t("Compatibility & Patch Test", "اختبار التوافق والحساسية"),
+                detail: t(
+                    "Recommended to perform a patch test on a small area of skin before regular application.",
+                    "يُفضّل إجراء اختبار حساسية على جزء صغير من الجلد قبل الاستخدام المنتظم للتأكد من عدم التحسس."
+                ),
+                icon: <CheckCircle2 className="w-4 h-4 text-white" />,
+            });
+
+            if (data.storage) {
+                items.push({
+                    id: "cosmetic-storage",
+                    tone: "info",
+                    title: t("Storage & Protection", "حفظ وتخزين المستحضر"),
+                    detail: String(data.storage || "").trim(),
+                    icon: <Box className="w-4 h-4 text-white" />,
+                });
+            }
+
+            return items.slice(0, 4);
+        }
+
+        // For Pharmaceutical Medications:
         const topGuard = (guardItems as any[])
-            .filter((it) => it && it.otherMedication)
+            .filter((it) => it && it.otherMedication && it.severity !== "safe")
             .slice()
             .sort((a: any, b: any) => {
                 const sevOrder = (s: any) => (String(s || "").toLowerCase() === "danger" ? 2 : String(s || "").toLowerCase() === "caution" ? 1 : 0);
@@ -1260,7 +1353,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
             const sev = String(topGuard.severity || "caution").toLowerCase();
             items.push({
                 id: "guard-top",
-                tone: sev === "danger" ? "danger" : sev === "safe" ? "success" : "warn",
+                tone: sev === "danger" ? "danger" : "warn",
                 title: t(
                     `Possible interaction: ${String(topGuard.otherMedication)}`,
                     `تداخل محتمل: ${String(topGuard.otherMedication)}`
@@ -1345,7 +1438,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
         }
 
         return items.slice(0, 5);
-    }, [data, guardItems, plan, t]);
+    }, [data, guardItems, isCosmetic, plan, t]);
 
     const actionToneUi = (tone: ActionTone) => {
         switch (tone) {

@@ -456,6 +456,27 @@ export async function POST(req: NextRequest) {
         let interactionGuard: any = null;
         let interactionGuardUsed = false;
 
+        const isTargetCosmetic = (() => {
+            const pCat = String(analysisWithEnrichment?.productCategory || analysisWithEnrichment?.category || analysisWithEnrichment?.productCategoryLabel || analysisWithEnrichment?.productClassification?.kind || "").toLowerCase();
+            const dName = String(analysisWithEnrichment?.drugName || analysisWithEnrichment?.drugNameEn || "").toLowerCase();
+            const desc = String(analysisWithEnrichment?.description || "").toLowerCase();
+            const formStr = String(analysisWithEnrichment?.form || "").toLowerCase();
+
+            return pCat.includes("cosmetic") || pCat.includes("تجميل") || pCat.includes("بشرة") || pCat.includes("شعر") || pCat.includes("topical_cosmetic") || pCat.includes("skincare") || pCat.includes("haircare") ||
+                dName.includes("cream") || dName.includes("serum") || dName.includes("lotion") || dName.includes("deodorant") || dName.includes("shampoo") || dName.includes("sunscreen") || dName.includes("conditioner") || dName.includes("cleanser") || dName.includes("كريم") || dName.includes("سيروم") || dName.includes("شامبو") || dName.includes("مرطب") || dName.includes("غسول") || dName.includes("مزيل عرق") || dName.includes("بلسم") ||
+                formStr.includes("cream") || formStr.includes("gel") || formStr.includes("lotion") || formStr.includes("serum") || formStr.includes("shampoo") || formStr.includes("deodorant") ||
+                desc.includes("مستحضر تجميل") || desc.includes("عناية بالبشرة") || desc.includes("عناية بالشعر") || desc.includes("cosmetic");
+        })();
+
+        const isCosmeticName = (name: string): boolean => {
+            const s = String(name || "").toLowerCase();
+            return s.includes("shampoo") || s.includes("شامبو") || s.includes("cream") || s.includes("كريم") ||
+                s.includes("serum") || s.includes("سيروم") || s.includes("lotion") || s.includes("لوشن") ||
+                s.includes("مرطب") || s.includes("غسول") || s.includes("cleanser") || s.includes("facewash") ||
+                s.includes("sunscreen") || s.includes("واقي شمس") || s.includes("deodorant") || s.includes("مزيل عرق") ||
+                s.includes("cosmetic") || s.includes("تجميل") || s.includes("skincare") || s.includes("haircare");
+        };
+
         const privateProfile = analysisContext?.privateProfile as any;
         const currentMeds = parseMedicationList(privateProfile?.current_medications);
         const memoryMeds = Array.isArray(analysisContext?.medicationMemories) ? analysisContext.medicationMemories : [];
@@ -483,7 +504,7 @@ export async function POST(req: NextRequest) {
 
         const candidates = [...currentMeds, ...memoryMeds, ...dbHistoryMeds, ...requestLocalMeds]
             .map((s) => String(s || "").trim())
-            .filter(Boolean);
+            .filter((s) => Boolean(s) && !isCosmeticName(s));
 
         const centralNorm = normalizeMedicationName((analysisWithEnrichment as any)?.drugName || "");
         const seen = new Set<string>();
@@ -499,11 +520,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Fallback: If otherMeds is empty (e.g. first scan ever), use multi-ingredients of the target drug itself!
-        if (otherMeds.length === 0 && Array.isArray((analysisWithEnrichment as any)?.activeIngredients) && (analysisWithEnrichment as any).activeIngredients.length > 1) {
+        if (!isTargetCosmetic && otherMeds.length === 0 && Array.isArray((analysisWithEnrichment as any)?.activeIngredients) && (analysisWithEnrichment as any).activeIngredients.length > 1) {
             otherMeds.push(...(analysisWithEnrichment as any).activeIngredients.slice(0, 5));
         }
 
-        if (otherMeds.length > 0) {
+        if (!isTargetCosmetic && otherMeds.length > 0) {
             try {
                 const result = await generateInteractionGuard({
                     language: lang,
