@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search } from "lucide-react";
+import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -190,7 +190,11 @@ export function AiChatPage() {
             }));
 
             const medPayload = currentMed
-                ? (currentMed.analysis_json || currentMed)
+                ? {
+                    ...(currentMed.analysis_json || currentMed),
+                    focusedTopic: activeTopic || currentMed.focusedTopic || currentMed.topic,
+                    topic: activeTopic || currentMed.topic,
+                  }
                 : undefined;
 
             const res = await fetch("/api/ai/chat/stream", {
@@ -324,7 +328,7 @@ export function AiChatPage() {
         }
     }, [activeConversationId, isArabic, isSending, isUltra, loadConversations, messages, selectedMedication, speakVoiceOs, t]);
 
-    /* ── Handle URL params, sessionStorage Context, & Auto-Consultation ── */
+    /* ── Handle URL params, sessionStorage Context, & Background Context Binding ── */
     useEffect(() => {
         if (autoSentRef.current) return;
 
@@ -332,8 +336,9 @@ export function AiChatPage() {
         let initialQuestion: string | null = null;
         let initialTopic: string | null = null;
         let shouldAutoSend = false;
+        let isNewChat = false;
 
-        // 1. Read rich context from sessionStorage (from purple star click)
+        // 1. Read rich context from sessionStorage
         try {
             const raw = sessionStorage.getItem("qure_ai_active_context");
             if (raw) {
@@ -341,7 +346,8 @@ export function AiChatPage() {
                 if (parsed.medication) initialMedication = parsed.medication;
                 if (parsed.question) initialQuestion = parsed.question;
                 if (parsed.topic) initialTopic = parsed.topic;
-                shouldAutoSend = true;
+                if (parsed.isNewChat) isNewChat = true;
+                if (parsed.shouldAutoSend) shouldAutoSend = true;
                 sessionStorage.removeItem("qure_ai_active_context");
             }
         } catch (err) {
@@ -349,6 +355,10 @@ export function AiChatPage() {
         }
 
         // 2. Read URL search params as fallback / explicit query
+        if (searchParams.get("newChat") === "1" || searchParams.get("newChat") === "true") {
+            isNewChat = true;
+        }
+
         const medParam = searchParams.get("medication");
         if (medParam && !initialMedication) {
             try {
@@ -370,6 +380,13 @@ export function AiChatPage() {
             shouldAutoSend = true;
         }
 
+        if (isNewChat) {
+            setActiveConversationId(null);
+            setMessages([]);
+            setError(null);
+            setAutoScroll(true);
+        }
+
         if (initialMedication) {
             setSelectedMedication(initialMedication);
             const isWound = initialMedication.type === "wound";
@@ -380,13 +397,11 @@ export function AiChatPage() {
             setActiveTopic(initialTopic);
         }
 
-        if (initialQuestion) {
-            if (shouldAutoSend) {
-                autoSentRef.current = true;
-                void sendMessage(initialQuestion, initialMedication);
-            } else {
-                setInput(initialQuestion);
-            }
+        if (initialQuestion && shouldAutoSend) {
+            autoSentRef.current = true;
+            void sendMessage(initialQuestion, initialMedication);
+        } else if (initialQuestion && !shouldAutoSend) {
+            setInput(initialQuestion);
         }
     }, [searchParams, sendMessage]);
 
@@ -603,27 +618,31 @@ export function AiChatPage() {
 
                                 {/* Smart Unified Linked Context Banner */}
                                 {selectedMedication && (
-                                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#080E1E]/90 border border-cyan-500/30 text-xs backdrop-blur-xl shadow-lg transition-all">
-                                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                            <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-sm">
-                                                <Pill className="w-4 h-4" />
+                                    <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-cyan-950/40 border border-cyan-500/30 text-xs backdrop-blur-2xl shadow-[0_4px_20px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all animate-in fade-in duration-300">
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+                                                <Brain className="w-4 h-4 text-cyan-300 animate-pulse" />
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-slate-300 font-medium">
-                                                        {t("Attached Medication:", "تم ربط الدواء:")}
+                                                    <span className="text-white/60 font-medium text-xs">
+                                                        {t("Attached Context:", "تم ربط سياق الدواء:")}
                                                     </span>
-                                                    <span className="font-bold text-white text-sm truncate">
-                                                        {selectedMedication.drug_name || selectedMedication.title || selectedMedication.generic_name || (isArabic ? "مستحضر دوائي" : "Medication")}
+                                                    <span className="font-bold text-white text-xs sm:text-sm truncate">
+                                                        {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "مستحضر دوائي" : "Medication")}
                                                     </span>
                                                     {activeTopic && (
-                                                        <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200 border border-purple-500/30 text-[10px] font-semibold truncate shrink-0">
+                                                        <span className="px-2.5 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-200 border border-cyan-400/30 text-[11px] font-bold truncate shrink-0 flex items-center gap-1 shadow-sm">
+                                                            <Sparkles className="w-3 h-3 text-cyan-300" />
                                                             {activeTopic}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <p className="text-[11px] text-cyan-300/80 mt-0.5 leading-normal">
-                                                    {t("Ask about personalized suitability, dosages, side effects, or drug interactions.", "يمكنك السؤال عن ملاءمته لملفك الصحي، الجرعات، الآثار الجانبية، والتداخلات الدوائية.")}
+                                                    {t(
+                                                        "Clinical context connected in background. Ask any question below for intelligent reasoning.",
+                                                        "تم ربط سياق هذه الجزئية في الخلفية. اكتب أي سؤال تريده بالأسفل وسيجيبك الذكاء الاصطناعي بدقة كاملة."
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
@@ -633,7 +652,7 @@ export function AiChatPage() {
                                                 setSelectedMedication(null);
                                                 setActiveTopic(null);
                                             }}
-                                            className="text-slate-400 hover:text-rose-300 text-xs px-3 py-1.5 rounded-xl border border-white/[0.08] hover:border-rose-500/30 bg-white/[0.02] hover:bg-rose-950/30 shrink-0 transition-all font-medium mr-1.5"
+                                            className="text-slate-400 hover:text-rose-300 text-xs px-3 py-1.5 rounded-xl border border-white/[0.08] hover:border-rose-500/30 bg-white/[0.02] hover:bg-rose-950/30 shrink-0 transition-all font-medium ms-2 cursor-pointer"
                                         >
                                             {t("Unlink", "إلغاء الربط")}
                                         </button>
@@ -642,32 +661,58 @@ export function AiChatPage() {
 
                                 {/* Welcome section when empty */}
                                 {messages.length === 0 && (
-                                    <div className="py-10 sm:py-16 text-center flex flex-col items-center justify-center space-y-5">
+                                    <div className="py-8 sm:py-14 text-center flex flex-col items-center justify-center space-y-5">
                                         <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-3xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shadow-xl select-none">
                                             <span className="text-xl sm:text-2xl font-black tracking-tight text-cyan-400 font-display">
                                                 Qure
                                             </span>
                                         </div>
 
-                                        <div className="space-y-1.5 max-w-md">
+                                        <div className="space-y-1.5 max-w-md px-2">
                                             <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                                                {t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
+                                                {selectedMedication
+                                                    ? (isArabic ? `استشارة سريرية حول ${selectedMedication.drug_name || selectedMedication.drugName || "الدواء"}` : `Clinical Consultation for ${selectedMedication.drug_name || selectedMedication.drugName || "Medication"}`)
+                                                    : t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
                                             </h3>
                                             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                                                {t(
-                                                    "Ask about your scanned medications, verify interactions, or analyze treatment regimens with AI precision.",
-                                                    "اسأل عن أدويتك المسجلة، وتحقق من التداخلات الدوائية والجرعات بدقة الذكاء الاصطناعي."
-                                                )}
+                                                {selectedMedication
+                                                    ? (isArabic
+                                                        ? (activeTopic ? `الجزئية المحددة: ${activeTopic} • اسأل أي سؤال وسيقوم الذكاء الاصطناعي بتحليله فوراً.` : "اطرح أي استفسار حول الجرعات أو الآثار الجانبية أو التوافق مع ملفك الصحي.")
+                                                        : (activeTopic ? `Focused topic: ${activeTopic} • Ask anything for instant clinical reasoning.` : "Ask about dosages, side effects, or personalized suitability with your health profile."))
+                                                    : t(
+                                                        "Ask about your scanned medications, verify interactions, or analyze treatment regimens with AI precision.",
+                                                        "اسأل عن أدويتك المسجلة، وتحقق من التداخلات الدوائية والجرعات بدقة الذكاء الاصطناعي."
+                                                    )}
                                             </p>
                                         </div>
 
                                         {/* Quick Prompts */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-2">
-                                            {QUICK_PROMPTS_UNIFIED.map((s, i) => (
+                                            {(selectedMedication
+                                                ? [
+                                                    {
+                                                        en: "Is this suitable for my health profile and chronic conditions?",
+                                                        ar: "هل هذا مناسب لملفي الصحي وحالتي الشخصية؟"
+                                                    },
+                                                    {
+                                                        en: "What are the important precautions and side effects to know?",
+                                                        ar: "ما هي أهم الاحتياطات والآثار الجانبية الواجب معرفتها؟"
+                                                    },
+                                                    {
+                                                        en: "Does this interact with any other medications or foods?",
+                                                        ar: "هل يتعارض مع أي أدوية أو مكملات أو أطعمة أخرى؟"
+                                                    },
+                                                    {
+                                                        en: "What is the optimal timing and dosage protocol?",
+                                                        ar: "ما هي الجرعة والتوقيت الأمثل للاستخدام الآمن؟"
+                                                    }
+                                                ]
+                                                : QUICK_PROMPTS_UNIFIED
+                                            ).map((s, i) => (
                                                 <button
                                                     key={i}
                                                     onClick={() => sendMessage(isArabic ? s.ar : s.en)}
-                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-white/[0.08] bg-[#080D1A]/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324]/90 backdrop-blur-xl transition-all leading-relaxed"
+                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-white/[0.08] bg-[#080D1A]/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324]/90 backdrop-blur-xl transition-all leading-relaxed cursor-pointer"
                                                 >
                                                     {isArabic ? s.ar : s.en}
                                                 </button>
@@ -745,20 +790,24 @@ export function AiChatPage() {
                                             onChange={handleInputChange}
                                             onKeyDown={handleKeyDown}
                                             placeholder={
-                                                selectedMedication
-                                                    ? t(
-                                                        `Ask about ${selectedMedication.drug_name || "this medication"} or suitability…`,
-                                                        `اسأل عن ${selectedMedication.drug_name || "هذا الدواء"} أو هل يناسبك…`
-                                                    )
-                                                    : liveSearchEnabled
+                                                activeTopic
+                                                    ? (isArabic
+                                                        ? `اسأل أي استفسار حول ${activeTopic}...`
+                                                        : `Ask anything about ${activeTopic}...`)
+                                                    : selectedMedication
                                                         ? t(
-                                                            "Search live medical web & clinical databases for any topic…",
-                                                            "ابحث مباشرة عبر الويب وقواعد البيانات السريرية في أي موضوع طبي…"
+                                                            `Ask about ${selectedMedication.drug_name || selectedMedication.drugName || "this medication"} or suitability…`,
+                                                            `اسأل عن ${selectedMedication.drug_name || selectedMedication.drugName || "هذا الدواء"} أو هل يناسبك…`
                                                         )
-                                                        : t(
-                                                            "Ask Qure AI anything — health, medications, or allergies…",
-                                                            "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الطبي…"
-                                                        )
+                                                        : liveSearchEnabled
+                                                            ? t(
+                                                                "Search live medical web & clinical databases for any topic…",
+                                                                "ابحث مباشرة عبر الويب وقواعد البيانات السريرية في أي موضوع طبي…"
+                                                            )
+                                                            : t(
+                                                                "Ask Qure AI anything — health, medications, or allergies…",
+                                                                "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الطبي…"
+                                                            )
                                             }
                                             className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder:text-slate-400/90 text-sm sm:text-base leading-normal py-1.5 resize-none min-h-[44px] max-h-[160px]"
                                             disabled={isSending}

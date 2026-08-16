@@ -1682,33 +1682,35 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
         }
     };
 
-    const askAiAbout = (topic: string, question: string) => {
-        // 1. Prepare comprehensive medical intelligence payload
-        const activeMedicationContext = {
-            drug_name: displayDrugName,
-            generic_name: displayGenericName,
-            strength: data.strength,
-            form: data.form,
-            category: data.category,
-            manufacturer: data.manufacturer,
-            activeIngredients: data.activeIngredients,
-            uses: data.uses,
-            dosage: data.dosage,
-            warnings: data.warnings,
-            contraindications: data.contraindications,
-            interactions: data.interactions,
-            adverseReactions: (data as any).adverseReactions || (data as any).sideEffects,
-            foodInteractions: (data as any).foodInteractions,
-            storageInstructions: (data as any).storageInstructions || (data as any).storage,
-            description: data.description,
-            personalized: (data as any).personalized,
-            analysis_json: analysisForAi,
-        };
-
+    const askAiAbout = (topic: string, question: string = "", sectionTitle: string = "") => {
+        const formattedTopic = sectionTitle ? `${sectionTitle}: ${topic}` : topic;
         const smartPayload = {
-            medication: activeMedicationContext,
-            topic: topic,
-            question: question,
+            medication: {
+                id: (data as any).id || `med-${Date.now()}`,
+                drug_name: displayDrugName,
+                drugName: displayDrugName,
+                drugNameEn: data.drugNameEn,
+                generic_name: displayGenericName,
+                genericName: displayGenericName,
+                form: data.form,
+                strength: data.strength,
+                active_ingredients: data.activeIngredients,
+                activeIngredients: data.activeIngredients,
+                indications: data.uses,
+                dosage: data.dosage,
+                warnings: data.warnings,
+                contraindications: data.contraindications,
+                precautions: data.precautions,
+                interactions: data.interactions,
+                side_effects: data.sideEffects,
+                category: data.category || data.productCategory,
+                analysis_json: analysisForAi,
+                focusedTopic: formattedTopic,
+            },
+            topic: formattedTopic,
+            sectionTitle: sectionTitle,
+            isNewChat: true,
+            source: "medical_result_card",
             timestamp: Date.now(),
         };
 
@@ -1718,34 +1720,24 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
             console.warn("Could not save AI context to sessionStorage:", e);
         }
 
-        // 2. Direct user intelligently to Qure AI Assistant with auto-send
+        // Direct user to regular Qure AI page starting a new conversation with context bound in background
         const queryParams = new URLSearchParams({
-            q: question,
-            topic: topic,
-            autoSend: "1",
+            topic: formattedTopic,
+            newChat: "1",
         });
 
         router.push(`/ai?${queryParams.toString()}`);
     };
 
-    const openQuickConsult = (topic: string, defaultQuestion: string, sectionTitle: string) => {
-        setQuickConsult({
-            isOpen: true,
-            topic,
-            sectionTitle,
-            question: defaultQuestion,
-        });
-    };
-
     const LiquidGlassAiButton = ({
         topic,
-        question,
+        question: _question,
         title,
         sectionTitle,
         size = "md",
     }: {
         topic: string;
-        question: string;
+        question?: string;
         title?: string;
         sectionTitle?: string;
         size?: "sm" | "md";
@@ -1755,7 +1747,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                 type="button"
                 onClick={(e) => {
                     e.stopPropagation();
-                    openQuickConsult(topic, question, sectionTitle || topic);
+                    askAiAbout(topic, "", sectionTitle || "");
                 }}
                 className={cn(
                     "group/ai-btn relative inline-flex items-center justify-center rounded-xl transition-all duration-300 active:scale-95 cursor-pointer shrink-0 select-none",
@@ -1765,7 +1757,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                     "backdrop-blur-md text-cyan-300 hover:text-white",
                     size === "sm" ? "p-1.5" : "p-1.5 sm:px-2.5 sm:py-1 gap-1.5"
                 )}
-                title={title || (isArabic ? "استشارة سريرية ذكية مع Qure AI حول هذه الجزئية" : "Ask Qure AI about this")}
+                title={title || (isArabic ? `استشارة سريرية ذكية مع Qure AI حول ${sectionTitle ? `${sectionTitle}: ` : ""}${topic}` : `Ask Qure AI about ${topic}`)}
             >
                 <Sparkles className={cn("shrink-0 transition-transform duration-300 group-hover/ai-btn:scale-110 group-hover/ai-btn:rotate-12", size === "sm" ? "w-3 h-3 text-cyan-300" : "w-3.5 h-3.5 text-cyan-300")} />
                 {size !== "sm" && (

@@ -542,14 +542,18 @@ export function formatClinicalContext(item: any, language: "en" | "ar" = "ar"): 
     const mfg = data.manufacturer || data.manufacturerName || item.manufacturer || "";
     const summary = data.summary || data.summaryAr || data.summaryEn || "";
 
+    const focusedTopic = data.focusedTopic || item.focusedTopic || data.topic || item.topic || "";
+
     const lines = [
         isAr
             ? `[سجل الفحص الدوائي المرفق الممسوح ضوئياً (QURE AI TARGET MEDICATION CONTEXT)]
 ⚠️ توجيه سياقي ذكي للذكاء الاصطناعي: هذا هو المستحضر/الدواء الذي قام المستخدم بتصويره ورفعه حالياً (${name}).
+${focusedTopic ? `🎯 الجزئية المحددة قيد الاستفسار (Focused Topic): "${focusedTopic}". قام المستخدم بربط هذه الجزئية بدقة، ركز تحليلك السريري عليها مع ربطها بالدواء.` : ""}
 - عندما يسأل المستخدم أي سؤال ضمني أو مباشر (مثل "مناسب مع زنك 20؟"، "هل يناسبني؟"، "متى آخذه؟"، "هل يتعارض مع الضغط؟")، اعلم تلقائياً ودون تردد أنه يتحدث عن هذا الدواء المرفوع ويطلب مقارنته أو فحصه بالنسبة لملفه الصحي الشخصي أو دمجه مع المستحضر الآخر الذي ذكره.
 - إذا كان السؤال عاماً تثقيفياً بحتاً (مثل "ما هو الزنك؟") أجب بإيجاز عام ودقيق. أما إذا كان السؤال عن الملاءمة أو التداخل، فاربط فوراً بين هذا الدواء المرفوع وملف صاحب الفحص.`
             : `[TARGET UPLOADED MEDICATION CONTEXT]
 ⚠️ CONTEXT INTELLIGENCE DIRECTIVE: This is the exact target medication scanned/uploaded by the user (${name}).
+${focusedTopic ? `🎯 FOCUSED TOPIC / SECTION: "${focusedTopic}". The user linked this specific section, provide deep clinical precision addressing it.` : ""}
 - When the user asks contextual questions (e.g. "Suitable with Zinc 20?", "Is it safe for me?", "When to take it?", "Any interaction with hypertension?"), automatically understand they refer to this uploaded medication in relation to the patient's personal health profile and/or the new item mentioned.
 - If purely educational ("What is Zinc?"), answer generally. If consultative/safety-oriented, automatically cross-reference this target medication.`,
         `• Drug Name: ${name} ${genericName ? `(${genericName})` : ""}`,
@@ -558,6 +562,7 @@ export function formatClinicalContext(item: any, language: "en" | "ar" = "ar"): 
         summary ? `• Summary: ${summary}` : "",
     ];
 
+    if (focusedTopic) lines.push(`• Focused Section / الجزئية المحددة: ${focusedTopic}`);
     if (data.targetAudience) lines.push(`• Approved Age Group / الفئة العمرية المعتمدة: ${data.targetAudience}`);
     if (data.activeIngredients) lines.push(`• Active Ingredients: ${JSON.stringify(data.activeIngredients)}`);
     if (data.indications) lines.push(`• Indications / الاستخدامات: ${JSON.stringify(data.indications)}`);
