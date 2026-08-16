@@ -124,6 +124,20 @@ export const translateMedicalTerm = (str: string | undefined | null, isArabic: b
 export const formatCleanStrength = (str?: string): string => {
     if (!str) return "";
     let s = String(str).trim();
+    const lower = s.toLowerCase();
+    if (
+        lower.includes("غير محدد") ||
+        lower.includes("لا توجد") ||
+        lower.includes("not specified") ||
+        lower.includes("unknown") ||
+        lower.includes("n/a") ||
+        lower.includes("none") ||
+        lower.includes("دوسير") ||
+        lower.includes("dossier") ||
+        lower.includes("مواصفات")
+    ) {
+        return "";
+    }
     // If it contains active ingredient names followed by numbers e.g. "Paracetamol 500 mg + Chlorpheniramine 2 mg..."
     // extract just the dosage numbers: "500 mg + 2 mg + 30 mg"
     const matches = s.match(/\b\d+(\.\d+)?\s*(mg|mcg|g|ml|iu|%|مجم|ملغم|ملج|جرام|مل)\b/gi);
@@ -306,6 +320,189 @@ export const getMedicalTargetAudienceIcon = (targetStr?: string) => {
         return <Baby className="w-3.5 h-3.5 text-amber-300" />;
     }
     return <Users className="w-3.5 h-3.5 text-amber-300" />;
+};
+
+export interface CareDomainConfig {
+    domain: "hair" | "beard" | "face" | "body" | "eyes_lips" | "intimate" | "general";
+    badgeLabel: string;
+    tabTitle: string;
+    guideTitle: string;
+    guideSubtitle: string;
+    categoryTitle: string;
+    icon: React.ReactNode;
+    suitabilityList: { label: string; color: string; hint: string }[];
+    purityItems: string[];
+}
+
+export const getCosmeticCareDomain = (data: any, isArabic: boolean): CareDomainConfig => {
+    const raw = `${data?.drugName || ""} ${data?.drugNameEn || ""} ${data?.genericName || ""} ${data?.genericNameEn || ""} ${data?.category || ""} ${data?.form || ""} ${data?.routeOfAdministration || ""} ${data?.description || ""} ${JSON.stringify(data?.uses || [])} ${JSON.stringify(data?.activeIngredients || [])} ${data?.dosage || ""}`.toLowerCase();
+
+    // 1. Beard & Facial Hair (الدقن واللحية والشارب)
+    if (raw.includes("beard") || raw.includes("moustache") || raw.includes("mustache") || raw.includes("لحية") || raw.includes("دقن") || raw.includes("شارب") || raw.includes("شعر الوجه")) {
+        return {
+            domain: "beard",
+            badgeLabel: isArabic ? "اللحية والشارب" : "Beard & Moustache",
+            tabTitle: isArabic ? "دليل العناية باللحية" : "Beard Care Guide",
+            guideTitle: isArabic ? "دليل العناية باللحية وشعر الوجه" : "Beard & Facial Hair Care Guide",
+            guideSubtitle: isArabic ? "المكونات • روتين التكثيف والترطيب • ملاءمة نوع شعر اللحية" : "Ingredients · Density Routine · Beard Hair Compatibility",
+            categoryTitle: isArabic ? "ملاءمة أنواع شعر اللحية وفروة الوجه" : "Beard & Facial Skin Compatibility",
+            icon: <Sparkles className="w-4 h-4 text-amber-400" />,
+            suitabilityList: [
+                { label: isArabic ? "لحية خفيفة / فراغات" : "Patchy Beard", color: "emerald", hint: isArabic ? "تحفيز نمو البصيلات" : "Stimulates follicles" },
+                { label: isArabic ? "شعر لحية خشن ومجعد" : "Coarse Beard", color: "cyan", hint: isArabic ? "تنعيم وترطيب عميق" : "Deep softening" },
+                { label: isArabic ? "بشرة تحت اللحية جافة" : "Dry Skin Under Beard", color: "violet", hint: isArabic ? "تهدئة ومنع الحكة" : "Relieves itch" },
+                { label: isArabic ? "بشرة حساسة بعد الحلاقة" : "Post-Shave Sensitive", color: "amber", hint: isArabic ? "حماية من الالتهاب" : "Anti-irritation" },
+                { label: isArabic ? "كافة أنواع اللحية" : "All Beard Types", color: "pink", hint: isArabic ? "لمعان وصحة يومية" : "Daily conditioning" },
+            ],
+            purityItems: [
+                isArabic ? "خالٍ من الزيوت المعدنية الضارة" : "Mineral Oil Free",
+                isArabic ? "لا يسد مسام البشرة" : "Non-Comedogenic",
+                isArabic ? "مغذي للبصيلات والجذور" : "Follicle Nourishing",
+                isArabic ? "خالٍ من السيليكون القاسي" : "Silicone Free",
+                isArabic ? "رائحة رجالية طبيعية هادئة" : "Subtle Natural Scent",
+                isArabic ? "سريع الامتصاص غير دهني" : "Non-Greasy Fast Absorbing",
+            ]
+        };
+    }
+
+    // 2. Hair & Scalp (الشعر وفروة الرأس)
+    const isHair = raw.includes("hair") || raw.includes("scalp") || raw.includes("شعر") || raw.includes("فروة") || raw.includes("capixyl") || raw.includes("rcp-1") || raw.includes("minoxidil") || raw.includes("shampoo") || raw.includes("conditioner") || raw.includes("follicle") || raw.includes("تساقط") || raw.includes("كثافة الشعر") || raw.includes("قشرة") || raw.includes("dandruff") || raw.includes("alopecia") || raw.includes("صلع");
+    if (isHair) {
+        return {
+            domain: "hair",
+            badgeLabel: isArabic ? "الشعر وفروة الرأس" : "Hair & Scalp",
+            tabTitle: isArabic ? "دليل العناية بالشعر" : "Hair Care Guide",
+            guideTitle: isArabic ? "دليل العناية بالشعر وفروة الرأس" : "Hair & Scalp Advanced Care Guide",
+            guideSubtitle: isArabic ? "المكونات النشطة • روتين التقوية والكثافة • ملاءمة نوع الشعر وفروة الرأس" : "Active Complexes · Density Routine · Hair & Scalp Compatibility",
+            categoryTitle: isArabic ? "ملاءمة أنواع الشعر وفروة الرأس" : "Hair & Scalp Compatibility",
+            icon: <Wind className="w-4 h-4 text-pink-400" />,
+            suitabilityList: [
+                { label: isArabic ? "شعر خفيف ومتساقط" : "Thinning / Hair Fall", color: "emerald", hint: isArabic ? "يقوي الجذور ويحفز الكثافة" : "Boosts density & roots" },
+                { label: isArabic ? "فروة دهنية / قشرة" : "Oily Scalp / Dandruff", color: "cyan", hint: isArabic ? "ينظم الإفرازات وينقي" : "Clarifying & balancing" },
+                { label: isArabic ? "شعر جاف وتالف" : "Dry & Damaged", color: "violet", hint: isArabic ? "ترميم عميق للألياف" : "Fiber restoration" },
+                { label: isArabic ? "فروة رأس حساسة" : "Sensitive Scalp", color: "amber", hint: isArabic ? "مهدئ ومضاد للحكة" : "Anti-itch soothing" },
+                { label: isArabic ? "شعر مصبوغ / كيرلي" : "Colored / Curly", color: "pink", hint: isArabic ? "حماية اللون والترطيب" : "Color & curl care" },
+            ],
+            purityItems: [
+                isArabic ? "خالٍ من السلفات القاسية (Sulfate-Free)" : "Sulfate-Free",
+                isArabic ? "خالٍ من البارابين (Paraben-Free)" : "Paraben-Free",
+                isArabic ? "آمن على بصيلات الشعر" : "Follicle Safe",
+                isArabic ? "مفحوص سريرياً لفروة الرأس" : "Dermatologically Tested",
+                isArabic ? "لا يترك بقايا دهنية لاصقة" : "Zero Greasy Residue",
+                isArabic ? "مناسب للشعر المعالج والمصبوغ" : "Color Safe",
+            ]
+        };
+    }
+
+    // 3. Eye & Lip Contour (محيط العيون والشفاه)
+    if (raw.includes("eye contour") || raw.includes("eye cream") || raw.includes("lip balm") || raw.includes("lips") || raw.includes("حول العين") || raw.includes("شفاه") || raw.includes("هالات") || raw.includes("انتفاخات العيون") || raw.includes("تشقق الشفاه")) {
+        return {
+            domain: "eyes_lips",
+            badgeLabel: isArabic ? "العيون والشفاه" : "Eyes & Lips",
+            tabTitle: isArabic ? "دليل العيون والشفاه" : "Eye & Lip Care",
+            guideTitle: isArabic ? "دليل العناية بمحيط العيون والشفاه" : "Eye & Lip Delicate Care Guide",
+            guideSubtitle: isArabic ? "المكونات الحساسة • روتين النضارة ومكافحة التجاعيد • ملاءمة المناطق الرقيقة" : "Delicate Formula · Anti-Dark Circles · Delicate Zone Safe",
+            categoryTitle: isArabic ? "ملاءمة مناطق محيط العيون والشفاه" : "Eye Contour & Lip Compatibility",
+            icon: <Eye className="w-4 h-4 text-purple-400" />,
+            suitabilityList: [
+                { label: isArabic ? "هالات سوداء وانتفاخ" : "Dark Circles & Puffiness", color: "emerald", hint: isArabic ? "تنشيط الدورة الدموية" : "Microcirculation boost" },
+                { label: isArabic ? "خطوط دقيقة وتجاعيد" : "Fine Lines / Crow's Feet", color: "cyan", hint: isArabic ? "شد وترطيب فائق" : "Smoothing & plumping" },
+                { label: isArabic ? "شفاه جافة ومشققة" : "Dry & Chapped Lips", color: "violet", hint: isArabic ? "ترميم الحاجز الشمعي" : "Barrier repair" },
+                { label: isArabic ? "عيون حساسة وعدسات" : "Sensitive Eyes / Lens", color: "amber", hint: isArabic ? "مفحوص رمدياً" : "Ophthalmologist tested" },
+                { label: isArabic ? "نضارة يومية شاملة" : "All Delicate Areas", color: "pink", hint: isArabic ? "إشراقة وترطيب مستمر" : "Daily radiance" },
+            ],
+            purityItems: [
+                isArabic ? "مفحوص من أطباء العيون (Ophthalmologist Tested)" : "Ophthalmologist Tested",
+                isArabic ? "خالٍ من العطور المسببة للدموع" : "Fragrance-Free",
+                isArabic ? "تركيبة خفيفة سريعة الامتصاص" : "Lightweight Absorption",
+                isArabic ? "آمن لمستخدمي العدسات اللاصقة" : "Contact Lens Safe",
+                isArabic ? "خالٍ من البارابين والزيوت الثقيلة" : "Paraben-Free",
+                isArabic ? "لا يسبب انسداد الغدد الدمعية" : "Safe For Sensitive Skin",
+            ]
+        };
+    }
+
+    // 4. Body & Hands (الجسم واليدين والقدمين)
+    if (raw.includes("body") || raw.includes("hand") || raw.includes("foot") || raw.includes("feet") || raw.includes("جسم") || raw.includes("يدين") || raw.includes("قدمين") || raw.includes("body lotion") || raw.includes("body wash") || raw.includes("hand cream") || raw.includes("سيلوليت") || raw.includes("تشققات الجسم") || raw.includes("علامات تمدد")) {
+        return {
+            domain: "body",
+            badgeLabel: isArabic ? "الجسم واليدين" : "Body & Hands",
+            tabTitle: isArabic ? "دليل العناية بالجسم" : "Body Care Guide",
+            guideTitle: isArabic ? "دليل العناية بالجسم واليدين" : "Body & Hand Care Guide",
+            guideSubtitle: isArabic ? "المكونات المرطبة • روتين العناية بالجسم • حماية وترميم حاجز البشرة" : "Hydrating Complexes · Body Routine · Skin Barrier Protection",
+            categoryTitle: isArabic ? "ملاءمة مناطق وبشرة الجسم" : "Body Skin Compatibility",
+            icon: <Hand className="w-4 h-4 text-cyan-400" />,
+            suitabilityList: [
+                { label: isArabic ? "جسم جاف وشديد الخشونة" : "Very Dry & Rough", color: "emerald", hint: isArabic ? "ترميم مكثف باليوريا والسيراميد" : "Intensive Urea & Ceramide" },
+                { label: isArabic ? "بشرة الجسم الحساسة" : "Sensitive Body", color: "cyan", hint: isArabic ? "خالٍ من المهيجات" : "Calming & fragrance-free" },
+                { label: isArabic ? "اليدين والقدمين المتشققة" : "Hands & Cracked Feet", color: "violet", hint: isArabic ? "حماية وتنعيم التشققات" : "Softens cracks" },
+                { label: isArabic ? "توحيد لون الجسم والنضارة" : "Even Tone & Glow", color: "amber", hint: isArabic ? "تفتيح وتجديد الخلايا" : "Brightening & renewal" },
+                { label: isArabic ? "كافة مناطق الجسم" : "All Body Areas", color: "pink", hint: isArabic ? "ترطيب يومي منعش" : "Daily refreshing moisture" },
+            ],
+            purityItems: [
+                isArabic ? "مفحوص جلدياً لكامل الجسم" : "Dermatologist Tested",
+                isArabic ? "سريع الامتصاص دون إحساس لزج" : "Non-Sticky Fast Absorption",
+                isArabic ? "ترطيب يدوم 24-48 ساعة" : "24h Long-Lasting Moisture",
+                isArabic ? "خالٍ من البارابين والملونات" : "Paraben & Dye Free",
+                isArabic ? "يدعم الحاجز الطبيعي للبشرة" : "Barrier Supporting",
+                isArabic ? "آمن للاستخدام اليومي المتكرر" : "Daily Safe",
+            ]
+        };
+    }
+
+    // 5. Intimate & Specialty (المناطق الحساسة والموضعية المتخصصة)
+    if (raw.includes("intimate") || raw.includes("sensitive area") || raw.includes("deodorant") || raw.includes("مناطق حساسة") || raw.includes("مزيل عرق") || raw.includes("تفتيح المناطق الحساسة") || raw.includes("حميمي")) {
+        return {
+            domain: "intimate",
+            badgeLabel: isArabic ? "عناية متخصصة" : "Specialty Care",
+            tabTitle: isArabic ? "دليل العناية المتخصصة" : "Specialty Care Guide",
+            guideTitle: isArabic ? "دليل العناية بالمناطق المتخصصة والحساسة" : "Intimate & Specialty Care Guide",
+            guideSubtitle: isArabic ? "موازنة درجة الحموضة pH • حماية وتهدئة فائقة من التهيج" : "pH-Balanced · High Soothing & Anti-Irritation",
+            categoryTitle: isArabic ? "ملاءمة المناطق الحساسة والمتخصصة" : "Specialty Area Compatibility",
+            icon: <ShieldAlert className="w-4 h-4 text-emerald-400" />,
+            suitabilityList: [
+                { label: isArabic ? "توازن درجة الحموضة pH" : "pH Balanced", color: "emerald", hint: isArabic ? "يحافظ على البكتيريا النافعة" : "Maintains microbiome" },
+                { label: isArabic ? "حماية من الاحتكاك والتهيج" : "Anti-Chafing", color: "cyan", hint: isArabic ? "تهدئة وعزل وقائي" : "Soothing protective layer" },
+                { label: isArabic ? "بشرة فائقة الحساسية" : "Ultra-Sensitive", color: "violet", hint: isArabic ? "خالٍ من الصابون والكحول" : "Soap & alcohol free" },
+                { label: isArabic ? "توحيد وتفتيح لطيف" : "Gentle Even-Tone", color: "amber", hint: isArabic ? "آمن بدون تقشير قاسي" : "No harsh acids" },
+                { label: isArabic ? "عناية وانتعاش يومي" : "Daily Freshness", color: "pink", hint: isArabic ? "حماية مستمرة طوال اليوم" : "All-day protection" },
+            ],
+            purityItems: [
+                isArabic ? "متوازن الحموضة فسيولوجياً (pH-Balanced)" : "Physiologically pH-Balanced",
+                isArabic ? "مفحوص سريرياً للمناطق الحساسة" : "Gynecologically / Derm Tested",
+                isArabic ? "خالٍ من الصابون والبارابين" : "Soap & Paraben Free",
+                isArabic ? "خالٍ من الكحول والعطور القاسية" : "Alcohol & Harsh Fragrance Free",
+                isArabic ? "مضاد للتهيج والتحسس" : "Hypoallergenic",
+                isArabic ? "آمن للاستخدام اليومي" : "Daily Gentle Care",
+            ]
+        };
+    }
+
+    // 6. Facial Skincare (الوجه والرقبة) - Default for facial skincare products
+    return {
+        domain: "face",
+        badgeLabel: isArabic ? "الوجه والرقبة" : "Face & Neck",
+        tabTitle: isArabic ? "دليل العناية بالوجه" : "Facial Care Guide",
+        guideTitle: isArabic ? "دليل العناية ببشرة الوجه والرقبة" : "Facial Skincare Advanced Guide",
+        guideSubtitle: isArabic ? "المكونات النشطة • الروتين النهاري والليلي • ملاءمة نوع البشرة" : "Active Ingredients · AM/PM Routine · Skin Type Compatibility",
+        categoryTitle: isArabic ? "ملاءمة أنواع بشرة الوجه" : "Facial Skin Type Compatibility",
+        icon: <Sparkles className="w-4 h-4 text-pink-400" />,
+        suitabilityList: [
+            { label: isArabic ? "دهنية ومعرضة للحبوب" : "Oily / Acne-Prone", color: "emerald", hint: isArabic ? "يقلل الإفرازات والمسام" : "Controls shine & pores" },
+            { label: isArabic ? "جافة وشاحبة" : "Dry / Dehydrated", color: "cyan", hint: isArabic ? "ترطيب عميق وحاجز وقائي" : "Deep hydration & barrier" },
+            { label: isArabic ? "مختلطة T-Zone" : "Combination", color: "violet", hint: isArabic ? "موازنة المناطق الدهنية والجافة" : "Balances T-zone" },
+            { label: isArabic ? "حساسة ومتهيجة" : "Sensitive / Reactive", color: "amber", hint: isArabic ? "تهدئة وترميم سريع" : "Soothing & calming" },
+            { label: isArabic ? "عادية / ناضجة" : "Normal / Mature", color: "pink", hint: isArabic ? "نضارة ومكافحة التجاعيد" : "Radiance & anti-aging" },
+        ],
+        purityItems: [
+            isArabic ? "خالٍ من البارابين (Paraben-Free)" : "Paraben-Free",
+            isArabic ? "خالٍ من السولفات (Sulfate-Free)" : "Sulfate-Free",
+            isArabic ? "لا يسد المسام (Non-Comedogenic)" : "Non-Comedogenic",
+            isArabic ? "مفحوص من أطباء الجلدية" : "Dermatologist Tested",
+            isArabic ? "خالٍ من الكحول والعطور القوية" : "Alcohol & Harsh Fragrance Free",
+            isArabic ? "لا يختبر على الحيوانات (Cruelty-Free)" : "Cruelty-Free",
+        ]
+    };
 };
 
 interface MedicalData {
@@ -2763,22 +2960,27 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     };
 
     const renderCosmetics = () => {
+        const careDomain = getCosmeticCareDomain(data, isArabic);
         const ingredientsList = data.activeIngredients && data.activeIngredients.length > 0
             ? data.activeIngredients
-            : [data.genericName || (isArabic ? "مكونات تجميلية مرطبة ومغذية" : "Nourishing Skin Formula")];
+            : [data.genericName || (isArabic ? "مكونات تجميلية مرطبة ومغذية" : "Nourishing Formula")];
 
         const benefits = data.uses && data.uses.length > 0 ? data.uses : [];
         const routine = data.dosage || (isArabic
-            ? "يُوضع على بشرة نظيفة وجافة صباحاً ومساءً مع الدلك الخفيف حتى الامتصاص الكامل."
-            : "Apply to clean, dry skin morning and evening. Massage gently until fully absorbed.");
-
-        const skinTypes = [
-            { label: t("Oily", "دهنية"), color: "emerald", hint: t("Controls shine", "يقلل الإفرازات") },
-            { label: t("Dry", "جافة"), color: "cyan", hint: t("Deep hydration", "ترطيب عميق") },
-            { label: t("Combination", "مختلطة"), color: "violet", hint: t("Balancing", "يوازن") },
-            { label: t("Sensitive", "حساسة"), color: "amber", hint: t("Patch test first", "اختبر أولاً") },
-            { label: t("Normal", "عادية"), color: "pink", hint: t("All-round care", "عناية شاملة") },
-        ];
+            ? (careDomain.domain === "hair"
+                ? "يُوضع على فروة رأس نظيفة مع التدليك الدائري اللطيف بأطراف الأصابع لتعزيز الامتصاص وتحفيز البصيلات."
+                : careDomain.domain === "beard"
+                ? "توضع بضع قطرات على شعر اللحية النظيف مع تدليك الجذور والبشرة السفلية لتغذية البصيلات وتنعيم الشعر."
+                : careDomain.domain === "eyes_lips"
+                ? "توضع كمية صغيرة جداً وتُربت بلطف بأطراف الأصابع حول محيط العين أو الشفاه دون شد البشرة."
+                : careDomain.domain === "body"
+                ? "يُوزع بسخاء على بشرة الجسم بعد الاستحمام مع التدليك حتى الامتصاص الكامل لترطيب يدوم طويلاً."
+                : "يُوضع على بشرة نظيفة وجافة صباحاً ومساءً مع الدلك الخفيف حتى الامتصاص الكامل.")
+            : (careDomain.domain === "hair"
+                ? "Apply to clean scalp and gently massage in circular motions to enhance absorption and stimulate follicles."
+                : careDomain.domain === "beard"
+                ? "Apply a few drops to clean beard and massage into roots and underlying skin."
+                : "Apply to clean, dry skin morning and evening. Massage gently until fully absorbed."));
 
         const colorMap: Record<string, { bg: string; border: string; text: string; sub: string }> = {
             emerald: { bg: "bg-emerald-500/8", border: "border-emerald-500/20", text: "text-emerald-300", sub: "text-emerald-200/60" },
@@ -2788,15 +2990,6 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
             pink: { bg: "bg-pink-500/8", border: "border-pink-500/20", text: "text-pink-300", sub: "text-pink-200/60" },
         };
 
-        const purityItems = [
-            t("Paraben-Free", "خالٍ من البارابين"),
-            t("Sulfate-Free", "خالٍ من السولفات"),
-            t("Non-Comedogenic", "لا يسد المسام"),
-            t("Dermatologist Tested", "مفحوص جلدياً"),
-            t("Fragrance Optional", "بدون عطور قوية"),
-            t("Cruelty-Free", "لا يختبر على الحيوانات"),
-        ];
-
         return (
             <div className="space-y-4 p-3 sm:p-5">
 
@@ -2804,29 +2997,29 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                 <div className="rounded-2xl overflow-hidden border border-pink-500/15 bg-gradient-to-br from-pink-950/30 via-purple-950/20 to-slate-950/60 backdrop-blur-xl">
                     <div className="px-5 py-4 flex items-center gap-3.5">
                         <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-5 h-5 text-pink-400" />
+                            {careDomain.icon}
                         </div>
                         <div className="min-w-0">
-                            <p className="text-white font-bold text-sm">{t("Skin & Beauty Guide", "دليل البشرة والتجميل")}</p>
-                            <p className="text-white/40 text-[11px] truncate">{t("Ingredients · Routine · Skin Compatibility", "المكونات · الروتين · ملاءمة البشرة")}</p>
+                            <p className="text-white font-bold text-sm">{careDomain.guideTitle}</p>
+                            <p className="text-white/40 text-[11px] truncate">{careDomain.guideSubtitle}</p>
                         </div>
                         <span className="ms-auto shrink-0 px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/25 text-pink-300 text-[10px] font-bold uppercase tracking-wider">
-                            {t("Cosmetic", "تجميل")}
+                            {careDomain.badgeLabel}
                         </span>
                     </div>
                 </div>
 
-                {/* Skin Type Grid */}
+                {/* Category Suitability Grid */}
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
                     <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
                         <Activity className="w-3.5 h-3.5 text-pink-400" />
-                        <p className="text-xs font-semibold text-white/70">{t("Skin Type Compatibility", "ملاءمة أنواع البشرة")}</p>
+                        <p className="text-xs font-semibold text-white/70">{careDomain.categoryTitle}</p>
                     </div>
-                    <div className="p-3 grid grid-cols-5 gap-2">
-                        {skinTypes.map((st) => {
-                            const c = colorMap[st.color];
+                    <div className="p-3 grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        {careDomain.suitabilityList.map((st) => {
+                            const c = colorMap[st.color] || colorMap.pink;
                             return (
-                                <div key={st.label} className={`rounded-xl ${c.bg} border ${c.border} py-3 px-1 flex flex-col items-center gap-1 text-center`}>
+                                <div key={st.label} className={`rounded-xl ${c.bg} border ${c.border} py-3 px-2 flex flex-col items-center gap-1 text-center`}>
                                     <span className={`text-[11px] font-bold ${c.text}`}>{st.label}</span>
                                     <span className={`text-[9px] ${c.sub} leading-tight`}>{st.hint}</span>
                                 </div>
@@ -2877,7 +3070,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                 <p className="text-xs font-semibold text-white/70">{t("Purity & Safety", "النقاء والسلامة")}</p>
                             </div>
                             <div className="p-3 grid grid-cols-2 gap-1.5">
-                                {purityItems.map((item, i) => (
+                                {careDomain.purityItems.map((item, i) => (
                                     <div key={i} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
                                         <Check className="w-3 h-3 text-emerald-400 shrink-0" />
                                         <span className="text-emerald-200/80 text-[10px] font-medium leading-tight">{item}</span>
@@ -2914,10 +3107,10 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-xl overflow-hidden">
                         <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                            <p className="text-xs font-semibold text-white/70">{t("Purity & Safety", "النقاء والسلامة")}</p>
+                            <p className="text-xs font-semibold text-white/70">{t("Purity & Safety", "معايير النقاء والسلامة")}</p>
                         </div>
-                        <div className="p-3 grid grid-cols-3 gap-1.5">
-                            {purityItems.map((item, i) => (
+                        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                            {careDomain.purityItems.map((item, i) => (
                                 <div key={i} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
                                     <Check className="w-3 h-3 text-emerald-400 shrink-0" />
                                     <span className="text-emerald-200/80 text-[10px] font-medium leading-tight">{item}</span>
@@ -3282,9 +3475,9 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                             {[
                                 { id: "overview", label: t("Overview", "نظرة عامة"), icon: <Activity className="w-4 h-4" /> },
                                 ...(isCosmetic ? [
-                                    { id: "cosmetics", label: t("Skin & Beauty Guide", "دليل البشرة والتجميل"), icon: <Sparkles className="w-4 h-4 text-pink-400" /> }
+                                    { id: "cosmetics", label: getCosmeticCareDomain(data, isArabic).tabTitle, icon: getCosmeticCareDomain(data, isArabic).icon }
                                 ] : []),
-                                { id: "safety", label: isCosmetic ? t("Skin Safety & Precautions", "أمان البشرة والاحتياطات") : t("Safety & Side Effects", "الأمان والآثار الجانبية"), icon: <ShieldAlert className="w-4 h-4" /> },
+                                { id: "safety", label: isCosmetic ? (getCosmeticCareDomain(data, isArabic).domain === "hair" ? t("Hair & Scalp Safety", "أمان الشعر وفروة الرأس") : getCosmeticCareDomain(data, isArabic).domain === "beard" ? t("Beard Safety", "أمان شعر اللحية") : t("Skin Safety & Precautions", "أمان البشرة والاحتياطات")) : t("Safety & Side Effects", "الأمان والآثار الجانبية"), icon: <ShieldAlert className="w-4 h-4" /> },
                                 ...(!isCosmetic ? [
                                     { id: "guard", label: t("Interaction Guard", "حارس التداخلات الدوائية"), icon: <GitBranch className="w-4 h-4" /> }
                                 ] : []),
