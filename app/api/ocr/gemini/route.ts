@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-import { createPollinationsClient, getDeepSeekApiKey } from "@/lib/ai/deepseek";
+import { createPollinationsClient, getDeepSeekApiKey, getVisionModelsToTry } from "@/lib/ai/deepseek";
 import { createClient } from "@/lib/supabase/server";
 import { deductCredit, getCreditsStatus } from "@/lib/creditService";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -94,32 +93,35 @@ Return ONLY a JSON object in this exact schema without any markdown formatting o
 }`;
 
         let text = "";
-        const visionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
+        const candidateVisionModels = getVisionModelsToTry();
         const pollinations = createPollinationsClient();
 
-        try {
-            console.log(`[Triage/OCR API] Calling Vision Model (${visionModel})...`);
-            const res = await pollinations.chat.completions.create({
-                model: visionModel,
-                messages: [
-                    {
-                        role: "user",
-                        content: [
-                            { type: "text", text: prompt },
-                            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
-                        ]
-                    }
-                ],
-                temperature: 0.1,
-            });
+        for (const candidateModel of candidateVisionModels) {
+            try {
+                console.log(`[Triage/OCR API] Calling Vision Model (${candidateModel})...`);
+                const res = await pollinations.chat.completions.create({
+                    model: candidateModel,
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                { type: "text", text: prompt },
+                                { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
+                            ]
+                        }
+                    ],
+                    temperature: 0.1,
+                });
 
-            text = res.choices[0]?.message?.content || "";
-            if (text && text.trim().length > 0) {
-                console.log(`[Triage/OCR API] Vision (${visionModel}) response received, length:`, text.length);
+                const content = res.choices[0]?.message?.content || "";
+                if (content && content.trim().length > 0) {
+                    text = content;
+                    console.log(`[Triage/OCR API] Vision (${candidateModel}) response received, length:`, text.length);
+                    break;
+                }
+            } catch (polErr: any) {
+                console.warn(`[Triage/OCR API] Vision model (${candidateModel}) failed:`, polErr?.message || polErr);
             }
-        } catch (polErr: any) {
-            console.warn(`[Triage/OCR API] Vision model failed:`, polErr?.message || polErr);
-            text = "";
         }
 
         // Multiple parsing strategies

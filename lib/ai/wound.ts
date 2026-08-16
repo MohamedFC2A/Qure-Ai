@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { createPollinationsClient, getDeepSeekApiKey } from "@/lib/ai/deepseek";
+import { createPollinationsClient, getDeepSeekApiKey, getVisionModelsToTry } from "@/lib/ai/deepseek";
 import { robustParseJson } from "@/lib/ai/jsonRepair";
 
 export type ClinicalCategory =
@@ -433,36 +433,41 @@ export async function analyzeWoundImage(
 ): Promise<WoundAnalysisResult> {
     const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
     const pollinations = createPollinationsClient();
-
-    const visionModel = process.env.OCR_VISION_MODEL || "YoannDev90/muse-glimmer-30b:free";
+    const candidateVisionModels = getVisionModelsToTry();
     let rawText = "";
 
     const userPrompt = language === "ar"
         ? `قم بفحص هذه الصورة الطبية بدقة سريرية وتشخيصية شاملة (سواء كانت صورة وجه ونوع بشرة، حب شباب، سنط/عين سمكة، مسمار قدم/كالو، خراج، حرق، جرح قطعي، إكزيما، طفح، أو إصابة). قم بإجراء تفكير سريري عميق (Clinical Chain-of-Thought) واستخرج كافة التفاصيل المطلوبة وفق الـ JSON Schema المحدد بدقة 100%.`
         : `Perform an exhaustive, deep-thinking clinical dermatological and physical diagnosis of this image (whether it is facial skin analysis, acne, wart/corn, abscess, burn, laceration, rash, or injury), outputting strictly according to the specified JSON schema.`;
 
-    try {
-        console.log(`[Clinical Vision Engine] Calling Vision Model (${visionModel})...`);
-        const res = await pollinations.chat.completions.create({
-            model: visionModel,
-            messages: [
-                { role: "system", content: CLINICAL_DIAGNOSTIC_SYSTEM_PROMPT },
-                {
-                    role: "user",
-                    content: [
-                        { type: "text", text: userPrompt },
-                        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
-                    ]
-                }
-            ],
-            temperature: 0.1,
-            max_tokens: 3000,
-        });
+    for (const candidateModel of candidateVisionModels) {
+        try {
+            console.log(`[Clinical Vision Engine] Calling Vision Model (${candidateModel})...`);
+            const res = await pollinations.chat.completions.create({
+                model: candidateModel,
+                messages: [
+                    { role: "system", content: CLINICAL_DIAGNOSTIC_SYSTEM_PROMPT },
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: userPrompt },
+                            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Data}` } }
+                        ]
+                    }
+                ],
+                temperature: 0.1,
+                max_tokens: 3000,
+            });
 
-        rawText = res.choices[0]?.message?.content || "";
-        console.log(`[Clinical Vision Engine] Raw response length: ${rawText.length}`);
-    } catch (apiErr: any) {
-        console.error("[Clinical Vision Engine] Vision call failed:", apiErr?.message || apiErr);
+            const content = res.choices[0]?.message?.content || "";
+            if (content && content.trim().length > 0) {
+                rawText = content;
+                console.log(`[Clinical Vision Engine] Raw response length (${candidateModel}): ${rawText.length}`);
+                break;
+            }
+        } catch (apiErr: any) {
+            console.error(`[Clinical Vision Engine] Vision call (${candidateModel}) failed:`, apiErr?.message || apiErr);
+        }
     }
 
     // Resilient JSON parsing

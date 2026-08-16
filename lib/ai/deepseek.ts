@@ -37,11 +37,20 @@ export const DEEPSEEK_MODEL = DEFAULT_POLLINATIONS_MODEL;
 
 export function getTextModelsToTry(): string[] {
     const configured = getDeepSeekModel();
-    const defaults = ["openai", "deepseek", "gpt-oss", "llama", "mistral"];
-    if (configured && !defaults.includes(configured)) {
-        return [configured, ...defaults];
+    const verifiedModels = ["openai", "llama"];
+    if (configured && !verifiedModels.includes(configured)) {
+        return [configured, ...verifiedModels];
     }
-    return defaults;
+    return verifiedModels;
+}
+
+export function getVisionModelsToTry(): string[] {
+    const configured = process.env.OCR_VISION_MODEL?.trim();
+    const verifiedModels = ["openai"];
+    if (configured && !configured.includes("YoannDev90") && !configured.includes("gemini") && !configured.includes("claude") && !verifiedModels.includes(configured)) {
+        return [configured, ...verifiedModels];
+    }
+    return verifiedModels;
 }
 
 export function createPollinationsClient(customKey?: string, customBaseUrl?: string): OpenAI {
@@ -50,8 +59,8 @@ export function createPollinationsClient(customKey?: string, customBaseUrl?: str
     return new OpenAI({
         apiKey,
         baseURL,
-        timeout: 15000, // 15s timeout prevents hung connections
-        maxRetries: 1,  // Fast failover to next candidate model
+        timeout: 25000, // 25s timeout for complex clinical reasoning & OCR
+        maxRetries: 2,  // Resilient retry for intermittent network fluctuations
         defaultQuery: { key: apiKey },
         defaultHeaders: {
             "Authorization": `Bearer ${apiKey}`

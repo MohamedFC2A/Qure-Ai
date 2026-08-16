@@ -71,4 +71,21 @@ describe('Functional QA: AI Guardrails & Robust JSON Parser Engine', () => {
       expect(parsed.riskLevel).toBe('LOW');
     });
   });
+
+  describe('AI Model Provider & Resilient Model Resolution', () => {
+    it('returns verified, working text models including openai and llama', async () => {
+      const { getTextModelsToTry } = await import('@/lib/ai/deepseek');
+      const models = getTextModelsToTry();
+      expect(models).toContain('openai');
+      expect(models).toContain('llama');
+      expect(models[0]).toBe('openai');
+    });
+
+    it('returns verified, working vision models', async () => {
+      const { getVisionModelsToTry } = await import('@/lib/ai/deepseek');
+      const visionModels = getVisionModelsToTry();
+      expect(visionModels).toContain('openai');
+      expect(visionModels[0]).toBe('openai');
+    });
+  });
 });
