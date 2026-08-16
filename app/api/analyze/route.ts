@@ -50,6 +50,67 @@ function classifyFromFdaProductTypes(productTypes: unknown): ProductClassificati
     return { kind: "unknown", confidence: 70, reasons };
 }
 
+function deduplicateList(list?: string[] | null): string[] {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const item of list) {
+        const text = String(item || "").trim();
+        const norm = text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+        if (!norm || seen.has(norm)) continue;
+        seen.add(norm);
+        out.push(text);
+    }
+    return out;
+}
+
+function deduplicateActiveIngredients(
+    listDetailed?: Array<{ name?: string; nameAr?: string; strength?: string; strengthMg?: number; source?: string }>,
+    listSimple?: string[]
+) {
+    const normalizeKey = (s: string) =>
+        String(s || "")
+            .toLowerCase()
+            .replace(/\b(hydrochloride|hcl|maleate|sodium|potassium|hydrate|anhydrous|monohydrate|sulfate|phosphate|ماليات|هيدروكلوريد|صوديوم|بوتاسيوم)\b/g, "")
+            .replace(/[\d.,%/\s–—-]+/g, "")
+            .trim();
+
+    const seen = new Set<string>();
+    const cleanDetailed: Array<{ name: string; nameAr?: string; strength: string; strengthMg?: number; source?: string }> = [];
+
+    if (Array.isArray(listDetailed) && listDetailed.length > 0) {
+        for (const it of listDetailed) {
+            const name = String(it?.name || "").trim();
+            if (!name) continue;
+            const key = normalizeKey(name);
+            if (key && seen.has(key)) continue;
+            if (key) seen.add(key);
+
+            cleanDetailed.push({
+                name,
+                nameAr: it?.nameAr ? String(it.nameAr).trim() : undefined,
+                strength: String(it?.strength || "").trim().replace(/\/1\b/g, ""),
+                strengthMg: typeof it?.strengthMg === "number" ? it.strengthMg : undefined,
+                source: it?.source,
+            });
+        }
+    }
+
+    const cleanSimple: string[] = [];
+    if (Array.isArray(listSimple) && listSimple.length > 0) {
+        for (const s of listSimple) {
+            const text = String(s || "").trim();
+            if (!text) continue;
+            const key = normalizeKey(text);
+            if (key && seen.has(key) && cleanDetailed.length > 0) continue;
+            if (key) seen.add(key);
+            cleanSimple.push(text);
+        }
+    }
+
+    return { cleanDetailed, cleanSimple };
+}
+
 export async function POST(req: NextRequest) {
     const startTime = Date.now();
     try {
@@ -270,8 +331,13 @@ export async function POST(req: NextRequest) {
                         patientContext: analysisContext,
                     });
 
-                    // Merge synthesized details preserving high-precision values
+                    // Merge synthesized details preserving high-precision values and deduplicating clinical arrays
                     if (synthesized && typeof synthesized === "object") {
+                        const { cleanDetailed, cleanSimple } = deduplicateActiveIngredients(
+                            synthesized.activeIngredientsDetailed || data.activeIngredientsDetailed,
+                            (synthesized.activeIngredients && synthesized.activeIngredients.length > 0) ? synthesized.activeIngredients : data.activeIngredients
+                        );
+
                         data = {
                             ...data,
                             ...synthesized,
@@ -281,14 +347,14 @@ export async function POST(req: NextRequest) {
                             genericNameEn: synthesized.genericNameEn || data.genericNameEn,
                             strength: synthesized.strength || data.strength,
                             dosage: (synthesized.dosage && !synthesized.dosage.includes("غير محدد")) ? synthesized.dosage : data.dosage,
-                            uses: (synthesized.uses && synthesized.uses.length > 0) ? synthesized.uses : data.uses,
-                            activeIngredients: (synthesized.activeIngredients && synthesized.activeIngredients.length > 0) ? synthesized.activeIngredients : data.activeIngredients,
-                            activeIngredientsDetailed: synthesized.activeIngredientsDetailed || data.activeIngredientsDetailed,
-                            warnings: (synthesized.warnings && synthesized.warnings.length > 0) ? synthesized.warnings : data.warnings,
-                            contraindications: (synthesized.contraindications && synthesized.contraindications.length > 0) ? synthesized.contraindications : data.contraindications,
-                            precautions: (synthesized.precautions && synthesized.precautions.length > 0) ? synthesized.precautions : data.precautions,
-                            sideEffects: (synthesized.sideEffects && synthesized.sideEffects.length > 0) ? synthesized.sideEffects : data.sideEffects,
-                            interactions: (synthesized.interactions && synthesized.interactions.length > 0) ? synthesized.interactions : data.interactions,
+                            uses: deduplicateList(synthesized.uses && synthesized.uses.length > 0 ? synthesized.uses : data.uses),
+                            activeIngredients: cleanSimple.length > 0 ? cleanSimple : data.activeIngredients,
+                            activeIngredientsDetailed: cleanDetailed.length > 0 ? cleanDetailed : data.activeIngredientsDetailed,
+                            warnings: deduplicateList(synthesized.warnings && synthesized.warnings.length > 0 ? synthesized.warnings : data.warnings),
+                            contraindications: deduplicateList(synthesized.contraindications && synthesized.contraindications.length > 0 ? synthesized.contraindications : data.contraindications),
+                            precautions: deduplicateList(synthesized.precautions && synthesized.precautions.length > 0 ? synthesized.precautions : data.precautions),
+                            sideEffects: deduplicateList(synthesized.sideEffects && synthesized.sideEffects.length > 0 ? synthesized.sideEffects : data.sideEffects),
+                            interactions: deduplicateList(synthesized.interactions && synthesized.interactions.length > 0 ? synthesized.interactions : data.interactions),
                             confidenceScore: Math.max(Number(data.confidenceScore || 90), Number(dossier.searchConfidence || 95)),
                         };
                     }

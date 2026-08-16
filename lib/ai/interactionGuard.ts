@@ -223,21 +223,26 @@ ${otherJson}
     }
 
     const rawItems = Array.isArray(parsed?.items) ? parsed.items : [];
-    const items: InteractionGuardItem[] = rawItems
-        .map((it: any) => {
-            const otherMedication = String(it?.otherMedication || "").trim();
-            if (!otherMedication) return null;
-            const severity = normalizeSeverity(it?.severity);
-            const confidence = clampInt(it?.confidence, 0, 100, severity === "safe" ? 70 : severity === "danger" ? 80 : 60);
-            const headline = String(it?.headline || "").trim() || (isAr ? "تقييم التداخل" : "Interaction assessment");
-            const summary = String(it?.summary || "").trim() || "";
-            const mechanism = String(it?.mechanism || "").trim() || undefined;
-            const whatToDo = Array.isArray(it?.whatToDo) ? it.whatToDo.map((s: any) => String(s || "").trim()).filter(Boolean).slice(0, 8) : undefined;
-            const monitoring = Array.isArray(it?.monitoring) ? it.monitoring.map((s: any) => String(s || "").trim()).filter(Boolean).slice(0, 8) : undefined;
-            const redFlags = Array.isArray(it?.redFlags) ? it.redFlags.map((s: any) => String(s || "").trim()).filter(Boolean).slice(0, 8) : undefined;
-            return { otherMedication, severity, confidence, headline, summary, mechanism, whatToDo, monitoring, redFlags };
-        })
-        .filter(Boolean) as InteractionGuardItem[];
+    const seenMeds = new Set<string>();
+    const items: InteractionGuardItem[] = [];
+
+    for (const it of rawItems) {
+        const otherMedication = String(it?.otherMedication || "").trim();
+        if (!otherMedication) continue;
+        const norm = otherMedication.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+        if (!norm || seenMeds.has(norm)) continue;
+        seenMeds.add(norm);
+
+        const severity = normalizeSeverity(it?.severity);
+        const confidence = clampInt(it?.confidence, 0, 100, severity === "safe" ? 70 : severity === "danger" ? 80 : 60);
+        const headline = String(it?.headline || "").trim() || (isAr ? "تقييم التداخل" : "Interaction assessment");
+        const summary = String(it?.summary || "").trim() || "";
+        const mechanism = String(it?.mechanism || "").trim() || undefined;
+        const whatToDo = Array.isArray(it?.whatToDo) ? it.whatToDo.map((s: any) => String(s || "").trim()).filter(Boolean).slice(0, 8) : undefined;
+        const monitoring = Array.isArray(it?.monitoring) ? it.monitoring.map((s: any) => String(s || "").trim()).filter(Boolean).slice(0, 8) : undefined;
+        const redFlags = Array.isArray(it?.redFlags) ? it.redFlags.map((s: any) => String(s || "").trim()).filter(Boolean).slice(0, 8) : undefined;
+        items.push({ otherMedication, severity, confidence, headline, summary, mechanism, whatToDo, monitoring, redFlags });
+    }
 
     return {
         overallRisk: typeof parsed?.overallRisk === "string" ? parsed.overallRisk : undefined,

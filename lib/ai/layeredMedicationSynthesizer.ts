@@ -133,9 +133,10 @@ Your objective: Conduct multi-layer forensic analysis on medication image text f
 
 FORENSIC MANDATES:
 1. RESOLVE EXACT IDENTITY (90-100% Precision): Identify the authentic registered commercial trade name and active pharmaceutical molecules even if the package photo is cropped, blurred, or missing numbers.
-2. SOLVE MISSING PACKAGING NUMBERS & DETAILS: If exact strength (e.g. 500mg, 1000mg, 5ml), active formulation percentages, or dosage instructions were omitted on the packaging, retrieve and compute them from the verified 5-page clinical dossier and pharmacological databases. Never leave fields as "غير محدد" when official monographs exist.
-3. LANGUAGE RULE: Output all descriptive text in professional Modern Standard Arabic if language is 'ar', or English if 'en'. Always keep 'drugNameEn', 'genericNameEn', and 'activeIngredientsEn' in clean Latin English.
-4. RETURN PURE JSON matching the schema strictly.
+2. DEDUPLICATION & MOLECULAR ACCURACY: Never repeat or duplicate active ingredients. For multi-ingredient combination drugs (e.g. Paracetamol + Chlorpheniramine + Pseudoephedrine), list each distinct active chemical entity exactly once with its authentic registered dose (e.g. 500 mg, 2 mg, 30 mg). Never sum or multiply doses incorrectly across repeated rows.
+3. SOLVE MISSING PACKAGING NUMBERS & DETAILS: If exact strength (e.g. 500mg, 1000mg, 5ml), active formulation percentages, or dosage instructions were omitted on the packaging, retrieve and compute them from the verified 5-page clinical dossier and pharmacological databases. Never leave fields as "غير محدد" when official monographs exist.
+4. LANGUAGE RULE: Output all descriptive text in professional Modern Standard Arabic if language is 'ar', or English if 'en'. Always keep 'drugNameEn', 'genericNameEn', and 'activeIngredientsEn' in clean Latin English.
+5. RETURN PURE JSON matching the schema strictly.
 
 JSON SCHEMA:
 {
@@ -150,11 +151,11 @@ JSON SCHEMA:
     "dosageForm": "tablet | capsule | syrup | cream | gel | drops | spray",
     "routeOfAdministration": "Oral | Topical | Inhalation | Intravenous",
     "targetAudience": "Adults / Children / All Ages",
-    "strength": "e.g. 500 mg or 1000 mg",
+    "strength": "e.g. 500 mg or 1000 mg or 500 mg + 2 mg + 30 mg",
     "activeIngredients": ["Molecule 1 (Strength)", "Molecule 2 (Strength)"],
     "activeIngredientsEn": ["Molecule 1 (Strength)", "Molecule 2 (Strength)"],
     "activeIngredientsDetailed": [
-        { "name": "Molecule 1", "strength": "500 mg", "source": "Therapeutic Agent" }
+        { "name": "Molecule 1", "strength": "500 mg", "strengthMg": 500, "source": "Therapeutic Agent" }
     ],
     "description": "Comprehensive clinical mechanism and therapeutic profile",
     "category": "Pharmacological Category",

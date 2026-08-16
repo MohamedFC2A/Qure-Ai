@@ -528,7 +528,22 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     }, [serverGuardItems, displayDrugName, isArabic, data.activeIngredients]);
 
     const guardItems = useMemo(() => {
-        return serverGuardItems.length > 0 ? serverGuardItems : localGuardItems;
+        const raw = serverGuardItems.length > 0 ? serverGuardItems : localGuardItems;
+        const seen = new Set<string>();
+        const deduplicated: typeof raw = [];
+
+        for (const it of raw) {
+            if (!it || !it.otherMedication) continue;
+            const norm = String(it.otherMedication)
+                .toLowerCase()
+                .replace(/[^\p{L}\p{N}]+/gu, " ")
+                .trim();
+            if (!norm || seen.has(norm)) continue;
+            seen.add(norm);
+            deduplicated.push(it);
+        }
+
+        return deduplicated;
     }, [serverGuardItems, localGuardItems]);
 
     const [selectedGuardKey, setSelectedGuardKey] = useState<string | null>(null);
@@ -1054,71 +1069,95 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     };
 
     const ingredientRows = useMemo(() => {
+        // Smart normalization key for active pharmaceutical chemical stems
+        const normalizeIngKey = (str: string) => {
+            return String(str || "")
+                .toLowerCase()
+                .replace(/\b(hydrochloride|hcl|maleate|sodium|potassium|hydrate|anhydrous|monohydrate|sulfate|phosphate|ماليات|هيدروكلوريد|صوديوم|بوتاسيوم)\b/g, "")
+                .replace(/[\d.,%/\s–—-]+/g, "")
+                .trim();
+        };
+
+        const seenKeys = new Set<string>();
+        const rows: Array<{ name: string; doseText: string; doseMg?: number; source: "scan" | "fda" }> = [];
+
         // 1. Direct active ingredients from AI scan (detailed)
         if (Array.isArray((data as any)?.activeIngredientsDetailed) && (data as any).activeIngredientsDetailed.length > 0) {
-            return ((data as any).activeIngredientsDetailed as any[])
-                .map((it, idx) => {
-                    let name = String(it?.name || "").trim();
-                    if (isArabic) {
-                        if (it?.nameAr) {
-                            name = String(it.nameAr).trim();
-                        } else if (Array.isArray(data.activeIngredients) && data.activeIngredients[idx]) {
-                            const parsedAr = parseDoseFromText(String(data.activeIngredients[idx]));
-                            if (parsedAr.name && /[\u0600-\u06FF]/.test(parsedAr.name)) {
-                                name = parsedAr.name;
-                            }
+            for (let idx = 0; idx < (data as any).activeIngredientsDetailed.length; idx++) {
+                const it = (data as any).activeIngredientsDetailed[idx];
+                let name = String(it?.name || "").trim();
+                if (isArabic) {
+                    if (it?.nameAr) {
+                        name = String(it.nameAr).trim();
+                    } else if (Array.isArray(data.activeIngredients) && data.activeIngredients[idx]) {
+                        const parsedAr = parseDoseFromText(String(data.activeIngredients[idx]));
+                        if (parsedAr.name && /[\u0600-\u06FF]/.test(parsedAr.name)) {
+                            name = parsedAr.name;
                         }
                     }
-                    let strength = String(it?.strength || "").trim().replace(/\/1\b/g, "").trim();
-                    const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
-                    const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
-                    if (!name) return null;
-                    return { name, doseText, doseMg: strengthMg, source: "scan" as const };
-                })
-                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "scan" }>;
+                }
+                if (!name) continue;
+                const key = normalizeIngKey(name);
+                if (key && seenKeys.has(key)) continue;
+                if (key) seenKeys.add(key);
+
+                let strength = String(it?.strength || "").trim().replace(/\/1\b/g, "").trim();
+                const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
+                const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
+                rows.push({ name, doseText, doseMg: strengthMg, source: "scan" });
+            }
+            if (rows.length > 0) return rows;
         }
 
         // 2. Active ingredients array from AI analysis
         const list = Array.isArray(data.activeIngredients) ? data.activeIngredients : [];
         const listEn = Array.isArray(data.activeIngredientsEn) ? data.activeIngredientsEn : [];
         if (list.length > 0) {
-            return list
-                .map((raw, idx) => {
-                    const parsed = parseDoseFromText(String(raw || ""));
-                    if (!parsed.name) return null;
-                    
-                    let displayName = parsed.name;
-                    if (!isArabic && listEn[idx]) {
-                        const parsedEn = parseDoseFromText(String(listEn[idx]));
-                        if (parsedEn.name) {
-                            displayName = parsedEn.name;
-                        }
-                    } else if (isArabic && !/[\u0600-\u06FF]/.test(displayName) && list[idx]) {
-                        displayName = parsed.name;
+            for (let idx = 0; idx < list.length; idx++) {
+                const raw = list[idx];
+                const parsed = parseDoseFromText(String(raw || ""));
+                if (!parsed.name) continue;
+
+                let displayName = parsed.name;
+                if (!isArabic && listEn[idx]) {
+                    const parsedEn = parseDoseFromText(String(listEn[idx]));
+                    if (parsedEn.name) {
+                        displayName = parsedEn.name;
                     }
-                    const doseText = String(parsed.doseText || "—").replace(/\/1\b/g, "").trim();
-                    return { name: displayName, doseText, doseMg: parsed.doseMg, source: "scan" as const };
-                })
-                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "scan" }>;
+                } else if (isArabic && !/[\u0600-\u06FF]/.test(displayName) && list[idx]) {
+                    displayName = parsed.name;
+                }
+
+                const key = normalizeIngKey(displayName);
+                if (key && seenKeys.has(key)) continue;
+                if (key) seenKeys.add(key);
+
+                const doseText = String(parsed.doseText || "—").replace(/\/1\b/g, "").trim();
+                rows.push({ name: displayName, doseText, doseMg: parsed.doseMg, source: "scan" });
+            }
+            if (rows.length > 0) return rows;
         }
 
         // 3. Fallback to FDA NDC only if activeIngredients was empty
         const ndcIngredients = (fda as any)?.ndc?.activeIngredients;
         if (fdaFeatureEnabled && Array.isArray(ndcIngredients) && ndcIngredients.length > 0) {
-            return (ndcIngredients as any[])
-                .map((it) => {
-                    const name = String(it?.name || "").trim();
-                    let strength = String(it?.strength || "").trim().replace(/\/1\b/g, "").trim();
-                    const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
-                    const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
-                    if (!name) return null;
-                    return { name, doseText, doseMg: strengthMg, source: "fda" as const };
-                })
-                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "fda" }>;
+            for (const it of ndcIngredients as any[]) {
+                const name = String(it?.name || "").trim();
+                if (!name) continue;
+                const key = normalizeIngKey(name);
+                if (key && seenKeys.has(key)) continue;
+                if (key) seenKeys.add(key);
+
+                let strength = String(it?.strength || "").trim().replace(/\/1\b/g, "").trim();
+                const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
+                const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
+                rows.push({ name, doseText, doseMg: strengthMg, source: "fda" });
+            }
+            if (rows.length > 0) return rows;
         }
 
         return [];
-    }, [data.activeIngredients, data.activeIngredientsEn, (data as any)?.activeIngredientsDetailed, fda, fdaFeatureEnabled]);
+    }, [data.activeIngredients, data.activeIngredientsEn, (data as any)?.activeIngredientsDetailed, fda, fdaFeatureEnabled, isArabic]);
 
     const askAi = async (params: { preset?: "alternative" | "personalized" | "history"; question?: string; reset?: boolean }) => {
         if (!user) {

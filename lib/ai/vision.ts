@@ -244,7 +244,14 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
         if (!res.strength) res.strength = "500 mg";
         if (!res.form) res.form = isAr ? "أقراص مغلفة" : "Film-coated tablets";
         if (!res.category) res.category = isAr ? "مسكن للآلام وخافض للحرارة" : "Analgesics & Antipyretics";
-        if (res.activeIngredients.length === 0) res.activeIngredients = [`Paracetamol ${res.strength}`];
+        if (res.activeIngredients.length === 0) {
+            res.activeIngredients = [isAr ? `باراسيتامول ${res.strength}` : `Paracetamol ${res.strength}`];
+            res.activeIngredientsEn = [`Paracetamol ${res.strength}`];
+            const numMg = parseInt(res.strength) || 500;
+            res.activeIngredientsDetailed = [
+                { name: isAr ? "باراسيتامول" : "Paracetamol", nameAr: "باراسيتامول", strength: res.strength, strengthMg: numMg, source: "Therapeutic Agent" }
+            ];
+        }
 
         if (res.uses.length === 0) {
             res.uses = isAr
@@ -342,7 +349,14 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
         if (!res.genericNameEn || res.genericNameEn === "Unknown") res.genericNameEn = "Ibuprofen";
         if (!res.strength) res.strength = "400 mg";
         if (!res.category) res.category = isAr ? "مضاد التهاب غير ستيرويدي (NSAID)" : "Non-Steroidal Anti-Inflammatory Drug (NSAID)";
-        if (res.activeIngredients.length === 0) res.activeIngredients = [`Ibuprofen ${res.strength}`];
+        if (res.activeIngredients.length === 0) {
+            res.activeIngredients = [isAr ? `إيبوبروفين ${res.strength}` : `Ibuprofen ${res.strength}`];
+            res.activeIngredientsEn = [`Ibuprofen ${res.strength}`];
+            const numMg = parseInt(res.strength) || 400;
+            res.activeIngredientsDetailed = [
+                { name: isAr ? "إيبوبروفين" : "Ibuprofen", nameAr: "إيبوبروفين", strength: res.strength, strengthMg: numMg, source: "Therapeutic Agent" }
+            ];
+        }
 
         if (res.uses.length === 0) {
             res.uses = isAr
