@@ -558,6 +558,7 @@ export function formatClinicalContext(item: any, language: "en" | "ar" = "ar"): 
         summary ? `• Summary: ${summary}` : "",
     ];
 
+    if (data.targetAudience) lines.push(`• Approved Age Group / الفئة العمرية المعتمدة: ${data.targetAudience}`);
     if (data.activeIngredients) lines.push(`• Active Ingredients: ${JSON.stringify(data.activeIngredients)}`);
     if (data.indications) lines.push(`• Indications / الاستخدامات: ${JSON.stringify(data.indications)}`);
     if (data.dosage) lines.push(`• Dosage & Admin: ${JSON.stringify(data.dosage)}`);

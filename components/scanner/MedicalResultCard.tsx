@@ -1,5 +1,5 @@
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Activity, AlertTriangle, Info, Pill, ShieldAlert, Thermometer, Box, FileText, CheckCircle2, AlertOctagon, Clock, Sparkles, GitBranch, ChevronRight, Lock, Database, ExternalLink, ListTodo, Download, FileDown, Copy, Mic, MicOff, Send, MessageSquare, Bookmark, RotateCcw, Languages, Check, Lightbulb, Zap, Brain, Stethoscope, Building2, Wind, Droplets, Hand, Users, Baby, Syringe, Leaf, Eye, Ear, Utensils } from "lucide-react";
+import { Activity, AlertTriangle, Info, Pill, ShieldAlert, Thermometer, Box, FileText, CheckCircle2, AlertOctagon, Clock, Sparkles, GitBranch, ChevronRight, Lock, Database, ExternalLink, ListTodo, Download, FileDown, Copy, Mic, MicOff, Send, MessageSquare, Bookmark, RotateCcw, Languages, Check, Lightbulb, Zap, Brain, Stethoscope, Building2, Wind, Droplets, Hand, Users, Baby, Syringe, Leaf, Eye, Ear, Utensils, UserCheck } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -137,24 +137,125 @@ export const getMedicalCategoryIcon = (catStr?: string) => {
 export const getMedicalRouteIcon = (routeStr?: string) => {
     const r = String(routeStr || "").toLowerCase();
     if (r.includes("topical") || r.includes("موضعي") || r.includes("سطحي") || r.includes("skin") || r.includes("جلد") || r.includes("external")) {
-        return <Hand className="w-3.5 h-3.5 text-emerald-300" />;
+        return <Hand className="w-3.5 h-3.5 text-emerald-300 shrink-0" />;
     }
     if (r.includes("oral") || r.includes("فم") || r.includes("بلع")) {
-        return <Utensils className="w-3.5 h-3.5 text-emerald-300" />;
+        return <Activity className="w-3.5 h-3.5 text-emerald-300 shrink-0" />;
     }
     if (r.includes("inject") || r.includes("وريد") || r.includes("عضل") || r.includes("iv") || r.includes("im")) {
-        return <Syringe className="w-3.5 h-3.5 text-emerald-300" />;
+        return <Syringe className="w-3.5 h-3.5 text-emerald-300 shrink-0" />;
     }
     if (r.includes("inhal") || r.includes("استنشاق") || r.includes("تنفس")) {
-        return <Wind className="w-3.5 h-3.5 text-emerald-300" />;
+        return <Wind className="w-3.5 h-3.5 text-emerald-300 shrink-0" />;
     }
     if (r.includes("eye") || r.includes("عين") || r.includes("ophthalmic")) {
-        return <Eye className="w-3.5 h-3.5 text-emerald-300" />;
+        return <Eye className="w-3.5 h-3.5 text-emerald-300 shrink-0" />;
     }
     if (r.includes("ear") || r.includes("أذن") || r.includes("otic")) {
-        return <Ear className="w-3.5 h-3.5 text-emerald-300" />;
+        return <Ear className="w-3.5 h-3.5 text-emerald-300 shrink-0" />;
     }
-    return <Activity className="w-3.5 h-3.5 text-emerald-300" />;
+    return <Activity className="w-3.5 h-3.5 text-emerald-300 shrink-0" />;
+};
+
+export interface AgeRatingInfo {
+    badgeText: string;
+    fullLabel: string;
+    tier: "adult18" | "teen16" | "adolescent12" | "child6" | "toddler2" | "infant" | "all";
+    colorClass: string;
+    pillBgClass: string;
+    icon: React.ReactNode;
+}
+
+export const getAgeSuitability = (data: any, isArabic: boolean): AgeRatingInfo => {
+    const raw = `${data?.targetAudience || ""} ${data?.dosage || ""} ${data?.warnings || ""} ${data?.contraindications || ""} ${data?.drugName || ""} ${data?.genericName || ""} ${data?.form || ""}`.toLowerCase();
+    const target = String(data?.targetAudience || "").toLowerCase();
+    
+    // 1. Check +18 / Adults Only (Aspirin, high-strength NSAIDs, fluoroquinolones, adult sedatives)
+    const isAspirin = raw.includes("aspirin") || raw.includes("acetylsalicylic") || raw.includes("أسبرين");
+    const isAdultNSAID = raw.includes("cataflam 50") || raw.includes("voltaren 100") || raw.includes("celebrex") || raw.includes("ketorolac") || raw.includes("feldene");
+    const isAdultOnly = target.includes("18") || target.includes("adults only") || isAspirin || isAdultNSAID;
+    
+    if (isAdultOnly) {
+        return {
+            badgeText: "+18",
+            fullLabel: isArabic ? "18 سنة فما فوق (للبالغين)" : "18+ Years (Adults Only)",
+            tier: "adult18",
+            colorClass: "bg-rose-500/15 border-rose-500/35 text-rose-200",
+            pillBgClass: "bg-rose-500/30 text-rose-100 border-rose-400/40",
+            icon: <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+        };
+    }
+
+    // 2. Check +16 / 16 years
+    if (target.includes("16") || raw.includes("16 سنة") || raw.includes("16 years") || raw.includes("سن 16")) {
+        return {
+            badgeText: "+16",
+            fullLabel: isArabic ? "16 سنة فما فوق" : "16+ Years",
+            tier: "teen16",
+            colorClass: "bg-amber-500/15 border-amber-500/35 text-amber-200",
+            pillBgClass: "bg-amber-500/30 text-amber-100 border-amber-400/40",
+            icon: <UserCheck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+        };
+    }
+
+    // 3. Check +12 / 12 years / Cold & Flu combinations (1,2,3 / Congestal / Pseudoephedrine)
+    const isColdDecongestant = raw.includes("pseudoephedrine") || raw.includes("chlorpheniramine") || raw.includes("congestal") || raw.includes("123") || raw.includes("1,2,3") || raw.includes("1 2 3") || raw.includes("one two three") || raw.includes("وان تو ثري");
+    if (target.includes("12") || target.includes("adolescent") || isColdDecongestant || raw.includes("12 سنة") || raw.includes("12 years") || raw.includes("سن 12") || target.includes("adult")) {
+        return {
+            badgeText: "+12",
+            fullLabel: isArabic ? "12 سنة فما فوق" : "12+ Years",
+            tier: "adolescent12",
+            colorClass: "bg-amber-500/15 border-amber-500/35 text-amber-200",
+            pillBgClass: "bg-amber-500/30 text-amber-100 border-amber-400/40",
+            icon: <Users className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+        };
+    }
+
+    // 4. Check +6 / 6 years / Children chewables & syrups
+    if (target.includes("6") || raw.includes("6 سنوات") || raw.includes("6 years") || raw.includes("سن 6")) {
+        return {
+            badgeText: "+6",
+            fullLabel: isArabic ? "6 سنوات فما فوق" : "6+ Years (Children)",
+            tier: "child6",
+            colorClass: "bg-teal-500/15 border-teal-500/35 text-teal-200",
+            pillBgClass: "bg-teal-500/30 text-teal-100 border-teal-400/40",
+            icon: <Baby className="w-3.5 h-3.5 text-teal-300 shrink-0" />
+        };
+    }
+
+    // 5. Check +2 / Toddlers
+    if (target.includes("2") || raw.includes("سنتين") || raw.includes("2 years") || raw.includes("toddler") || target.includes("child") || target.includes("أطفال")) {
+        return {
+            badgeText: "+2",
+            fullLabel: isArabic ? "سنتين فما فوق (أطفال)" : "2+ Years (Pediatric)",
+            tier: "toddler2",
+            colorClass: "bg-cyan-500/15 border-cyan-500/35 text-cyan-200",
+            pillBgClass: "bg-cyan-500/30 text-cyan-100 border-cyan-400/40",
+            icon: <Baby className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+        };
+    }
+
+    // 6. Check Infant / Drops
+    if (target.includes("infant") || target.includes("baby") || target.includes("رضيع") || target.includes("رضع") || raw.includes("قطرات للرضع")) {
+        return {
+            badgeText: "+0",
+            fullLabel: isArabic ? "للرضّع (بإشراف طبي)" : "Infants (Under Supervision)",
+            tier: "infant",
+            colorClass: "bg-indigo-500/15 border-indigo-500/35 text-indigo-200",
+            pillBgClass: "bg-indigo-500/30 text-indigo-100 border-indigo-400/40",
+            icon: <Baby className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+        };
+    }
+
+    // All ages fallback
+    return {
+        badgeText: isArabic ? "الجميع" : "All",
+        fullLabel: isArabic ? "كافة الأعمار" : "All Ages",
+        tier: "all",
+        colorClass: "bg-emerald-500/15 border-emerald-500/35 text-emerald-200",
+        pillBgClass: "bg-emerald-500/30 text-emerald-100 border-emerald-400/40",
+        icon: <Users className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+    };
 };
 
 export const getMedicalTargetAudienceIcon = (targetStr?: string) => {
@@ -2998,18 +3099,18 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                             </div>
 
                             {/* Badges / Comprehensive Pharmaceutical & Product Classification Hub */}
-                            <div className="flex flex-wrap items-center gap-2 text-white/80 text-xs mt-3">
+                            <div className="flex flex-wrap items-center gap-2 text-white/90 text-xs mt-3">
                                 {/* Manufacturer */}
                                 {data.manufacturer && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-slate-300">
-                                        <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-slate-200 shadow-sm">
+                                        <Building2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                                         <span className="truncate">{translateMedicalTerm(data.manufacturer, isArabic)}</span>
                                     </div>
                                 )}
 
                                 {/* High-Level Category Label */}
                                 {(data.productCategoryLabel || productKindLabel || data.category) && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-200 font-bold shadow-sm">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 font-bold shadow-sm">
                                         {getMedicalCategoryIcon(data.productCategoryLabel || productKindLabel || data.category)}
                                         <span>{translateMedicalTerm(data.productCategoryLabel || productKindLabel || data.category, isArabic)}</span>
                                     </div>
@@ -3017,7 +3118,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
 
                                 {/* Specific Dosage / Product Form (e.g. Tablets, Syrup, Deodorant Roll-on, Cream, Spray) */}
                                 {data.form && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 font-semibold shadow-sm">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-200 font-semibold shadow-sm">
                                         {getMedicalFormIcon(data.form)}
                                         <span>{translateMedicalTerm(data.form, isArabic)}</span>
                                     </div>
@@ -3025,23 +3126,37 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
 
                                 {/* Route of Administration (e.g. Topical External Only, Oral, Inhalation) */}
                                 {data.routeOfAdministration && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 font-semibold">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 font-semibold shadow-sm">
                                         {getMedicalRouteIcon(data.routeOfAdministration)}
                                         <span>{translateMedicalTerm(data.routeOfAdministration, isArabic)}</span>
                                     </div>
                                 )}
 
-                                {/* Target Guidance */}
-                                {data.targetAudience && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 font-semibold">
-                                        {getMedicalTargetAudienceIcon(data.targetAudience)}
-                                        <span>{translateMedicalTerm(data.targetAudience, isArabic)}</span>
-                                    </div>
-                                )}
+                                {/* Smart Age Suitability Classification Badge */}
+                                {(() => {
+                                    const ageRating = getAgeSuitability(data, isArabic);
+                                    return (
+                                        <div className={cn(
+                                            "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-bold shadow-sm transition-all",
+                                            ageRating.colorClass
+                                        )}>
+                                            <div className="flex items-center gap-1">
+                                                {ageRating.icon}
+                                                <span className={cn(
+                                                    "text-[10px] font-mono font-black px-1.5 py-0.5 rounded-md border",
+                                                    ageRating.pillBgClass
+                                                )}>
+                                                    <bdi dir="ltr">{ageRating.badgeText}</bdi>
+                                                </span>
+                                            </div>
+                                            <span className="text-xs">{ageRating.fullLabel}</span>
+                                        </div>
+                                    );
+                                })()}
 
                                 {/* Strength */}
                                 {data.strength && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 font-mono text-slate-200 font-bold">
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 font-mono text-slate-100 font-bold shadow-sm">
                                         <bdi dir="ltr">{data.strength}</bdi>
                                     </div>
                                 )}
