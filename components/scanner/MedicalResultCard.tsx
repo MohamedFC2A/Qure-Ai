@@ -1,5 +1,5 @@
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Activity, AlertTriangle, Info, Pill, ShieldAlert, Thermometer, Box, FileText, CheckCircle2, AlertOctagon, Clock, Sparkles, GitBranch, ChevronRight, Lock, Database, ExternalLink, ListTodo, Download, FileDown, Copy, Mic, MicOff, Send, MessageSquare, Bookmark, RotateCcw, Languages, Check, Lightbulb, Zap, Brain, Stethoscope, Building2, Wind, Droplets, Hand, Users, Baby, Syringe, Leaf, Eye, Ear, Utensils, UserCheck } from "lucide-react";
+import { Activity, AlertTriangle, Info, Pill, ShieldAlert, Thermometer, Box, FileText, CheckCircle2, AlertOctagon, Clock, Sparkles, GitBranch, ChevronRight, Lock, Database, ExternalLink, ListTodo, Download, FileDown, Copy, Mic, MicOff, Send, MessageSquare, Bookmark, RotateCcw, Languages, Check, Lightbulb, Zap, Brain, Stethoscope, Building2, Wind, Droplets, Hand, Users, Baby, Syringe, Leaf, Eye, Ear, Utensils, UserCheck, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -765,6 +765,13 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     const [showSimplified, setShowSimplified] = useState<Record<number, boolean>>({});
     const aiInputRef = useRef<HTMLTextAreaElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+
+    const [quickConsult, setQuickConsult] = useState<{
+        isOpen: boolean;
+        topic: string;
+        sectionTitle: string;
+        question: string;
+    } | null>(null);
 
     const [activeTab, setActiveTab] = useState<'overview' | 'cosmetics' | 'safety' | 'guard' | 'chat' | 'fda'>('overview');
     const [safetyTab, setSafetyTab] = useState<UltraSafetyTab>('interactions');
@@ -1628,6 +1635,55 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
         router.push(`/ai?${queryParams.toString()}`);
     };
 
+    const openQuickConsult = (topic: string, defaultQuestion: string, sectionTitle: string) => {
+        setQuickConsult({
+            isOpen: true,
+            topic,
+            sectionTitle,
+            question: defaultQuestion,
+        });
+    };
+
+    const LiquidGlassAiButton = ({
+        topic,
+        question,
+        title,
+        sectionTitle,
+        size = "md",
+    }: {
+        topic: string;
+        question: string;
+        title?: string;
+        sectionTitle?: string;
+        size?: "sm" | "md";
+    }) => {
+        return (
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    openQuickConsult(topic, question, sectionTitle || topic);
+                }}
+                className={cn(
+                    "group/ai-btn relative inline-flex items-center justify-center rounded-xl transition-all duration-300 active:scale-95 cursor-pointer shrink-0 select-none",
+                    "bg-gradient-to-b from-white/[0.1] to-white/[0.03] hover:from-cyan-500/25 hover:to-blue-500/20",
+                    "border border-white/20 hover:border-cyan-400/50",
+                    "shadow-[0_2px_8px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_0_14px_rgba(6,182,212,0.35)]",
+                    "backdrop-blur-md text-cyan-300 hover:text-white",
+                    size === "sm" ? "p-1.5" : "p-1.5 sm:px-2.5 sm:py-1 gap-1.5"
+                )}
+                title={title || (isArabic ? "استشارة سريرية ذكية مع Qure AI حول هذه الجزئية" : "Ask Qure AI about this")}
+            >
+                <Sparkles className={cn("shrink-0 transition-transform duration-300 group-hover/ai-btn:scale-110 group-hover/ai-btn:rotate-12", size === "sm" ? "w-3 h-3 text-cyan-300" : "w-3.5 h-3.5 text-cyan-300")} />
+                {size !== "sm" && (
+                    <span className="hidden sm:inline text-[10px] font-bold tracking-tight text-cyan-200/90 group-hover/ai-btn:text-white">
+                        {isArabic ? "اسأل AI" : "Ask AI"}
+                    </span>
+                )}
+            </button>
+        );
+    };
+
     // Copy answer to clipboard
     const copyAnswer = async (nodeIdx: number, text: string) => {
         try {
@@ -1927,20 +1983,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                             <td className="px-4 py-3 text-white/80 font-medium leading-relaxed break-words">
                                                 <div className="flex items-center justify-between gap-2">
                                                     <span className="truncate" dir="auto">{row.name}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => askAiAbout(
-                                                            row.name,
-                                                            t(
-                                                                `What is the medical role of ${row.name} in ${data.drugName}? Explain its mechanism, purpose, and precautions.`,
-                                                                `ما هو الدور الطبي للمادة الفعالة ${row.name} في دواء ${data.drugName}؟ اشرح آليتها، الغرض منها، والاحتياطات الخاصة بها.`
-                                                            )
+                                                    <LiquidGlassAiButton
+                                                        topic={row.name}
+                                                        sectionTitle={t("Active Ingredient", "المادة الفعالة")}
+                                                        question={t(
+                                                            `What is the medical role of ${row.name} in ${data.drugName}? Explain its mechanism, purpose, and precautions.`,
+                                                            `ما هو الدور الطبي للمادة الفعالة ${row.name} في دواء ${data.drugName}؟ اشرح آليتها، الغرض منها، والاحتياطات الخاصة بها.`
                                                         )}
-                                                        className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
-                                                        title={t("Ask AI about this ingredient", "اسأل الذكاء الاصطناعي عن هذه المادة")}
-                                                    >
-                                                        <Sparkles className="w-3.5 h-3.5" />
-                                                    </button>
+                                                    />
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-white/70 font-mono tabular-nums text-center">
@@ -1959,20 +2009,15 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                     <div className="min-w-0">
                                         <div className="flex items-center justify-between gap-1">
                                             <p className="text-[9px] text-white/35 font-bold uppercase tracking-wider">{t(`Active #${i+1}`, `مادة #${i+1}`)}</p>
-                                            <button
-                                                type="button"
-                                                onClick={() => askAiAbout(
-                                                    row.name,
-                                                    t(
-                                                        `What is the medical role of ${row.name} in ${data.drugName}? Explain its mechanism, purpose, and precautions.`,
-                                                        `ما هو الدور الطبي للمادة الفعالة ${row.name} في دواء ${data.drugName}؟ اشرح آليتها، الغرض منها، والاحتياطات الخاصة بها.`
-                                                    )
+                                            <LiquidGlassAiButton
+                                                topic={row.name}
+                                                sectionTitle={t("Active Ingredient", "المادة الفعالة")}
+                                                question={t(
+                                                    `What is the medical role of ${row.name} in ${data.drugName}? Explain its mechanism, purpose, and precautions.`,
+                                                    `ما هو الدور الطبي للمادة الفعالة ${row.name} في دواء ${data.drugName}؟ اشرح آليتها، الغرض منها، والاحتياطات الخاصة بها.`
                                                 )}
-                                                className="p-1 rounded-md bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
-                                                title={t("Ask AI about this ingredient", "اسأل الذكاء الاصطناعي عن هذه المادة")}
-                                            >
-                                                <Sparkles className="w-3 h-3" />
-                                            </button>
+                                                size="sm"
+                                            />
                                         </div>
                                         <p className="text-white font-semibold text-xs mt-0.5 line-clamp-2 leading-tight" title={row.name} dir="auto">{row.name}</p>
                                     </div>
@@ -2017,20 +2062,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                         <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
                                         <span className="text-white/80 text-sm leading-relaxed">{use}</span>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => askAiAbout(
-                                            use,
-                                            t(
-                                                `How does ${data.drugName} treat or support: "${use}"? What is the expected timeframe for relief?`,
-                                                `كيف يعالج أو يساعد دواء ${data.drugName} في حالة: "${use}"؟ وما هو الإطار الزمني المتوقع للتحسن؟`
-                                            )
+                                    <LiquidGlassAiButton
+                                        topic={use}
+                                        sectionTitle={t("Indication & Uses", "دواعي الاستعمال")}
+                                        question={t(
+                                            `How does ${data.drugName} treat or support: "${use}"? What is the expected timeframe for relief?`,
+                                            `كيف يعالج أو يساعد دواء ${data.drugName} في حالة: "${use}"؟ وما هو الإطار الزمني المتوقع للتحسن؟`
                                         )}
-                                        className="p-1.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
-                                        title={t("Ask AI about this indication", "اسأل الذكاء الاصطناعي عن دواعي الاستعمال")}
-                                    >
-                                        <Sparkles className="w-3.5 h-3.5" />
-                                    </button>
+                                    />
                                 </li>
                             ))}
                         </ul>
@@ -2048,20 +2087,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                             <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-blue-100 text-sm leading-relaxed flex items-start justify-between gap-3">
                                 <span>{data.dosage || t("Consult a doctor for precise dosage.", "استشر الطبيب لمعرفة الجرعة الدقيقة.")}</span>
                                 {data.dosage && (
-                                    <button
-                                        type="button"
-                                        onClick={() => askAiAbout(
-                                            t("Dosage Details", "تفاصيل الجرعة"),
-                                            t(
-                                                `Please explain the dosage instructions for ${data.drugName}: "${data.dosage}". Are there custom adjustments for liver/kidney/elderly?`,
-                                                `يرجى شرح تعليمات جرعة دواء ${data.drugName}: "${data.dosage}". وهل هناك تعديلات مخصصة لمرضى الكبد/الكلى أو كبار السن؟`
-                                            )
+                                    <LiquidGlassAiButton
+                                        topic={t("Standard Dosage", "الجرعة المعتادة")}
+                                        sectionTitle={t("Dosage Details", "تفاصيل الجرعة")}
+                                        question={t(
+                                            `Please explain the dosage instructions for ${data.drugName}: "${data.dosage}". Are there custom adjustments for liver/kidney/elderly?`,
+                                            `يرجى شرح تعليمات جرعة دواء ${data.drugName}: "${data.dosage}". وهل هناك تعديلات مخصصة لمرضى الكبد/الكلى أو كبار السن؟`
                                         )}
-                                        className="p-1.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
-                                        title={t("Ask AI about this dosage", "اسأل الذكاء الاصطناعي عن الجرعة")}
-                                    >
-                                        <Sparkles className="w-3.5 h-3.5" />
-                                    </button>
+                                    />
                                 )}
                             </div>
                         </div>
@@ -2104,20 +2137,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                             <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                                             <span className="text-red-100/90 text-sm leading-relaxed">{w}</span>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => askAiAbout(
-                                                w,
-                                                t(
-                                                    `Why is "${w}" a warning for ${data.drugName}? Explain the potential risks and what precautions to take.`,
-                                                    `لماذا يعتبر "${w}" تحذيراً لدواء ${data.drugName}؟ اشرح المخاطر المحتملة والاحتياطات الواجب اتخاذها.`
-                                                )
+                                        <LiquidGlassAiButton
+                                            topic={w}
+                                            sectionTitle={t("Warning", "تحذير سريري")}
+                                            question={t(
+                                                `Why is "${w}" a warning for ${data.drugName}? Explain the potential risks and what precautions to take.`,
+                                                `لماذا يعتبر "${w}" تحذيراً لدواء ${data.drugName}؟ اشرح المخاطر المحتملة والاحتياطات الواجب اتخاذها.`
                                             )}
-                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
-                                            title={t("Ask AI about this warning", "اسأل الذكاء الاصطناعي عن هذا التحذير")}
-                                        >
-                                            <Sparkles className="w-3.5 h-3.5" />
-                                        </button>
+                                        />
                                     </li>
                                 ))}
                             </ul>
@@ -2140,20 +2167,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                             <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
                                             <span className="text-orange-100/90 text-sm leading-relaxed">{c}</span>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => askAiAbout(
-                                                c,
-                                                t(
-                                                    `Why is "${c}" a contraindication for ${data.drugName}? What are the biological reasons or interactions?`,
-                                                    `لماذا يمنع استعمال دواء ${data.drugName} في حالة: "${c}"؟ ما هي الأسباب البيولوجية أو التداخلات؟`
-                                                )
+                                        <LiquidGlassAiButton
+                                            topic={c}
+                                            sectionTitle={t("Contraindication", "مانع استعمال")}
+                                            question={t(
+                                                `Why is "${c}" a contraindication for ${data.drugName}? What are the biological reasons or interactions?`,
+                                                `لماذا يمنع استعمال دواء ${data.drugName} في حالة: "${c}"؟ ما هي الأسباب البيولوجية أو التداخلات؟`
                                             )}
-                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
-                                            title={t("Ask AI about this contraindication", "اسأل الذكاء الاصطناعي عن مانع الاستعمال")}
-                                        >
-                                            <Sparkles className="w-3.5 h-3.5" />
-                                        </button>
+                                        />
                                     </li>
                                 ))}
                             </ul>
@@ -2268,20 +2289,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                                             <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
                                                             <span className="text-white/80 text-sm leading-relaxed">{p}</span>
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => askAiAbout(
-                                                                p,
-                                                                t(
-                                                                    `What precautions should I take regarding "${p}" when using ${data.drugName}? Explain the details.`,
-                                                                    `ما هي الاحتياطات التي يجب أن أتخذها بخصوص "${p}" عند استخدام ${data.drugName}؟ اشرح التفاصيل.`
-                                                                )
+                                                        <LiquidGlassAiButton
+                                                            topic={p}
+                                                            sectionTitle={t("Precaution", "احتياط وقائي")}
+                                                            question={t(
+                                                                `What precautions should I take regarding "${p}" when using ${data.drugName}? Explain the details.`,
+                                                                `ما هي الاحتياطات التي يجب أن أتخذها بخصوص "${p}" عند استخدام ${data.drugName}؟ اشرح التفاصيل.`
                                                             )}
-                                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
-                                                            title={t("Ask AI about this precaution", "اسأل الذكاء الاصطناعي عن هذا الاحتياط")}
-                                                        >
-                                                            <Sparkles className="w-3.5 h-3.5" />
-                                                        </button>
+                                                        />
                                                     </li>
                                                 ))}
                                             </ul>
@@ -2308,21 +2323,21 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                         {(data.interactions && data.interactions.length > 0) ? (
                                             <div className="flex flex-wrap gap-2">
                                                 {(safetyShowAll.interactions ? data.interactions : data.interactions.slice(0, 10)).map((interaction, i) => (
-                                                    <button
+                                                    <div
                                                         key={i}
-                                                        type="button"
-                                                        onClick={() => askAiAbout(
-                                                            interaction,
-                                                            t(
-                                                                `Explain the drug-drug or drug-food interaction between ${data.drugName} and "${interaction}". What are the risks and recommendations?`,
-                                                                `اشرح التداخل الدوائي أو الغذائي بين ${data.drugName} و"${interaction}". ما هي المخاطر والتوصيات؟`
-                                                            )
-                                                        )}
-                                                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-200 text-xs font-semibold hover:bg-orange-500/20 hover:border-orange-500/30 transition-all text-start"
+                                                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-200 text-xs font-semibold"
                                                     >
                                                         <span>{interaction}</span>
-                                                        <Sparkles className="w-3 h-3 text-purple-300 shrink-0" />
-                                                    </button>
+                                                        <LiquidGlassAiButton
+                                                            topic={interaction}
+                                                            sectionTitle={t("Drug Interaction", "تداخل دوائي")}
+                                                            question={t(
+                                                                `Explain the drug-drug or drug-food interaction between ${data.drugName} and "${interaction}". What are the risks and recommendations?`,
+                                                                `اشرح التداخل الدوائي أو الغذائي بين ${data.drugName} و"${interaction}". ما هي المخاطر والتوصيات؟`
+                                                            )}
+                                                            size="sm"
+                                                        />
+                                                    </div>
                                                 ))}
                                             </div>
                                         ) : (
@@ -2353,20 +2368,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                                             <div className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                                                             <span className="text-white/80 text-sm leading-relaxed">{s}</span>
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => askAiAbout(
-                                                                s,
-                                                                t(
-                                                                    `What should I know about the side effect: "${s}" when taking ${data.drugName}? How common is it, and how can I manage it?`,
-                                                                    `ما الذي يجب معرفته عن الأثر الجانبي: "${s}" عند تناول ${data.drugName}؟ ما مدى شيوعه وكيف يمكنني التعامل معه؟`
-                                                                )
+                                                        <LiquidGlassAiButton
+                                                            topic={s}
+                                                            sectionTitle={t("Side Effect", "أثر جانبي")}
+                                                            question={t(
+                                                                `What should I know about the side effect: "${s}" when taking ${data.drugName}? How common is it, and how can I manage it?`,
+                                                                `ما الذي يجب معرفته عن الأثر الجانبي: "${s}" عند تناول ${data.drugName}؟ ما مدى شيوعه وكيف يمكنني التعامل معه؟`
                                                             )}
-                                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0 mt-0.5"
-                                                            title={t("Ask AI about this side effect", "اسأل الذكاء الاصطناعي عن هذا العرض")}
-                                                        >
-                                                            <Sparkles className="w-3.5 h-3.5" />
-                                                        </button>
+                                                        />
                                                     </li>
                                                 ))}
                                             </ul>
@@ -2388,19 +2397,15 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                                             {(safetyShowAll.overdose ? data.overdose.symptoms : data.overdose.symptoms.slice(0, 6)).map((s, i) => (
                                                                 <li key={i} className="flex items-center justify-between gap-2 p-1 rounded hover:bg-red-500/5 transition-colors">
                                                                     <span>• {s}</span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => askAiAbout(
-                                                                            s,
-                                                                            t(
-                                                                                `What should I do if I notice the overdose symptom "${s}" while taking ${data.drugName}?`,
-                                                                                `ماذا يجب أن أفعل إذا لاحظت عرض الجرعة الزائدة "${s}" أثناء تناول ${data.drugName}؟`
-                                                                            )
+                                                                    <LiquidGlassAiButton
+                                                                        topic={s}
+                                                                        sectionTitle={t("Overdose Symptom", "عرض جرعة زائدة")}
+                                                                        question={t(
+                                                                            `What should I do if I notice the overdose symptom "${s}" while taking ${data.drugName}?`,
+                                                                            `ماذا يجب أن أفعل إذا لاحظت عرض الجرعة الزائدة "${s}" أثناء تناول ${data.drugName}؟`
                                                                         )}
-                                                                        className="p-0.5 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
-                                                                    >
-                                                                        <Sparkles className="w-3 h-3" />
-                                                                    </button>
+                                                                        size="sm"
+                                                                    />
                                                                 </li>
                                                             ))}
                                                         </ul>
@@ -2421,19 +2426,15 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                                             {(safetyShowAll.overdose ? data.overdose.whatToDo : data.overdose.whatToDo.slice(0, 6)).map((s, i) => (
                                                                 <li key={i} className="flex items-center justify-between gap-2 p-1 rounded hover:bg-white/5 transition-colors">
                                                                     <span>• {s}</span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => askAiAbout(
-                                                                            s,
-                                                                            t(
-                                                                                `Explain the overdose action step: "${s}" for ${data.drugName}. When should emergency services be called?`,
-                                                                                `اشرح خطوة التصرف في حال الجرعة الزائدة: "${s}" لدواء ${data.drugName}. متى يجب الاتصال بخدمات الطوارئ؟`
-                                                                            )
+                                                                    <LiquidGlassAiButton
+                                                                        topic={s}
+                                                                        sectionTitle={t("Overdose Action", "إجراء جرعة زائدة")}
+                                                                        question={t(
+                                                                            `Explain the overdose action step: "${s}" for ${data.drugName}. When should emergency services be called?`,
+                                                                            `اشرح خطوة التصرف في حال الجرعة الزائدة: "${s}" لدواء ${data.drugName}. متى يجب الاتصال بخدمات الطوارئ؟`
                                                                         )}
-                                                                        className="p-0.5 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
-                                                                    >
-                                                                        <Sparkles className="w-3 h-3" />
-                                                                    </button>
+                                                                        size="sm"
+                                                                    />
                                                                 </li>
                                                             ))}
                                                         </ul>
@@ -2465,20 +2466,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                                 {(safetyShowAll.seekHelp ? data.whenToSeekHelp : data.whenToSeekHelp.slice(0, 8)).map((s, i) => (
                                                     <li key={i} className="flex items-center justify-between gap-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-100 text-sm leading-relaxed group">
                                                         <span>• {s}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => askAiAbout(
-                                                                s,
-                                                                t(
-                                                                    `Why is "${s}" considered a red flag symptom for ${data.drugName}? What immediate medical interventions are typically required?`,
-                                                                    `لماذا يعتبر عرض الخطر "${s}" علامة تحذيرية حمراء لدواء ${data.drugName}؟ وما هي التدخلات الطبية الفورية المطلوبة عادة؟`
-                                                                )
+                                                        <LiquidGlassAiButton
+                                                            topic={s}
+                                                            sectionTitle={t("Red Flag Symptom", "علامة خطر حرجة")}
+                                                            question={t(
+                                                                `Why is "${s}" considered a red flag symptom for ${data.drugName}? What immediate medical interventions are typically required?`,
+                                                                `لماذا يعتبر عرض الخطر "${s}" علامة تحذيرية حمراء لدواء ${data.drugName}؟ وما هي التدخلات الطبية الفورية المطلوبة عادة؟`
                                                             )}
-                                                            className="p-1 rounded bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shrink-0"
-                                                            title={t("Ask AI about this urgent symptom", "اسأل الذكاء الاصطناعي عن هذا العرض الطارئ")}
-                                                        >
-                                                            <Sparkles className="w-3.5 h-3.5" />
-                                                        </button>
+                                                        />
                                                     </li>
                                                 ))}
                                             </ul>
@@ -2809,20 +2804,14 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                             <h4 className="text-white font-bold text-base sm:text-lg">
                                                 {displayDrugName} + <span className="text-cyan-300">{formatShortMedName(selectedGuardItem.otherMedication)}</span>
                                             </h4>
-                                            <button
-                                                type="button"
-                                                onClick={() => askAiAbout(
-                                                    `${displayDrugName} + ${selectedGuardItem.otherMedication}`,
-                                                    t(
-                                                        `Explain in detail the interaction between ${displayDrugName} and ${selectedGuardItem.otherMedication}. Headline: "${selectedGuardItem.headline || ''}". Summary: "${selectedGuardItem.summary || ''}". Mechanism: "${selectedGuardItem.mechanism || ''}". What is the biological pathway and clinical risk?`,
-                                                        `اشرح بالتفصيل التداخل بين ${displayDrugName} و ${selectedGuardItem.otherMedication}. العنوان الرئيسي: "${selectedGuardItem.headline || ''}". الملخص: "${selectedGuardItem.summary || ''}". الآلية: "${selectedGuardItem.mechanism || ''}". ما هو المسار البيولوجي والمخاطر السريرية؟`
-                                                    )
+                                            <LiquidGlassAiButton
+                                                topic={`${displayDrugName} + ${selectedGuardItem.otherMedication}`}
+                                                sectionTitle={t("Interaction Analysis", "تفاصيل التداخل الدوائي")}
+                                                question={t(
+                                                    `Explain in detail the interaction between ${displayDrugName} and ${selectedGuardItem.otherMedication}. Headline: "${selectedGuardItem.headline || ''}". Summary: "${selectedGuardItem.summary || ''}". Mechanism: "${selectedGuardItem.mechanism || ''}". What is the biological pathway and clinical risk?`,
+                                                    `اشرح بالتفصيل التداخل بين ${displayDrugName} و ${selectedGuardItem.otherMedication}. العنوان الرئيسي: "${selectedGuardItem.headline || ''}". الملخص: "${selectedGuardItem.summary || ''}". الآلية: "${selectedGuardItem.mechanism || ''}". ما هو المسار البيولوجي والمخاطر السريرية؟`
                                                 )}
-                                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all text-[11px] font-semibold border border-purple-500/20"
-                                            >
-                                                <Sparkles className="w-3.5 h-3.5" />
-                                                <span>{t("Ask AI", "اسأل الذكاء الاصطناعي")}</span>
-                                            </button>
+                                            />
                                         </div>
                                     </div>
                                     <span className={cn("px-3.5 py-1 rounded-xl text-xs font-bold border uppercase shrink-0", severityUi(selectedGuardItem.severity).chip)}>
@@ -3544,6 +3533,133 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                         )}
                     </div>
                 </div>
+
+                {/* Liquid Glass Quick AI Consultation Modal */}
+                {quickConsult?.isOpen && (
+                    <div 
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
+                        onClick={() => setQuickConsult(null)}
+                    >
+                        <div 
+                            className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 p-6 sm:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.85),inset_0_1px_2px_rgba(255,255,255,0.2)] backdrop-blur-2xl transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                            dir={isArabic ? "rtl" : "ltr"}
+                        >
+                            {/* Decorative liquid glows */}
+                            <div className="absolute -top-20 -right-20 w-44 h-44 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
+                            <div className="absolute -bottom-20 -left-20 w-44 h-44 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+
+                            {/* Header */}
+                            <div className="relative flex items-start justify-between gap-3 border-b border-white/10 pb-4 mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+                                        <Brain className="w-5 h-5 text-cyan-300" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-bold text-base sm:text-lg">
+                                            {t("Qure AI Consultation", "استشارة سريرية مع Qure AI")}
+                                        </h3>
+                                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                            <span className="text-[11px] font-semibold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20">
+                                                {quickConsult.sectionTitle}
+                                            </span>
+                                            <span className="text-white/40 text-xs">•</span>
+                                            <span className="text-[11px] font-medium text-white/70 truncate max-w-[200px]" title={quickConsult.topic}>
+                                                {quickConsult.topic}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setQuickConsult(null)}
+                                    className="p-1.5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                                    title={t("Close", "إغلاق")}
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Prompt Input Area */}
+                            <div className="relative space-y-3">
+                                <label className="text-xs font-bold text-white/80 block">
+                                    {t("Edit or customize your clinical question:", "حرر أو خصص سؤالك واستفسارك للذكاء الاصطناعي:")}
+                                </label>
+                                <textarea
+                                    value={quickConsult.question}
+                                    onChange={(e) => setQuickConsult({ ...quickConsult, question: e.target.value })}
+                                    rows={4}
+                                    className="w-full rounded-2xl bg-white/[0.04] border border-white/15 focus:border-cyan-400/60 focus:bg-white/[0.06] p-3.5 text-white text-xs sm:text-sm leading-relaxed placeholder:text-white/30 outline-none transition-all resize-none shadow-inner"
+                                    placeholder={t("Type your custom question here...", "اكتب استفسارك الدقيق هنا...")}
+                                />
+
+                                {/* Smart Preset Chips */}
+                                <div className="space-y-1.5 pt-1">
+                                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                                        {t("Quick Suggestions:", "اقتراحات أسئلة سريعة:")}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {[
+                                            {
+                                                label: isArabic ? "مدى الأمان والاستخدام الطويل" : "Long-term Safety",
+                                                q: isArabic 
+                                                    ? `هل يعتبر (${quickConsult.topic}) آمناً للاستخدام المتكرر أو لفترة طويلة مع دواء ${displayDrugName}؟` 
+                                                    : `Is (${quickConsult.topic}) safe for long-term or repeated use with ${displayDrugName}?`
+                                            },
+                                            {
+                                                label: isArabic ? "التداخل مع الأمراض المزمنة" : "Chronic Conditions",
+                                                q: isArabic 
+                                                    ? `هل يتعارض (${quickConsult.topic}) مع مرضى الضغط، السكري، أو الكبد والكلى؟` 
+                                                    : `Does (${quickConsult.topic}) have adverse risks for hypertension, diabetes, kidney, or liver disease?`
+                                            },
+                                            {
+                                                label: isArabic ? "التوقيت والجرعة والبدائل" : "Timing & Alternatives",
+                                                q: isArabic 
+                                                    ? `ما هي أفضل طريقة وتوقيت للتعامل مع (${quickConsult.topic})؟ وهل توجد بدائل أكثر أماناً؟` 
+                                                    : `What is the optimal timing and protocol for (${quickConsult.topic}), and are there safer alternatives?`
+                                            }
+                                        ].map((chip, idx) => (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                onClick={() => setQuickConsult({ ...quickConsult, question: chip.q })}
+                                                className="text-[11px] px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-cyan-500/15 border border-white/10 hover:border-cyan-500/30 text-white/70 hover:text-cyan-200 transition-all cursor-pointer text-start"
+                                            >
+                                                {chip.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Actions */}
+                            <div className="relative flex items-center justify-end gap-2.5 mt-6 pt-4 border-t border-white/10">
+                                <button
+                                    type="button"
+                                    onClick={() => setQuickConsult(null)}
+                                    className="px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/70 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+                                >
+                                    {t("Cancel", "إلغاء")}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const topic = quickConsult.topic;
+                                        const q = quickConsult.question.trim();
+                                        setQuickConsult(null);
+                                        if (q) {
+                                            askAiAbout(topic, q);
+                                        }
+                                    }}
+                                    className="shiny-cta-btn inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm gap-2 select-none cursor-pointer text-slate-950"
+                                >
+                                    <Sparkles className="w-4 h-4 text-slate-950" />
+                                    <span>{t("Ask Qure AI Now", "بدء الاستشارة الفورية")}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </GlassCard>
         </div>
     );

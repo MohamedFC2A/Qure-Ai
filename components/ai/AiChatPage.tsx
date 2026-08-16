@@ -381,14 +381,14 @@ export function AiChatPage() {
         }
 
         if (initialQuestion) {
-            if (shouldAutoSend && isUltra) {
+            if (shouldAutoSend) {
                 autoSentRef.current = true;
                 void sendMessage(initialQuestion, initialMedication);
             } else {
                 setInput(initialQuestion);
             }
         }
-    }, [searchParams, isUltra, sendMessage]);
+    }, [searchParams, sendMessage]);
 
     /* ── Handle clinical context switch (Medication or Wound) ── */
     const handleSelectMedication = useCallback((item: any) => {
