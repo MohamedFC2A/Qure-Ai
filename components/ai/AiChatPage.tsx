@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search, Sparkles, Plus } from "lucide-react";
+import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search, Sparkles, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -435,9 +435,15 @@ export function AiChatPage() {
 
     /* ── Auto-scroll strictly on container, zero window jitter ── */
     useEffect(() => {
-        if (!autoScroll || !chatContainerRef.current) return;
-        const el = chatContainerRef.current;
-        el.scrollTop = el.scrollHeight;
+        if (!chatContainerRef.current) return;
+        if (messages.length === 0) {
+            chatContainerRef.current.scrollTop = 0;
+            return;
+        }
+        if (autoScroll) {
+            const el = chatContainerRef.current;
+            el.scrollTop = el.scrollHeight;
+        }
     }, [messages, isStreaming, autoScroll]);
 
     /* ── Track scroll position to toggle auto-scroll ── */
@@ -575,7 +581,7 @@ export function AiChatPage() {
             {/* ── Main Chat Area ── */}
             <div className="flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden">
                 {/* Top Chat Sub-Header with Zero-Duplication Clean Controls */}
-                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2.5 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
+                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
                     <div className="flex items-center gap-2.5">
                         <button
                             type="button"
@@ -634,40 +640,58 @@ export function AiChatPage() {
                 <div
                     ref={chatContainerRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-4"
+                    className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 space-y-3 scrollbar-thin"
                 >
-                            <div className="max-w-3xl mx-auto space-y-4">
+                    <div className="max-w-3xl mx-auto space-y-3">
 
-                                {/* Smart Unified Linked Context Banner */}
-                                {selectedMedication && (
-                                    <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-cyan-950/40 border border-cyan-500/30 text-xs backdrop-blur-2xl shadow-[0_4px_20px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all animate-in fade-in duration-300">
-                                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                                            <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-                                                <Brain className="w-4 h-4 text-cyan-300 animate-pulse" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-white/60 font-medium text-xs">
-                                                        {t("Attached Context:", "تم ربط سياق الدواء:")}
-                                                    </span>
-                                                    <span className="font-bold text-white text-xs sm:text-sm truncate">
-                                                        {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "مستحضر دوائي" : "Medication")}
-                                                    </span>
-                                                    {activeTopic && (
-                                                        <span className="px-2.5 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-200 border border-cyan-400/30 text-[11px] font-bold truncate shrink-0 flex items-center gap-1 shadow-sm">
-                                                            <Sparkles className="w-3 h-3 text-cyan-300" />
-                                                            {activeTopic}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[11px] text-cyan-300/80 mt-0.5 leading-normal">
-                                                    {t(
-                                                        "Clinical context connected in background. Ask any question below for intelligent reasoning.",
-                                                        "تم ربط سياق هذه الجزئية في الخلفية. اكتب أي سؤال تريده بالأسفل وسيجيبك الذكاء الاصطناعي بدقة كاملة."
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
+                        {/* Linked Context Banner when messages exist */}
+                        {selectedMedication && messages.length > 0 && (
+                            <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-cyan-950/40 border border-cyan-500/30 text-xs backdrop-blur-2xl shadow-[0_4px_20px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all animate-in fade-in duration-300">
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div className="w-7 h-7 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0">
+                                        <Brain className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
+                                    </div>
+                                    <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
+                                        <span className="text-white/60 text-xs">{t("Attached Context:", "تم ربط سياق الدواء:")}</span>
+                                        <span className="font-bold text-white text-xs truncate">
+                                            {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "مستحضر دوائي" : "Medication")}
+                                        </span>
+                                        {activeTopic && (
+                                            <span className="px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-200 border border-cyan-400/30 text-[10px] font-bold">
+                                                {activeTopic}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedMedication(null);
+                                        setActiveTopic(null);
+                                        setActiveMode("health");
+                                    }}
+                                    className="text-slate-400 hover:text-rose-300 text-xs px-2.5 py-1 rounded-xl border border-white/[0.08] hover:border-rose-500/30 bg-white/[0.02] hover:bg-rose-950/30 shrink-0 transition-all font-medium cursor-pointer"
+                                >
+                                    {t("Unlink", "إلغاء الربط")}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Welcome section when empty */}
+                        {messages.length === 0 && (
+                            <div className="py-2 sm:py-5 text-center flex flex-col items-center justify-center space-y-3 sm:space-y-4">
+                                {selectedMedication ? (
+                                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs backdrop-blur-xl shadow-[0_0_20px_rgba(6,182,212,0.15)] animate-in fade-in">
+                                        <Brain className="w-4 h-4 text-cyan-300 shrink-0 animate-pulse" />
+                                        <span className="text-cyan-200/80 font-medium">{t("Attached Context:", "تم ربط سياق الدواء:")}</span>
+                                        <span className="font-bold text-white truncate max-w-[220px]">
+                                            {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "مستحضر دوائي" : "Medication")}
+                                        </span>
+                                        {activeTopic && (
+                                            <span className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 text-[10px] font-bold">
+                                                {activeTopic}
+                                            </span>
+                                        )}
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -675,74 +699,72 @@ export function AiChatPage() {
                                                 setActiveTopic(null);
                                                 setActiveMode("health");
                                             }}
-                                            className="text-slate-400 hover:text-rose-300 text-xs px-3 py-1.5 rounded-xl border border-white/[0.08] hover:border-rose-500/30 bg-white/[0.02] hover:bg-rose-950/30 shrink-0 transition-all font-medium ms-2 cursor-pointer"
+                                            className="ms-1 p-1 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition-all cursor-pointer"
+                                            title={t("Unlink", "إلغاء الربط")}
                                         >
-                                            {t("Unlink", "إلغاء الربط")}
+                                            <X className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
-                                )}
-
-                                {/* Welcome section when empty */}
-                                {messages.length === 0 && (
-                                    <div className="py-8 sm:py-14 text-center flex flex-col items-center justify-center space-y-5">
-                                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-3xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shadow-xl select-none">
-                                            <span className="text-xl sm:text-2xl font-black tracking-tight text-cyan-400 font-display">
-                                                Qure
-                                            </span>
-                                        </div>
-
-                                        <div className="space-y-1.5 max-w-md px-2">
-                                            <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                                                {selectedMedication
-                                                    ? (isArabic ? `استشارة سريرية حول ${selectedMedication.drug_name || selectedMedication.drugName || "الدواء"}` : `Clinical Consultation for ${selectedMedication.drug_name || selectedMedication.drugName || "Medication"}`)
-                                                    : t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
-                                            </h3>
-                                            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                                                {selectedMedication
-                                                    ? (isArabic
-                                                        ? (activeTopic ? `الجزئية المحددة: ${activeTopic} • اسأل أي سؤال وسيقوم الذكاء الاصطناعي بتحليله فوراً.` : "اطرح أي استفسار حول الجرعات أو الآثار الجانبية أو التوافق مع ملفك الصحي.")
-                                                        : (activeTopic ? `Focused topic: ${activeTopic} • Ask anything for instant clinical reasoning.` : "Ask about dosages, side effects, or personalized suitability with your health profile."))
-                                                    : t(
-                                                        "Ask about your scanned medications, verify interactions, or analyze treatment regimens with AI precision.",
-                                                        "اسأل عن أدويتك المسجلة، وتحقق من التداخلات الدوائية والجرعات بدقة الذكاء الاصطناعي."
-                                                    )}
-                                            </p>
-                                        </div>
-
-                                        {/* Quick Prompts */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-2">
-                                            {(selectedMedication
-                                                ? [
-                                                    {
-                                                        en: "Is this suitable for my health profile and chronic conditions?",
-                                                        ar: "هل هذا مناسب لملفي الصحي وحالتي الشخصية؟"
-                                                    },
-                                                    {
-                                                        en: "What are the important precautions and side effects to know?",
-                                                        ar: "ما هي أهم الاحتياطات والآثار الجانبية الواجب معرفتها؟"
-                                                    },
-                                                    {
-                                                        en: "Does this interact with any other medications or foods?",
-                                                        ar: "هل يتعارض مع أي أدوية أو مكملات أو أطعمة أخرى؟"
-                                                    },
-                                                    {
-                                                        en: "What is the optimal timing and dosage protocol?",
-                                                        ar: "ما هي الجرعة والتوقيت الأمثل للاستخدام الآمن؟"
-                                                    }
-                                                ]
-                                                : QUICK_PROMPTS_UNIFIED
-                                            ).map((s, i) => (
-                                                <button
-                                                    key={i}
-                                                    onClick={() => sendMessage(isArabic ? s.ar : s.en)}
-                                                    className="px-4 py-3 rounded-2xl text-xs text-start border border-white/[0.08] bg-[#080D1A]/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324]/90 backdrop-blur-xl transition-all leading-relaxed cursor-pointer"
-                                                >
-                                                    {isArabic ? s.ar : s.en}
-                                                </button>
-                                            ))}
-                                        </div>
+                                ) : (
+                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shadow-xl select-none">
+                                        <span className="text-lg sm:text-xl font-black tracking-tight text-cyan-400 font-display">
+                                            Qure
+                                        </span>
                                     </div>
                                 )}
+
+                                <div className="space-y-1 max-w-md px-2">
+                                    <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                                        {selectedMedication
+                                            ? (isArabic ? `استشارة سريرية حول ${selectedMedication.drug_name || selectedMedication.drugName || "الدواء"}` : `Clinical Consultation for ${selectedMedication.drug_name || selectedMedication.drugName || "Medication"}`)
+                                            : t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
+                                    </h3>
+                                    <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+                                        {selectedMedication
+                                            ? (isArabic
+                                                ? (activeTopic ? `الجزئية المحددة: ${activeTopic} • اسأل أي سؤال وسيجيبك الذكاء الاصطناعي بدقة كاملة.` : "اطرح أي استفسار حول الجرعات أو الآثار الجانبية أو التوافق مع ملفك الصحي.")
+                                                : (activeTopic ? `Focused topic: ${activeTopic} • Ask anything for instant clinical reasoning.` : "Ask about dosages, side effects, or personalized suitability with your health profile."))
+                                            : t(
+                                                "Ask about your scanned medications, verify interactions, or analyze treatment regimens with AI precision.",
+                                                "اسأل عن أدويتك المسجلة، وتحقق من التداخلات الدوائية والجرعات بدقة الذكاء الاصطناعي."
+                                            )}
+                                    </p>
+                                </div>
+
+                                {/* Quick Prompts */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-1">
+                                    {(selectedMedication
+                                        ? [
+                                            {
+                                                en: "Is this suitable for my health profile and chronic conditions?",
+                                                ar: "هل هذا مناسب لملفي الصحي وحالتي الشخصية؟"
+                                            },
+                                            {
+                                                en: "What are the important precautions and side effects to know?",
+                                                ar: "ما هي أهم الاحتياطات والآثار الجانبية الواجب معرفتها؟"
+                                            },
+                                            {
+                                                en: "Does this interact with any other medications or foods?",
+                                                ar: "هل يتعارض مع أي أدوية أو مكملات أو أطعمة أخرى؟"
+                                            },
+                                            {
+                                                en: "What is the optimal timing and dosage protocol?",
+                                                ar: "ما هي الجرعة والتوقيت الأمثل للاستخدام الآمن؟"
+                                            }
+                                        ]
+                                        : QUICK_PROMPTS_UNIFIED
+                                    ).map((s, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => sendMessage(isArabic ? s.ar : s.en)}
+                                            className="px-3.5 py-2.5 rounded-xl text-xs text-start border border-white/[0.08] bg-[#080D1A]/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324]/90 backdrop-blur-xl transition-all leading-relaxed cursor-pointer"
+                                        >
+                                            {isArabic ? s.ar : s.en}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                                 {/* Messages */}
                                 {messages.map((msg, idx) => (
