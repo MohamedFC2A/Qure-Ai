@@ -128,11 +128,15 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
         if (!res.drugNameEn || res.drugNameEn === "Unknown") {
             res.drugNameEn = isOneTwoThree ? "1,2,3 Cold & Flu" : "Congestal Cold & Flu";
         }
-        if (!res.manufacturer || res.manufacturer === "Unknown") {
-            if (isOneTwoThree) {
-                res.manufacturer = isAr ? "شركة الحكمة للصناعات الدوائية (Hikma Pharmaceuticals)" : "Hikma Pharmaceuticals";
-            } else if (combinedText.includes("sigma")) {
-                res.manufacturer = isAr ? "شركة سيجما للصناعات الدوائية (Sigma)" : "Sigma Pharmaceuticals";
+        if (isAr) {
+            if (isOneTwoThree || String(res.manufacturer || "").toLowerCase().includes("hikma")) {
+                res.manufacturer = "شركة الحكمة للأدوية";
+            } else if (combinedText.includes("sigma") || String(res.manufacturer || "").toLowerCase().includes("sigma")) {
+                res.manufacturer = "شركة سيجما للصناعات الدوائية";
+            }
+        } else {
+            if (!res.manufacturer || res.manufacturer === "Unknown") {
+                res.manufacturer = isOneTwoThree ? "Hikma Pharmaceuticals" : "Sigma Pharmaceuticals";
             }
         }
         if (!res.genericName || res.genericName === "Unknown") {

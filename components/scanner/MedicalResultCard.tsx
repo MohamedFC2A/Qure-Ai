@@ -22,17 +22,47 @@ export const translateMedicalTerm = (str: string | undefined | null, isArabic: b
 
     const lower = trimmed.toLowerCase();
 
-    // Specific Therapeutic Categories (Check first before generic substrings)
+    // Specific Manufacturers
+    if (lower.includes("hikma") || lower.includes("حكمة")) return "شركة الحكمة للأدوية";
+    if (lower.includes("sanofi")) return "سانوفي";
+    if (lower.includes("gsk") || lower.includes("glaxo")) return "جلاكسو سميث كلاين (GSK)";
+    if (lower.includes("novartis")) return "نوفارتس";
+    if (lower.includes("pfizer")) return "فايزر";
+    if (lower.includes("bayer")) return "باير";
+    if (lower.includes("astrazeneca")) return "أسترازينيكا";
+    if (lower.includes("eva pharma") || lower === "eva") return "إيفا فارما";
+    if (lower.includes("amoun")) return "أمون للأدوية";
+    if (lower.includes("sedico")) return "سيديكو للأدوية";
+    if (lower.includes("epico") || lower.includes("eupc")) return "إيبيكو للأدوية";
+    if (lower.includes("pharco")) return "فاركو للأدوية";
+    if (lower.includes("sigma")) return "سيجما للصناعات الدوائية";
+    if (lower.includes("marcyrl")) return "ماركيرل للأدوية";
+    if (lower.includes("abbott")) return "أبوت";
+    if (lower.includes("merck")) return "ميرك";
+    if (lower.includes("roche")) return "روش";
+    if (lower.includes("johnson")) return "جونسون آند جونسون";
+
+    // Cold & Flu & Respiratory Categories (Handle combinations e.g. "Pharmaceutical cold/flu combination")
+    if (lower.includes("cold") || lower.includes("flu") || lower.includes("influenza") || lower.includes("برد") || lower.includes("إنفلونزا") || lower.includes("زكام")) {
+        return "علاج نزلات البرد والإنفلونزا";
+    }
+    if (lower.includes("combination") || lower.includes("multi-symptom") || lower.includes("multi symptom")) {
+        return "مركب دوائي متعدد الفعالية";
+    }
     if (lower.includes("nasal decongestant") || lower.includes("decongestant") || lower.includes("احتقان")) return "مضاد لاحتقان الأنف والجيوب";
-    if (lower.includes("antihistamine") || lower.includes("antihistaminic") || lower.includes("حساسية")) return "مضاد للحساسية (مضاد هيستامين)";
+    if (lower.includes("antihistamine") || lower.includes("antihistaminic") || lower.includes("حساسية")) return "مضاد للحساسية والرشح";
     if (lower.includes("analgesic") || lower.includes("antipyretic") || lower.includes("pain reliever") || lower.includes("مسكن")) return "مسكن وخافض للحرارة";
-    if (lower.includes("cold and flu") || lower.includes("cold & flu") || lower.includes("برد") || lower.includes("إنفلونزا")) return "علاج نزلات البرد والإنفلونزا";
-    if (lower.includes("anti-inflammatory") || lower.includes("nsaid")) return "مضاد للالتهاب ومسكن";
-    if (lower.includes("antibiotic") || lower.includes("مضاد حيوي")) return "مضاد حيوي";
+    if (lower.includes("anti-inflammatory") || lower.includes("antiinflammatory") || lower.includes("nsaid")) return "مضاد للالتهاب ومسكن";
+    if (lower.includes("antibiotic") || lower.includes("antibacterial") || lower.includes("مضاد حيوي")) return "مضاد حيوي";
     if (lower.includes("antifungal") || lower.includes("فطريات")) return "مضاد للفطريات";
     if (lower.includes("antiviral") || lower.includes("فيروسات")) return "مضاد للفيروسات";
     if (lower.includes("cough suppressant") || lower.includes("antitussive") || lower.includes("سعال")) return "مهدئ للسعال";
     if (lower.includes("expectorant") || lower.includes("mucolytic") || lower.includes("بلغم")) return "مذيب وطارد للبلغم";
+    if (lower.includes("bronchodilator") || lower.includes("asthma") || lower.includes("ربو")) return "موسع للشعب الهوائية";
+    if (lower.includes("gastrointestinal") || lower.includes("antacid") || lower.includes("proton pump") || lower.includes("معدة")) return "علاج الجهاز الهضمي والمعدة";
+    if (lower.includes("antihypertensive") || lower.includes("blood pressure") || lower.includes("cardiovascular")) return "علاج ضغط الدم والقلب";
+    if (lower.includes("antidiabetic") || lower.includes("diabetes") || lower.includes("سكر")) return "علاج داء السكري";
+    if (lower.includes("dietary supplement") || lower.includes("multivitamin") || lower.includes("vitamin") || lower.includes("مكمل")) return "مكمل غذائي وفيتامينات";
 
     // Target Audience
     if (lower.includes("adult") && lower.includes("adolescent")) return "البالغون والمراهقون";
@@ -80,7 +110,7 @@ export const translateMedicalTerm = (str: string | undefined | null, isArabic: b
     if (lower.includes("rectal")) return "عن طريق الشرج";
 
     // High-level categories
-    if (lower === "dawa" || lower === "medication" || lower === "drug" || lower === "human_drug") return "دواء معتمد";
+    if (lower === "dawa" || lower === "medication" || lower === "drug" || lower === "human_drug" || lower.includes("pharmaceutical")) return "علاج دوائي معتمد";
     if (lower === "human_supplement" || lower.includes("supplement")) return "مكمل غذائي";
     if (lower.includes("cosmetic") || lower.includes("topical_cosmetic")) return "مستحضر تجميل";
     if (lower === "veterinary_drug" || lower === "veterinary_supplement" || lower.includes("veterinary")) return "مستحضر بيطري";
@@ -89,6 +119,18 @@ export const translateMedicalTerm = (str: string | undefined | null, isArabic: b
     if (lower === "unknown" || lower === "generic") return "دواء علاجي";
 
     return trimmed;
+};
+
+export const formatCleanStrength = (str?: string): string => {
+    if (!str) return "";
+    let s = String(str).trim();
+    // If it contains active ingredient names followed by numbers e.g. "Paracetamol 500 mg + Chlorpheniramine 2 mg..."
+    // extract just the dosage numbers: "500 mg + 2 mg + 30 mg"
+    const matches = s.match(/\b\d+(\.\d+)?\s*(mg|mcg|g|ml|iu|%|مجم|ملغم|ملج|جرام|مل)\b/gi);
+    if (matches && matches.length > 0 && s.length > 25) {
+        return matches.join(" + ");
+    }
+    return s.replace(/\/1\b/g, "").replace(/\s+/g, " ").trim();
 };
 
 export const formatShortMedName = (rawName: string): string => {
@@ -178,7 +220,7 @@ export const getAgeSuitability = (data: any, isArabic: boolean): AgeRatingInfo =
     if (isAdultOnly) {
         return {
             badgeText: "+18",
-            fullLabel: isArabic ? "18 سنة فما فوق (للبالغين)" : "18+ Years (Adults Only)",
+            fullLabel: isArabic ? "للبالغين فقط" : "Adults Only",
             tier: "adult18",
             colorClass: "bg-rose-500/15 border-rose-500/35 text-rose-200",
             pillBgClass: "bg-rose-500/30 text-rose-100 border-rose-400/40",
@@ -190,7 +232,7 @@ export const getAgeSuitability = (data: any, isArabic: boolean): AgeRatingInfo =
     if (target.includes("16") || raw.includes("16 سنة") || raw.includes("16 years") || raw.includes("سن 16")) {
         return {
             badgeText: "+16",
-            fullLabel: isArabic ? "16 سنة فما فوق" : "16+ Years",
+            fullLabel: isArabic ? "سنة فما فوق" : "Years & older",
             tier: "teen16",
             colorClass: "bg-amber-500/15 border-amber-500/35 text-amber-200",
             pillBgClass: "bg-amber-500/30 text-amber-100 border-amber-400/40",
@@ -203,7 +245,7 @@ export const getAgeSuitability = (data: any, isArabic: boolean): AgeRatingInfo =
     if (target.includes("12") || target.includes("adolescent") || isColdDecongestant || raw.includes("12 سنة") || raw.includes("12 years") || raw.includes("سن 12") || target.includes("adult")) {
         return {
             badgeText: "+12",
-            fullLabel: isArabic ? "12 سنة فما فوق" : "12+ Years",
+            fullLabel: isArabic ? "سنة فما فوق" : "Years & older",
             tier: "adolescent12",
             colorClass: "bg-amber-500/15 border-amber-500/35 text-amber-200",
             pillBgClass: "bg-amber-500/30 text-amber-100 border-amber-400/40",
@@ -215,7 +257,7 @@ export const getAgeSuitability = (data: any, isArabic: boolean): AgeRatingInfo =
     if (target.includes("6") || raw.includes("6 سنوات") || raw.includes("6 years") || raw.includes("سن 6")) {
         return {
             badgeText: "+6",
-            fullLabel: isArabic ? "6 سنوات فما فوق" : "6+ Years (Children)",
+            fullLabel: isArabic ? "سنوات فما فوق" : "Years & older",
             tier: "child6",
             colorClass: "bg-teal-500/15 border-teal-500/35 text-teal-200",
             pillBgClass: "bg-teal-500/30 text-teal-100 border-teal-400/40",
@@ -227,7 +269,7 @@ export const getAgeSuitability = (data: any, isArabic: boolean): AgeRatingInfo =
     if (target.includes("2") || raw.includes("سنتين") || raw.includes("2 years") || raw.includes("toddler") || target.includes("child") || target.includes("أطفال")) {
         return {
             badgeText: "+2",
-            fullLabel: isArabic ? "سنتين فما فوق (أطفال)" : "2+ Years (Pediatric)",
+            fullLabel: isArabic ? "سنتين فما فوق" : "Years & older",
             tier: "toddler2",
             colorClass: "bg-cyan-500/15 border-cyan-500/35 text-cyan-200",
             pillBgClass: "bg-cyan-500/30 text-cyan-100 border-cyan-400/40",
@@ -239,7 +281,7 @@ export const getAgeSuitability = (data: any, isArabic: boolean): AgeRatingInfo =
     if (target.includes("infant") || target.includes("baby") || target.includes("رضيع") || target.includes("رضع") || raw.includes("قطرات للرضع")) {
         return {
             badgeText: "+0",
-            fullLabel: isArabic ? "للرضّع (بإشراف طبي)" : "Infants (Under Supervision)",
+            fullLabel: isArabic ? "للرضّع والأطفال" : "Infants & Toddlers",
             tier: "infant",
             colorClass: "bg-indigo-500/15 border-indigo-500/35 text-indigo-200",
             pillBgClass: "bg-indigo-500/30 text-indigo-100 border-indigo-400/40",
@@ -3157,7 +3199,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                 {/* Strength */}
                                 {data.strength && (
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 font-mono text-slate-100 font-bold shadow-sm">
-                                        <bdi dir="ltr">{data.strength}</bdi>
+                                        <bdi dir="ltr">{formatCleanStrength(data.strength)}</bdi>
                                     </div>
                                 )}
                             </div>

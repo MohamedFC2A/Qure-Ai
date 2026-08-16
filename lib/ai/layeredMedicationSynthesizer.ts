@@ -135,7 +135,7 @@ FORENSIC MANDATES:
 1. RESOLVE EXACT IDENTITY (90-100% Precision): Identify the authentic registered commercial trade name and active pharmaceutical molecules even if the package photo is cropped, blurred, or missing numbers.
 2. DEDUPLICATION & MOLECULAR ACCURACY: Never repeat or duplicate active ingredients. For multi-ingredient combination drugs (e.g. Paracetamol + Chlorpheniramine + Pseudoephedrine), list each distinct active chemical entity exactly once with its authentic registered dose (e.g. 500 mg, 2 mg, 30 mg). Never sum or multiply doses incorrectly across repeated rows.
 3. SOLVE MISSING PACKAGING NUMBERS & DETAILS: If exact strength (e.g. 500mg, 1000mg, 5ml), active formulation percentages, or dosage instructions were omitted on the packaging, retrieve and compute them from the verified 5-page clinical dossier and pharmacological databases. Never leave fields as "غير محدد" when official monographs exist.
-4. LANGUAGE RULE: When language is 'ar' (Arabic), output 'drugName' (e.g. 'وان تو ثري (1 2 3)' or 'كونجستال' or 'بنادول'), 'genericName' (e.g. 'باراسيتامول + كلورفينيرامين + سودوإيفيدرين'), 'form' (e.g. 'أقراص مغلفة'), 'routeOfAdministration' (e.g. 'عن طريق الفم'), 'category', and ALL clinical fields ('uses', 'dosage', 'missedDose', 'warnings', 'contraindications', 'precautions', 'sideEffects', 'interactions', 'whenToSeekHelp', 'storage') in 100% fluent, sound Modern Standard Arabic. Always provide 'drugNameEn', 'genericNameEn', and 'activeIngredientsEn' in clean Latin English. When language is 'en', output everything in English.
+4. LANGUAGE RULE: When language is 'ar' (Arabic), output 'drugName' (e.g. 'وان تو ثري (1 2 3)' or 'كونجستال' or 'بنادول'), 'genericName' (e.g. 'باراسيتامول + كلورفينيرامين + سودوإيفيدرين'), 'form' (e.g. 'أقراص مغلفة'), 'routeOfAdministration' (e.g. 'عن طريق الفم'), 'manufacturer' (e.g. 'شركة الحكمة للأدوية' or 'شركة سيجما'), 'category' (e.g. 'علاج نزلات البرد والإنفلونزا'), 'productCategoryLabel', and ALL clinical fields ('uses', 'dosage', 'missedDose', 'warnings', 'contraindications', 'precautions', 'sideEffects', 'interactions', 'whenToSeekHelp', 'storage') in 100% fluent, sound Modern Standard Arabic. Never output untranslated English labels for category, manufacturer, or form when language is 'ar'. Always provide 'drugNameEn', 'genericNameEn', and 'activeIngredientsEn' in clean Latin English. When language is 'en', output everything in English.
 5. RETURN PURE JSON matching the schema strictly.
 
 JSON SCHEMA:
@@ -146,7 +146,7 @@ JSON SCHEMA:
     "genericNameEn": "Scientific Active Molecule in English",
     "manufacturer": "Verified Pharmaceutical Manufacturer",
     "productCategory": "pharmaceutical_drug | dietary_supplement | topical_cosmetic_care",
-    "productCategoryLabel": "Category Label",
+    "productCategoryLabel": "Category Label in Arabic if language=ar (e.g. علاج نزلات البرد والإنفلونزا)",
     "form": "Tablet / Capsule / Syrup / Drops / Cream",
     "dosageForm": "tablet | capsule | syrup | cream | gel | drops | spray",
     "routeOfAdministration": "Oral | Topical | Inhalation | Intravenous",
@@ -222,5 +222,15 @@ ${patientContext ? JSON.stringify(patientContext) : "None"}
         throw new Error("Multi-layer synthesis yielded empty response");
     }
 
-    return robustParseJson(generatedJson, {});
+    const parsed: any = robustParseJson(generatedJson, {});
+    if (isAr && parsed) {
+        if (parsed.manufacturer && String(parsed.manufacturer).toLowerCase().includes("hikma")) {
+            parsed.manufacturer = "شركة الحكمة للأدوية";
+        }
+        if (parsed.manufacturer && String(parsed.manufacturer).toLowerCase().includes("sigma")) {
+            parsed.manufacturer = "شركة سيجما للصناعات الدوائية";
+        }
+    }
+
+    return parsed;
 }
