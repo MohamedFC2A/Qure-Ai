@@ -12,6 +12,7 @@ import {
     Pill,
     Zap,
 } from "lucide-react";
+import { translateMedicalTerm } from "@/components/scanner/MedicalResultCard";
 
 interface MedicalReportPdfDocumentProps {
     data: any;
@@ -37,13 +38,31 @@ export const MedicalReportPdfDocument: React.FC<MedicalReportPdfDocumentProps> =
     const t = (en: string, ar: string) => (isArabic ? ar : en);
     const dir = isArabic ? "rtl" : "ltr";
 
-    const drugName = data?.drugName || t("Unknown Medication", "دواء غير محدد");
-    const drugNameEn = data?.drugNameEn || data?.drugName || "";
-    const genericName = data?.genericName || data?.activeIngredients?.[0] || t("Not specified", "غير محدد");
-    const manufacturer = data?.manufacturer || t("Pharmaceutical Co.", "شركة دوائية معتمدة");
-    const strength = data?.strength || "";
-    const dosageForm = data?.dosageForm || data?.form || t("Pharmaceutical Form", "شكل صيدلاني");
-    const route = data?.routeOfAdministration || t("Oral", "عن طريق الفم");
+    const isLatinOnly = (text: string) => /^[A-Za-z0-9\s+,./()–—:%-]+$/.test(String(text || "").trim());
+
+    const rawDrugName = data?.drugName || "";
+    const rawDrugNameEn = data?.drugNameEn || "";
+    const drugName = isArabic 
+        ? (rawDrugName || rawDrugNameEn || t("Unknown Medication", "دواء غير محدد")) 
+        : (rawDrugNameEn || rawDrugName || t("Unknown Medication", "دواء غير محدد"));
+    
+    const drugNameEn = rawDrugNameEn || (isLatinOnly(rawDrugName) ? rawDrugName : "");
+    
+    const rawGeneric = data?.genericName || data?.activeIngredients?.[0] || "";
+    const rawGenericEn = data?.genericNameEn || "";
+    const genericName = isArabic
+        ? (rawGeneric || rawGenericEn || t("Not specified", "غير محدد"))
+        : (rawGenericEn || rawGeneric || t("Not specified", "غير محدد"));
+
+    const manufacturer = translateMedicalTerm(data?.manufacturer, isArabic) || t("Pharmaceutical Co.", "شركة دوائية معتمدة");
+    
+    let strength = String(data?.strength || "").trim().replace(/\/1\b/g, "");
+    if (!strength && Array.isArray(data?.activeIngredientsDetailed) && data.activeIngredientsDetailed.length > 0) {
+        strength = data.activeIngredientsDetailed.map((ai: any) => ai.strength).filter(Boolean).join(" + ");
+    }
+    
+    const dosageForm = translateMedicalTerm(data?.dosageForm || data?.form, isArabic) || (isArabic ? "أقراص" : "Tablets");
+    const route = translateMedicalTerm(data?.routeOfAdministration, isArabic) || (isArabic ? "عن طريق الفم" : "Oral");
     const confidence = data?.confidenceScore || 98;
 
     const uses: string[] = Array.isArray(data?.uses) ? data.uses : [];
@@ -116,7 +135,6 @@ export const MedicalReportPdfDocument: React.FC<MedicalReportPdfDocumentProps> =
                 key={idx}
                 style={{
                     display: "flex",
-                    flexDirection: isArabic ? "row-reverse" : "row",
                     alignItems: "flex-start",
                     gap: "10px",
                     marginBottom: "8px",
@@ -237,39 +255,129 @@ export const MedicalReportPdfDocument: React.FC<MedicalReportPdfDocumentProps> =
                     {/* ── Drug Hero Banner ── */}
                     <div style={{
                         background: "linear-gradient(135deg, #0c4a6e 0%, #1e3a5f 50%, #1e1b4b 100%)",
-                        color: "white", borderRadius: "12px", padding: "18px 20px",
+                        color: "white", borderRadius: "12px", padding: "16px 20px",
                         marginBottom: "16px",
+                        direction: isArabic ? "rtl" : "ltr",
                     }}>
                         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
+                            {/* Main Drug Details (Right in RTL, Left in LTR) */}
+                            <div style={{ flex: "1 1 auto", minWidth: 0, textAlign: isArabic ? "right" : "left" }}>
+                                {/* Pill badge: Form • Route */}
                                 <div style={{
                                     display: "inline-flex", alignItems: "center", gap: "6px",
                                     padding: "3px 10px", borderRadius: "999px",
-                                    background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
-                                    fontSize: "9px", fontWeight: "600", color: "#bae6fd",
+                                    background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)",
+                                    fontSize: "9px", fontWeight: "700", color: "#bae6fd",
                                     marginBottom: "6px",
                                 }}>
-                                    <Pill style={{ width: "11px", height: "11px" }} />
+                                    <Pill style={{ width: "11px", height: "11px", flexShrink: 0 }} />
                                     <span>{dosageForm} • {route}</span>
                                 </div>
-                                <h2 style={{ fontSize: "20px", fontWeight: "900", color: "white", margin: "0 0 4px", lineHeight: "1.2" }}>{drugName}</h2>
-                                {drugNameEn && drugNameEn !== drugName && (
-                                    <p style={{ fontSize: "11px", color: "#bae6fd", fontFamily: "monospace", fontWeight: "600", margin: "0 0 4px" }}>{drugNameEn}</p>
-                                )}
-                                <p style={{ fontSize: "10px", color: "#cbd5e1", margin: 0 }}>
-                                    <span style={{ opacity: 0.75 }}>{t("Generic:", "الاسم العلمي:")} </span>
-                                    <strong style={{ color: "white", fontWeight: "700" }}>{genericName}</strong>
-                                </p>
-                            </div>
-                            <div style={{ textAlign: isArabic ? "left" : "right", flexShrink: 0 }}>
-                                <div style={{
-                                    background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
-                                    padding: "6px 12px", borderRadius: "8px", textAlign: "center", marginBottom: "6px",
+
+                                {/* Trade Name */}
+                                <h2 style={{
+                                    fontSize: drugName.length > 30 ? "17px" : "21px",
+                                    fontWeight: "900",
+                                    color: "white",
+                                    margin: "0 0 2px",
+                                    lineHeight: "1.25",
+                                    wordBreak: "break-word",
+                                    fontFamily: isArabic ? "'Cairo', 'Segoe UI', Tahoma, sans-serif" : "inherit"
                                 }}>
-                                    <span style={{ fontSize: "8px", color: "#bae6fd", display: "block", fontWeight: "700", textTransform: "uppercase" }}>{t("Strength", "التركيز")}</span>
-                                    <span style={{ fontSize: "12px", fontWeight: "900", color: "white" }}>{strength || t("Standard", "معياري")}</span>
+                                    {drugName}
+                                </h2>
+
+                                {/* Secondary English Trade Name if in Arabic mode & distinct */}
+                                {isArabic && drugNameEn && drugNameEn.toLowerCase() !== drugName.toLowerCase() && (
+                                    <p style={{
+                                        fontSize: "10.5px",
+                                        color: "#93c5fd",
+                                        fontFamily: "monospace",
+                                        fontWeight: "600",
+                                        margin: "0 0 4px",
+                                        direction: "ltr",
+                                        textAlign: "right"
+                                    }}>
+                                        <bdi dir="ltr">{drugNameEn}</bdi>
+                                    </p>
+                                )}
+
+                                {/* Generic Scientific Molecule */}
+                                <div style={{
+                                    display: "flex",
+                                    alignItems: "baseline",
+                                    gap: "5px",
+                                    fontSize: "10px",
+                                    color: "#cbd5e1",
+                                    marginTop: "4px",
+                                    flexWrap: "wrap",
+                                    lineHeight: "1.4"
+                                }}>
+                                    <span style={{ opacity: 0.8, fontWeight: "700", flexShrink: 0 }}>
+                                        {t("Generic Name:", "الاسم العلمي:")}
+                                    </span>
+                                    <strong style={{
+                                        color: "#f8fafc",
+                                        fontWeight: "700",
+                                        direction: isLatinOnly(genericName) ? "ltr" : (isArabic ? "rtl" : "ltr"),
+                                        unicodeBidi: "isolate"
+                                    }}>
+                                        <bdi dir={isLatinOnly(genericName) ? "ltr" : (isArabic ? "rtl" : "ltr")}>
+                                            {genericName}
+                                        </bdi>
+                                    </strong>
                                 </div>
-                                <div style={{ fontSize: "9px", color: "#93c5fd", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{manufacturer}</div>
+                            </div>
+
+                            {/* Strength & Manufacturer Box (Left in RTL, Right in LTR) */}
+                            <div style={{
+                                flex: "0 0 auto",
+                                minWidth: "160px",
+                                maxWidth: "240px",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: isArabic ? "flex-start" : "flex-end",
+                                gap: "5px"
+                            }}>
+                                <div style={{
+                                    background: "rgba(255,255,255,0.08)",
+                                    border: "1px solid rgba(255,255,255,0.18)",
+                                    padding: "7px 12px",
+                                    borderRadius: "8px",
+                                    width: "100%",
+                                    boxSizing: "border-box",
+                                    textAlign: "center"
+                                }}>
+                                    <span style={{ fontSize: "8.5px", color: "#bae6fd", display: "block", fontWeight: "700", textTransform: "uppercase", marginBottom: "2px" }}>
+                                        {t("Strength / Concentration", "التركيز الدوائي")}
+                                    </span>
+                                    <span style={{
+                                        fontSize: strength.length > 20 ? "10px" : "12px",
+                                        fontWeight: "900",
+                                        color: "white",
+                                        display: "block",
+                                        lineHeight: "1.3",
+                                        wordBreak: "break-word"
+                                    }}>
+                                        <bdi dir="ltr">{strength || t("Standard", "معياري")}</bdi>
+                                    </span>
+                                </div>
+
+                                {manufacturer && (
+                                    <div style={{
+                                        fontSize: "9px",
+                                        color: "#93c5fd",
+                                        fontWeight: "600",
+                                        maxWidth: "100%",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        textAlign: isArabic ? "left" : "right",
+                                        width: "100%"
+                                    }}>
+                                        {manufacturer}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -373,24 +481,40 @@ export const MedicalReportPdfDocument: React.FC<MedicalReportPdfDocumentProps> =
                                     {activeIngredientsDetailed.length > 0 ? (
                                         activeIngredientsDetailed.map((ing: any, idx: number) => (
                                             <tr key={idx} style={{ background: idx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
-                                                <td style={{ padding: "8px 10px", fontWeight: "700", color: "#0c4a6e" }}>{ing?.name || ""}</td>
-                                                <td style={{ padding: "8px 10px", fontFamily: "monospace", fontWeight: "600" }}>{ing?.strength || strength || t("Standard", "معياري")}</td>
-                                                <td style={{ padding: "8px 10px", color: "#475569" }}>{ing?.source || t("Active Therapeutic Agent", "مركب علاجي رئيسي")}</td>
+                                                <td style={{ padding: "8px 10px", fontWeight: "700", color: "#0c4a6e", textAlign: isArabic ? "right" : "left" }}>
+                                                    <bdi dir={isLatinOnly(ing?.name) ? "ltr" : (isArabic ? "rtl" : "ltr")}>{ing?.name || ""}</bdi>
+                                                </td>
+                                                <td style={{ padding: "8px 10px", fontFamily: "monospace", fontWeight: "600", textAlign: isArabic ? "right" : "left" }}>
+                                                    <bdi dir="ltr">{ing?.strength || strength || t("Standard", "معياري")}</bdi>
+                                                </td>
+                                                <td style={{ padding: "8px 10px", color: "#475569", textAlign: isArabic ? "right" : "left" }}>
+                                                    {translateMedicalTerm(ing?.source, isArabic) || t("Active Therapeutic Agent", "مركب علاجي رئيسي")}
+                                                </td>
                                             </tr>
                                         ))
                                     ) : activeIngredients.length > 0 ? (
                                         activeIngredients.map((name: string, idx: number) => (
                                             <tr key={idx} style={{ background: idx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
-                                                <td style={{ padding: "8px 10px", fontWeight: "700", color: "#0c4a6e" }}>{name}</td>
-                                                <td style={{ padding: "8px 10px", fontFamily: "monospace", fontWeight: "600" }}>{strength || t("Standard", "معياري")}</td>
-                                                <td style={{ padding: "8px 10px", color: "#475569" }}>{t("Active Therapeutic Agent", "مركب علاجي فعال")}</td>
+                                                <td style={{ padding: "8px 10px", fontWeight: "700", color: "#0c4a6e", textAlign: isArabic ? "right" : "left" }}>
+                                                    <bdi dir={isLatinOnly(name) ? "ltr" : (isArabic ? "rtl" : "ltr")}>{name}</bdi>
+                                                </td>
+                                                <td style={{ padding: "8px 10px", fontFamily: "monospace", fontWeight: "600", textAlign: isArabic ? "right" : "left" }}>
+                                                    <bdi dir="ltr">{strength || t("Standard", "معياري")}</bdi>
+                                                </td>
+                                                <td style={{ padding: "8px 10px", color: "#475569", textAlign: isArabic ? "right" : "left" }}>
+                                                    {t("Active Therapeutic Agent", "مركب علاجي فعال")}
+                                                </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td style={{ padding: "8px 10px", fontWeight: "700", color: "#0c4a6e" }}>{genericName}</td>
-                                            <td style={{ padding: "8px 10px", fontFamily: "monospace", fontWeight: "600" }}>{strength || t("Standard", "معياري")}</td>
-                                            <td style={{ padding: "8px 10px", color: "#475569" }}>{dosageForm}</td>
+                                            <td style={{ padding: "8px 10px", fontWeight: "700", color: "#0c4a6e", textAlign: isArabic ? "right" : "left" }}>
+                                                <bdi dir={isLatinOnly(genericName) ? "ltr" : (isArabic ? "rtl" : "ltr")}>{genericName}</bdi>
+                                            </td>
+                                            <td style={{ padding: "8px 10px", fontFamily: "monospace", fontWeight: "600", textAlign: isArabic ? "right" : "left" }}>
+                                                <bdi dir="ltr">{strength || t("Standard", "معياري")}</bdi>
+                                            </td>
+                                            <td style={{ padding: "8px 10px", color: "#475569", textAlign: isArabic ? "right" : "left" }}>{dosageForm}</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -525,7 +649,6 @@ export const MedicalReportPdfDocument: React.FC<MedicalReportPdfDocumentProps> =
                             {sideEffects.slice(0, 6).map((effect, idx) => (
                                 <div key={idx} style={{
                                     display: "flex",
-                                    flexDirection: isArabic ? "row-reverse" : "row",
                                     alignItems: "flex-start",
                                     gap: "6px",
                                     background: "#f8fafc",
