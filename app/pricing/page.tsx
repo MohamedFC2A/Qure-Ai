@@ -280,10 +280,7 @@ export default function PricingPage() {
                 {/* ── HERO SECTION ────────────────────────────────── */}
                 <section className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-cyan-300 text-xs font-bold mb-3">
-                            <Zap className="h-3.5 w-3.5 text-cyan-400" />
-                            <span>{t("Transparent Clinical Pricing", "خطط مرنة وواضحة بدون تعقيد")}</span>
-                        </div>
+
                         <h1 className="text-3xl xs:text-4xl sm:text-5xl font-black leading-tight text-white tracking-tight">
                             {isArabic ? (
                                 <>

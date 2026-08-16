@@ -336,18 +336,6 @@ export const ScannerInterface = () => {
         if (finalResult.scanType === "wound") {
             return (
                 <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
-                    {isRestoredSession && (
-                        <div className="w-full max-w-4xl mb-4 flex items-center justify-between p-3 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-200 text-xs">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-cyan-300" />
-                                <span>{t("Scan results restored automatically from session.", "تمت استعادة نتيجة الفحص السريري تلقائياً من الجلسة المحفوظة.")}</span>
-                            </div>
-                            <button onClick={resetScan} className="underline text-cyan-300 hover:text-white font-bold">
-                                {t("Start New Scan", "بدء فحص جديد")}
-                            </button>
-                        </div>
-                    )}
-
                     <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
                         <div className="flex items-center gap-3">
                             <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">
@@ -376,18 +364,6 @@ export const ScannerInterface = () => {
 
         return (
             <div className="w-full flex flex-col items-center animate-in fade-in zoom-in duration-500 p-0 sm:p-4">
-                {isRestoredSession && (
-                    <div className="w-full max-w-4xl mb-4 flex items-center justify-between p-3 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-200 text-xs">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-cyan-300" />
-                            <span>{t("Scan results restored automatically from session.", "تمت استعادة نتيجة الفحص السريري تلقائياً من الجلسة المحفوظة.")}</span>
-                        </div>
-                        <button onClick={resetScan} className="underline text-cyan-300 hover:text-white font-bold">
-                            {t("Start New Scan", "بدء فحص جديد")}
-                        </button>
-                    </div>
-                )}
-
                 <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 max-w-4xl gap-4">
                     <div className="flex items-center gap-3">
                         <div className="p-3 rounded-full bg-emerald-500/20 border border-emerald-500/30">

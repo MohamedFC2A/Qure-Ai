@@ -23,6 +23,7 @@ import {
     Download,
     RefreshCw,
     AlertTriangle,
+    Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -62,6 +63,7 @@ export default function HistoryPage() {
     const [profileFilter, setProfileFilter] = useState<string>("all");
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<UnifiedHistoryItem | null>(null);
     const { user } = useUser();
 
     useEffect(() => {
@@ -220,11 +222,17 @@ export default function HistoryPage() {
         fetchAllHistory();
     }, [fetchAllHistory]);
 
-    // Handle Deleting a Single History Record
-    const handleDeleteItem = async (e: React.MouseEvent, item: UnifiedHistoryItem) => {
+    // Handle Request to Delete a Single History Record (Opens confirmation modal)
+    const handleDeleteItem = (e: React.MouseEvent, item: UnifiedHistoryItem) => {
         e.stopPropagation();
-        if (deletingId) return;
+        setItemToDelete(item);
+    };
 
+    // Execute deletion after user confirms in modal
+    const confirmDeleteItem = async () => {
+        if (!itemToDelete || deletingId) return;
+
+        const item = itemToDelete;
         setDeletingId(item.id);
         try {
             // 1. Remove from local storage
@@ -241,6 +249,7 @@ export default function HistoryPage() {
             if (selectedItem?.id === item.id) {
                 setSelectedItem(null);
             }
+            setItemToDelete(null);
         } catch (err) {
             console.error("Failed to delete history item:", err);
         } finally {
@@ -317,41 +326,41 @@ export default function HistoryPage() {
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-2.5 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <button
                                 onClick={() => fetchAllHistory(true)}
                                 disabled={refreshing}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 hover:text-white transition-all disabled:opacity-50"
+                                className="h-10 inline-flex items-center gap-2 px-3.5 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 hover:text-white transition-all disabled:opacity-50 shadow-sm"
                                 title={t("Refresh history", "تحديث السجل")}
                             >
-                                <RefreshCw className={cn("w-3.5 h-3.5", refreshing && "animate-spin text-cyan-400")} />
-                                <span className="hidden xs:inline">{t("Refresh", "تحديث")}</span>
+                                <RefreshCw className={cn("w-4 h-4 text-slate-300", refreshing && "animate-spin text-cyan-400")} />
+                                <span>{t("Refresh", "تحديث")}</span>
                             </button>
 
                             {history.length > 0 && (
                                 <>
                                     <button
                                         onClick={handleExportHistory}
-                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 hover:text-white transition-all"
+                                        className="h-10 inline-flex items-center gap-2 px-3.5 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 hover:text-white transition-all shadow-sm"
                                         title={t("Export history JSON", "تصدير السجل")}
                                     >
-                                        <Download className="w-3.5 h-3.5 text-cyan-400" />
-                                        <span className="hidden xs:inline">{t("Export", "تصدير")}</span>
+                                        <Download className="w-4 h-4 text-cyan-400" />
+                                        <span>{t("Export", "تصدير")}</span>
                                     </button>
 
                                     <button
                                         onClick={() => setShowClearConfirm(true)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 hover:text-rose-200 transition-all"
+                                        className="h-10 inline-flex items-center gap-2 px-3.5 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-300 hover:text-rose-200 transition-all shadow-sm"
                                         title={t("Clear all history", "مسح كافة السجلات")}
                                     >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                        <span className="hidden xs:inline">{t("Clear All", "مسح الكل")}</span>
+                                        <Trash2 className="w-4 h-4 text-rose-400" />
+                                        <span>{t("Clear All", "مسح الكل")}</span>
                                     </button>
                                 </>
                             )}
 
-                            <Button href="/scan" className="w-full sm:w-auto gap-2 font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl">
-                                <Sparkles className="w-4 h-4" />
+                            <Button href="/scan" className="h-10 inline-flex items-center gap-2 px-4 font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm">
+                                <Sparkles className="w-4 h-4 text-emerald-100" />
                                 <span>{t("Start New Scan", "ابدأ فحصاً جديداً")}</span>
                             </Button>
                         </div>
@@ -512,7 +521,7 @@ export default function HistoryPage() {
 
                                                     <button
                                                         onClick={(e) => handleDeleteItem(e, item)}
-                                                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition-all"
+                                                        className="p-1.5 rounded-lg opacity-80 sm:opacity-0 group-hover:opacity-100 bg-white/5 hover:bg-rose-500/20 border border-transparent hover:border-rose-500/30 text-slate-400 hover:text-rose-300 transition-all"
                                                         title={t("Delete scan", "حذف الفحص")}
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />
@@ -620,6 +629,70 @@ export default function HistoryPage() {
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
                                         <span>{t("Yes, Clear Everything", "نعم، احذف الكل")}</span>
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* ── Single Item Delete Confirmation Modal ── */}
+                <AnimatePresence>
+                    {itemToDelete && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                            onClick={() => !deletingId && setItemToDelete(null)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.95, opacity: 0 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full max-w-md p-6 rounded-2xl border border-rose-500/25 bg-slate-900/95 text-white space-y-4 shadow-2xl"
+                            >
+                                <div className="flex items-center gap-3 text-rose-400">
+                                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
+                                        <Trash2 className="w-5 h-5 text-rose-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-base text-white">
+                                            {t("Delete this record?", "تأكيد حذف السجل؟")}
+                                        </h3>
+                                        <p className="text-xs text-slate-400 truncate max-w-[260px]">
+                                            {itemToDelete.title}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <p className="text-xs text-slate-300 leading-relaxed">
+                                    {t(
+                                        "Are you sure you want to remove this medical record? It will be deleted from your saved history.",
+                                        "هل أنت متأكد من رغبتك في حذف هذا السجل الطبي؟ سيتم حذفه من سجلاتك المحفوظة نهائياً."
+                                    )}
+                                </p>
+
+                                <div className="flex items-center justify-end gap-2.5 pt-2">
+                                    <button
+                                        disabled={!!deletingId}
+                                        onClick={() => setItemToDelete(null)}
+                                        className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors disabled:opacity-50"
+                                    >
+                                        {t("Cancel", "إلغاء")}
+                                    </button>
+                                    <button
+                                        disabled={!!deletingId}
+                                        onClick={confirmDeleteItem}
+                                        className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                    >
+                                        {deletingId ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        )}
+                                        <span>{t("Delete", "تأكيد الحذف")}</span>
                                     </button>
                                 </div>
                             </motion.div>

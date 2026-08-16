@@ -158,13 +158,7 @@ export default function Home() {
             <section className="clinical-page max-w-6xl mx-auto text-center">
                 <div className="space-y-5 animate-fade-in">
 
-                    {/* Eyebrow Pill */}
-                    <div className="flex items-center justify-center pt-2">
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs font-bold text-cyan-300 shadow-sm select-none">
-                            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                            <span>{t("Next-Gen Pharmaceutical Intelligence Platform", "المنصة الذكية المتطورة للتحليل والذكاء الصيدلاني")}</span>
-                        </div>
-                    </div>
+
 
                     {/* Headline */}
                     <h1 className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.08] tracking-tight text-white max-w-5xl mx-auto">
