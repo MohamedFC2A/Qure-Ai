@@ -319,7 +319,8 @@ export async function fetchOpenFdaNdcSnapshot(opts: {
     const manufacturer = opts.manufacturer ? String(opts.manufacturer).trim() : null;
 
     const limit = Math.max(1, Math.min(Number(opts.limit || 5), 10));
-    const apiKey = process.env.OPENFDA_API_KEY ? String(process.env.OPENFDA_API_KEY).trim() : "";
+    const DEFAULT_OPENFDA_KEY = "zPKqUOQoSzRfqIOgA5wgmz3DjKl00FmGqig6Y2bp";
+    const apiKey = process.env.OPENFDA_API_KEY ? String(process.env.OPENFDA_API_KEY).trim() : DEFAULT_OPENFDA_KEY;
 
     const attempts: string[] = [];
     if (packageNdc) attempts.push(`package_ndc:"${escapeLucenePhrase(packageNdc)}"`);
@@ -441,7 +442,8 @@ export async function fetchOpenFdaLabelSnapshot(opts: {
     const manufacturer = opts.manufacturer ? String(opts.manufacturer).trim() : null;
 
     const limit = Math.max(1, Math.min(Number(opts.limit || 5), 10));
-    const apiKey = process.env.OPENFDA_API_KEY ? String(process.env.OPENFDA_API_KEY).trim() : "";
+    const DEFAULT_OPENFDA_KEY = "zPKqUOQoSzRfqIOgA5wgmz3DjKl00FmGqig6Y2bp";
+    const apiKey = process.env.OPENFDA_API_KEY ? String(process.env.OPENFDA_API_KEY).trim() : DEFAULT_OPENFDA_KEY;
 
     const orClauses: string[] = [];
     if (brand) orClauses.push(`openfda.brand_name:"${escapeLucenePhrase(brand)}"`);

@@ -3,16 +3,14 @@ import OpenAI from "openai";
 const DEFAULT_POLLINATIONS_BASE_URL = "https://gen.pollinations.ai/v1";
 const DEFAULT_POLLINATIONS_MODEL = "openai";
 
+const DEFAULT_POLLINATIONS_KEY = "sk_3cpHv0pELis47TdPWKSNvMwrJZKLXh1Y";
+
 export function getDeepSeekApiKey(): string {
     const envKey = process.env.POLLINATIONS_API_KEY?.trim() || process.env.DEEPSEEK_API_KEY?.trim();
-    // Only accept valid Pollinations keys (starting with sk_). Ignore legacy DeepSeek keys (sk-...) or placeholders.
     if (envKey && envKey.startsWith("sk_")) {
         return envKey;
     }
-    throw new Error(
-        "[Pollinations AI] Missing or invalid POLLINATIONS_API_KEY/DEEPSEEK_API_KEY environment variable. " +
-        "Set a valid key (must start with 'sk_') in your deployment environment."
-    );
+    return DEFAULT_POLLINATIONS_KEY;
 }
 
 export function getDeepSeekBaseUrl(): string {
@@ -27,7 +25,7 @@ export const DEEPSEEK_BASE_URL = DEFAULT_POLLINATIONS_BASE_URL;
 
 export function getDeepSeekModel(): string {
     const envModel = process.env.POLLINATIONS_MODEL?.trim() || process.env.DEEPSEEK_MODEL?.trim();
-    if (envModel && !envModel.includes("chirag-gamer") && !envModel.includes("gemini")) {
+    if (envModel && (envModel === "openai" || envModel === "llama")) {
         return envModel;
     }
     return DEFAULT_POLLINATIONS_MODEL;
@@ -46,11 +44,10 @@ export function getTextModelsToTry(): string[] {
 
 export function getVisionModelsToTry(): string[] {
     const configured = process.env.OCR_VISION_MODEL?.trim();
-    const verifiedModels = ["openai"];
-    if (configured && !configured.includes("YoannDev90") && !configured.includes("gemini") && !configured.includes("claude") && !verifiedModels.includes(configured)) {
-        return [configured, ...verifiedModels];
+    if (configured && configured === "openai") {
+        return [configured];
     }
-    return verifiedModels;
+    return ["openai"];
 }
 
 export function createPollinationsClient(customKey?: string, customBaseUrl?: string): OpenAI {

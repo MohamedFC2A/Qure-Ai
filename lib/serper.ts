@@ -68,7 +68,8 @@ export async function serperSearch(opts: {
         return { found: false, query, results: [], fetchedAt, error: "Missing query" };
     }
 
-    const apiKey = process.env.SERPER_API_KEY ? String(process.env.SERPER_API_KEY).trim() : "";
+    const DEFAULT_SERPER_KEY = "ef557c518d568a9c596b6c2cb40ddf2dce22a879";
+    const apiKey = process.env.SERPER_API_KEY ? String(process.env.SERPER_API_KEY).trim() : DEFAULT_SERPER_KEY;
     if (!apiKey) {
         return {
             found: false,
