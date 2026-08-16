@@ -108,7 +108,7 @@ export function AiChatPage() {
         } catch (e) { console.error("Failed to load conversations:", e); }
     }, []);
 
-    useEffect(() => { if (user && isUltra) loadConversations(); }, [user, isUltra, loadConversations]);
+    useEffect(() => { if (user) loadConversations(); }, [user, loadConversations]);
 
     /* ── Load a conversation's messages ── */
     const loadConversation = useCallback(async (convId: string) => {
@@ -137,11 +137,6 @@ export function AiChatPage() {
     /* ── STREAMING send message ── */
     const sendMessage = useCallback(async (text: string, overrideMedication?: any) => {
         if (!text.trim() || isSending) return;
-
-        if (!isUltra) {
-            setError(t("Qure AI is exclusive to ULTRA plan members.", "ميزة Qure AI متاحة حصرياً لمشتركي باقة ULTRA."));
-            return;
-        }
 
         const currentMed = overrideMedication || selectedMedication;
 
@@ -225,6 +220,90 @@ export function AiChatPage() {
             let buffer = "";
             let streamedContent = "";
 
+            const processLine = (line: string) => {
+                if (!line.startsWith("data: ")) return;
+                const jsonStr = line.slice(6).trim();
+                if (!jsonStr) return;
+
+                try {
+                    const event = JSON.parse(jsonStr);
+
+                    if (event.type === "search_start") {
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantId
+                                    ? { ...m, isLiveSearch: true }
+                                    : m
+                            )
+                        );
+                    }
+
+                    if (event.type === "search_status") {
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantId
+                                    ? {
+                                        ...m,
+                                        isLiveSearch: true,
+                                        searchMetadata: {
+                                            performed: true,
+                                            query: event.query,
+                                            pagesCount: event.pagesCount,
+                                            totalSources: event.totalSources,
+                                            sources: event.sources,
+                                            directAnswer: event.directAnswer,
+                                            knowledgeEntity: event.knowledgeEntity,
+                                        },
+                                    }
+                                    : m
+                            )
+                        );
+                    }
+
+                    if (event.type === "token" && event.token) {
+                        streamedContent += event.token;
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantId ? { ...m, content: streamedContent } : m
+                            )
+                        );
+                    }
+
+                    if (event.type === "done") {
+                        const finalAns = event.answer || streamedContent || "";
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === assistantId
+                                    ? {
+                                        ...m,
+                                        content: finalAns || m.content,
+                                        keyPoints: event.keyPoints || [],
+                                        suggestedFollowUps: event.suggestedFollowUps || [],
+                                        searchMetadata: event.searchMetadata || m.searchMetadata,
+                                    }
+                                    : m
+                            )
+                        );
+
+                        // VOICE OS Automatic Background Warning Announcement
+                        if (finalAns && /(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)/i.test(finalAns)) {
+                            const match = finalAns.match(/[^.!?\n]*(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)[^.!?\n]*/i);
+                            const warningTxt = match ? match[0].trim() : finalAns.slice(0, 140);
+                            speakVoiceOs((isArabic ? "تنبيه طبي مهم: " : "Important Medical Warning: ") + warningTxt);
+                        }
+
+                        if (event.conversationId && event.conversationId !== activeConversationId) {
+                            setActiveConversationId(event.conversationId);
+                            loadConversations();
+                        }
+                    }
+
+                    if (event.type === "error") {
+                        setError(event.error || t("Stream error", "خطأ في البث"));
+                    }
+                } catch { /* skip invalid JSON */ }
+            };
+
             if (reader) {
                 while (true) {
                     const { done, value } = await reader.read();
@@ -235,88 +314,12 @@ export function AiChatPage() {
                     buffer = lines.pop() || "";
 
                     for (const line of lines) {
-                        if (!line.startsWith("data: ")) continue;
-                        const jsonStr = line.slice(6).trim();
-                        if (!jsonStr) continue;
-
-                        try {
-                            const event = JSON.parse(jsonStr);
-
-                            if (event.type === "search_start") {
-                                setMessages((prev) =>
-                                    prev.map((m) =>
-                                        m.id === assistantId
-                                            ? { ...m, isLiveSearch: true }
-                                            : m
-                                    )
-                                );
-                            }
-
-                            if (event.type === "search_status") {
-                                setMessages((prev) =>
-                                    prev.map((m) =>
-                                        m.id === assistantId
-                                            ? {
-                                                ...m,
-                                                isLiveSearch: true,
-                                                searchMetadata: {
-                                                    performed: true,
-                                                    query: event.query,
-                                                    pagesCount: event.pagesCount,
-                                                    totalSources: event.totalSources,
-                                                    sources: event.sources,
-                                                    directAnswer: event.directAnswer,
-                                                    knowledgeEntity: event.knowledgeEntity,
-                                                },
-                                            }
-                                            : m
-                                    )
-                                );
-                            }
-
-                            if (event.type === "token" && event.token) {
-                                streamedContent += event.token;
-                                setMessages((prev) =>
-                                    prev.map((m) =>
-                                        m.id === assistantId ? { ...m, content: streamedContent } : m
-                                    )
-                                );
-                            }
-
-                            if (event.type === "done") {
-                                const finalAns = event.answer || streamedContent || "";
-                                setMessages((prev) =>
-                                    prev.map((m) =>
-                                        m.id === assistantId
-                                            ? {
-                                                ...m,
-                                                content: finalAns || m.content,
-                                                keyPoints: event.keyPoints || [],
-                                                suggestedFollowUps: event.suggestedFollowUps || [],
-                                                searchMetadata: event.searchMetadata || m.searchMetadata,
-                                            }
-                                            : m
-                                    )
-                                );
-
-                                // VOICE OS Automatic Background Warning Announcement
-                                if (finalAns && /(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)/i.test(finalAns)) {
-                                    const match = finalAns.match(/[^.!?\n]*(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)[^.!?\n]*/i);
-                                    const warningTxt = match ? match[0].trim() : finalAns.slice(0, 140);
-                                    speakVoiceOs((isArabic ? "تنبيه طبي مهم: " : "Important Medical Warning: ") + warningTxt);
-                                }
-
-                                if (event.conversationId && event.conversationId !== activeConversationId) {
-                                    setActiveConversationId(event.conversationId);
-                                    loadConversations();
-                                }
-                            }
-
-                            if (event.type === "error") {
-                                setError(event.error || t("Stream error", "خطأ في البث"));
-                            }
-                        } catch { /* skip invalid JSON */ }
+                        processLine(line);
                     }
+                }
+
+                if (buffer.trim()) {
+                    processLine(buffer);
                 }
             }
         } catch (e: any) {
@@ -326,7 +329,7 @@ export function AiChatPage() {
             setIsSending(false);
             setIsStreaming(false);
         }
-    }, [activeConversationId, isArabic, isSending, isUltra, loadConversations, messages, selectedMedication, speakVoiceOs, t]);
+    }, [activeConversationId, activeTopic, isArabic, isSending, liveSearchEnabled, loadConversations, messages, selectedMedication, speakVoiceOs, t]);
 
     /* ── Handle URL params, sessionStorage Context, & Background Context Binding ── */
     useEffect(() => {
@@ -529,120 +532,63 @@ export function AiChatPage() {
             style={{ background: "#040711" }}
         >
             {/* ── Sidebar ── */}
-            {isUltra && (
-                <ConversationSidebar
-                    conversations={conversations}
-                    activeConversationId={activeConversationId}
-                    onSelect={handleSelectConversation}
-                    onDelete={handleDeleteConversation}
-                    onNewChat={handleNewChat}
-                    isArabic={isArabic}
-                    isOpen={sidebarOpen}
-                    onClose={() => setSidebarOpen(false)}
-                />
-            )}
+            <ConversationSidebar
+                conversations={conversations}
+                activeConversationId={activeConversationId}
+                onSelect={handleSelectConversation}
+                onDelete={handleDeleteConversation}
+                onNewChat={handleNewChat}
+                isArabic={isArabic}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+            />
 
             {/* ── Main Chat Area ── */}
             <div className="flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden">
                 {/* Top Chat Sub-Header with Smooth Sidebar Toggle */}
-                {isUltra && (
-                    <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
-                        <div className="flex items-center gap-2.5">
-                            <button
-                                type="button"
-                                onClick={() => setSidebarOpen((prev) => !prev)}
-                                className={cn(
-                                    "p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold select-none",
-                                    sidebarOpen
-                                        ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
-                                        : "bg-white/[0.03] hover:bg-cyan-500/10 border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200"
-                                )}
-                                title={isArabic ? "سجل المحادثات" : "Chat History"}
-                            >
-                                <Menu className="w-4 h-4" />
-                                <span className="hidden sm:inline">{isArabic ? "المحادثات" : "Chats"}</span>
-                            </button>
-
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="text-[11px] font-bold text-slate-200">
-                                    Qure AI
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={handleNewChat}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-cyan-500/15 border border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200 text-xs font-semibold transition-all cursor-pointer"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">{isArabic ? "محادثة جديدة" : "New Chat"}</span>
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── ULTRA PAYWALL BLOCK (For Free Tier Users) ── */}
-                {!isUltra ? (
-                    <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
-                        <div className="max-w-xl w-full rounded-3xl border border-white/[0.09] p-6 sm:p-8 text-center space-y-6 bg-[#080D1A]/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
-                            <div className="w-16 h-16 rounded-2xl bg-[#0C1324] border border-white/[0.08] flex items-center justify-center mx-auto text-cyan-400">
-                                <Lock className="w-8 h-8" />
-                            </div>
-
-                            <div className="space-y-2">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#0C1324] text-slate-300 border border-white/[0.08]">
-                                    <Zap className="w-3.5 h-3.5 text-cyan-400" />
-                                    {t("ULTRA EXCLUSIVE FEATURE", "ميزة حصرية لمشتركي ULTRA")}
-                                </span>
-                                <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                                    {t("Unlock Qure AI Assistant", "افتح المساعد الطبي الذكي Qure AI")}
-                                </h2>
-                                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
-                                    {t(
-                                        "Qure AI Assistant offers deep pharmaceutical memory, prescription interaction checks, and instant clinical reasoning.",
-                                        "يقدم مساعد Qure AI ذاكرة أدوية متطورة، وفحص تعارضات الوصفات، وتحليلات سريرية فورية معتمدة."
-                                    )}
-                                </p>
-                            </div>
-
-                            <div className="p-4 rounded-2xl bg-[#0C1324]/60 border border-white/[0.06] text-start space-y-2.5 max-w-md mx-auto">
-                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-                                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                                    <span>{t("Continuous Medication Memory across all scans", "ذاكرة أدوية متصلة مع جميع فحوصاتك")}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-                                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                                    <span>{t("Automated Drug-Drug & Disease Interaction Engine", "محرك كشف التعارضات الدوائية والمرضية التلقائي")}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-                                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                                    <span>{t("Voice input & real-time audio explanations", "إمكانية التحدث الصوتي وسماع الشرح الطبي المباشر")}</span>
-                                </div>
-                            </div>
-
-                            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                                <Button href="/pricing" variant="primary" className="w-full sm:w-auto px-8 py-3.5 font-black gap-2">
-                                    <Zap className="w-4 h-4" />
-                                    <span>{t("Upgrade to Ultra ($9/mo)", "الترقية إلى ألترا ($9/شهر)")}</span>
-                                </Button>
-                                <Button href="/scan" variant="ghost" className="w-full sm:w-auto text-xs text-slate-400 hover:text-white">
-                                    {t("Back to Scanner", "العودة للفحص")}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    /* ── CHAT MESSAGES & INPUT FOR ULTRA USERS ── */
-                    <>
-                        {/* Scrollable Messages */}
-                        <div
-                            ref={chatContainerRef}
-                            onScroll={handleScroll}
-                            className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-4"
+                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
+                    <div className="flex items-center gap-2.5">
+                        <button
+                            type="button"
+                            onClick={() => setSidebarOpen((prev) => !prev)}
+                            className={cn(
+                                "p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold select-none",
+                                sidebarOpen
+                                    ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+                                    : "bg-white/[0.03] hover:bg-cyan-500/10 border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200"
+                            )}
+                            title={isArabic ? "سجل المحادثات" : "Chat History"}
                         >
+                            <Menu className="w-4 h-4" />
+                            <span className="hidden sm:inline">{isArabic ? "المحادثات" : "Chats"}</span>
+                        </button>
+
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-[11px] font-bold text-slate-200">
+                                Qure AI
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={handleNewChat}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-cyan-500/15 border border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200 text-xs font-semibold transition-all cursor-pointer"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">{isArabic ? "محادثة جديدة" : "New Chat"}</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── CHAT MESSAGES & INPUT ── */}
+                <div
+                    ref={chatContainerRef}
+                    onScroll={handleScroll}
+                    className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-4"
+                >
                             <div className="max-w-3xl mx-auto space-y-4">
 
                                 {/* Smart Unified Linked Context Banner */}
@@ -919,9 +865,7 @@ export function AiChatPage() {
                                 </div>
                             </div>
                         </div>
-                    </>
-                )}
-            </div>
-        </main>
-    );
-}
+                    </div>
+                </main>
+            );
+        }

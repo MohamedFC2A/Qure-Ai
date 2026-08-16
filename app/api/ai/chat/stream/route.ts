@@ -82,10 +82,12 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Check ULTRA plan access
+        // Check Plan & Credits Access
         const isDev = process.env.NODE_ENV === "development" || Boolean(localDevUser);
-        let plan = "ultra";
-        if (!isDev && supabase) {
+        let plan = "free";
+        if (isDev) {
+            plan = "ultra";
+        } else if (supabase) {
             try {
                 plan = await getUserPlan(user.id, supabase);
             } catch {
@@ -93,20 +95,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        if (plan !== "ultra" && !isDev) {
-            return new Response(
-                JSON.stringify({
-                    error:
-                        language === "ar"
-                            ? "ميزة Qure AI متاحة حصرياً لمشتركي باقة ULTRA. يرجى الترقية لاستخدام المساعد الذكي."
-                            : "Qure AI is available exclusively on the ULTRA plan. Please upgrade your plan to access Qure AI.",
-                    requiresUltra: true,
-                }),
-                { status: 402, headers: { "Content-Type": "application/json" } }
-            );
-        }
-
-        // Safe Credit Check
+        // Safe Credit Check for all users
         if (!isDev && supabase) {
             try {
                 const creditStatus = await getCreditsStatus(user.id, supabase);
@@ -115,9 +104,10 @@ export async function POST(req: NextRequest) {
                         JSON.stringify({
                             error:
                                 language === "ar"
-                                    ? "عذراً، لقد استنفدت رصيد النقاط المتاح لك هذا الشهر. يرجى الترقية إلى باقة ULTRA."
-                                    : "Sorry, you have run out of monthly AI credits. Please upgrade your plan.",
+                                    ? "عذراً، لقد استنفدت رصيد الاستشارات المتاح لك. يرجى الترقية إلى باقة ULTRA للاستمرار بدون قيود."
+                                    : "Sorry, you have run out of consultation credits. Please upgrade to ULTRA plan for unlimited access.",
                             outOfCredits: true,
+                            requiresUltra: true,
                         }),
                         { status: 402, headers: { "Content-Type": "application/json" } }
                     );
