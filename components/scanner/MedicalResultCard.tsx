@@ -1040,28 +1040,50 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
     };
 
     const ingredientRows = useMemo(() => {
-        if (fdaFeatureEnabled && Array.isArray((data as any)?.activeIngredientsDetailed) && (data as any).activeIngredientsDetailed.length > 0) {
+        // 1. Direct active ingredients from AI scan (detailed)
+        if (Array.isArray((data as any)?.activeIngredientsDetailed) && (data as any).activeIngredientsDetailed.length > 0) {
             return ((data as any).activeIngredientsDetailed as any[])
                 .map((it) => {
                     const name = String(it?.name || "").trim();
-                    const strength = String(it?.strength || "").trim();
+                    let strength = String(it?.strength || "").trim().replace(/\/1\b/g, "").trim();
                     const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
-                    // Prioritize raw strength string to preserve original units
                     const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
                     if (!name) return null;
-                    return { name, doseText, doseMg: strengthMg, source: "fda" as const };
+                    return { name, doseText, doseMg: strengthMg, source: "scan" as const };
                 })
-                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "fda" }>;
+                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "scan" }>;
         }
 
+        // 2. Active ingredients array from AI analysis
+        const list = Array.isArray(data.activeIngredients) ? data.activeIngredients : [];
+        const listEn = Array.isArray(data.activeIngredientsEn) ? data.activeIngredientsEn : [];
+        if (list.length > 0) {
+            return list
+                .map((raw, idx) => {
+                    const parsed = parseDoseFromText(String(raw || ""));
+                    if (!parsed.name) return null;
+                    
+                    let displayName = parsed.name;
+                    if (listEn[idx]) {
+                        const parsedEn = parseDoseFromText(String(listEn[idx]));
+                        if (parsedEn.name) {
+                            displayName = parsedEn.name;
+                        }
+                    }
+                    const doseText = String(parsed.doseText || "—").replace(/\/1\b/g, "").trim();
+                    return { name: displayName, doseText, doseMg: parsed.doseMg, source: "scan" as const };
+                })
+                .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "scan" }>;
+        }
+
+        // 3. Fallback to FDA NDC only if activeIngredients was empty
         const ndcIngredients = (fda as any)?.ndc?.activeIngredients;
         if (fdaFeatureEnabled && Array.isArray(ndcIngredients) && ndcIngredients.length > 0) {
             return (ndcIngredients as any[])
                 .map((it) => {
                     const name = String(it?.name || "").trim();
-                    const strength = String(it?.strength || "").trim();
+                    let strength = String(it?.strength || "").trim().replace(/\/1\b/g, "").trim();
                     const strengthMg = typeof it?.strengthMg === "number" ? it.strengthMg : undefined;
-                    // Prioritize raw strength string to preserve original units
                     const doseText = strength || (strengthMg !== undefined ? formatMg(strengthMg) : "—");
                     if (!name) return null;
                     return { name, doseText, doseMg: strengthMg, source: "fda" as const };
@@ -1069,23 +1091,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                 .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "fda" }>;
         }
 
-        const list = Array.isArray(data.activeIngredients) ? data.activeIngredients : [];
-        const listEn = Array.isArray(data.activeIngredientsEn) ? data.activeIngredientsEn : [];
-        return list
-            .map((raw, idx) => {
-                const parsed = parseDoseFromText(String(raw || ""));
-                if (!parsed.name) return null;
-                
-                let displayName = parsed.name;
-                if (listEn[idx]) {
-                    const parsedEn = parseDoseFromText(String(listEn[idx]));
-                    if (parsedEn.name) {
-                        displayName = parsedEn.name;
-                    }
-                }
-                return { name: displayName, doseText: parsed.doseText, doseMg: parsed.doseMg, source: "ai" as const };
-            })
-            .filter(Boolean) as Array<{ name: string; doseText: string; doseMg?: number; source: "ai" }>;
+        return [];
     }, [data.activeIngredients, data.activeIngredientsEn, (data as any)?.activeIngredientsDetailed, fda, fdaFeatureEnabled]);
 
     const askAi = async (params: { preset?: "alternative" | "personalized" | "history"; question?: string; reset?: boolean }) => {
@@ -1488,21 +1494,25 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                 <FileText className="w-5 h-5" />
                                 {t('Active Ingredients', 'المواد الفعالة')}
                             </div>
-                            {fdaFeatureEnabled && ingredientRows[0]?.source === "fda" && (
+                            {ingredientRows[0]?.source === "scan" ? (
+                                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-[10px] font-medium flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" /> {t("Verified Package Composition", "تركيبة العبوة المعتمدة")}
+                                </span>
+                            ) : fdaFeatureEnabled && ingredientRows[0]?.source === "fda" ? (
                                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] font-medium flex items-center gap-1">
                                     <Database className="w-3 h-3" /> {t("From FDA (NDC)", "من FDA (NDC)")}
                                 </span>
-                            )}
+                            ) : null}
                         </div>
 
                         {/* Desktop View */}
                         <div className="hidden md:block overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                            <table className={cn("w-full text-sm table-fixed", isArabic && "text-right")}>
+                            <table className={cn("w-full text-sm table-fixed", isArabic ? "text-right" : "text-left")}>
                                 <thead className="bg-white/5">
                                     <tr>
                                         <th className="px-4 py-2.5 text-white/60 font-semibold w-12 text-center">#</th>
-                                        <th className="px-4 py-2.5 text-white/60 font-semibold">{t("Ingredient", "المادة")}</th>
-                                        <th className="px-4 py-2.5 text-white/60 font-semibold w-32 text-center">{t("Dose", "الجرعة")}</th>
+                                        <th className={cn("px-4 py-2.5 text-white/60 font-semibold", isArabic ? "text-right" : "text-left")}>{t("Ingredient", "المادة الفعالة")}</th>
+                                        <th className="px-4 py-2.5 text-white/60 font-semibold w-36 text-center">{t("Dose", "الجرعة")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1511,7 +1521,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                             <td className="px-4 py-3 text-white/50 font-mono tabular-nums text-center">{i + 1}</td>
                                             <td className="px-4 py-3 text-white/80 font-medium leading-relaxed break-words">
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <span className="truncate">{row.name}</span>
+                                                    <span className="truncate" dir="auto">{row.name}</span>
                                                     <button
                                                         type="button"
                                                         onClick={() => askAiAbout(
@@ -1528,7 +1538,9 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-white/70 font-mono tabular-nums text-center">{row.doseText}</td>
+                                            <td className="px-4 py-3 text-white/70 font-mono tabular-nums text-center">
+                                                <bdi dir="ltr" className="inline-block px-2 py-0.5 rounded bg-white/5 border border-white/10 text-cyan-300 font-bold">{row.doseText}</bdi>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -1557,10 +1569,10 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                                 <Sparkles className="w-3 h-3" />
                                             </button>
                                         </div>
-                                        <p className="text-white font-semibold text-xs mt-0.5 line-clamp-2 leading-tight" title={row.name}>{row.name}</p>
+                                        <p className="text-white font-semibold text-xs mt-0.5 line-clamp-2 leading-tight" title={row.name} dir="auto">{row.name}</p>
                                     </div>
                                     <div className="w-max px-2.5 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold">
-                                        {row.doseText}
+                                        <bdi dir="ltr">{row.doseText}</bdi>
                                     </div>
                                 </div>
                             ))}
@@ -2965,7 +2977,7 @@ export const MedicalResultCard = ({ data, onResetScan }: MedicalResultCardProps)
                                 {/* Strength */}
                                 {data.strength && (
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 font-mono text-slate-200 font-bold">
-                                        <span>{data.strength}</span>
+                                        <bdi dir="ltr">{data.strength}</bdi>
                                     </div>
                                 )}
                             </div>

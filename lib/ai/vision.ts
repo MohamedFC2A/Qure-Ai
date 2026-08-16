@@ -104,29 +104,149 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
     const lowerRaw = rawText.toLowerCase();
     const foundBrand = brandMatches.find((b) => lowerRaw.includes(b.key));
 
-    const isParacetamol = combinedText.includes("doliprane") || combinedText.includes("paracetamol") || combinedText.includes("panadol") || combinedText.includes("acetaminophen") || combinedText.includes("cetal") || combinedText.includes("abimol");
+    const isCongestal = combinedText.includes("congestal") || (combinedText.includes("paracetamol") && (combinedText.includes("pseudoephedrine") || combinedText.includes("chlorpheniramine")));
+    const isAugmentin = combinedText.includes("augmentin") || (combinedText.includes("amoxicillin") && combinedText.includes("clavulan"));
+    const isFlumox = combinedText.includes("flumox") || (combinedText.includes("amoxicillin") && combinedText.includes("flucloxacillin"));
+    const isParacetamol = !isCongestal && (combinedText.includes("doliprane") || combinedText.includes("paracetamol") || combinedText.includes("panadol") || combinedText.includes("acetaminophen") || combinedText.includes("cetal") || combinedText.includes("abimol"));
     const isIbuprofen = combinedText.includes("ibuprofen") || combinedText.includes("brufen") || combinedText.includes("advil") || combinedText.includes("spidifen") || combinedText.includes("nurofen");
 
-    if (isParacetamol) {
+    if (isCongestal) {
+        const defaultBrand = "Congestal";
+        if (!res.drugName || res.drugName === "Unknown") res.drugName = defaultBrand;
+        if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = defaultBrand;
+        if (!res.genericName || res.genericName === "Unknown") {
+            res.genericName = isAr ? "باراسيتامol + كلورفينيرامين + سودوإيفيدرين" : "Paracetamol + Chlorpheniramine + Pseudoephedrine";
+        }
+        if (!res.genericNameEn || res.genericNameEn === "Unknown") {
+            res.genericNameEn = "Paracetamol + Chlorpheniramine Maleate + Pseudoephedrine Hydrochloride";
+        }
+        if (!res.strength || res.strength === "1000 mg" || res.strength === "1000mg" || res.strength === "Unknown") {
+            res.strength = "500 mg + 2 mg + 30 mg";
+        }
+        if (!res.form) res.form = isAr ? "أقراص مغلفة (Film-coated tablets)" : "Film-coated tablets";
+        if (!res.category) res.category = isAr ? "علاج نزلات البرد والاحتقان والأنفلونزا (مركّب متعدد المواد)" : "Cold, Flu & Multi-Symptom Nasal Decongestant";
+        
+        if (!Array.isArray(res.activeIngredients) || res.activeIngredients.length < 2) {
+            res.activeIngredients = [
+                "Paracetamol 500mg",
+                "Chlorpheniramine maleate 2mg",
+                "Pseudoephedrine hydrochloride 30mg"
+            ];
+            res.activeIngredientsEn = [
+                "Paracetamol 500mg",
+                "Chlorpheniramine maleate 2mg",
+                "Pseudoephedrine hydrochloride 30mg"
+            ];
+            res.activeIngredientsDetailed = [
+                { name: "Paracetamol", strength: "500 mg", strengthMg: 500 },
+                { name: "Chlorpheniramine maleate", strength: "2 mg", strengthMg: 2 },
+                { name: "Pseudoephedrine hydrochloride", strength: "30 mg", strengthMg: 30 }
+            ];
+        }
+
+        if (res.uses.length === 0) {
+            res.uses = isAr
+                ? [
+                    "التخفيف السريع والشامل من أعراض نزلات البرد والأنفلونزا الشديدة",
+                    "إزالة احتقان الأنف والجيوب الأنفية وتسهيل التنفس",
+                    "تسكين آلام الصداع، آلام الجسم، والتهاب الحلق المصاحب للزكام",
+                    "علاج الرشح والعطس والعيون الدامعة الناتجة عن الحساسية الموسمية"
+                ]
+                : [
+                    "Fast, multi-symptom relief from cold and flu symptoms",
+                    "Relief of nasal and sinus congestion to restore clear breathing",
+                    "Relief of headache, body aches, sore throat, and fever",
+                    "Relief of runny nose, sneezing, and watery itchy eyes"
+                ];
+        }
+
+        if (!res.dosage || res.dosage.includes("Consult") || res.dosage.includes("استشر") || res.dosage.includes("1000")) {
+            res.dosage = isAr
+                ? "البالغون والأطفال من سن 12 عاماً فما فوق: قرص واحد كل 4 إلى 6 ساعات عند الحاجة. الجرعة القصوى: لا تتجاوز 4 أقراص خلال 24 ساعة. يُبلع القرص كاملاً مع كوب من الماء."
+                : "Adults & Children 12 years and older: 1 tablet every 4 to 6 hours as needed. Maximum dose: Do not exceed 4 tablets in 24 hours. Swallow whole with a full glass of water.";
+        }
+
+        if (res.sideEffects.length === 0) {
+            res.sideEffects = isAr
+                ? [
+                    "النعاس أو الخمول الخفيف (بسبب مضاد الهيستامين)",
+                    "جفاف في الفم أو الحلق",
+                    "صداع خفيف أو أرق وعصبية بسيطة لدى بعض الأفراد"
+                ]
+                : [
+                    "Drowsiness or mild sedation (due to antihistamine component)",
+                    "Dryness of the mouth, nose, or throat",
+                    "Mild headache, nervousness, or restlessness in sensitive individuals"
+                ];
+        }
+
+        if (res.warnings.length === 0) {
+            res.warnings = isAr
+                ? [
+                    "يحتوي على باراسيتامول: لا تتناول أي دواء آخر يحتوي على باراسيتامول لتجنب زيادة الجرعة",
+                    "يحتوي على سودوإيفيدرين: يجب الحذر لدى مرضى ارتفاع ضغط الدم، أمراض القلب التاجية، أو تضخم البروستاتا",
+                    "يحتوي على كلورفينيرامين: قد يسبب النعاس؛ يُنصح بتجنب قيادة السيارة أو تشغيل الآلات أثناء استخدامه"
+                ]
+                : [
+                    "Contains Paracetamol: Do not combine with other paracetamol-containing medications to avoid overdose",
+                    "Contains Pseudoephedrine: Exercise strict caution in patients with hypertension, coronary artery disease, or prostatic hypertrophy",
+                    "Contains Chlorpheniramine: May cause drowsiness; avoid driving or operating machinery while taking this medication"
+                ];
+        }
+
+        if (res.contraindications.length === 0) {
+            res.contraindications = isAr
+                ? ["الحساسية المفرطة لأي من مكونات المستحضر", "ارتفاع ضغط الدم الشديد غير المنضبط أو أمراض الشرايين التاجية الحادة", "الاستخدام المتزامن مع مثبطات أكسيداز أحادي الأمين (MAOIs) أو خلال 14 يوماً من إيقافها"]
+                : ["Known hypersensitivity to any of the active components", "Severe uncontrolled hypertension or severe coronary artery disease", "Concomitant use of monoamine oxidase inhibitors (MAOIs) or within 14 days of cessation"];
+        }
+
+        if (res.interactions.length === 0) {
+            res.interactions = isAr
+                ? [
+                    "مثبطات MAO ومضادات الاكتئاب: خطر ارتفاع ضغط الدم الحاد",
+                    "المهدئات ومضادات القلق: تزيد من تأثير النعاس والخمول",
+                    "أدوية الضغط المرتفع: قد يقلل السودوإيفيدرين من فاعليتها الخافضة للضغط"
+                ]
+                : [
+                    "MAO inhibitors & Antidepressants: Risk of severe hypertensive crisis",
+                    "Sedatives & Alcohol: Increased CNS depression and drowsiness",
+                    "Antihypertensive agents: Pseudoephedrine may attenuate antihypertensive efficacy"
+                ];
+        }
+
+        if (res.whenToSeekHelp.length === 0) {
+            res.whenToSeekHelp = isAr
+                ? [
+                    "استمرار الأعراض أو تفاقمها لأكثر من 7 أيام دون تحسن",
+                    "ارتفاع شديد في ضغط الدم، خفقان سريع وغير منتظم في القلب، أو دوخة شديدة",
+                    "ظهور علامات حساسية حادة مثل طفح جلدي مفاجئ أو صعوبة في التنفس"
+                ]
+                : [
+                    "Symptoms persisting for more than 7 days or worsening with high fever",
+                    "Severe palpitations, rapid heartbeat, marked hypertension, or severe dizziness",
+                    "Signs of severe allergic reaction (rash, difficulty breathing, facial swelling)"
+                ];
+        }
+    } else if (isParacetamol) {
         const defaultBrand = foundBrand ? foundBrand.name : "Panadol / Doliprane";
         if (!res.drugName || res.drugName === "Unknown" || res.drugName.toLowerCase() === "paracetamol" || res.drugName.toLowerCase() === "acetaminophen") {
             res.drugName = res.strength ? `${defaultBrand} ${res.strength}` : defaultBrand;
         }
         if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = res.drugName;
-        if (!res.genericName || res.genericName === "Unknown") res.genericName = "Paracetamol (Acetaminophen)";
+        if (!res.genericName || res.genericName === "Unknown") res.genericName = isAr ? "باراسيتامول (أسيتامينوفين)" : "Paracetamol (Acetaminophen)";
         if (!res.genericNameEn || res.genericNameEn === "Unknown") res.genericNameEn = "Paracetamol (Acetaminophen)";
-        if (!res.strength) res.strength = "1000 mg";
+        if (!res.strength) res.strength = "500 mg";
         if (!res.form) res.form = isAr ? "أقراص مغلفة" : "Film-coated tablets";
         if (!res.category) res.category = isAr ? "مسكن للآلام وخافض للحرارة" : "Analgesics & Antipyretics";
-        if (res.activeIngredients.length === 0) res.activeIngredients = ["Paracetamol 1000mg"];
+        if (res.activeIngredients.length === 0) res.activeIngredients = [`Paracetamol ${res.strength}`];
 
         if (res.uses.length === 0) {
             res.uses = isAr
                 ? [
                     "تسكين الآلام الخفيفة إلى المتوسطة (الصداع، آلام الأسنان، آلام العضلات والمفاصل)",
-                    "خافض ممتاز للحرارة والحمى الشديدة",
-                    "التخفيف من أعراض نزلات البرد والانفلونزا وآلام الجسم",
-                    "مسكن لآلام الدورة الشهرية وآلام الظهر"
+                    "خافض فعال للحرارة والحمى",
+                    "التخفيف من أعراض نزلات البرد والإنفلونزا وآلام الجسم",
+                    "تسكين آلام الدورة الشهرية وآلام الظهر"
                 ]
                 : [
                     "Relief of mild to moderate pain (headache, toothache, muscle aches, joint pain)",
@@ -137,15 +257,20 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
         }
 
         if (!res.dosage || res.dosage.includes("Consult") || res.dosage.includes("استشر")) {
+            const is500 = res.strength.includes("500");
             res.dosage = isAr
-                ? "البالغون والأطفال فوق 15 سنة: قرص واحد (1000 مجم) كل 6 إلى 8 ساعات عند الحاجة. الجرعة القصوى المطلقة: 4000 مجم (4 أقراص) في 24 ساعة. يُفضل بلع القرص مع كوب كامل من الماء."
-                : "Adults & Children over 15 years: 1 tablet (1000mg) every 6 to 8 hours as needed. Absolute maximum daily dose: 4000mg (4 tablets) in 24 hours. Swallowed whole with a full glass of water.";
+                ? (is500 
+                    ? "البالغون والأطفال فوق 12 سنة: قرص إلى قرصين (500-1000 مجم) كل 4 إلى 6 ساعات عند الحاجة. الجرعة القصوى: 4000 مجم (8 أقراص من عيار 500 مجم) في 24 ساعة."
+                    : "البالغون والأطفال فوق 15 سنة: قرص واحد (1000 مجم) كل 6 إلى 8 ساعات عند الحاجة. الجرعة القصوى: 4000 مجم (4 أقراص) في 24 ساعة.")
+                : (is500
+                    ? "Adults & Children 12+: 1 to 2 tablets (500-1000mg) every 4 to 6 hours as needed. Maximum dose: 4000mg in 24 hours."
+                    : "Adults & Children over 15 years: 1 tablet (1000mg) every 6 to 8 hours as needed. Maximum dose: 4000mg in 24 hours.");
         }
 
         if (res.sideEffects.length === 0) {
             res.sideEffects = isAr
                 ? [
-                    "آمن للغاية عند الالتزام بالجرعات الموصى بها",
+                    "آمن للغاية عند الالتزام بالجرعات المقررة",
                     "نادراً جداً: تفاعلات تحسسية جلدية (طفح جلدي، حكة)",
                     "اضطرابات خفيفة في الجهاز الهضمي أو غثيان عابر عند تناوله على معدة فارغة"
                 ]
@@ -159,14 +284,14 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
         if (res.warnings.length === 0) {
             res.warnings = isAr
                 ? [
-                    "تحذير هام: لا تتناول أكثر من 4000 مجم (4 أقراص) يومياً لتجنب التسمم الكبدي الحاد",
+                    "تحذير هام: لا تتناول أكثر من 4000 مجم يومياً لتجنب التسمم الكبدي الحاد",
                     "تجنب تناول أدوية أخرى تحتوي على الباراسيتامول في نفس الوقت (مثل أدوية البرد المركبة)",
-                    "الحذر الشديد لدى مرضى القشور الكبدي أو الكلوي أو مستهلكي الكحول"
+                    "الحذر الشديد لدى مرضى القصور الكبدي أو الكلوي"
                 ]
                 : [
-                    "CRITICAL WARNING: Do not exceed 4000mg (4 tablets) daily to avoid severe liver toxicity",
-                    "Avoid co-administration with other paracetamol-containing medications (e.g., cold & flu multisymptom formulations)",
-                    "Exercise extreme caution in patients with hepatic impairment, renal dysfunction, or chronic alcohol use"
+                    "CRITICAL WARNING: Do not exceed 4000mg daily to avoid severe liver toxicity",
+                    "Avoid co-administration with other paracetamol-containing medications",
+                    "Exercise caution in patients with hepatic or renal impairment"
                 ];
         }
 
@@ -193,12 +318,12 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
                 ? [
                     "استمرار الحمى لأكثر من 3 أيام أو استمرار الألم لأكثر من 5 أيام دون تحسن",
                     "ظهور أعراض حساسية شديدة (صعوبة التنفس، تورم الشفتين أو الوجه، طفح جلدي مفاجئ)",
-                    "ألم شديد في أعلى اليمين من البطن أو غثيان شديد أو صفار العينين (يرقان)"
+                    "ألم شديد في أعلى اليمين من البطن أو صفار العينين (يرقان)"
                 ]
                 : [
                     "Fever persisting for >3 days or pain persisting for >5 days without improvement",
                     "Signs of severe allergic reaction (difficulty breathing, swelling of face/lips, sudden rash)",
-                    "Severe upper right abdominal pain, persistent vomiting, or jaundice (yellowing of skin/eyes)"
+                    "Severe upper right abdominal pain, persistent vomiting, or jaundice"
                 ];
         }
     } else if (isIbuprofen) {
@@ -207,18 +332,18 @@ function normalizeAndEnrichAnalysis(parsed: any, language: "en" | "ar", rawText:
             res.drugName = res.strength ? `${defaultBrand} ${res.strength}` : defaultBrand;
         }
         if (!res.drugNameEn || res.drugNameEn === "Unknown") res.drugNameEn = res.drugName;
-        if (!res.genericName || res.genericName === "Unknown") res.genericName = "Ibuprofen";
+        if (!res.genericName || res.genericName === "Unknown") res.genericName = isAr ? "إيبوبروفين" : "Ibuprofen";
         if (!res.genericNameEn || res.genericNameEn === "Unknown") res.genericNameEn = "Ibuprofen";
         if (!res.strength) res.strength = "400 mg";
         if (!res.category) res.category = isAr ? "مضاد التهاب غير ستيرويدي (NSAID)" : "Non-Steroidal Anti-Inflammatory Drug (NSAID)";
-        if (res.activeIngredients.length === 0) res.activeIngredients = ["Ibuprofen"];
+        if (res.activeIngredients.length === 0) res.activeIngredients = [`Ibuprofen ${res.strength}`];
 
         if (res.uses.length === 0) {
             res.uses = isAr
                 ? [
                     "علاج التهاب المفاصل والعظام وتخفيف التورم والآلام",
                     "تسكين الآلام الحادة (الصداع النصفي، آلام الأسنان، آلام العضلات)",
-                    "خافض للحرارة ومضاد لالتهابات الجسم",
+                    "خافض للحرارة ومضاد للالتهاب",
                     "تخفيف آلام تقلصات الطمث والدورة الشهرية"
                 ]
                 : [

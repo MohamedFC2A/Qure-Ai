@@ -353,13 +353,18 @@ export async function POST(req: NextRequest) {
                     };
                 }
 
-                if (ndcSnapshot?.activeIngredients?.length) {
+                const existingActives = (data as any)?.activeIngredientsDetailed || (data as any)?.activeIngredients;
+                const hasValidScanActives = Array.isArray(existingActives) && existingActives.length > 0;
+
+                if (!hasValidScanActives && ndcSnapshot?.activeIngredients?.length) {
                     activeIngredientsDetailed = ndcSnapshot.activeIngredients.slice(0, 12).map((ai: any) => ({
                         name: String(ai?.name || "").trim(),
-                        strength: String(ai?.strength || "").trim(),
+                        strength: String(ai?.strength || "").trim().replace(/\/1\b/g, ""),
                         strengthMg: typeof ai?.strengthMg === "number" ? ai.strengthMg : undefined,
                         source: "fda",
                     }));
+                } else if (hasValidScanActives) {
+                    activeIngredientsDetailed = (data as any)?.activeIngredientsDetailed;
                 }
             } catch (e) {
                 console.warn("openFDA NDC lookup failed:", e);
