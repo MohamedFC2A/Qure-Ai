@@ -541,10 +541,10 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
                 {/* Key Takeaways */}
                 {!isUser && displayKeyPoints && displayKeyPoints.length > 0 && (
-                    <div className={cn("mt-2.5 rounded-xl border border-white/[0.08] bg-[#0C1324] p-3.5 space-y-2 shadow-sm", isArabic ? "text-right" : "text-left")} dir={isArabic ? "rtl" : "ltr"}>
+                    <div className={cn("mt-2.5 rounded-xl border border-white/[0.08] bg-[#0C1324] p-3 space-y-2 shadow-sm", isArabic ? "text-right" : "text-left")} dir={isArabic ? "rtl" : "ltr"}>
                         <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
                             <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                            <span>{isArabic ? "أهم النقاط السريرية" : "Key Clinical Takeaways"}</span>
+                            <span>{isArabic ? "النقاط الرئيسية" : "Key Takeaways"}</span>
                         </p>
                         <div className="space-y-1.5">
                             {displayKeyPoints.map((kp, i) => (
@@ -561,7 +561,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 {!isUser && displayFollowUps && displayFollowUps.length > 0 && onSuggestionClick && (
                     <div className={cn("mt-2.5 space-y-1.5", isArabic ? "text-right" : "text-left")} dir={isArabic ? "rtl" : "ltr"}>
                         <p className="text-[11px] font-semibold text-slate-400 px-1">
-                            {isArabic ? "أسئلة متابعة مقترحة:" : "Suggested follow-ups:"}
+                            {isArabic ? "مقترحات للمتابعة:" : "Suggested follow-ups:"}
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                             {displayFollowUps.map((s, i) => (
@@ -593,8 +593,8 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                             </div>
                                             <span>
                                                 {isArabic
-                                                    ? `تم التوثيق السريري المباشر عبر ${totalSources === 1 ? "مصدر معتمد واحد" : totalSources === 2 ? "مصدرين معتمدين" : totalSources <= 10 ? `${totalSources} مصادر معتمدة` : `${totalSources} مصدراً معتمداً`}`
-                                                    : `Verified via ${totalSources} Live Medical ${totalSources === 1 ? "Source" : "Sources"}`}
+                                                    ? `توثيق عبر ${totalSources === 1 ? "مصدر معتمد" : totalSources === 2 ? "مصدرين معتمدين" : totalSources <= 10 ? `${totalSources} مصادر معتمدة` : `${totalSources} مصدراً معتمداً`}`
+                                                    : `Verified via ${totalSources} ${totalSources === 1 ? "Source" : "Sources"}`}
                                             </span>
                                         </div>
 

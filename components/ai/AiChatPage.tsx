@@ -59,24 +59,24 @@ function detectModeFromText(text: string): AiChatMode {
 }
 
 const QUICK_PROMPTS_GENERAL: { en: string; ar: string; icon: string }[] = [
-    { en: "Is this medication safe for my health profile?", ar: "هل هذا الدواء مناسب لملفي الصحي؟", icon: "💊" },
-    { en: "Check drug interactions for my medications", ar: "افحص تداخلات الأدوية بناءً على ملفي الصحي", icon: "⚠️" },
-    { en: "First aid for a bleeding laceration", ar: "إسعافات أولية لجرح قطعي ينزف", icon: "🩹" },
-    { en: "How to properly care for thermal burns?", ar: "كيف أتعامل مع حرق جلدي منزلي بشكل سليم؟", icon: "🩺" },
+    { en: "Is this medication safe for my profile?", ar: "هل هذا الدواء آمن لملفي الصحي؟", icon: "💊" },
+    { en: "Check drug interactions", ar: "فحص التداخلات الدوائية", icon: "⚠️" },
+    { en: "First aid for bleeding wounds", ar: "إسعافات الجروح والنزيف", icon: "🩹" },
+    { en: "First aid for minor burns", ar: "إسعافات الحروق المنزلية", icon: "🩺" },
 ];
 
 const QUICK_PROMPTS_MED: { en: string; ar: string; icon: string }[] = [
-    { en: "Is this suitable for my health profile & conditions?", ar: "هل هذا الدواء مناسب لملفي الصحي وحالتي؟", icon: "💊" },
-    { en: "What are the important precautions and side effects?", ar: "ما هي أهم الاحتياطات والآثار الجانبية الواجب معرفتها؟", icon: "⚠️" },
-    { en: "What is the optimal timing and dosage protocol?", ar: "ما هي الجرعة والتوقيت الأمثل للاستخدام الآمن؟", icon: "📋" },
-    { en: "Does this interact with any other drugs or food?", ar: "هل يتعارض مع أي أدوية أو مكملات أو أطعمة أخرى؟", icon: "🔍" },
+    { en: "Is this suitable for my condition?", ar: "هل هذا مناسب لحالتي الصحية؟", icon: "💊" },
+    { en: "Key side effects & precautions", ar: "الآثار الجانبية والاحتياطات", icon: "⚠️" },
+    { en: "Safe dosage & timing protocol", ar: "الجرعة السليمة ومواعيد الاستخدام", icon: "📋" },
+    { en: "Drug & food interactions", ar: "تداخلات الأدوية والأغذية", icon: "🔍" },
 ];
 
 const QUICK_PROMPTS_WOUND: { en: string; ar: string; icon: string }[] = [
-    { en: "Immediate first-aid steps for this injury", ar: "خطوات الإسعاف الأولي السريع لهذه الإصابة", icon: "🩹" },
-    { en: "Red flag symptoms requiring emergency ER", ar: "علامات الخطر التي تستدعي التوجه للطوارئ فوراً", icon: "⚠️" },
-    { en: "Proper cleaning & dressing guidelines", ar: "طريقة تنظيف وتطهير وتضميد الجرح الصحيحة", icon: "🧼" },
-    { en: "Is a tetanus vaccination needed?", ar: "هل يلزم أخذ مصل التيتانوس في هذه الحالة؟", icon: "💉" },
+    { en: "Immediate first-aid steps", ar: "إسعافات أولية فورية", icon: "🩹" },
+    { en: "Emergency red flag symptoms", ar: "علامات تستدعي الطوارئ", icon: "⚠️" },
+    { en: "Proper cleaning & dressing", ar: "تطهير وتضميد الجرح", icon: "🧼" },
+    { en: "Is a tetanus shot needed?", ar: "هل يلزم مصل التيتانوس؟", icon: "💉" },
 ];
 
 export function AiChatPage() {
@@ -752,17 +752,17 @@ export function AiChatPage() {
                                 <div className="space-y-1.5 px-2">
                                     <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                                         {selectedMedication
-                                            ? (isArabic ? `استشارة سريرية حول ${selectedMedication.drug_name || selectedMedication.drugName || "العنصر المحدد"}` : `Clinical Consultation for ${selectedMedication.drug_name || selectedMedication.drugName || "Selected Item"}`)
+                                            ? (isArabic ? `استشارة: ${selectedMedication.drug_name || selectedMedication.drugName || "العنصر المحدد"}` : `Consultation: ${selectedMedication.drug_name || selectedMedication.drugName || "Selected Item"}`)
                                             : t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
                                     </h3>
                                     <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
                                         {selectedMedication
                                             ? (isArabic
-                                                ? (activeTopic ? `الجزئية المحددة: ${activeTopic} • اسأل أي سؤال وسيجيبك الذكاء الاصطناعي بدقة كاملة.` : "اطرح أي استفسار حول الجرعات أو الآثار الجانبية أو التوافق مع ملفك الصحي.")
-                                                : (activeTopic ? `Focused topic: ${activeTopic} • Ask anything for instant clinical reasoning.` : "Ask about dosages, side effects, or personalized suitability with your health profile."))
+                                                ? (activeTopic ? `الجزئية: ${activeTopic}` : "استشارات وتحليل الجرعات والتداخلات السريرية.")
+                                                : (activeTopic ? `Topic: ${activeTopic}` : "Consult AI on dosages, interactions & safety."))
                                             : t(
-                                                "Ask about your scanned medications, verify interactions, or analyze treatment regimens with AI precision.",
-                                                "اسأل عن أدويتك المسجلة، وتحقق من التداخلات الدوائية والجرعات بدقة الذكاء الاصطناعي."
+                                                "Instant clinical AI consultations, drug safety & interaction checks.",
+                                                "استشارات طبية وتحليل دوائي وسريري فوري."
                                             )}
                                     </p>
                                 </div>
@@ -795,7 +795,7 @@ export function AiChatPage() {
                                             className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-white/[0.08] hover:border-cyan-500/40 bg-[#0C1527]/90 hover:bg-[#111D36] text-slate-300 hover:text-cyan-300 text-xs font-semibold shadow-sm active:scale-[0.98] transition-all touch-manipulation cursor-pointer"
                                         >
                                             <History className="w-3.5 h-3.5 text-cyan-400" />
-                                            <span>{isArabic ? "ربط فحص من سجلك الطبي" : "Link a scan from medical history"}</span>
+                                            <span>{isArabic ? "ربط فحص طبي" : "Link clinical scan"}</span>
                                         </button>
                                     </div>
                                 )}
