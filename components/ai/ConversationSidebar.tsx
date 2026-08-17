@@ -155,6 +155,10 @@ export function ConversationSidebar({
                     <div className="relative flex items-center">
                         <Search className="w-3.5 h-3.5 text-slate-500 absolute start-3 pointer-events-none" />
                         <input
+                            id="sidebar-search-input"
+                            name="sidebar-search-input"
+                            aria-label={isArabic ? "بحث في المحادثات" : "Search clinical conversations"}
+                            autoComplete="off"
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}

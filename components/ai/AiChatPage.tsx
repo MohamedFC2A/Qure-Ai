@@ -896,6 +896,10 @@ export function AiChatPage() {
                         <div className="rounded-2xl sm:rounded-3xl border border-white/[0.10] focus-within:border-cyan-500/50 bg-[#0B132B] shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-200 overflow-hidden">
                             <div className="flex items-end gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5">
                                 <textarea
+                                    id="clinical-chat-input"
+                                    name="clinical-chat-input"
+                                    aria-label={isArabic ? "صندوق كتابة الاستفسار الطبي" : "Clinical medical prompt input"}
+                                    autoComplete="off"
                                     ref={inputRef}
                                     value={input}
                                     onChange={handleInputChange}
