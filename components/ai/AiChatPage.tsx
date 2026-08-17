@@ -4,18 +4,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Send, Mic, MicOff, Menu, ArrowUp, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search, Sparkles, Plus, X } from "lucide-react";
+import { Send, Mic, MicOff, Menu, ArrowUp, ArrowDown, Lock, ShieldCheck, Zap, Pill, Brain, CheckCircle2, Globe, Search, Sparkles, Plus, X, Bandage, HeartPulse, History, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
 import { useSettings } from "@/context/SettingsContext";
-import { type AiChatMode, getModeConfig } from "@/lib/ai/chat";
+import { type AiChatMode } from "@/lib/ai/chat";
 import { ChatMessage, type ChatMessageData } from "./ChatMessage";
 import { ConversationSidebar, type ConversationSummary } from "./ConversationSidebar";
-import { MedicationSelect } from "./MedicationSelect";
+import { MedicationSelectModal } from "./MedicationSelect";
 
 /* ──────────────────────────────────────────────────────────
- *  AiChatPage – Unified Qure AI (Smart context, no mode juggling)
+ *  AiChatPage – Native Mobile-First Ergonomics & Zero-Glow Clean UI
  * ────────────────────────────────────────────────────────── */
 
 // Smart intent detection to auto-route mode without user interaction
@@ -58,11 +58,25 @@ function detectModeFromText(text: string): AiChatMode {
     return "health";
 }
 
-const QUICK_PROMPTS_UNIFIED: { en: string; ar: string }[] = [
-    { en: "Is this medication safe for my health profile?", ar: "هل هذا الدواء مناسب لملفي الصحي؟" },
-    { en: "First aid for a bleeding laceration", ar: "إسعافات أولية لجرح قطعي ينزف" },
-    { en: "How to properly care for thermal burns?", ar: "كيف أتعامل مع حرق جلدي منزلي بشكل سليم؟" },
-    { en: "Check drug interactions for my medications", ar: "افحص تداخلات الأدوية بناءً على ملفي الصحي" },
+const QUICK_PROMPTS_GENERAL: { en: string; ar: string; icon: string }[] = [
+    { en: "Is this medication safe for my health profile?", ar: "هل هذا الدواء مناسب لملفي الصحي؟", icon: "💊" },
+    { en: "Check drug interactions for my medications", ar: "افحص تداخلات الأدوية بناءً على ملفي الصحي", icon: "⚠️" },
+    { en: "First aid for a bleeding laceration", ar: "إسعافات أولية لجرح قطعي ينزف", icon: "🩹" },
+    { en: "How to properly care for thermal burns?", ar: "كيف أتعامل مع حرق جلدي منزلي بشكل سليم؟", icon: "🩺" },
+];
+
+const QUICK_PROMPTS_MED: { en: string; ar: string; icon: string }[] = [
+    { en: "Is this suitable for my health profile & conditions?", ar: "هل هذا الدواء مناسب لملفي الصحي وحالتي؟", icon: "💊" },
+    { en: "What are the important precautions and side effects?", ar: "ما هي أهم الاحتياطات والآثار الجانبية الواجب معرفتها؟", icon: "⚠️" },
+    { en: "What is the optimal timing and dosage protocol?", ar: "ما هي الجرعة والتوقيت الأمثل للاستخدام الآمن؟", icon: "📋" },
+    { en: "Does this interact with any other drugs or food?", ar: "هل يتعارض مع أي أدوية أو مكملات أو أطعمة أخرى؟", icon: "🔍" },
+];
+
+const QUICK_PROMPTS_WOUND: { en: string; ar: string; icon: string }[] = [
+    { en: "Immediate first-aid steps for this injury", ar: "خطوات الإسعاف الأولي السريع لهذه الإصابة", icon: "🩹" },
+    { en: "Red flag symptoms requiring emergency ER", ar: "علامات الخطر التي تستدعي التوجه للطوارئ فوراً", icon: "⚠️" },
+    { en: "Proper cleaning & dressing guidelines", ar: "طريقة تنظيف وتطهير وتضميد الجرح الصحيحة", icon: "🧼" },
+    { en: "Is a tetanus vaccination needed?", ar: "هل يلزم أخذ مصل التيتانوس في هذه الحالة؟", icon: "💉" },
 ];
 
 export function AiChatPage() {
@@ -84,24 +98,50 @@ export function AiChatPage() {
     const [error, setError] = useState<string | null>(null);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedMedication, setSelectedMedication] = useState<any>(null);
     const [liveSearchEnabled, setLiveSearchEnabled] = useState(false);
     const [activeTopic, setActiveTopic] = useState<string | null>(null);
     const [isListening, setIsListening] = useState(false);
     const [autoScroll, setAutoScroll] = useState(true);
+    const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
     const [activeMode, setActiveMode] = useState<AiChatMode>("health");
+    const [historyModalOpen, setHistoryModalOpen] = useState(false);
 
     const chatEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const autoSentRef = useRef(false);
+    const processedUrlKeyRef = useRef<string | null>(null);
 
-    // Responsive sidebar initialization
+    // Dynamic State Refs to keep callbacks completely stable & prevent infinite update loops
+    const messagesRef = useRef(messages);
+    messagesRef.current = messages;
+    const selectedMedicationRef = useRef(selectedMedication);
+    selectedMedicationRef.current = selectedMedication;
+    const activeTopicRef = useRef(activeTopic);
+    activeTopicRef.current = activeTopic;
+    const activeConversationIdRef = useRef(activeConversationId);
+    activeConversationIdRef.current = activeConversationId;
+    const liveSearchEnabledRef = useRef(liveSearchEnabled);
+    liveSearchEnabledRef.current = liveSearchEnabled;
+    const isArabicRef = useRef(isArabic);
+    isArabicRef.current = isArabic;
+
+    // Responsive sidebar initialization & Keyboard shortcuts (Ctrl+B / Cmd+B)
     useEffect(() => {
-        if (typeof window !== "undefined" && window.innerWidth < 1024) {
-            setSidebarOpen(false);
+        if (typeof window !== "undefined") {
+            setSidebarOpen(window.innerWidth >= 1024);
         }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+                e.preventDefault();
+                setSidebarOpen((prev) => !prev);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     /* ── Load conversations ── */
@@ -136,22 +176,28 @@ export function AiChatPage() {
                 );
                 if (data.conversation?.mode) setActiveMode(data.conversation.mode as AiChatMode);
                 setAutoScroll(true);
-                setTimeout(() => chatEndRef.current?.scrollIntoView(), 100);
+                setTimeout(() => {
+                    if (chatContainerRef.current) {
+                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                    }
+                }, 100);
             }
         } catch (e) { console.error("Failed to load conversation:", e); }
     }, []);
 
-    /* ── STREAMING send message ── */
+    /* ── STREAMING send message (Rock-solid, zero re-render cycle) ── */
     const sendMessage = useCallback(async (text: string, overrideMedication?: any) => {
         if (!text.trim() || isSending) return;
 
-        const currentMed = overrideMedication || selectedMedication;
+        const currentMed = overrideMedication || selectedMedicationRef.current;
+        const currentTopic = activeTopicRef.current;
+        const currentLiveSearch = liveSearchEnabledRef.current;
+        const currentLangArabic = isArabicRef.current;
 
         // Smart auto-detect mode from user's message text
         const detectedMode = detectModeFromText(text);
-        // If a medication is selected, always use medication mode
         const resolvedMode: AiChatMode = currentMed
-            ? (detectedMode === "context" ? "context" : "medication")
+            ? (currentMed.type === "wound" ? "wound" : detectedMode === "context" ? "context" : "medication")
             : detectedMode;
         setActiveMode(resolvedMode);
 
@@ -170,7 +216,7 @@ export function AiChatPage() {
         setAutoScroll(true);
 
         if (inputRef.current) {
-            inputRef.current.style.height = "auto";
+            inputRef.current.style.height = "44px";
         }
 
         const assistantId = `stream-${Date.now()}`;
@@ -178,7 +224,7 @@ export function AiChatPage() {
             id: assistantId,
             role: "assistant",
             content: "",
-            isLiveSearch: liveSearchEnabled,
+            isLiveSearch: currentLiveSearch,
             keyPoints: [],
             suggestedFollowUps: [],
             created_at: new Date().toISOString(),
@@ -186,7 +232,7 @@ export function AiChatPage() {
         setMessages((prev) => [...prev, placeholder]);
 
         try {
-            const history = [...messages, userMessage].slice(-20).map((m) => ({
+            const history = [...messagesRef.current, userMessage].slice(-20).map((m) => ({
                 role: m.role,
                 content: m.content,
             }));
@@ -194,8 +240,8 @@ export function AiChatPage() {
             const medPayload = currentMed
                 ? {
                     ...(currentMed.analysis_json || currentMed),
-                    focusedTopic: activeTopic || currentMed.focusedTopic || currentMed.topic,
-                    topic: activeTopic || currentMed.topic,
+                    focusedTopic: currentTopic || currentMed.focusedTopic || currentMed.topic,
+                    topic: currentTopic || currentMed.topic,
                   }
                 : undefined;
 
@@ -205,20 +251,20 @@ export function AiChatPage() {
                 body: JSON.stringify({
                     mode: resolvedMode,
                     question: text.trim(),
-                    conversationId: activeConversationId,
+                    conversationId: activeConversationIdRef.current,
                     messageHistory: history.slice(0, -1),
-                    language: isArabic ? "ar" : "en",
+                    language: currentLangArabic ? "ar" : "en",
                     medicationData: medPayload,
-                    forceLiveSearch: liveSearchEnabled,
+                    forceLiveSearch: currentLiveSearch,
                 }),
             });
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-                if (res.status === 402) setError(t("ULTRA plan subscription required to access Qure AI.", "يلزم الاشتراك في باقة ULTRA لاستخدام مساعد Qure AI."));
-                else if (res.status === 401) setError(t("Please log in", "يرجى تسجيل الدخول"));
-                else setError(errData.error || t("Failed to get response", "فشل في الحصول على استجابة"));
+                if (res.status === 402) setError(currentLangArabic ? "يلزم الاشتراك في باقة ULTRA لاستخدام مساعد Qure AI." : "ULTRA plan subscription required to access Qure AI.");
+                else if (res.status === 401) setError(currentLangArabic ? "يرجى تسجيل الدخول" : "Please log in");
+                else setError(errData.error || (currentLangArabic ? "فشل في الحصول على استجابة" : "Failed to get response"));
                 return;
             }
 
@@ -296,17 +342,17 @@ export function AiChatPage() {
                         if (finalAns && /(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)/i.test(finalAns)) {
                             const match = finalAns.match(/[^.!?\n]*(تحذير|خطر|احذر|تداخل|خطيرة|warning|caution|danger)[^.!?\n]*/i);
                             const warningTxt = match ? match[0].trim() : finalAns.slice(0, 140);
-                            speakVoiceOs((isArabic ? "تنبيه طبي مهم: " : "Important Medical Warning: ") + warningTxt);
+                            speakVoiceOs((currentLangArabic ? "تنبيه طبي مهم: " : "Important Medical Warning: ") + warningTxt);
                         }
 
-                        if (event.conversationId && event.conversationId !== activeConversationId) {
+                        if (event.conversationId && event.conversationId !== activeConversationIdRef.current) {
                             setActiveConversationId(event.conversationId);
                             loadConversations();
                         }
                     }
 
                     if (event.type === "error") {
-                        setError(event.error || t("Stream error", "خطأ في البث"));
+                        setError(event.error || (currentLangArabic ? "خطأ في البث" : "Stream error"));
                     }
                 } catch { /* skip invalid JSON */ }
             };
@@ -331,16 +377,23 @@ export function AiChatPage() {
             }
         } catch (e: any) {
             setMessages((prev) => prev.filter((m) => m.id !== assistantId));
-            setError(e?.message || t("Failed to send message", "فشل إرسال الرسالة"));
+            setError(e?.message || (currentLangArabic ? "فشل إرسال الرسالة" : "Failed to send message"));
         } finally {
             setIsSending(false);
             setIsStreaming(false);
         }
-    }, [activeConversationId, activeTopic, isArabic, isSending, liveSearchEnabled, loadConversations, messages, selectedMedication, speakVoiceOs, t]);
+    }, [isSending, loadConversations, speakVoiceOs]);
+
+    const sendMessageRef = useRef(sendMessage);
+    sendMessageRef.current = sendMessage;
 
     /* ── Handle URL params, sessionStorage Context, & Background Context Binding ── */
     useEffect(() => {
-        if (autoSentRef.current) return;
+        const currentUrlKey = searchParams ? searchParams.toString() : "";
+        if (processedUrlKeyRef.current === currentUrlKey && currentUrlKey !== "") {
+            return;
+        }
+        processedUrlKeyRef.current = currentUrlKey;
 
         let initialMedication: any = null;
         let initialQuestion: string | null = null;
@@ -348,7 +401,7 @@ export function AiChatPage() {
         let shouldAutoSend = false;
         let isNewChat = false;
 
-        // 1. Read rich context from sessionStorage
+        // 1. Check SessionStorage
         try {
             const raw = sessionStorage.getItem("qure_ai_active_context");
             if (raw) {
@@ -364,30 +417,32 @@ export function AiChatPage() {
             console.warn("[AiChatPage] SessionStorage context error:", err);
         }
 
-        // 2. Read URL search params as fallback / explicit query
-        if (searchParams.get("newChat") === "1" || searchParams.get("newChat") === "true") {
-            isNewChat = true;
-        }
+        // 2. Check URL SearchParams
+        if (searchParams) {
+            if (searchParams.get("newChat") === "1" || searchParams.get("newChat") === "true") {
+                isNewChat = true;
+            }
 
-        const medParam = searchParams.get("medication");
-        if (medParam && !initialMedication) {
-            try {
-                initialMedication = JSON.parse(decodeURIComponent(medParam));
-            } catch {}
-        }
+            const medParam = searchParams.get("medication");
+            if (medParam && !initialMedication) {
+                try {
+                    initialMedication = JSON.parse(decodeURIComponent(medParam));
+                } catch {}
+            }
 
-        const qParam = searchParams.get("q") || searchParams.get("question");
-        if (qParam && !initialQuestion) {
-            initialQuestion = decodeURIComponent(qParam);
-        }
+            const qParam = searchParams.get("q") || searchParams.get("question");
+            if (qParam && !initialQuestion) {
+                initialQuestion = decodeURIComponent(qParam);
+            }
 
-        const topicParam = searchParams.get("topic");
-        if (topicParam && !initialTopic) {
-            initialTopic = decodeURIComponent(topicParam);
-        }
+            const topicParam = searchParams.get("topic");
+            if (topicParam && !initialTopic) {
+                initialTopic = decodeURIComponent(topicParam);
+            }
 
-        if (searchParams.get("autoSend") === "1" || searchParams.get("autoSend") === "true") {
-            shouldAutoSend = true;
+            if (searchParams.get("autoSend") === "1" || searchParams.get("autoSend") === "true") {
+                shouldAutoSend = true;
+            }
         }
 
         if (isNewChat) {
@@ -414,12 +469,11 @@ export function AiChatPage() {
         }
 
         if (initialQuestion && shouldAutoSend) {
-            autoSentRef.current = true;
-            void sendMessage(initialQuestion, initialMedication);
+            void sendMessageRef.current(initialQuestion, initialMedication);
         } else if (initialQuestion && !shouldAutoSend) {
             setInput(initialQuestion);
         }
-    }, [searchParams, sendMessage]);
+    }, [searchParams]);
 
     /* ── Handle clinical context switch (Medication or Wound) ── */
     const handleSelectMedication = useCallback((item: any) => {
@@ -446,12 +500,30 @@ export function AiChatPage() {
         }
     }, [messages, isStreaming, autoScroll]);
 
-    /* ── Track scroll position to toggle auto-scroll ── */
+    /* ── Smart Anchor Scrolling & Keyboard Dismiss on Upward Scroll ── */
     const handleScroll = useCallback(() => {
         const container = chatContainerRef.current;
         if (!container) return;
         const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-        setAutoScroll(distanceFromBottom < 200);
+        const atBottom = distanceFromBottom < 100;
+        setAutoScroll(atBottom);
+        setShowScrollBottomBtn(!atBottom && messages.length > 1);
+
+        // Automatically dismiss virtual keyboard if user scrolls up through message history
+        if (distanceFromBottom > 150 && document.activeElement === inputRef.current) {
+            inputRef.current?.blur();
+        }
+    }, [messages.length]);
+
+    const scrollToBottom = useCallback(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+                top: chatContainerRef.current.scrollHeight,
+                behavior: "smooth",
+            });
+        }
+        setAutoScroll(true);
+        setShowScrollBottomBtn(false);
     }, []);
 
     /* ── Voice input ── */
@@ -465,7 +537,8 @@ export function AiChatPage() {
         recognition.interimResults = false;
 
         recognition.onresult = (event: any) => {
-            setInput((prev) => prev + event.results[0][0].transcript);
+            const transcript = event.results[0][0].transcript;
+            setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
             setIsListening(false);
         };
         recognition.onerror = () => setIsListening(false);
@@ -474,19 +547,22 @@ export function AiChatPage() {
         setIsListening(true);
     }, [isListening, isArabic]);
 
+    /* ── Keyboard handling: Desktop Enter sends, Mobile Enter adds newline ── */
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        const isTouchDevice = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+        
+        if (e.key === "Enter" && !e.shiftKey && !isTouchDevice) {
             e.preventDefault();
             sendMessage(input);
         }
     }, [sendMessage, input]);
 
-    /* ── Auto-grow textarea ── */
+    /* ── Auto-grow textarea smoothly from 44px to 140px ── */
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInput(e.target.value.slice(0, 2000));
         const el = e.target;
         el.style.height = "auto";
-        el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+        el.style.height = `${Math.max(44, Math.min(el.scrollHeight, 140))}px`;
     }, []);
 
     const handleNewChat = useCallback(() => {
@@ -532,24 +608,21 @@ export function AiChatPage() {
         sendMessage(text);
     }, [sendMessage]);
 
-    // Active mode indicator color
-    const modeColors: Record<AiChatMode, string> = {
-        health: "text-cyan-400",
-        medication: "text-cyan-300",
-        wound: "text-emerald-400",
-        context: "text-violet-400",
-    };
-    const modeLabels: Record<AiChatMode, { en: string; ar: string }> = {
-        health: { en: "Health AI", ar: "صحي عام" },
-        medication: { en: "Medications & Rx", ar: "أدوية وروشتات" },
-        wound: { en: "Wound & Trauma Care", ar: "طوارئ وجروح" },
-        context: { en: "Private Health Memory", ar: "الملف الصحي الخاص" },
-    };
+    // Dynamic Quick Prompt Chips based on active clinical state
+    const quickChips = useMemo(() => {
+        if (selectedMedication?.type === "wound" || activeMode === "wound") {
+            return QUICK_PROMPTS_WOUND;
+        }
+        if (selectedMedication || activeMode === "medication") {
+            return QUICK_PROMPTS_MED;
+        }
+        return QUICK_PROMPTS_GENERAL;
+    }, [selectedMedication, activeMode]);
 
-    /* ── Loading ── */
+    /* ── Loading State ── */
     if (loading) {
         return (
-            <main className="min-h-screen pt-20 px-4 bg-[#040711] flex items-center justify-center">
+            <main className="h-[100dvh] pt-16 sm:pt-20 px-4 bg-[#080D1A] flex items-center justify-center">
                 <div className="w-full max-w-3xl space-y-4">
                     <div className="h-12 skeleton rounded-2xl bg-white/[0.04]" />
                     <div className="h-[60vh] skeleton rounded-2xl bg-white/[0.04]" />
@@ -562,11 +635,11 @@ export function AiChatPage() {
 
     return (
         <main
-            className="fixed inset-0 pt-16 sm:pt-20 md:pt-20 z-40 flex overflow-hidden"
+            className="fixed inset-0 pt-14 sm:pt-16 md:pt-20 z-40 flex overflow-hidden h-[100dvh] max-h-[100dvh]"
             dir={isArabic ? "rtl" : "ltr"}
-            style={{ background: "#040711" }}
+            style={{ background: "#080D1A" }}
         >
-            {/* ── Sidebar ── */}
+            {/* ── Native Slide-Over Drawer / Desktop Sidebar ── */}
             <ConversationSidebar
                 conversations={conversations}
                 activeConversationId={activeConversationId}
@@ -578,120 +651,82 @@ export function AiChatPage() {
                 onClose={() => setSidebarOpen(false)}
             />
 
-            {/* ── Main Chat Area ── */}
-            <div className="flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden">
-                {/* Top Chat Sub-Header with Zero-Duplication Clean Controls */}
-                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 border-b border-white/[0.06] bg-[#060A17]/80 backdrop-blur-xl">
-                    <div className="flex items-center gap-2.5">
+            {/* ── Main Chat Area (Dynamic Viewport 100dvh) ── */}
+            <div className="flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden bg-[#080D1A]">
+                
+                {/* Top Chat Sub-Header (Clean Minimal Controls • Zero Redundant Badges) */}
+                <div className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-2 border-b border-white/[0.06] bg-[#080D1A]/95 backdrop-blur-xl">
+                    <div className="flex items-center gap-2">
+                        {/* Sidebar Toggle Button */}
                         <button
                             type="button"
                             onClick={() => setSidebarOpen((prev) => !prev)}
                             className={cn(
-                                "p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold select-none",
+                                "min-h-[40px] px-3 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold select-none touch-manipulation",
                                 sidebarOpen
-                                    ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
-                                    : "bg-white/[0.03] hover:bg-cyan-500/10 border-white/[0.08] hover:border-cyan-500/30 text-slate-300 hover:text-cyan-200"
+                                    ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-300"
+                                    : "bg-white/[0.03] hover:bg-cyan-500/10 active:bg-cyan-500/15 border-white/[0.08] text-slate-300"
                             )}
                             title={
                                 sidebarOpen
-                                    ? (isArabic ? "إخفاء سجل المحادثات" : "Collapse Sidebar")
-                                    : (isArabic ? "إظهار سجل المحادثات" : "Open History")
+                                    ? (isArabic ? "إخفاء سجل المحادثات (Ctrl+B)" : "Hide History (Ctrl+B)")
+                                    : (isArabic ? "إظهار سجل المحادثات (Ctrl+B)" : "Show History (Ctrl+B)")
                             }
+                            aria-label={sidebarOpen ? "Hide sidebar" : "Open sidebar"}
                         >
                             <Menu className="w-4 h-4" />
                             <span className="text-xs font-medium">
                                 {isArabic
-                                    ? (sidebarOpen ? "إخفاء السجل" : "المحادثات")
+                                    ? (sidebarOpen ? "إخفاء" : "السجل")
                                     : (sidebarOpen ? "Hide" : "Chats")
                                 }
                             </span>
                         </button>
-
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                            <span className="text-xs font-bold text-slate-200">
-                                {activeMode === "wound"
-                                    ? (isArabic ? "طوارئ وجروح" : "Wound AI")
-                                    : activeMode === "medication"
-                                        ? (isArabic ? "أدوية وروشتات" : "Medication AI")
-                                        : activeMode === "context"
-                                            ? (isArabic ? "الملف الصحي" : "Health Profile")
-                                            : (isArabic ? "مساعد Qure AI" : "Qure AI Assistant")}
-                            </span>
-                        </div>
                     </div>
-
-                    {/* Show New Chat button ONLY when sidebar is closed to eliminate dual button duplication */}
-                    {!sidebarOpen && (
-                        <div className="flex items-center gap-2 animate-fade-in">
-                            <button
-                                type="button"
-                                onClick={handleNewChat}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-200 text-xs font-semibold transition-all cursor-pointer shadow-sm"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                                <span>{isArabic ? "محادثة جديدة" : "New Chat"}</span>
-                            </button>
-                        </div>
-                    )}
                 </div>
 
-                {/* ── CHAT MESSAGES & INPUT ── */}
+                {/* ── Chat Messages Scroll Container ── */}
                 <div
                     ref={chatContainerRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 space-y-3 scrollbar-thin"
+                    className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 space-y-3 scrollbar-thin overscroll-contain"
+                    style={{ WebkitOverflowScrolling: "touch" }}
                 >
                     <div className="max-w-3xl mx-auto space-y-3">
 
-                        {/* Linked Context Banner when messages exist */}
-                        {selectedMedication && messages.length > 0 && (
-                            <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-cyan-950/40 border border-cyan-500/30 text-xs backdrop-blur-2xl shadow-[0_4px_20px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all animate-in fade-in duration-300">
-                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                    <div className="w-7 h-7 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0">
-                                        <Brain className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
-                                    </div>
-                                    <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
-                                        <span className="text-white/60 text-xs">{t("Attached Context:", "تم ربط سياق الدواء:")}</span>
-                                        <span className="font-bold text-white text-xs truncate">
-                                            {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "مستحضر دوائي" : "Medication")}
-                                        </span>
-                                        {activeTopic && (
-                                            <span className="px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-200 border border-cyan-400/30 text-[10px] font-bold">
-                                                {activeTopic}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedMedication(null);
-                                        setActiveTopic(null);
-                                        setActiveMode("health");
-                                    }}
-                                    className="text-slate-400 hover:text-rose-300 text-xs px-2.5 py-1 rounded-xl border border-white/[0.08] hover:border-rose-500/30 bg-white/[0.02] hover:bg-rose-950/30 shrink-0 transition-all font-medium cursor-pointer"
-                                >
-                                    {t("Unlink", "إلغاء الربط")}
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Welcome section when empty */}
+                        {/* Welcome Empty State (Ultra Clean & High-End Aesthetic) */}
                         {messages.length === 0 && (
-                            <div className="py-2 sm:py-5 text-center flex flex-col items-center justify-center space-y-3 sm:space-y-4">
+                            <div className="py-6 sm:py-10 text-center flex flex-col items-center justify-center space-y-4 max-w-xl mx-auto">
                                 {selectedMedication ? (
-                                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs backdrop-blur-xl shadow-[0_0_20px_rgba(6,182,212,0.15)] animate-in fade-in">
-                                        <Brain className="w-4 h-4 text-cyan-300 shrink-0 animate-pulse" />
-                                        <span className="text-cyan-200/80 font-medium">{t("Attached Context:", "تم ربط سياق الدواء:")}</span>
-                                        <span className="font-bold text-white truncate max-w-[220px]">
-                                            {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "مستحضر دوائي" : "Medication")}
-                                        </span>
-                                        {activeTopic && (
-                                            <span className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 text-[10px] font-bold">
-                                                {activeTopic}
+                                    <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-[#0E1A33] border border-cyan-500/30 text-xs shadow-md animate-fade-in max-w-full">
+                                        <div className={cn(
+                                            "w-6 h-6 rounded-xl flex items-center justify-center shrink-0 border",
+                                            selectedMedication.type === "wound"
+                                                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                                                : "bg-cyan-500/20 border-cyan-500/40 text-cyan-400"
+                                        )}>
+                                            {selectedMedication.type === "wound" ? (
+                                                <Bandage className="w-3.5 h-3.5" />
+                                            ) : (
+                                                <Pill className="w-3.5 h-3.5" />
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className="font-bold text-cyan-300 shrink-0">
+                                                {isArabic ? "تم الربط:" : "Linked:"}
                                             </span>
-                                        )}
+                                            <span className="font-bold text-white truncate max-w-[180px] sm:max-w-[280px]">
+                                                {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "مستحضر دوائي" : "Medication")}
+                                            </span>
+                                            {activeTopic && (
+                                                <>
+                                                    <span className="text-slate-600 shrink-0">•</span>
+                                                    <span className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-200 text-[11px] font-semibold border border-cyan-500/40 shrink-0 truncate max-w-[150px] sm:max-w-[220px]">
+                                                        {activeTopic.replace(/^تفاصيل\s*الجرعة:\s*/, "")}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -699,27 +734,28 @@ export function AiChatPage() {
                                                 setActiveTopic(null);
                                                 setActiveMode("health");
                                             }}
-                                            className="ms-1 p-1 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition-all cursor-pointer"
+                                            className="ms-1 p-1 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition-colors cursor-pointer shrink-0"
                                             title={t("Unlink", "إلغاء الربط")}
+                                            aria-label={t("Unlink context", "إلغاء الربط")}
                                         >
                                             <X className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#080D1A] border border-cyan-500/30 flex items-center justify-center shadow-xl select-none">
-                                        <span className="text-lg sm:text-xl font-black tracking-tight text-cyan-400 font-display">
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-b from-[#132342] to-[#0A1224] border border-cyan-500/30 flex items-center justify-center shadow-lg select-none">
+                                        <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-emerald-300 bg-clip-text text-transparent font-display">
                                             Qure
                                         </span>
                                     </div>
                                 )}
 
-                                <div className="space-y-1 max-w-md px-2">
-                                    <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                                <div className="space-y-1.5 px-2">
+                                    <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                                         {selectedMedication
-                                            ? (isArabic ? `استشارة سريرية حول ${selectedMedication.drug_name || selectedMedication.drugName || "الدواء"}` : `Clinical Consultation for ${selectedMedication.drug_name || selectedMedication.drugName || "Medication"}`)
+                                            ? (isArabic ? `استشارة سريرية حول ${selectedMedication.drug_name || selectedMedication.drugName || "العنصر المحدد"}` : `Clinical Consultation for ${selectedMedication.drug_name || selectedMedication.drugName || "Selected Item"}`)
                                             : t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
                                     </h3>
-                                    <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+                                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
                                         {selectedMedication
                                             ? (isArabic
                                                 ? (activeTopic ? `الجزئية المحددة: ${activeTopic} • اسأل أي سؤال وسيجيبك الذكاء الاصطناعي بدقة كاملة.` : "اطرح أي استفسار حول الجرعات أو الآثار الجانبية أو التوافق مع ملفك الصحي.")
@@ -731,215 +767,271 @@ export function AiChatPage() {
                                     </p>
                                 </div>
 
-                                {/* Quick Prompts */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-1">
-                                    {(selectedMedication
-                                        ? [
-                                            {
-                                                en: "Is this suitable for my health profile and chronic conditions?",
-                                                ar: "هل هذا مناسب لملفي الصحي وحالتي الشخصية؟"
-                                            },
-                                            {
-                                                en: "What are the important precautions and side effects to know?",
-                                                ar: "ما هي أهم الاحتياطات والآثار الجانبية الواجب معرفتها؟"
-                                            },
-                                            {
-                                                en: "Does this interact with any other medications or foods?",
-                                                ar: "هل يتعارض مع أي أدوية أو مكملات أو أطعمة أخرى؟"
-                                            },
-                                            {
-                                                en: "What is the optimal timing and dosage protocol?",
-                                                ar: "ما هي الجرعة والتوقيت الأمثل للاستخدام الآمن؟"
-                                            }
-                                        ]
-                                        : QUICK_PROMPTS_UNIFIED
-                                    ).map((s, i) => (
+                                {/* Quick Prompts 2-Column Responsive Grid */}
+                                <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full pt-2 px-1">
+                                    {quickChips.map((chip, i) => (
                                         <button
                                             key={i}
-                                            onClick={() => sendMessage(isArabic ? s.ar : s.en)}
-                                            className="px-3.5 py-2.5 rounded-xl text-xs text-start border border-white/[0.08] bg-[#080D1A]/80 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324]/90 backdrop-blur-xl transition-all leading-relaxed cursor-pointer"
+                                            type="button"
+                                            onClick={() => sendMessage(isArabic ? chip.ar : chip.en)}
+                                            className="p-3 rounded-2xl text-xs text-start font-medium border border-white/[0.08] bg-[#0C1527]/90 hover:bg-[#111D36] hover:border-cyan-500/40 text-slate-300 hover:text-white active:scale-[0.98] transition-all duration-150 flex flex-col justify-between gap-2 shadow-sm touch-manipulation cursor-pointer group min-h-[72px]"
                                         >
-                                            {isArabic ? s.ar : s.en}
+                                            <div className="w-7 h-7 rounded-xl bg-white/[0.05] border border-white/[0.08] group-hover:border-cyan-500/30 group-hover:bg-cyan-500/10 flex items-center justify-center text-sm transition-colors shrink-0">
+                                                {chip.icon}
+                                            </div>
+                                            <span className="text-[11.5px] font-medium leading-snug line-clamp-2 text-slate-200 group-hover:text-white">
+                                                {isArabic ? chip.ar : chip.en}
+                                            </span>
                                         </button>
                                     ))}
+                                </div>
+
+                                {/* Action to link scan from history if not attached */}
+                                {!selectedMedication && (
+                                    <div className="pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setHistoryModalOpen(true)}
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-white/[0.08] hover:border-cyan-500/40 bg-[#0C1527]/90 hover:bg-[#111D36] text-slate-300 hover:text-cyan-300 text-xs font-semibold shadow-sm active:scale-[0.98] transition-all touch-manipulation cursor-pointer"
+                                        >
+                                            <History className="w-3.5 h-3.5 text-cyan-400" />
+                                            <span>{isArabic ? "ربط فحص من سجلك الطبي" : "Link a scan from medical history"}</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Messages List */}
+                        {messages.map((msg, idx) => (
+                            <ChatMessage
+                                key={msg.id || idx}
+                                message={msg}
+                                isArabic={isArabic}
+                                accentColor={activeMode === "context" ? "violet" : activeMode === "medication" ? "emerald" : "cyan"}
+                                onSuggestionClick={handleSuggestionClick}
+                            />
+                        ))}
+
+                        {/* Error Banner */}
+                        {error && (
+                            <div className="flex items-center justify-center animate-fade-in my-2">
+                                <div className="rounded-xl border border-red-500/30 bg-red-950/40 px-4 py-2.5 text-xs text-red-200 text-center font-medium">
+                                    {error}
                                 </div>
                             </div>
                         )}
 
-                                {/* Messages */}
-                                {messages.map((msg, idx) => (
-                                    <ChatMessage
-                                        key={msg.id || idx}
-                                        message={msg}
-                                        isArabic={isArabic}
-                                        accentColor={activeMode === "context" ? "violet" : activeMode === "medication" ? "emerald" : "cyan"}
-                                        onSuggestionClick={handleSuggestionClick}
-                                    />
-                                ))}
+                        <div ref={chatEndRef} />
+                    </div>
+                </div>
 
-                                {/* Error */}
-                                {error && (
-                                    <div className="flex items-center justify-center animate-fade-in">
-                                        <div className="rounded-2xl border border-red-500/20 bg-red-950/30 px-5 py-3.5 text-xs text-red-300 text-center">
-                                            {error}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div ref={chatEndRef} />
-                            </div>
+                {/* ── STICKY BOTTOM INPUT DOCK (Zero-Clutter • One-Handed Ergonomics) ── */}
+                <div className="shrink-0 relative px-3 sm:px-6 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-white/[0.06] bg-[#080D1A]/95 backdrop-blur-2xl">
+                    {/* ── Floating "Back to Bottom" Pill Button (Positioned cleanly right above input dock) ── */}
+                    {showScrollBottomBtn && (
+                        <div className="absolute -top-10 sm:-top-11 left-1/2 -translate-x-1/2 z-30 animate-fade-in pointer-events-auto">
+                            <button
+                                type="button"
+                                onClick={scrollToBottom}
+                                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0E1A33]/95 border border-cyan-500/40 hover:bg-[#122244] active:scale-95 text-cyan-300 text-xs font-semibold shadow-xl backdrop-blur-md transition-all cursor-pointer touch-manipulation"
+                            >
+                                <ArrowDown className="w-3.5 h-3.5 animate-bounce text-cyan-400" />
+                                <span>{isArabic ? "أحدث الرسائل" : "Latest Messages"}</span>
+                            </button>
                         </div>
+                    )}
+                    <div className="max-w-3xl mx-auto space-y-2">
 
-                        {/* ── INPUT BAR ── */}
-                        <div className="shrink-0 px-3 sm:px-6 pt-3 pb-3 sm:pb-5 border-t border-white/[0.08] bg-[#080D1A]/90 backdrop-blur-2xl">
-                            <div className="max-w-3xl mx-auto space-y-2.5">
-
-                                {/* Medication picker bar — only show picker when no medication is active */}
-                                {!selectedMedication && (
-                                    <MedicationSelect
-                                        isArabic={isArabic}
-                                        onSelect={handleSelectMedication}
-                                        selected={selectedMedication}
-                                        onNavigateToScan={() => router.push("/scan")}
-                                    />
-                                )}
-
-                                {/* Premium Main Input Container */}
-                                <div className="rounded-2xl border border-white/[0.09] bg-[#0C1324]/90 focus-within:border-cyan-500/50 backdrop-blur-xl transition-all duration-200 shadow-xl overflow-hidden">
-                                    
-                                    {/* Subtitle / Mode Indicator Header */}
-                                    <div className="flex items-center justify-between px-4 pt-2.5 pb-1 border-b border-white/[0.04]">
-                                        <div className="flex items-center gap-2">
-                                            <div className={cn("flex items-center gap-1.5 text-[11px] font-bold tracking-wide", modeColors[activeMode])}>
-                                                <span className="w-2 h-2 rounded-full bg-current" />
-                                                <span>{isArabic ? modeLabels[activeMode].ar : modeLabels[activeMode].en}</span>
-                                            </div>
-                                            <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
-                                                {t("• Smart Intent Engine", "• كشف تلقائي بالذكاء الاصطناعي")}
-                                            </span>
-                                        </div>
-
-                                        {selectedMedication && (
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedMedication(null);
-                                                    setActiveTopic(null);
-                                                    setActiveMode("health");
-                                                }}
-                                                className="text-[10px] text-slate-400 hover:text-rose-400 font-medium transition-colors cursor-pointer"
-                                            >
-                                                {t("Clear selected drug", "إلغاء تحديد الدواء")}
-                                            </button>
+                        {/* Attached Medical Context Pill */}
+                        {selectedMedication && (
+                            <div className="flex items-center">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0E1A33] border border-cyan-500/30 text-xs shadow-sm animate-fade-in max-w-full">
+                                    <div className={cn(
+                                        "w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border",
+                                        selectedMedication.type === "wound"
+                                            ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                                            : "bg-cyan-500/20 border-cyan-500/40 text-cyan-400"
+                                    )}>
+                                        {selectedMedication.type === "wound" ? (
+                                            <Bandage className="w-3 h-3" />
+                                        ) : (
+                                            <Pill className="w-3 h-3" />
                                         )}
                                     </div>
-
-                                    {/* Textarea & Controls */}
-                                    <div className="flex items-end gap-2 px-4 py-2.5">
-                                        <textarea
-                                            ref={inputRef}
-                                            value={input}
-                                            onChange={handleInputChange}
-                                            onKeyDown={handleKeyDown}
-                                            placeholder={
-                                                selectedMedication && activeTopic
-                                                    ? (isArabic
-                                                        ? `اسأل أي استفسار حول ${activeTopic}...`
-                                                        : `Ask anything about ${activeTopic}...`)
-                                                    : selectedMedication
-                                                        ? t(
-                                                            `Ask about ${selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || "this medication"} or suitability…`,
-                                                            `اسأل عن ${selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || "هذا الدواء"} أو هل يناسبك…`
-                                                        )
-                                                        : liveSearchEnabled
-                                                            ? t(
-                                                                "Search live medical web & clinical databases for any topic…",
-                                                                "ابحث مباشرة عبر الويب وقواعد البيانات السريرية في أي موضوع طبي…"
-                                                            )
-                                                            : t(
-                                                                "Ask Qure AI anything — health, medications, or allergies…",
-                                                                "اسأل Qure AI أي شيء — صحة، دواء، أو عن ملفك الطبي…"
-                                                            )
-                                            }
-                                            className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder:text-slate-400/90 text-sm sm:text-base leading-normal py-1.5 resize-none min-h-[44px] max-h-[160px]"
-                                            disabled={isSending}
-                                            dir={isArabic ? "rtl" : "ltr"}
-                                            rows={1}
-                                        />
-
-                                        <div className="flex items-center gap-2 shrink-0 pb-1">
-                                            {/* Live Search quick button */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setLiveSearchEnabled((prev) => !prev)}
-                                                disabled={isSending}
-                                                className={cn(
-                                                    "w-9 h-9 rounded-xl border flex items-center justify-center transition-all duration-150 active:scale-95",
-                                                    liveSearchEnabled
-                                                        ? "bg-sky-950/80 border-sky-500/60 text-sky-300"
-                                                        : "bg-slate-800/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600"
-                                                )}
-                                                title={t("Toggle Live Medical Web Search", "تفعيل/إلغاء البحث السريري المباشر عبر الإنترنت")}
-                                            >
-                                                <Globe className={cn("w-4 h-4", liveSearchEnabled ? "text-sky-400" : "text-slate-400")} />
-                                            </button>
-
-                                            {/* Voice input button */}
-                                            <button
-                                                type="button"
-                                                onClick={toggleVoice}
-                                                disabled={isSending}
-                                                className={cn(
-                                                    "w-9 h-9 rounded-xl border flex items-center justify-center transition-all duration-150 active:scale-95",
-                                                    isListening
-                                                        ? "bg-red-950/80 border-red-800 text-red-300 animate-pulse"
-                                                        : "bg-slate-800/80 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600"
-                                                )}
-                                                title={t("Voice input", "إدخال صوتي")}
-                                            >
-                                                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                                            </button>
-
-                                            {/* Send button */}
-                                            <button
-                                                type="button"
-                                                onClick={() => sendMessage(input)}
-                                                disabled={isSending || !input.trim()}
-                                                className={cn(
-                                                    "p-2.5 rounded-xl transition-all",
-                                                    input.trim() && !isSending
-                                                        ? "bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold"
-                                                        : "bg-slate-800 text-slate-600 cursor-not-allowed"
-                                                )}
-                                            >
-                                                {isSending
-                                                    ? <div className="w-4 h-4 border-2 border-slate-900 border-t-cyan-400 rounded-full animate-spin" />
-                                                    : <ArrowUp className="w-4 h-4" />
-                                                }
-                                            </button>
-                                        </div>
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <span className="font-bold text-cyan-300 shrink-0">
+                                            {isArabic ? "تم الربط:" : "Linked:"}
+                                        </span>
+                                        <span className="font-bold text-white truncate max-w-[180px] sm:max-w-[280px]">
+                                            {selectedMedication.drug_name || selectedMedication.drugName || selectedMedication.title || (isArabic ? "فحص سريري" : "Clinical Scan")}
+                                        </span>
+                                        {activeTopic && (
+                                            <>
+                                                <span className="text-slate-600 shrink-0">•</span>
+                                                <span className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-200 text-[11px] font-semibold border border-cyan-500/35 shrink-0 truncate max-w-[140px] sm:max-w-[200px]">
+                                                    {activeTopic.replace(/^تفاصيل\s*الجرعة:\s*/, "")}
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedMedication(null);
+                                            setActiveTopic(null);
+                                            setActiveMode("health");
+                                        }}
+                                        className="ms-0.5 p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                                        title={t("Unlink", "إلغاء الربط")}
+                                        aria-label={t("Unlink context", "إلغاء الربط")}
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
+                            </div>
+                        )}
 
-                                {/* Hint row */}
-                                <div className={cn(
-                                    "flex items-center px-1",
-                                    input.length > 0 ? "justify-between" : "justify-center"
-                                )}>
-                                    <p className="text-[10px] text-slate-500 hidden lg:block">
-                                        {t("Enter to send  •  Shift+Enter for new line", "Enter للإرسال  •  Shift+Enter لسطر جديد")}
-                                    </p>
-                                    {input.length > 0 && (
-                                        <p className={cn(
-                                            "text-[10px]",
-                                            input.length > 1800 ? "text-amber-400" : "text-slate-500"
-                                        )}>
-                                            {input.length}/2000
-                                        </p>
-                                    )}
+                        {/* Main Chat Input Container */}
+                        <div className="rounded-2xl sm:rounded-3xl border border-white/[0.10] focus-within:border-cyan-500/50 bg-[#0B132B] shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-200 overflow-hidden">
+                            <div className="flex items-end gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5">
+                                <textarea
+                                    ref={inputRef}
+                                    value={input}
+                                    onChange={handleInputChange}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder={
+                                        selectedMedication && activeTopic
+                                            ? (isArabic
+                                                ? `اسأل حول ${activeTopic}...`
+                                                : `Ask about ${activeTopic}...`)
+                                            : selectedMedication
+                                                ? (isArabic
+                                                    ? `اسأل عن ${selectedMedication.drug_name || selectedMedication.drugName || "الدواء"}...`
+                                                    : `Ask about ${selectedMedication.drug_name || selectedMedication.drugName || "medication"}...`)
+                                                : liveSearchEnabled
+                                                    ? (isArabic ? "ابحث في المراجع السريرية..." : "Search clinical databases...")
+                                                    : (isArabic ? "اكتب استفسارك الطبي هنا..." : "Type your medical question here...")
+                                    }
+                                    className="flex-1 bg-transparent border-0 outline-none focus:ring-0 text-white placeholder:text-slate-500 text-[13.5px] sm:text-[14.5px] leading-relaxed py-2 resize-none min-h-[46px] max-h-[140px]"
+                                    disabled={isSending}
+                                    dir={isArabic ? "rtl" : "ltr"}
+                                    rows={1}
+                                />
+
+                                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pb-1">
+                                    {/* Attach Scan History Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setHistoryModalOpen(true)}
+                                        disabled={isSending}
+                                        className={cn(
+                                            "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center transition-all duration-150 active:scale-95 touch-manipulation cursor-pointer select-none",
+                                            selectedMedication
+                                                ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300"
+                                                : "bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-slate-400 hover:text-white"
+                                        )}
+                                        title={t("Link clinical scan from history", "ربط فحص من السجل الطبي")}
+                                        aria-label={t("Link clinical scan from history", "ربط فحص من السجل الطبي")}
+                                    >
+                                        <History className="w-4 h-4" />
+                                    </button>
+
+                                    {/* Live Search Quick Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setLiveSearchEnabled((prev) => !prev)}
+                                        disabled={isSending}
+                                        className={cn(
+                                            "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center transition-all duration-150 active:scale-95 touch-manipulation cursor-pointer select-none",
+                                            liveSearchEnabled
+                                                ? "bg-sky-500/20 border-sky-500/40 text-sky-300 shadow-sm"
+                                                : "bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-slate-400 hover:text-white"
+                                        )}
+                                        title={t("Toggle Live Medical Web Search", "تفعيل/إلغاء البحث السريري المباشر عبر الإنترنت")}
+                                        aria-label={t("Toggle Live Medical Web Search", "تفعيل/إلغاء البحث السريري المباشر عبر الإنترنت")}
+                                    >
+                                        <Globe className={cn("w-4 h-4", liveSearchEnabled ? "text-sky-300" : "text-slate-400")} />
+                                    </button>
+
+                                    {/* Voice Input Button */}
+                                    <button
+                                        type="button"
+                                        onClick={toggleVoice}
+                                        disabled={isSending}
+                                        className={cn(
+                                            "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center transition-all duration-150 active:scale-95 touch-manipulation cursor-pointer select-none",
+                                            isListening
+                                                ? "bg-red-500/20 border-red-500/40 text-red-300 animate-pulse shadow-sm"
+                                                : "bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-slate-400 hover:text-white"
+                                        )}
+                                        title={t("Voice input", "إدخال صوتي")}
+                                        aria-label={t("Voice input", "إدخال صوتي")}
+                                    >
+                                        {isListening ? (
+                                            <div className="flex items-center gap-1">
+                                                <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                                                <MicOff className="w-4 h-4 text-red-300" />
+                                            </div>
+                                        ) : (
+                                            <Mic className="w-4 h-4" />
+                                        )}
+                                    </button>
+
+                                    {/* Send Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => sendMessage(input)}
+                                        disabled={isSending || !input.trim()}
+                                        className={cn(
+                                            "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-150 select-none touch-manipulation",
+                                            input.trim() && !isSending
+                                                ? "bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 text-slate-950 font-bold shadow-[0_2px_10px_rgba(6,182,212,0.35)] hover:brightness-110 active:scale-95 cursor-pointer"
+                                                : "bg-white/[0.05] border border-white/[0.06] text-slate-600 cursor-not-allowed"
+                                        )}
+                                        title={t("Send message", "إرسال الرسالة")}
+                                        aria-label={t("Send message", "إرسال الرسالة")}
+                                    >
+                                        {isSending ? (
+                                            <div className="w-4 h-4 border-2 border-slate-900 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <ArrowUp className={cn("w-4 h-4", input.trim() ? "text-slate-950 stroke-[2.5]" : "text-slate-600")} />
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Hint row */}
+                        <div className={cn(
+                            "flex items-center px-1.5",
+                            input.length > 0 ? "justify-between" : "justify-center"
+                        )}>
+                            <p className="text-[10.5px] text-slate-500 hidden lg:block">
+                                {t("Enter to send  •  Shift+Enter for new line  •  Ctrl+B for sidebar", "Enter للإرسال  •  Shift+Enter لسطر جديد  •  Ctrl+B للسجل")}
+                            </p>
+                            {input.length > 0 && (
+                                <p className={cn(
+                                    "text-[10.5px] font-mono",
+                                    input.length > 1800 ? "text-amber-400" : "text-slate-500"
+                                )}>
+                                    {input.length}/2000
+                                </p>
+                            )}
+                        </div>
                     </div>
-                </main>
-            );
-        }
+                </div>
+            </div>
+
+            {/* ── Modal for Selecting Past Medication or Wound Scans ── */}
+            <MedicationSelectModal
+                isArabic={isArabic}
+                onSelect={handleSelectMedication}
+                selected={selectedMedication}
+                onNavigateToScan={() => router.push("/scan")}
+                isOpen={historyModalOpen}
+                onClose={() => setHistoryModalOpen(false)}
+            />
+        </main>
+    );
+}

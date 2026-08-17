@@ -34,6 +34,11 @@ export const MobileNav = () => {
         },
     ];
 
+    // Hide bottom navigation bar on /ai to allow native one-handed chat dock ergonomics
+    if (pathname === "/ai" || pathname.startsWith("/ai/")) {
+        return null;
+    }
+
     return (
         <>
             <MobileHubDrawer isOpen={isHubOpen} onClose={() => setIsHubOpen(false)} />

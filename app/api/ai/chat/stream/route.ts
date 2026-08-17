@@ -301,8 +301,8 @@ export async function POST(req: NextRequest) {
                             deepseekMessages.push({
                                 role: "user",
                                 content: language === "ar"
-                                    ? `[نتائج البحث السريري المباشر عبر الإنترنت (${searchResult.pagesCount} صفحات ومصادر طبية معتمدة)]:\n${searchResult.evidenceText}\n\nاستند إلى هذه الأدلة والمصادر السريرية المباشرة بدقة في إجابتك واستشهد بها عند اللزوم.`
-                                    : `[LIVE MEDICAL WEB SEARCH EVIDENCE (${searchResult.pagesCount} Verified Sources)]:\n${searchResult.evidenceText}\n\nIncorporate this fresh clinical evidence accurately in your answer.`
+                                    ? `[نتائج البحث السريري المباشر عبر الإنترنت (${searchResult.pagesCount} صفحات ومصادر طبية معتمدة)]:\n${searchResult.evidenceText}\n\nاستند إلى هذه الأدلة والمصادر السريرية المباشرة بدقة في إجابتك. عند الاستشهاد بمصدر، اكتب رقم المصدر بصيغة نظيفة وموحدة مثل [المصدر: #1] أو [المصدر: #1، #31]. ممنوع منعاً باتاً استخدام أي إيموجيات تعبيرية في النص نهائياً.`
+                                    : `[LIVE MEDICAL WEB SEARCH EVIDENCE (${searchResult.pagesCount} Verified Sources)]:\n${searchResult.evidenceText}\n\nIncorporate this fresh clinical evidence accurately. When citing sources, use clean bracket tokens like [Source: #1] or [Source: #1, #31]. Strictly zero emojis.`
                             });
                         }
                     }

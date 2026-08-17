@@ -1,15 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Pill, Upload, History, X, ChevronDown, ChevronUp, Bandage, Sparkles, Filter } from "lucide-react";
+import { Pill, Upload, History, X, Bandage, Plus, ScanLine } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
 import { getLocalScans } from "@/lib/localHistory";
 
 /* ──────────────────────────────────────────────────────────
- *  ClinicalContextSelect – Unified local + Supabase history picker
- *  Seamlessly supports BOTH Medications and Wounds / Trauma Scans
+ *  ClinicalContextSelect – Clean Modal / Drawer for Selecting History
+ *  Zero-Glow • Clean Matte Design • 44px Touch Targets • Zero Layout Shift
  * ────────────────────────────────────────────────────────── */
 
 export interface ClinicalHistoryItem {
@@ -28,14 +28,15 @@ interface MedicationSelectProps {
     onSelect: (item: ClinicalHistoryItem | null) => void;
     selected: ClinicalHistoryItem | null;
     onNavigateToScan: () => void;
+    isOpen: boolean;
+    onClose: () => void;
 }
 
-export function MedicationSelect({ isArabic, onSelect, selected, onNavigateToScan }: MedicationSelectProps) {
+export function MedicationSelectModal({ isArabic, onSelect, selected, onNavigateToScan, isOpen, onClose }: MedicationSelectProps) {
     const { user } = useUser();
     const [items, setItems] = useState<ClinicalHistoryItem[]>([]);
     const [filterTab, setFilterTab] = useState<"all" | "medication" | "wound">("all");
     const [loading, setLoading] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
     const supabase = createClient();
 
     const loadHistory = useCallback(async () => {
@@ -57,7 +58,7 @@ export function MedicationSelect({ isArabic, onSelect, selected, onNavigateToSca
 
             // 2. Load Remote Medications & Wounds from Supabase
             if (user?.id) {
-                // A) Fetch Medication History
+                // Fetch Medication History
                 const { data: medData } = await supabase
                     .from("medication_history")
                     .select("id, drug_name, manufacturer, created_at, analysis_json")
@@ -78,7 +79,7 @@ export function MedicationSelect({ isArabic, onSelect, selected, onNavigateToSca
                     unifiedList.push(...remoteMeds);
                 }
 
-                // B) Fetch Wound Scans
+                // Fetch Wound Scans
                 try {
                     const { data: woundData } = await supabase
                         .from("wound_scans")
@@ -122,55 +123,13 @@ export function MedicationSelect({ isArabic, onSelect, selected, onNavigateToSca
         } finally {
             setLoading(false);
         }
-    }, [user?.id, isArabic]);
+    }, [user?.id, isArabic, supabase]);
 
     useEffect(() => {
         if (isOpen) loadHistory();
     }, [isOpen, loadHistory]);
 
-    // When an item is selected, show sleek compact selected state
-    if (selected) {
-        const isWound = selected.type === "wound";
-        return (
-            <div className={cn(
-                "flex items-center gap-3 rounded-xl border px-4 py-2.5 animate-fade-in",
-                isWound
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                    : "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
-            )}>
-                <div className={cn(
-                    "w-7 h-7 rounded-lg border flex items-center justify-center shrink-0",
-                    isWound ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400" : "bg-cyan-500/20 border-cyan-500/30 text-cyan-400"
-                )}>
-                    {isWound ? <Bandage className="w-3.5 h-3.5" /> : <Pill className="w-3.5 h-3.5" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                        <p className="text-xs font-bold text-white truncate">{selected.title}</p>
-                        <span className={cn(
-                            "text-[10px] font-bold px-1.5 py-0.2 rounded uppercase",
-                            isWound ? "bg-emerald-500/20 text-emerald-300" : "bg-cyan-500/20 text-cyan-300"
-                        )}>
-                            {isWound ? (isArabic ? "جرح" : "Wound") : (isArabic ? "دواء" : "Rx")}
-                        </span>
-                    </div>
-                    <p className="text-[10px] text-slate-400">
-                        {isWound
-                            ? (isArabic ? "سياق تقييم الجروح نشط" : "Wound triage context active")
-                            : (isArabic ? "السياق الدوائي نشط" : "Medication context active")
-                        }
-                    </p>
-                </div>
-                <button
-                    onClick={() => onSelect(null)}
-                    className="p-1 rounded-lg hover:bg-white/[0.08] text-slate-400 hover:text-white transition-all"
-                    title={isArabic ? "إلغاء التحديد" : "Remove context"}
-                >
-                    <X className="w-3.5 h-3.5" />
-                </button>
-            </div>
-        );
-    }
+    if (!isOpen) return null;
 
     const filteredItems = items.filter((item) => {
         if (filterTab === "all") return true;
@@ -178,130 +137,147 @@ export function MedicationSelect({ isArabic, onSelect, selected, onNavigateToSca
     });
 
     return (
-        <div className="space-y-2">
-            {/* Action buttons — always visible */}
-            <div className="flex gap-2 flex-wrap items-center">
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className={cn(
-                        "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all",
-                        "border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.03]",
-                        "text-slate-300 hover:text-white",
-                        isOpen && "border-white/25 bg-white/[0.05] text-white"
-                    )}
-                >
-                    <History className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
-                    <span>{isArabic ? "اختر من السجل" : "Select from history"}</span>
-                    {isOpen ? <ChevronUp className="w-3 h-3 ms-0.5" /> : <ChevronDown className="w-3 h-3 ms-0.5" />}
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+            <div
+                className="w-full max-w-lg rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-[#080D1A] flex flex-col max-h-[80vh] animate-in fade-in zoom-in-95 duration-150"
+                onClick={(e) => e.stopPropagation()}
+                dir={isArabic ? "rtl" : "ltr"}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06] bg-[#0C1324]/80">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-300">
+                            <History className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-white">
+                                {isArabic ? "ربط فحص من السجل السريري" : "Link Clinical Scan"}
+                            </h3>
+                            <p className="text-[11px] text-slate-400">
+                                {isArabic ? "اختر دواء أو جرحاً مسجلاً لتخصيص الاستشارة" : "Select a scanned medication or wound to focus consultation"}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                        aria-label={isArabic ? "إغلاق" : "Close"}
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
 
-                <button
-                    onClick={onNavigateToScan}
-                    className={cn(
-                        "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all",
-                        "border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.03]",
-                        "text-slate-300 hover:text-white"
-                    )}
-                >
-                    <Upload className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-                    <span>{isArabic ? "ارفع صورة دواء أو جرح" : "Upload Scan"}</span>
-                </button>
-            </div>
-
-            {/* Dropdown clinical history list */}
-            {isOpen && (
-                <div
-                    className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl animate-fade-in bg-slate-900/95 backdrop-blur-xl"
-                >
-                    {/* Category Filter Bar */}
-                    <div className="p-2 border-b border-white/[0.06] flex items-center gap-1 bg-white/[0.02]">
+                {/* Filter Tabs & New Scan Action */}
+                <div className="p-3 border-b border-white/[0.06] flex items-center justify-between gap-2 flex-wrap bg-[#080D1A]">
+                    <div className="flex items-center gap-1.5">
                         <button
+                            type="button"
                             onClick={() => setFilterTab("all")}
                             className={cn(
-                                "px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
-                                filterTab === "all" ? "bg-white text-slate-950 font-bold" : "text-slate-400 hover:text-white"
+                                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all touch-manipulation cursor-pointer min-h-[36px]",
+                                filterTab === "all" ? "bg-white text-slate-950 font-bold" : "text-slate-400 hover:text-white bg-white/[0.03]"
                             )}
                         >
                             {isArabic ? "الكل" : "All"}
                         </button>
                         <button
+                            type="button"
                             onClick={() => setFilterTab("medication")}
                             className={cn(
-                                "px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1",
-                                filterTab === "medication" ? "bg-cyan-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
+                                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 touch-manipulation cursor-pointer min-h-[36px]",
+                                filterTab === "medication" ? "bg-cyan-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white bg-white/[0.03]"
                             )}
                         >
-                            <Pill className="w-3 h-3" />
-                            <span>{isArabic ? "سجل الأدوية" : "Medications"}</span>
+                            <Pill className="w-3.5 h-3.5" />
+                            <span>{isArabic ? "أدوية" : "Meds"}</span>
                         </button>
                         <button
+                            type="button"
                             onClick={() => setFilterTab("wound")}
                             className={cn(
-                                "px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1",
-                                filterTab === "wound" ? "bg-emerald-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
+                                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 touch-manipulation cursor-pointer min-h-[36px]",
+                                filterTab === "wound" ? "bg-emerald-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white bg-white/[0.03]"
                             )}
                         >
-                            <Bandage className="w-3 h-3" />
-                            <span>{isArabic ? "سجل الجروح" : "Wounds"}</span>
+                            <Bandage className="w-3.5 h-3.5" />
+                            <span>{isArabic ? "جروح" : "Wounds"}</span>
                         </button>
                     </div>
 
+                    <button
+                        type="button"
+                        onClick={() => {
+                            onClose();
+                            onNavigateToScan();
+                        }}
+                        className="min-h-[38px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-b from-[#22d3ee] via-[#06b6d4] to-[#10b981] text-slate-950 font-bold text-xs border-t border-white/50 border-b border-emerald-900 shadow-[0_3px_0_#047857,0_4px_10px_rgba(16,185,129,0.3)] active:translate-y-[2px] active:shadow-[0_1px_0_#047857] transition-all touch-manipulation cursor-pointer select-none"
+                    >
+                        <ScanLine className="w-4 h-4 text-slate-950 font-bold" />
+                        <span>{isArabic ? "ابدأ فحص الدواء" : "Start Medication Scan"}</span>
+                    </button>
+                </div>
+
+                {/* Items List */}
+                <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
                     {loading ? (
-                        <div className="p-3 space-y-1.5">
-                            {[1, 2, 3].map(i => <div key={i} className="h-9 animate-pulse bg-white/5 rounded-lg" />)}
+                        <div className="p-4 space-y-2">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="h-12 animate-pulse bg-white/5 rounded-xl" />
+                            ))}
                         </div>
                     ) : filteredItems.length === 0 ? (
-                        <div className="p-5 text-center space-y-2">
-                            <History className="w-6 h-6 text-slate-600 mx-auto" />
+                        <div className="py-12 text-center space-y-2 px-4">
+                            <History className="w-8 h-8 text-slate-600 mx-auto" />
                             <p className="text-xs text-slate-400">
                                 {isArabic ? "لا توجد عناصر محفوظة في هذا السجل" : "No saved items in this history"}
                             </p>
                             <button
-                                onClick={() => { setIsOpen(false); onNavigateToScan(); }}
-                                className="text-xs text-cyan-400 hover:underline font-medium"
+                                type="button"
+                                onClick={() => { onClose(); onNavigateToScan(); }}
+                                className="text-xs text-cyan-400 hover:underline font-semibold"
                             >
-                                {isArabic ? "بدء فحص جديد الآن" : "Start a scan now"}
+                                {isArabic ? "بدء فحص دواء أو جرح الآن" : "Start a scan now"}
                             </button>
                         </div>
                     ) : (
-                        <div className="max-h-56 overflow-y-auto p-1.5 space-y-1">
-                            {filteredItems.map((item) => {
-                                const isWound = item.type === "wound";
-                                return (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => {
-                                            onSelect(item);
-                                            setIsOpen(false);
-                                        }}
-                                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-white/[0.06] text-start transition-all group"
-                                    >
-                                        <div className={cn(
-                                            "w-7 h-7 rounded-lg border flex items-center justify-center shrink-0",
-                                            isWound ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" : "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
-                                        )}>
-                                            {isWound ? <Bandage className="w-3.5 h-3.5" /> : <Pill className="w-3.5 h-3.5" />}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="text-xs font-bold text-white group-hover:text-cyan-300 truncate">
-                                                    {item.title}
-                                                </p>
-                                                <span className="text-[10px] text-slate-500 shrink-0">
-                                                    {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { month: "short", day: "numeric" })}
-                                                </span>
-                                            </div>
-                                            <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                                                {item.subtitle || (isWound ? "فحص سريري" : "دواء مسجل")}
+                        filteredItems.map((item) => {
+                            const isWound = item.type === "wound";
+                            return (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => {
+                                        onSelect(item);
+                                        onClose();
+                                    }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.06] active:bg-white/[0.10] text-start transition-all min-h-[52px] touch-manipulation cursor-pointer border border-transparent hover:border-white/[0.06]"
+                                >
+                                    <div className={cn(
+                                        "w-9 h-9 rounded-xl border flex items-center justify-center shrink-0",
+                                        isWound ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" : "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
+                                    )}>
+                                        {isWound ? <Bandage className="w-4 h-4" /> : <Pill className="w-4 h-4" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className="text-xs font-bold text-white group-hover:text-cyan-300 truncate">
+                                                {item.title}
                                             </p>
+                                            <span className="text-[10px] text-slate-500 shrink-0 font-mono">
+                                                {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { month: "short", day: "numeric" })}
+                                            </span>
                                         </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                                        <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                                            {item.subtitle || (isWound ? "فحص سريري" : "دواء مسجل")}
+                                        </p>
+                                    </div>
+                                </button>
+                            );
+                        })
                     )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
