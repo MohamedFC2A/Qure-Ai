@@ -219,9 +219,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 elements.push(
                     <ul key={`ul-${elements.length}`} className="list-none space-y-2 my-2.5" dir={isArabic ? "rtl" : "ltr"}>
                         {listItems.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2.5 text-start">
+                            <li key={i} className={cn("flex items-start gap-2.5", isArabic ? "text-right" : "text-left")}>
                                 <span className="mt-2 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                                <span className="text-xs sm:text-sm leading-relaxed text-slate-200 text-start flex-1 [unicode-bidi:plaintext]" dir={isArabic ? "rtl" : "ltr"} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
+                                <span className={cn("text-xs sm:text-sm leading-relaxed text-slate-200 flex-1", isArabic ? "text-right" : "text-left")} dir={isArabic ? "rtl" : "ltr"} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
                             </li>
                         ))}
                     </ul>
@@ -281,11 +281,11 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 my-0.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 font-semibold text-xs shrink-0 align-middle"><svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>$1</span></span>'
             );
 
-            // Bold, italic, inline code with bidirectional isolation
+            // Bold, italic, inline code with clean isolate tags
             return formatted
-                .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-white [unicode-bidi:isolate]">$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em class="italic text-slate-300 [unicode-bidi:isolate]">$1</em>')
-                .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-800 text-cyan-300 text-xs font-mono border border-slate-700 [unicode-bidi:isolate]">$1</code>');
+                .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-white"><bdi>$1</bdi></strong>')
+                .replace(/\*(.+?)\*/g, '<em class="italic text-slate-300"><bdi>$1</bdi></em>')
+                .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-slate-800 text-cyan-300 text-xs font-mono border border-slate-700"><bdi>$1</bdi></code>');
         };
 
         for (let i = 0; i < lines.length; i++) {
@@ -308,17 +308,17 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
                 if (startsWithNo || (hasNegativePhrase && !startsWithYes && !lower.includes("نعم"))) {
                     elements.push(
-                        <div key={`verdict-${i}`} dir={isArabic ? "rtl" : "ltr"} className="my-2 p-3 sm:p-3.5 rounded-xl border border-red-500/30 bg-red-950/30 text-red-100 text-xs sm:text-sm font-bold flex items-start sm:items-center gap-2.5 text-start">
+                        <div key={`verdict-${i}`} dir={isArabic ? "rtl" : "ltr"} className={cn("my-2 p-3 sm:p-3.5 rounded-xl border border-red-500/30 bg-red-950/30 text-red-100 text-xs sm:text-sm font-bold flex items-start sm:items-center gap-2.5", isArabic ? "text-right" : "text-left")}>
                             <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 shrink-0 mt-0.5 sm:mt-0" />
-                            <div className="flex-1 leading-relaxed text-start [unicode-bidi:plaintext]" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                            <div className={cn("flex-1 leading-relaxed", isArabic ? "text-right" : "text-left")} dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
                         </div>
                     );
                     continue;
                 } else if (startsWithYes || (hasPositiveWords && !lower.includes("غير مناسب") && !lower.includes("غير آمن") && !lower.includes("غير مفضل"))) {
                     elements.push(
-                        <div key={`verdict-${i}`} dir={isArabic ? "rtl" : "ltr"} className="my-2 p-3 sm:p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 text-emerald-100 text-xs sm:text-sm font-bold flex items-start sm:items-center gap-2.5 text-start">
+                        <div key={`verdict-${i}`} dir={isArabic ? "rtl" : "ltr"} className={cn("my-2 p-3 sm:p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 text-emerald-100 text-xs sm:text-sm font-bold flex items-start sm:items-center gap-2.5", isArabic ? "text-right" : "text-left")}>
                             <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
-                            <div className="flex-1 leading-relaxed text-start [unicode-bidi:plaintext]" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                            <div className={cn("flex-1 leading-relaxed", isArabic ? "text-right" : "text-left")} dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
                         </div>
                     );
                     continue;
@@ -354,7 +354,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                 <thead className="bg-cyan-950/30 text-cyan-300 font-bold border-b border-white/[0.08]">
                                     <tr>
                                         {headers.map((h, hIdx) => (
-                                            <th key={hIdx} className="px-3.5 py-2.5 text-start font-bold border-x border-white/[0.04] whitespace-nowrap">
+                                            <th key={hIdx} className={cn("px-3.5 py-2.5 font-bold border-x border-white/[0.04] whitespace-nowrap", isArabic ? "text-right" : "text-left")}>
                                                 <span dangerouslySetInnerHTML={{ __html: formatInline(h) }} />
                                             </th>
                                         ))}
@@ -364,7 +364,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                     {bodyRows.map((r, rIdx) => (
                                         <tr key={rIdx} className="hover:bg-white/[0.02] transition-colors">
                                             {r.map((cell, cIdx) => (
-                                                <td key={cIdx} className="px-3.5 py-2.5 leading-relaxed border-x border-white/[0.04] text-start">
+                                                <td key={cIdx} className={cn("px-3.5 py-2.5 leading-relaxed border-x border-white/[0.04]", isArabic ? "text-right" : "text-left")}>
                                                     <span dangerouslySetInnerHTML={{ __html: formatInline(cell) }} />
                                                 </td>
                                             ))}
@@ -382,9 +382,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             if (line.startsWith("> ")) {
                 flushList();
                 elements.push(
-                    <div key={`quote-${i}`} dir={isArabic ? "rtl" : "ltr"} className="my-2.5 p-3 sm:p-3.5 rounded-xl border border-cyan-500/25 bg-cyan-950/20 text-cyan-200 text-xs sm:text-sm leading-relaxed flex items-start gap-2.5 shadow-sm text-start">
+                    <div key={`quote-${i}`} dir={isArabic ? "rtl" : "ltr"} className={cn("my-2.5 p-3 sm:p-3.5 rounded-xl border border-cyan-500/25 bg-cyan-950/20 text-cyan-200 text-xs sm:text-sm leading-relaxed flex items-start gap-2.5 shadow-sm", isArabic ? "text-right" : "text-left")}>
                         <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                        <div className="flex-1 text-start [unicode-bidi:plaintext]" dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^>\s+/, "")) }} />
+                        <div className={cn("flex-1", isArabic ? "text-right" : "text-left")} dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^>\s+/, "")) }} />
                     </div>
                 );
                 continue;
@@ -394,9 +394,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             if (line.startsWith("## ")) {
                 flushList();
                 elements.push(
-                    <h4 key={`h-${i}`} dir={isArabic ? "rtl" : "ltr"} className="font-bold text-white text-sm sm:text-base mt-4 mb-2 flex items-center gap-2 pb-1 border-b border-slate-800 text-start">
+                    <h4 key={`h-${i}`} dir={isArabic ? "rtl" : "ltr"} className={cn("font-bold text-white text-sm sm:text-base mt-4 mb-2 flex items-center gap-2 pb-1 border-b border-slate-800", isArabic ? "text-right" : "text-left")}>
                         <span className="w-1.5 h-4 rounded-full bg-cyan-400 shrink-0" />
-                        <span className="text-start [unicode-bidi:plaintext]" dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^##\s+/, "")) }} />
+                        <span className={isArabic ? "text-right" : "text-left"} dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^##\s+/, "")) }} />
                     </h4>
                 );
                 continue;
@@ -404,9 +404,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
             if (line.startsWith("### ")) {
                 flushList();
                 elements.push(
-                    <h5 key={`h-${i}`} dir={isArabic ? "rtl" : "ltr"} className="font-bold text-white text-xs sm:text-sm mt-3 mb-1.5 flex items-center gap-1.5 text-start">
+                    <h5 key={`h-${i}`} dir={isArabic ? "rtl" : "ltr"} className={cn("font-bold text-white text-xs sm:text-sm mt-3 mb-1.5 flex items-center gap-1.5", isArabic ? "text-right" : "text-left")}>
                         <span className="w-1 h-3 rounded-full bg-cyan-500/80 shrink-0" />
-                        <span className="text-start [unicode-bidi:plaintext]" dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^###\s+/, "")) }} />
+                        <span className={isArabic ? "text-right" : "text-left"} dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^###\s+/, "")) }} />
                     </h5>
                 );
                 continue;
@@ -428,7 +428,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
             flushList();
             elements.push(
-                <p key={i} dir={isArabic ? "rtl" : "ltr"} className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans text-start [unicode-bidi:plaintext]" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                <p key={i} dir={isArabic ? "rtl" : "ltr"} className={cn("text-xs sm:text-sm text-slate-200 leading-relaxed font-sans", isArabic ? "text-right" : "text-left")} dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
             );
         }
         flushList();
@@ -462,12 +462,12 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         onTouchEnd={handleTouchEnd}
                         dir={isArabic ? "rtl" : "ltr"}
                         className={cn(
-                            "rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 border text-xs sm:text-sm leading-relaxed shadow-sm transition-all select-text text-start [unicode-bidi:plaintext]",
-                            isArabic ? "rounded-tr-sm" : "rounded-tl-sm",
+                            "rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 border text-xs sm:text-sm leading-relaxed shadow-sm transition-all select-text",
+                            isArabic ? "rounded-tr-sm text-right" : "rounded-tl-sm text-left",
                             "bg-cyan-950/40 border-cyan-500/30 text-cyan-50"
                         )}
                     >
-                        <p className="whitespace-pre-wrap text-start">{message.content}</p>
+                        <p className={cn("whitespace-pre-wrap", isArabic ? "text-right" : "text-left")}>{message.content}</p>
                     </div>
                 ) : (
                     /* AI Assistant Message Bubble (Matte Dark Card, Zero Glow) */
@@ -475,12 +475,12 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         onTouchEnd={handleTouchEnd}
                         dir={isArabic ? "rtl" : "ltr"}
                         className={cn(
-                            "px-4 sm:px-5 py-3.5 sm:py-4 border border-white/[0.08] bg-[#0C1324]/95 rounded-2xl text-slate-100 leading-relaxed shadow-sm transition-all select-text text-start [unicode-bidi:plaintext]",
-                            isArabic ? "rounded-tl-sm" : "rounded-tr-sm"
+                            "px-4 sm:px-5 py-3.5 sm:py-4 border border-white/[0.08] bg-[#0C1324]/95 rounded-2xl text-slate-100 leading-relaxed shadow-sm transition-all select-text",
+                            isArabic ? "rounded-tl-sm text-right" : "rounded-tr-sm text-left"
                         )}
                     >
                         {displayContent ? (
-                            <div className="space-y-1 text-start" dir={isArabic ? "rtl" : "ltr"}>{renderMarkdown(displayContent)}</div>
+                            <div className={cn("space-y-1", isArabic ? "text-right" : "text-left")} dir={isArabic ? "rtl" : "ltr"}>{renderMarkdown(displayContent)}</div>
                         ) : (message.isLiveSearch || message.searchMetadata?.performed) ? (
                             <LiveMedicalSearchRadar isArabic={isArabic} searchMetadata={message.searchMetadata} />
                         ) : (
@@ -533,14 +533,14 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
                 {/* Key Takeaways */}
                 {!isUser && displayKeyPoints && displayKeyPoints.length > 0 && (
-                    <div className="mt-2.5 rounded-xl border border-white/[0.08] bg-[#0C1324] p-3.5 space-y-2 shadow-sm text-start" dir={isArabic ? "rtl" : "ltr"}>
+                    <div className={cn("mt-2.5 rounded-xl border border-white/[0.08] bg-[#0C1324] p-3.5 space-y-2 shadow-sm", isArabic ? "text-right" : "text-left")} dir={isArabic ? "rtl" : "ltr"}>
                         <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
                             <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                             <span>{isArabic ? "أهم النقاط السريرية" : "Key Clinical Takeaways"}</span>
                         </p>
                         <div className="space-y-1.5">
                             {displayKeyPoints.map((kp, i) => (
-                                <div key={i} className="flex items-start gap-2 text-xs text-slate-200 text-start [unicode-bidi:plaintext]">
+                                <div key={i} className={cn("flex items-start gap-2 text-xs text-slate-200", isArabic ? "text-right" : "text-left")}>
                                     <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
                                     <span className="leading-relaxed flex-1">{kp}</span>
                                 </div>
@@ -551,7 +551,7 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
 
                 {/* Suggested Follow-Ups */}
                 {!isUser && displayFollowUps && displayFollowUps.length > 0 && onSuggestionClick && (
-                    <div className="mt-2.5 space-y-1.5 text-start" dir={isArabic ? "rtl" : "ltr"}>
+                    <div className={cn("mt-2.5 space-y-1.5", isArabic ? "text-right" : "text-left")} dir={isArabic ? "rtl" : "ltr"}>
                         <p className="text-[11px] font-semibold text-slate-400 px-1">
                             {isArabic ? "أسئلة متابعة مقترحة:" : "Suggested follow-ups:"}
                         </p>
@@ -562,9 +562,9 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                                     type="button"
                                     onClick={() => onSuggestionClick(s)}
                                     dir={isArabic ? "rtl" : "ltr"}
-                                    className="px-3 py-1.5 rounded-xl text-xs font-medium border border-white/[0.08] bg-[#080D1A] text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324] active:scale-[0.98] transition-all touch-manipulation cursor-pointer text-start [unicode-bidi:isolate]"
+                                    className={cn("px-3 py-1.5 rounded-xl text-xs font-medium border border-white/[0.08] bg-[#080D1A] text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-[#0C1324] active:scale-[0.98] transition-all touch-manipulation cursor-pointer", isArabic ? "text-right" : "text-left")}
                                 >
-                                    <span className="[unicode-bidi:plaintext]">{s}</span>
+                                    <span>{s}</span>
                                 </button>
                             ))}
                         </div>
