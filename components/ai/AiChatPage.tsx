@@ -892,6 +892,25 @@ export function AiChatPage() {
                             </div>
                         )}
 
+                        {/* Live Search Active Status Badge */}
+                        {liveSearchEnabled && !selectedMedication && (
+                            <div className="flex items-center">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#09152C] border border-sky-500/30 text-xs shadow-sm animate-fade-in text-sky-300">
+                                    <Globe className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+                                    <span className="text-[11.5px] font-semibold">{isArabic ? "البحث السريري المباشر عبر الإنترنت مفعّل" : "Live Clinical Web Search Active"}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setLiveSearchEnabled(false)}
+                                        className="ms-1 p-0.5 rounded hover:bg-sky-500/20 text-slate-400 hover:text-white cursor-pointer"
+                                        title={t("Disable live search", "إلغاء تفعيل البحث")}
+                                        aria-label={t("Disable live search", "إلغاء تفعيل البحث")}
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Main Chat Input Container */}
                         <div className="rounded-2xl sm:rounded-3xl border border-white/[0.10] focus-within:border-cyan-500/50 bg-[#0B132B] shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-200 overflow-hidden">
                             <div className="flex items-end gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5">
