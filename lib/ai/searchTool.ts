@@ -52,16 +52,18 @@ export function shouldTriggerLiveMedicalSearch(prompt: string, mode: string = "h
         return true;
     }
 
-    // 2. Clinical trials, FDA recalls, regulatory approvals, and novel research updates
-    const externalRegulatoryKeywords = [
+    // 2. Clinical queries, drug safety, interactions, suitability, dosages, alternatives
+    const medicalInquiryKeywords = [
+        "هل يضر", "هل يؤثر", "هل يرفع", "هل يخفض", "هل يناسب", "هل آمن", "هل امن",
+        "فوائد", "اضرار", "أضرار", "آثار جانبية", "اثار جانبية", "جرعة", "جرعات",
+        "تداخل", "تفاعلات", "تفاعل", "بديل", "بدائل", "نقص", "زيادة", "تحليل", "فحص",
         "fda approval", "موافقة fda", "موافقة الغذاء والدواء", "هيئة الدواء", "سحب دواء",
         "drug recall", "warning letter", "تحذير رسمي", "clinical trial", "تجارب سريرية",
-        "أحدث الأبحاث", "احدث الدراسات", "أحدث دراسة", "guidelines 2025", "guidelines 2026",
-        "إرشادات 2025", "إرشادات 2026", "بروتوكول جديد", "نشرة طبية", "daily med", "pubmed",
-        "تداخل دوائي", "تفاعلات", "بديل", "active ingredient", "مادة فعالة"
+        "أحدث الأبحاث", "احدث الدراسات", "أحدث دراسة", "guidelines", "بروتوكول", "نشرة طبية",
+        "daily med", "pubmed", "active ingredient", "مادة فعالة", "contraindication", "interaction"
     ];
 
-    if (externalRegulatoryKeywords.some((kw) => text.includes(kw))) {
+    if (medicalInquiryKeywords.some((kw) => text.includes(kw))) {
         return true;
     }
 

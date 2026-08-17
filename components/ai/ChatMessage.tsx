@@ -250,6 +250,10 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                         const srcIdx = parseInt(n, 10);
                         const srcMeta = message.searchMetadata?.sources?.[srcIdx - 1];
                         const domainLabel = srcMeta?.domain ? srcMeta.domain : (isArabic ? `المصدر #${n}` : `Source #${n}`);
+                        const srcLink = srcMeta?.link;
+                        if (srcLink) {
+                            return `<a href="${srcLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 my-0.5 mx-0.5 rounded-md bg-sky-500/15 hover:bg-sky-500/25 active:bg-sky-500/35 border border-sky-500/30 hover:border-sky-400/50 text-sky-300 hover:text-sky-100 font-mono text-[10.5px] font-bold align-middle select-none shadow-sm transition-all touch-manipulation" title="${srcMeta?.title || domainLabel}"><svg class="w-3 h-3 text-sky-400 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>${domainLabel}</span></a>`;
+                        }
                         return `<span class="inline-flex items-center gap-1 px-2 py-0.5 my-0.5 mx-0.5 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 font-mono text-[10.5px] font-bold align-middle select-none shadow-sm"><svg class="w-3 h-3 text-sky-400 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>${domainLabel}</span></span>`;
                     }).join(" ");
                 }
@@ -260,6 +264,10 @@ export function ChatMessage({ message, isArabic, accentColor, onSuggestionClick 
                 const srcIdx = parseInt(n, 10);
                 const srcMeta = message.searchMetadata?.sources?.[srcIdx - 1];
                 const domainLabel = srcMeta?.domain ? srcMeta.domain : (isArabic ? `المصدر #${n}` : `Source #${n}`);
+                const srcLink = srcMeta?.link;
+                if (srcLink) {
+                    return `<a href="${srcLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 my-0.5 mx-0.5 rounded-md bg-sky-500/15 hover:bg-sky-500/25 active:bg-sky-500/35 border border-sky-500/30 hover:border-sky-400/50 text-sky-300 hover:text-sky-100 font-mono text-[10.5px] font-bold align-middle select-none shadow-sm transition-all touch-manipulation" title="${srcMeta?.title || domainLabel}"><svg class="w-3 h-3 text-sky-400 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>${domainLabel}</span></a>`;
+                }
                 return `<span class="inline-flex items-center gap-1 px-2 py-0.5 my-0.5 mx-0.5 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 font-mono text-[10.5px] font-bold align-middle select-none shadow-sm"><svg class="w-3 h-3 text-sky-400 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>${domainLabel}</span></span>`;
             });
 
