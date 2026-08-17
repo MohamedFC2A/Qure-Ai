@@ -752,14 +752,20 @@ export function AiChatPage() {
                                 <div className="space-y-1.5 px-2">
                                     <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                                         {selectedMedication
-                                            ? (isArabic ? `استشارة: ${selectedMedication.drug_name || selectedMedication.drugName || "العنصر المحدد"}` : `Consultation: ${selectedMedication.drug_name || selectedMedication.drugName || "Selected Item"}`)
+                                            ? (isArabic
+                                                ? (selectedMedication.type === "wound" || selectedMedication.analysis_json?.scanType === "wound"
+                                                    ? `استشارة إصابة: ${selectedMedication.title || selectedMedication.drug_name || "جرح"} ${selectedMedication.analysis_json?.anatomicalLocation?.location ? `(${selectedMedication.analysis_json.anatomicalLocation.location})` : ""}`
+                                                    : `استشارة: ${selectedMedication.drug_name || selectedMedication.drugName || "العنصر المحدد"}`)
+                                                : `Consultation: ${selectedMedication.title || selectedMedication.drug_name || "Selected Item"}`)
                                             : t("Qure AI Medical Assistant", "المساعد الطبي الذكي Qure AI")}
                                     </h3>
                                     <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
                                         {selectedMedication
                                             ? (isArabic
-                                                ? (activeTopic ? `الجزئية: ${activeTopic}` : "استشارات وتحليل الجرعات والتداخلات السريرية.")
-                                                : (activeTopic ? `Topic: ${activeTopic}` : "Consult AI on dosages, interactions & safety."))
+                                                ? (selectedMedication.type === "wound" || selectedMedication.analysis_json?.scanType === "wound"
+                                                    ? "استشارات سريرية دقيقة وتوجيهات التضميد والعناية بالإصابة."
+                                                    : (activeTopic ? `الجزئية: ${activeTopic}` : "استشارات وتحليل الجرعات والتداخلات السريرية."))
+                                                : (activeTopic ? `Topic: ${activeTopic}` : "Consult AI on clinical care, dosages & safety."))
                                             : t(
                                                 "Instant clinical AI consultations, drug safety & interaction checks.",
                                                 "استشارات طبية وتحليل دوائي وسريري فوري."

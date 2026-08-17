@@ -4,7 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { useSettings } from "@/context/SettingsContext";
 import { useUser } from "@/context/UserContext";
 import { AI_DISPLAY_NAME } from "@/lib/ai/branding";
-import { getLocalScans } from "@/lib/localHistory";
+import { getLocalScans, saveLocalScan } from "@/lib/localHistory";
 import { BiometricAuthModal } from "@/components/scanner/BiometricAuthModal";
 import {
     savePersistedSession,
@@ -547,6 +547,13 @@ export const ScanProvider = ({ children }: { children: React.ReactNode }) => {
             setCompletedAtMs(completedAt);
             const finalDur = ((completedAt - startedAt) / 1000).toFixed(1);
             setTotalDuration(finalDur);
+
+            // Save to local history immediately
+            try {
+                saveLocalScan(analysisData, effectiveProfileId);
+            } catch (saveErr) {
+                console.warn("[ScanContext] Local history save skipped:", saveErr);
+            }
 
             // Persist completed scan into IndexedDB
             void savePersistedSession({

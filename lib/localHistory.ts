@@ -25,6 +25,25 @@ export function getLocalScans(): StoredScanItem[] {
 export function saveLocalScan(analysisResult: any, profileId?: string | null): StoredScanItem | null {
     if (typeof window === "undefined" || !analysisResult) return null;
     try {
+        if (analysisResult.scanType === "wound" || analysisResult.woundTitle) {
+            const woundTitle = analysisResult.woundTitle || analysisResult.woundTitleEn || "Wound Assessment";
+            const loc = analysisResult.anatomicalLocation?.location || "الساعد / الذراع";
+            const existing = getLocalScans();
+            const matchedId = analysisResult.id || `local-wound-${Date.now()}`;
+            const newItem: StoredScanItem = {
+                id: matchedId,
+                profile_id: profileId || undefined,
+                drug_name: woundTitle,
+                manufacturer: `موضع: ${loc}`,
+                created_at: new Date().toISOString(),
+                analysis_json: analysisResult,
+            };
+            existing.unshift(newItem);
+            const finalItems = existing.slice(0, 100);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalItems));
+            return newItem;
+        }
+
         const drugName = analysisResult.drugNameEn || analysisResult.drugName || "Medication";
         if (!drugName || drugName === "Unknown") return null;
 

@@ -80,6 +80,16 @@ export interface ClinicalThinking {
     diagnosticRationale: string;
 }
 
+export interface AnatomicalLocationAssessment {
+    location: string;             // e.g. "الساعد الأيمن" or "باطن القدم" or "راحة اليد" or "الوجه (الخد)" or "الركبة"
+    locationEn: string;           // e.g. "Right Forearm", "Plantar Foot", "Palm of Hand", "Face (Cheek)", "Knee"
+    bodyRegion: "head_neck" | "upper_limb" | "hand_fingers" | "chest_abdomen" | "back_spine" | "lower_limb" | "foot_toes" | "general_body";
+    bodyRegionLocalized: string;  // "الرأس والوجه والرقبة", "الطرف العلوي والذراع", "اليد والأصابع", "الصدر والبطن", "الظهر", "الساق والركبة", "القدم وأصابع القدم"
+    confidence: "high" | "moderate" | "low_ambiguous";
+    isAmbiguous: boolean;         // true if image is close-up/macro crop where exact body part cannot be 100% distinguished
+    userClarificationPrompt?: string; // e.g. "حدد موضع الإصابة بدقة لضبط خطة العلاج والتضميد:"
+}
+
 export interface WoundAnalysisResult {
     id?: string;
     scanType: "wound";
@@ -87,6 +97,7 @@ export interface WoundAnalysisResult {
     categoryLocalized?: string;
     woundTitle: string;
     woundTitleEn: string;
+    anatomicalLocation: AnatomicalLocationAssessment;
     woundType:
         | "laceration"
         | "abrasion"
@@ -208,6 +219,11 @@ You must accurately identify and differentiate all clinical entities:
 
 🏷️ MANDATORY RULES:
 - "woundTitle": MUST BE CONCISE (2 to 4 words MAX). Direct, famous Arabic clinical term.
+- "anatomicalLocation": DEDUCE AND CLASSIFY THE EXACT ANATOMICAL BODY PART WITH CLINICAL PRECISION:
+  - Scrutinize visual landmarks (skin texture, hair patterns, joints, fingers/toes, nails, facial features, veins, contour).
+  - Provide specific Arabic location (e.g. "الساعد الأيمن", "باطن القدم - الكعب", "راحة اليد", "الوجه - الخد الأيسر", "الركبة", "أعلى الفخذ", "الكتف", "أصبع السبابة", "أسفل الساق").
+  - If clearly identifiable -> set "confidence": "high", "isAmbiguous": false.
+  - If it is a extreme close-up/macro view without clear anatomical landmarks -> set "confidence": "low_ambiguous", "isAmbiguous": true, specify the most probable region in "location", and provide a gentle "userClarificationPrompt" (e.g. "حدد موضع الإصابة بدقة لضبط خطة التضميد والعلاج:").
 - "clinicalThinking": Provide rigorous diagnostic reasoning (observations, differential diagnosis, and reasons for confirming the primary diagnosis).
 - "dressingProtocol.recommendedActives": Provide 2-3 safe, evidence-based active ingredients (e.g. Salicylic acid, Niacinamide, Clotrimazole, Zinc oxide, Panthenol, Hydrocolloid, Mupirocin, Silver sulfadiazine).
 - "dressingProtocol.avoidSubstances": List dangerous home remedies or harmful substances (e.g. معجون الأسنان، الكحول المركز على الجروح المفتوحة، الفرك العنيف، عصر البثور).
@@ -220,6 +236,15 @@ Return ONLY a valid, raw JSON object matching this EXACT schema:
   "categoryLocalized": "تصنيف الحالة بالعربية (مثل: فحص نوع البشرة / تشخيص أمراض جلدية / فحص زوائد ومسامير / تقييم جروح وإصابات)",
   "woundTitle": "الاسم السريري القصير المشهور المباشر (مثل: عين السمكة / حب شباب التهابي / بشرة مختلطة / مسمار القدم / خراج جلدي / حرق درجة ثانية)",
   "woundTitleEn": "Short standard clinical name in English",
+  "anatomicalLocation": {
+    "location": "الموضع التشريحي الدقيق بالعربية (مثل: الساعد الأيمن / باطن القدم / راحة اليد / الوجه - الخد الأيسر / الركبة / الصدر / الظهر / أصبع السبابة)",
+    "locationEn": "Precise Anatomical Location in English (e.g. Right Forearm, Plantar Foot, Palm of Hand, Left Cheek, Knee, Chest, Back, Index Finger)",
+    "bodyRegion": "head_neck" | "upper_limb" | "hand_fingers" | "chest_abdomen" | "back_spine" | "lower_limb" | "foot_toes" | "general_body",
+    "bodyRegionLocalized": "المنطقة الجسدية (مثل: الرأس والوجه والرقبة / الطرف العلوي والذراع / اليد والأصابع / الصدر والبطن / الظهر / الساق والركبة / القدم وأصابع القدم)",
+    "confidence": "high" | "moderate" | "low_ambiguous",
+    "isAmbiguous": false,
+    "userClarificationPrompt": "سؤال توضيحي لتحديد الموضع إذا كان غير مؤكد"
+  },
   "woundType": "acne_vulgaris" | "wart_verruca" | "corn_clavus" | "abscess_boil" | "eczema_dermatitis" | "psoriasis" | "fungal_tinea" | "burn" | "laceration" | "abrasion" | "puncture" | "insect_bite" | "skin_type_facial" | "diabetic_ulcer" | "pressure_ulcer" | "surgical_incision" | "contusion" | "cellulitis" | "other",
   "woundTypeLocalized": "النوع السريري بالعربية",
   "severity": "minor" | "moderate" | "severe" | "emergency",
@@ -483,12 +508,28 @@ export async function analyzeWoundImage(
 
     const isAr = language === "ar";
 
+    const rawLoc: any = parsed.anatomicalLocation || {};
+    const locAr = rawLoc.location || (isAr ? "الساعد أو الذراع" : "Forearm / Arm");
+    const locEn = rawLoc.locationEn || "Forearm / Arm";
+    const bodyRegion = rawLoc.bodyRegion || "upper_limb";
+    const bodyRegionAr = rawLoc.bodyRegionLocalized || (isAr ? "الطرف العلوي والذراع" : "Upper Limb & Arm");
+    const isAmbiguous = typeof rawLoc.isAmbiguous === "boolean" ? rawLoc.isAmbiguous : (!rawLoc.location || rawLoc.confidence === "low_ambiguous");
+
     const normalized: WoundAnalysisResult = {
         scanType: "wound",
         category: (parsed.category as ClinicalCategory) || "general_dermatology",
         categoryLocalized: parsed.categoryLocalized || categoryAr,
         woundTitle: isAr ? titleAr : (parsed.woundTitle || titleAr),
         woundTitleEn: parsed.woundTitleEn || titleEn,
+        anatomicalLocation: {
+            location: locAr,
+            locationEn: locEn,
+            bodyRegion: bodyRegion,
+            bodyRegionLocalized: bodyRegionAr,
+            confidence: rawLoc.confidence || (isAmbiguous ? "low_ambiguous" : "high"),
+            isAmbiguous: isAmbiguous,
+            userClarificationPrompt: rawLoc.userClarificationPrompt || (isAr ? "حدد موضع الإصابة بدقة لضبط خطة العلاج والتضميد:" : "Specify exact anatomical location:"),
+        },
         woundType: (parsed.woundType as any) || "other",
         woundTypeLocalized: parsed.woundTypeLocalized || (isAr ? titleAr : titleEn),
         severity: parsed.severity || "minor",

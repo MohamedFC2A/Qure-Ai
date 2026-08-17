@@ -24,6 +24,7 @@ import {
     RefreshCw,
     AlertTriangle,
     Loader2,
+    MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -301,9 +302,11 @@ export default function HistoryPage() {
 
     const filteredHistory = history.filter((item) => {
         const matchesCategory = categoryFilter === "all" || item.type === categoryFilter;
+        const locationStr = item.analysis_json?.anatomicalLocation?.location || item.analysis_json?.anatomical_location || "";
         const matchesSearch =
             (item.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.subtitle || "").toLowerCase().includes(searchTerm.toLowerCase());
+            (item.subtitle || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            locationStr.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 
@@ -532,6 +535,16 @@ export default function HistoryPage() {
                                             <h3 className="text-base sm:text-lg font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors truncate">
                                                 {item.title}
                                             </h3>
+
+                                            {isWound && (
+                                                <div className="mb-2 flex items-center gap-1.5 text-xs text-cyan-300 font-medium bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded-lg w-fit">
+                                                    <MapPin className="w-3 h-3 text-cyan-400 shrink-0" />
+                                                    <span className="truncate">
+                                                        {item.analysis_json?.anatomicalLocation?.location || item.analysis_json?.anatomical_location || (isArabic ? "الموضع: الساعد أو الذراع" : "Loc: Forearm / Arm")}
+                                                    </span>
+                                                </div>
+                                            )}
+
                                             <p className="text-xs text-slate-400 mb-4 line-clamp-2 leading-relaxed">
                                                 {item.subtitle || (isWound ? t("Clinical wound triage & dressing report.", "تقرير التقييم السريري للجرح والتضميد.") : t("Medication safety analysis report.", "تقرير تحليل السلامة الدوائية."))}
                                             </p>

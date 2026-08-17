@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Pill, Upload, History, X, Bandage, Plus, ScanLine } from "lucide-react";
+import { Pill, Upload, History, X, Bandage, Plus, ScanLine, MapPin } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/context/UserContext";
@@ -214,7 +214,7 @@ export function MedicationSelectModal({ isArabic, onSelect, selected, onNavigate
                         className="min-h-[38px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-b from-[#22d3ee] via-[#06b6d4] to-[#10b981] text-slate-950 font-bold text-xs border-t border-white/50 border-b border-emerald-900 shadow-[0_3px_0_#047857,0_4px_10px_rgba(16,185,129,0.3)] active:translate-y-[2px] active:shadow-[0_1px_0_#047857] transition-all touch-manipulation cursor-pointer select-none"
                     >
                         <ScanLine className="w-4 h-4 text-slate-950 font-bold" />
-                        <span>{isArabic ? "ابدأ فحص الدواء" : "Start Medication Scan"}</span>
+                        <span>{isArabic ? "ابدأ فحص جديد" : "Start New Scan"}</span>
                     </button>
                 </div>
 
@@ -243,6 +243,7 @@ export function MedicationSelectModal({ isArabic, onSelect, selected, onNavigate
                     ) : (
                         filteredItems.map((item) => {
                             const isWound = item.type === "wound";
+                            const locStr = item.analysis_json?.anatomicalLocation?.location || item.analysis_json?.anatomical_location || "";
                             return (
                                 <button
                                     key={item.id}
@@ -268,9 +269,18 @@ export function MedicationSelectModal({ isArabic, onSelect, selected, onNavigate
                                                 {new Date(item.created_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { month: "short", day: "numeric" })}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                                            {item.subtitle || (isWound ? "فحص سريري" : "دواء مسجل")}
-                                        </p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            {isWound && locStr ? (
+                                                <p className="text-[11px] text-emerald-300 flex items-center gap-1 truncate font-medium">
+                                                    <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                                                    <span>{locStr}</span>
+                                                </p>
+                                            ) : (
+                                                <p className="text-[11px] text-slate-400 truncate">
+                                                    {item.subtitle || (isWound ? "فحص سريري" : "دواء مسجل")}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </button>
                             );

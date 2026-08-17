@@ -74,6 +74,17 @@ const EMERGENCY_DIRECTORY: Record<string, { country: string; ambulance: string }
     GLOBAL: { country: "طوارئ عامة", ambulance: "112" },
 };
 
+const BODY_REGION_PRESETS = [
+    { ar: "الساعد / الذراع", en: "Forearm / Arm", region: "upper_limb", regionAr: "الطرف العلوي" },
+    { ar: "اليد / الأصابع", en: "Hand / Fingers", region: "hand_fingers", regionAr: "اليد والأصابع" },
+    { ar: "باطن القدم / الكعب", en: "Plantar Foot / Heel", region: "foot_toes", regionAr: "القدم وأصابع القدم" },
+    { ar: "الوجه / الرأس", en: "Face / Head", region: "head_neck", regionAr: "الرأس والوجه" },
+    { ar: "الساق / الركبة", en: "Leg / Knee", region: "lower_limb", regionAr: "الطرف السفلي" },
+    { ar: "الكتف / الرقبة", en: "Shoulder / Neck", region: "upper_limb", regionAr: "الكتف والرقبة" },
+    { ar: "الصدر / البطن", en: "Chest / Abdomen", region: "chest_abdomen", regionAr: "الصدر والبطن" },
+    { ar: "الظهر / الخاصرة", en: "Back / Flank", region: "back_spine", regionAr: "الظهر والعمود الفقري" },
+];
+
 export const WoundResultCard: React.FC<WoundResultCardProps> = ({
     result,
     scannedImage,
@@ -87,6 +98,51 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
     const [exportError, setExportError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<"care" | "reasoning" | "safety">("care");
     const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
+
+    // Anatomical Location Telemetry
+    const [anatomicalLocation, setAnatomicalLocation] = useState<string>(
+        result.anatomicalLocation?.location || (isAr ? "الساعد أو الذراع" : "Forearm / Arm")
+    );
+    const [isEditingLocation, setIsEditingLocation] = useState<boolean>(
+        Boolean(result.anatomicalLocation?.isAmbiguous)
+    );
+    const [customLocationInput, setCustomLocationInput] = useState<string>("");
+    const [locationSavedSuccess, setLocationSavedSuccess] = useState<boolean>(false);
+
+    const handleSelectLocation = async (locName: string, regionName = "الطرف العلوي") => {
+        setAnatomicalLocation(locName);
+        if (!result.anatomicalLocation) {
+            result.anatomicalLocation = {
+                location: locName,
+                locationEn: locName,
+                bodyRegion: "general_body",
+                bodyRegionLocalized: regionName,
+                confidence: "high",
+                isAmbiguous: false,
+            };
+        } else {
+            result.anatomicalLocation.location = locName;
+            result.anatomicalLocation.bodyRegionLocalized = regionName;
+            result.anatomicalLocation.isAmbiguous = false;
+            result.anatomicalLocation.confidence = "high";
+        }
+        setIsEditingLocation(false);
+        setLocationSavedSuccess(true);
+        setTimeout(() => setLocationSavedSuccess(false), 2500);
+
+        if (result.id) {
+            try {
+                const { createClient } = await import("@/lib/supabase/client");
+                const sb = createClient();
+                await sb.from("wound_scans").update({
+                    anatomical_location: locName,
+                    analysis_json: result,
+                }).eq("id", result.id);
+            } catch (e) {
+                console.warn("Could not update wound location in DB:", e);
+            }
+        }
+    };
 
     const downloadPng = async () => {
         setExportError(null);
@@ -349,6 +405,111 @@ export const WoundResultCard: React.FC<WoundResultCardProps> = ({
                             <span>{result.confidenceScore}%</span>
                         </span>
                     </div>
+                </div>
+
+                {/* ── ANATOMICAL LOCATION SMART CARD & SELECTOR ── */}
+                <div className="mt-3 sm:mt-4 p-3.5 sm:p-4 rounded-2xl border border-white/[0.08] bg-[#0C1527]/90 shadow-md">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
+                                <MapPin className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[11px] font-semibold text-slate-400">
+                                        {isAr ? "الموضع التشريحي للجرح (AI)" : "Anatomical Location (AI)"}
+                                    </span>
+                                    {result.anatomicalLocation?.isAmbiguous && (
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                            {isAr ? "غير مؤكد - يرجى التحديد" : "Uncertain - Specify"}
+                                        </span>
+                                    )}
+                                    {locationSavedSuccess && (
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                                            <Check className="w-3 h-3" />
+                                            {isAr ? "تم الحفظ" : "Saved"}
+                                        </span>
+                                    )}
+                                </div>
+                                <h4 className="text-sm sm:text-base font-bold text-white mt-0.5 truncate">
+                                    {anatomicalLocation}
+                                    {result.anatomicalLocation?.bodyRegionLocalized && (
+                                        <span className="text-xs text-cyan-400 font-normal ms-2">
+                                            ({result.anatomicalLocation.bodyRegionLocalized})
+                                        </span>
+                                    )}
+                                </h4>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsEditingLocation(!isEditingLocation)}
+                            className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white transition-all shrink-0 cursor-pointer"
+                        >
+                            {isEditingLocation ? (isAr ? "إغلاق التحديد" : "Close") : (isAr ? "تعديل الموضع" : "Change Location")}
+                        </button>
+                    </div>
+
+                    {/* Expandable Location Selector */}
+                    {isEditingLocation && (
+                        <div className="mt-3 pt-3 border-t border-white/[0.08] space-y-3 animate-in fade-in duration-200">
+                            <p className="text-xs text-slate-300">
+                                {isAr
+                                    ? "اختر موضع الجرح من الخيارات السريعة أو اكتب الموضع لتسجيله في بطاقة السجل بدقة:"
+                                    : "Select or type the exact anatomical wound location for the clinical record:"}
+                            </p>
+
+                            <div className="flex flex-wrap gap-1.5">
+                                {BODY_REGION_PRESETS.map((preset, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => handleSelectLocation(isAr ? preset.ar : preset.en, isAr ? preset.regionAr : preset.region)}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all active:scale-[0.98] cursor-pointer",
+                                            anatomicalLocation === (isAr ? preset.ar : preset.en)
+                                                ? "bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold"
+                                                : "bg-[#080D1A] border-white/[0.08] text-slate-300 hover:text-white hover:border-white/20"
+                                        )}
+                                    >
+                                        {isAr ? preset.ar : preset.en}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Custom text input */}
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={customLocationInput}
+                                    onChange={(e) => setCustomLocationInput(e.target.value)}
+                                    placeholder={isAr ? "أو اكتب موضعاً مخصصاً (مثال: أسفل الساق اليمنى من الخلف)..." : "Or type custom location (e.g. Right Posterior Lower Leg)..."}
+                                    className="flex-1 rounded-xl bg-[#080D1A] border border-white/[0.08] px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && customLocationInput.trim()) {
+                                            handleSelectLocation(customLocationInput.trim());
+                                            setCustomLocationInput("");
+                                        }
+                                    }}
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="primary"
+                                    disabled={!customLocationInput.trim()}
+                                    onClick={() => {
+                                        if (customLocationInput.trim()) {
+                                            handleSelectLocation(customLocationInput.trim());
+                                            setCustomLocationInput("");
+                                        }
+                                    }}
+                                    className="shrink-0 text-xs px-4"
+                                >
+                                    {isAr ? "تأكيد" : "Save"}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

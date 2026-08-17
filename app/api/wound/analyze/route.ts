@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
                         user_id: user.id,
                         profile_id: subjectProfileId !== user.id ? subjectProfileId : null,
                         wound_title: analysis.woundTitle,
+                        anatomical_location: analysis.anatomicalLocation?.location || null,
                         wound_type: analysis.woundType,
                         severity: analysis.severity,
                         infection_risk: analysis.infectionAssessment.riskLevel,
