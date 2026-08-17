@@ -219,7 +219,7 @@ export function MedicationSelectModal({ isArabic, onSelect, selected, onNavigate
                 </div>
 
                 {/* Items List */}
-                <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
+                <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin overscroll-contain [-webkit-overflow-scrolling:touch]">
                     {loading ? (
                         <div className="p-4 space-y-2">
                             {[1, 2, 3].map((i) => (

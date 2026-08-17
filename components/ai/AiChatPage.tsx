@@ -767,8 +767,8 @@ export function AiChatPage() {
                                     </p>
                                 </div>
 
-                                {/* Quick Prompts 2-Column Responsive Grid */}
-                                <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full pt-2 px-1">
+                                {/* Quick Prompts Responsive Grid (1-Col on ultra-narrow, 2-Col on normal screens) */}
+                                <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2 sm:gap-2.5 w-full pt-2 px-1">
                                     {quickChips.map((chip, i) => (
                                         <button
                                             key={i}
